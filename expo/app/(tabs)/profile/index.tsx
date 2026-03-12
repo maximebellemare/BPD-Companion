@@ -26,6 +26,7 @@ import {
   Sparkles,
   AlertTriangle,
   Phone,
+  BarChart3,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
@@ -126,6 +127,27 @@ export default function ProfileScreen() {
                     ? `Top trigger: ${patternSummary.topTriggerThisMonth}`
                     : 'Start checking in to see your patterns'}
                 </Text>
+              </View>
+            </View>
+            <ChevronRight size={18} color={Colors.white} style={{ opacity: 0.7 }} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.insightsBanner}
+            onPress={() => {
+              handleHaptic();
+              router.push('/insights' as never);
+            }}
+            activeOpacity={0.7}
+            testID="insights-btn"
+          >
+            <View style={styles.patternsBannerLeft}>
+              <View style={[styles.patternsBannerIcon, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                <BarChart3 size={20} color={Colors.white} />
+              </View>
+              <View style={styles.patternsBannerContent}>
+                <Text style={styles.patternsBannerTitle}>Insights</Text>
+                <Text style={styles.patternsBannerDesc}>Charts, trends, and emotional patterns</Text>
               </View>
             </View>
             <ChevronRight size={18} color={Colors.white} style={{ opacity: 0.7 }} />
@@ -648,5 +670,13 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 30,
+  },
+  insightsBanner: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    backgroundColor: '#507A66',
+    padding: 18,
+    borderRadius: 18,
+    marginTop: 10,
   },
 });

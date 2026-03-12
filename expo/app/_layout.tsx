@@ -42,6 +42,13 @@ function RootLayoutNav() {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="insights"
+        options={{
+          headerShown: false,
+          presentation: "modal",
+        }}
+      />
     </Stack>
   );
 }

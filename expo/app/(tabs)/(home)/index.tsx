@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Shield, Heart, Wind, Sparkles } from 'lucide-react-native';
+import { Shield, Heart, Wind, Sparkles, BarChart3, ChevronRight } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { VALIDATION_MESSAGES } from '@/constants/data';
@@ -234,6 +234,26 @@ export default function HomeScreen() {
             </Text>
           </Animated.View>
         )}
+
+        <Animated.View style={[{ opacity: fadeAnim }]}>
+          <TouchableOpacity
+            style={styles.insightsBanner}
+            onPress={() => router.push('/insights')}
+            activeOpacity={0.7}
+            testID="insights-button"
+          >
+            <View style={styles.insightsBannerLeft}>
+              <View style={styles.insightsBannerIcon}>
+                <BarChart3 size={20} color={Colors.white} />
+              </View>
+              <View style={styles.insightsBannerText}>
+                <Text style={styles.insightsBannerTitle}>Your Insights</Text>
+                <Text style={styles.insightsBannerDesc}>See your emotional patterns</Text>
+              </View>
+            </View>
+            <ChevronRight size={18} color={Colors.white} style={{ opacity: 0.7 }} />
+          </TouchableOpacity>
+        </Animated.View>
       </ScrollView>
     </View>
   );
@@ -394,5 +414,40 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     marginTop: 4,
     textAlign: 'center',
+  },
+  insightsBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.primary,
+    borderRadius: 18,
+    padding: 18,
+    marginTop: 16,
+  },
+  insightsBannerLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  insightsBannerIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  insightsBannerText: {
+    flex: 1,
+  },
+  insightsBannerTitle: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: Colors.white,
+    marginBottom: 2,
+  },
+  insightsBannerDesc: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.8)',
   },
 });

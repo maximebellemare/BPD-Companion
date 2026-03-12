@@ -37,17 +37,24 @@ import BehavioralCoachingCard from '@/components/BehavioralCoachingCard';
 import RelationshipSpiralCard from '@/components/RelationshipSpiralCard';
 import { useCoaching } from '@/hooks/useCoaching';
 import { useRelationshipSpiral } from '@/hooks/useRelationshipSpiral';
+import WeeklyReflectionCard from '@/components/WeeklyReflectionCard';
+import { generateWeeklyReflection } from '@/services/reflection/weeklyReflectionService';
 
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { journalEntries } = useApp();
+  const { journalEntries, messageDrafts } = useApp();
   const earlyWarning = useEarlyWarning();
   const { recommendations, topRecommendation } = useRecommendations();
   const crisisPrediction = useCrisisPrediction();
   const emotionalStorm = useEmotionalStorm();
   const { dailyCoaching } = useCoaching();
   const relationshipSpiral = useRelationshipSpiral();
+
+  const weeklyReflection = useMemo(
+    () => generateWeeklyReflection(journalEntries, messageDrafts),
+    [journalEntries, messageDrafts],
+  );
 
   const ritualQuery = useQuery({
     queryKey: ['ritual'],
@@ -315,6 +322,15 @@ export default function HomeScreen() {
 
         <Animated.View style={{ opacity: fadeAnim }}>
           <HomeInsightsPreview />
+        </Animated.View>
+
+        <Animated.View style={{ opacity: fadeAnim }}>
+          <WeeklyReflectionCard
+            weekLabel={weeklyReflection.weekLabel}
+            hasEnoughData={weeklyReflection.hasEnoughData}
+            openingNarrative={weeklyReflection.openingNarrative}
+            improvementCount={weeklyReflection.growthSignals.improvements.length}
+          />
         </Animated.View>
 
         <Animated.View style={{ opacity: fadeAnim }}>

@@ -37,10 +37,13 @@ import {
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useProfile } from '@/providers/ProfileProvider';
+import { useSubscription } from '@/providers/SubscriptionProvider';
+import { Crown } from 'lucide-react-native';
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { profile, patternSummary, updateProfile, updateNotifications, updatePrivacy } = useProfile();
+  const { isPremium, daysRemaining, state: subState } = useSubscription();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
@@ -86,6 +89,35 @@ export default function ProfileScreen() {
           <Text style={styles.headerSubtitle}>
             {daysSinceJoined} day{daysSinceJoined !== 1 ? 's' : ''} of showing up for yourself
           </Text>
+        </Animated.View>
+
+        <Animated.View style={{ opacity: fadeAnim }}>
+          <TouchableOpacity
+            style={styles.upgradeBanner}
+            onPress={() => {
+              handleHaptic();
+              router.push('/upgrade' as never);
+            }}
+            activeOpacity={0.7}
+            testID="upgrade-btn"
+          >
+            <View style={styles.patternsBannerLeft}>
+              <View style={[styles.patternsBannerIcon, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                <Crown size={20} color={Colors.white} />
+              </View>
+              <View style={styles.patternsBannerContent}>
+                <Text style={styles.patternsBannerTitle}>
+                  {isPremium ? 'Premium Active' : 'Upgrade to Premium'}
+                </Text>
+                <Text style={styles.patternsBannerDesc}>
+                  {isPremium
+                    ? (subState.isTrialActive ? `Trial • ${daysRemaining} days left` : 'All features unlocked')
+                    : 'Unlock deeper insights & AI support'}
+                </Text>
+              </View>
+            </View>
+            <ChevronRight size={18} color={Colors.white} style={{ opacity: 0.7 }} />
+          </TouchableOpacity>
         </Animated.View>
 
         <Animated.View style={[styles.statsRow, { opacity: fadeAnim }]}>
@@ -875,5 +907,13 @@ const styles = StyleSheet.create({
     padding: 18,
     borderRadius: 18,
     marginTop: 10,
+  },
+  upgradeBanner: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    backgroundColor: '#D4956A',
+    padding: 18,
+    borderRadius: 18,
+    marginBottom: 24,
   },
 });

@@ -32,6 +32,7 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { VALIDATION_MESSAGES } from '@/constants/data';
 import { useApp } from '@/providers/AppProvider';
+import UpgradePromptCard from '@/components/UpgradePromptCard';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -344,6 +345,10 @@ export default function HomeScreen() {
             recommendations={recommendations}
             topRecommendation={topRecommendation}
           />
+        </Animated.View>
+
+        <Animated.View style={{ opacity: fadeAnim }}>
+          <UpgradePromptCard />
         </Animated.View>
 
         <Animated.View style={[{ opacity: fadeAnim }]}>

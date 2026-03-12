@@ -6,6 +6,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AppProvider } from "@/providers/AppProvider";
 import { AICompanionProvider } from "@/providers/AICompanionProvider";
 import { ProfileProvider } from "@/providers/ProfileProvider";
+import { SubscriptionProvider } from "@/providers/SubscriptionProvider";
 import Colors from "@/constants/colors";
 
 void SplashScreen.preventAutoHideAsync();
@@ -70,6 +71,13 @@ function RootLayoutNav() {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="upgrade"
+        options={{
+          presentation: "modal",
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }
@@ -83,11 +91,13 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <GestureHandlerRootView>
         <AppProvider>
-          <ProfileProvider>
-            <AICompanionProvider>
-              <RootLayoutNav />
-            </AICompanionProvider>
-          </ProfileProvider>
+          <SubscriptionProvider>
+            <ProfileProvider>
+              <AICompanionProvider>
+                <RootLayoutNav />
+              </AICompanionProvider>
+            </ProfileProvider>
+          </SubscriptionProvider>
         </AppProvider>
       </GestureHandlerRootView>
     </QueryClientProvider>

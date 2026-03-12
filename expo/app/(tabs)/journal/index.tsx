@@ -8,7 +8,8 @@ import {
   Animated,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Calendar, TrendingUp, ChevronDown, ChevronUp } from 'lucide-react-native';
+import { Calendar, TrendingUp, ChevronDown, ChevronUp, Clock } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
 import { useApp } from '@/providers/AppProvider';
 import { JournalEntry } from '@/types';
@@ -154,6 +155,7 @@ function JournalEntryCard({ entry }: { entry: JournalEntry }) {
 
 export default function JournalScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { journalEntries, triggerPatterns } = useApp();
   const [showPatterns, setShowPatterns] = useState<boolean>(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -175,22 +177,31 @@ export default function JournalScreen() {
       <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
         <View style={styles.header}>
           <Text style={styles.title}>Journal</Text>
-          {hasPatterns && (
+          <View style={styles.headerActions}>
             <TouchableOpacity
-              style={[styles.patternToggle, showPatterns && styles.patternToggleActive]}
-              onPress={() => setShowPatterns(!showPatterns)}
+              style={styles.timelineBtn}
+              onPress={() => router.push('/journal/timeline')}
             >
-              <TrendingUp size={16} color={showPatterns ? Colors.white : Colors.primary} />
-              <Text
-                style={[
-                  styles.patternToggleText,
-                  showPatterns && styles.patternToggleTextActive,
-                ]}
-              >
-                Patterns
-              </Text>
+              <Clock size={16} color={Colors.primary} />
+              <Text style={styles.timelineBtnText}>Timeline</Text>
             </TouchableOpacity>
-          )}
+            {hasPatterns && (
+              <TouchableOpacity
+                style={[styles.patternToggle, showPatterns && styles.patternToggleActive]}
+                onPress={() => setShowPatterns(!showPatterns)}
+              >
+                <TrendingUp size={16} color={showPatterns ? Colors.white : Colors.primary} />
+                <Text
+                  style={[
+                    styles.patternToggleText,
+                    showPatterns && styles.patternToggleTextActive,
+                  ]}
+                >
+                  Patterns
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
 
         <ScrollView
@@ -240,6 +251,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 16,
     paddingBottom: 12,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  timelineBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.primaryLight,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  timelineBtnText: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: Colors.primary,
   },
   title: {
     fontSize: 32,

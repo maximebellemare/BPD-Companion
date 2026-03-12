@@ -9,7 +9,8 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Anchor, Heart, Eye, ArrowRightLeft, Clock } from 'lucide-react-native';
+import { Anchor, Heart, Eye, ArrowRightLeft, Clock, Brain, ChevronRight } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { COPING_EXERCISES } from '@/constants/data';
 import { CopingCategory } from '@/types';
@@ -78,6 +79,27 @@ export default function ToolsScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
+          <TouchableOpacity
+            style={styles.dbtCoachCard}
+            onPress={() => {
+              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push('/tools/dbt-coach' as never);
+            }}
+            activeOpacity={0.7}
+            testID="dbt-coach-card"
+          >
+            <View style={styles.dbtCoachLeft}>
+              <View style={styles.dbtCoachIcon}>
+                <Brain size={22} color={Colors.white} />
+              </View>
+              <View style={styles.dbtCoachInfo}>
+                <Text style={styles.dbtCoachTitle}>DBT Coach</Text>
+                <Text style={styles.dbtCoachDesc}>Personalized skill guidance with step-by-step exercises</Text>
+              </View>
+            </View>
+            <ChevronRight size={20} color={Colors.white} />
+          </TouchableOpacity>
+
           {CATEGORIES.map(category => {
             const config = CATEGORY_CONFIG[category];
             const exercises = COPING_EXERCISES.filter(e => e.category === category);
@@ -214,5 +236,42 @@ const styles = StyleSheet.create({
   exerciseDuration: {
     fontSize: 12,
     color: Colors.textMuted,
+  },
+  dbtCoachCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.primary,
+    borderRadius: 18,
+    padding: 18,
+    marginBottom: 28,
+  },
+  dbtCoachLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    flex: 1,
+  },
+  dbtCoachIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dbtCoachInfo: {
+    flex: 1,
+  },
+  dbtCoachTitle: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: Colors.white,
+    marginBottom: 3,
+  },
+  dbtCoachDesc: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.8)',
+    lineHeight: 18,
   },
 });

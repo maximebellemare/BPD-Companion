@@ -1,10 +1,14 @@
 import { AIServiceResponse } from '@/types/ai';
+import { AIMode } from '@/types/aiModes';
 import {
   EmotionalIntent,
   RESPONSE_TEMPLATES,
   HIGH_DISTRESS_KEYWORDS,
   FOLLOW_UP_RESPONSES,
 } from './aiResponseTemplates';
+import { detectAIMode } from './aiModeService';
+import { getModeResponse, personalizeForMode } from './aiResponseStrategy';
+import { MemoryProfile } from '@/types/memory';
 
 function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -98,6 +102,8 @@ export interface MockResponseOptions {
   contextSummary?: string;
   conversationHistory?: Array<{ role: string; content: string }>;
   personalization?: MemoryPersonalization;
+  activeMode?: AIMode;
+  memoryProfile?: MemoryProfile;
 }
 
 function personalizeResponse(
@@ -159,12 +165,21 @@ export async function generateMockResponse(
   userMessage: string,
   _contextSummary?: string,
   options?: MockResponseOptions,
-): Promise<AIServiceResponse & { intent: EmotionalIntent; quickActions: string[] }> {
+): Promise<AIServiceResponse & { intent: EmotionalIntent; quickActions: string[]; activeMode: AIMode }> {
   const delay = detectHighDistress(userMessage) ? 800 + Math.random() * 600 : 1200 + Math.random() * 1500;
   await new Promise(resolve => setTimeout(resolve, delay));
 
   const history = options?.conversationHistory ?? [];
   const contextType = detectConversationContext(history, userMessage);
+
+  const modeDetection = detectAIMode({
+    messageContent: userMessage,
+    conversationHistory: history,
+    averageIntensity: options?.personalization?.averageIntensity,
+    relationshipSignals: options?.personalization?.topTrigger?.toLowerCase().includes('relationship'),
+  });
+
+  const activeMode = options?.activeMode ?? modeDetection.mode;
 
   let content: string;
   let intent: EmotionalIntent;
@@ -175,21 +190,31 @@ export async function generateMockResponse(
     intent = 'general';
     quickActions = RESPONSE_TEMPLATES.general.quickActions ?? [];
   } else {
+    const modeResponse = getModeResponse(activeMode);
     intent = detectIntent(userMessage);
-    const template = RESPONSE_TEMPLATES[intent];
-    content = pickRandom(template.responses);
-    quickActions = template.quickActions ?? [];
+
+    const useModePrimary = options?.activeMode != null || modeDetection.confidence >= 0.6;
+
+    if (useModePrimary) {
+      content = modeResponse.content;
+      quickActions = modeResponse.quickActions;
+      content = personalizeForMode(content, activeMode, options?.memoryProfile);
+    } else {
+      const template = RESPONSE_TEMPLATES[intent];
+      content = pickRandom(template.responses);
+      quickActions = template.quickActions ?? [];
+      content = personalizeResponse(content, intent, options?.personalization);
+    }
   }
 
-  content = personalizeResponse(content, intent, options?.personalization);
-
-  console.log('[MockAI] Detected intent:', intent, 'context:', contextType, 'personalized:', !!options?.personalization);
+  console.log('[MockAI] Detected intent:', intent, 'mode:', activeMode, 'context:', contextType, 'personalized:', !!options?.personalization);
 
   return {
     content,
     timestamp: Date.now(),
     intent,
     quickActions,
+    activeMode,
   };
 }
 

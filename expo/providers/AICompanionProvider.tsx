@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import createContextHook from '@nkzw/create-context-hook';
 import { AIConversation, AIMessage, SuggestedPrompt, SupportiveInterpretation } from '@/types/ai';
+import { AIMode } from '@/types/aiModes';
 import { MemoryProfile, InsightCard } from '@/types/memory';
 import { useApp } from '@/providers/AppProvider';
 import { generateMockResponse, generateConversationTitle } from '@/services/ai/mockAIService';
@@ -9,6 +10,7 @@ import { buildMemoryProfile, buildInsightCards, buildContextSummary } from '@/se
 import { buildConversationTags } from '@/services/ai/aiPromptBuilder';
 import { generateSupportiveInterpretations } from '@/services/insights/aiInsightsService';
 import { conversationRepository } from '@/services/repositories';
+import { getModeConfig } from '@/services/ai/aiModeService';
 
 export const SUGGESTED_PROMPTS: SuggestedPrompt[] = [
   { id: 'sp1', label: 'I feel abandoned right now', icon: '💔', prompt: 'I feel abandoned right now and I need support' },
@@ -26,6 +28,8 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
   const [conversations, setConversations] = useState<AIConversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [manualMode, setManualMode] = useState<AIMode | null>(null);
+  const [currentActiveMode, setCurrentActiveMode] = useState<AIMode | null>(null);
 
   const conversationsQuery = useQuery({
     queryKey: ['ai-conversations'],
@@ -152,7 +156,12 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
           pauseFrequent: memoryProfile.messageUsage.totalPauses > 1,
           averageIntensity: memoryProfile.averageIntensity,
         },
+        activeMode: manualMode ?? undefined,
+        memoryProfile,
       });
+
+      setCurrentActiveMode(response.activeMode);
+      console.log('[AICompanion] Response mode:', response.activeMode, 'manual:', !!manualMode);
 
       const assistantMessage: AIMessage = {
         id: `msg_${Date.now()}_ai`,
@@ -181,7 +190,7 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
     } finally {
       setIsGenerating(false);
     }
-  }, [activeConversationId, isGenerating, conversations, contextSummary, saveConversationsMutation, memoryProfile]);
+  }, [activeConversationId, isGenerating, conversations, contextSummary, saveConversationsMutation, memoryProfile, manualMode]);
 
   const toggleSaveConversation = useCallback((conversationId: string) => {
     const updated = conversations.map(c =>
@@ -204,6 +213,21 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
     return generateSupportiveInterpretations(memoryProfile);
   }, [memoryProfile]);
 
+  const setMode = useCallback((mode: AIMode | null) => {
+    console.log('[AICompanion] Manual mode set to:', mode);
+    setManualMode(mode);
+    if (mode) {
+      setCurrentActiveMode(mode);
+    }
+  }, []);
+
+  const currentModeConfig = useMemo(() => {
+    if (currentActiveMode) {
+      return getModeConfig(currentActiveMode);
+    }
+    return null;
+  }, [currentActiveMode]);
+
   return useMemo(() => ({
     conversations,
     activeConversation,
@@ -215,12 +239,16 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
     insightCards,
     supportiveInterpretations,
     isLoading: conversationsQuery.isLoading,
+    manualMode,
+    currentActiveMode,
+    currentModeConfig,
     setActiveConversationId,
     startNewConversation,
     continueLastConversation,
     sendMessage,
     toggleSaveConversation,
     deleteConversation,
+    setMode,
   }), [
     conversations,
     activeConversation,
@@ -232,11 +260,15 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
     insightCards,
     supportiveInterpretations,
     conversationsQuery.isLoading,
+    manualMode,
+    currentActiveMode,
+    currentModeConfig,
     setActiveConversationId,
     startNewConversation,
     continueLastConversation,
     sendMessage,
     toggleSaveConversation,
     deleteConversation,
+    setMode,
   ]);
 });

@@ -32,6 +32,8 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useAICompanion } from '@/providers/AICompanionProvider';
 import { AIMessage } from '@/types/ai';
+import { AIMode } from '@/types/aiModes';
+import { getManualModeOptions, getModeConfig } from '@/services/ai/aiModeService';
 
 const STARTER_CHIPS = [
   { id: 's1', label: 'I feel abandoned right now', icon: '💔', prompt: 'I feel abandoned right now and I need support' },
@@ -284,6 +286,110 @@ function ChatMenu({
   );
 }
 
+const MODE_OPTIONS = getManualModeOptions();
+
+interface ModeSelectorProps {
+  activeMode: AIMode | null;
+  manualMode: AIMode | null;
+  onSelectMode: (mode: AIMode | null) => void;
+  visible: boolean;
+}
+
+const ModeSelector = React.memo(({ activeMode, manualMode, onSelectMode, visible }: ModeSelectorProps) => {
+  const [expanded, setExpanded] = useState<boolean>(false);
+
+  const handleToggle = useCallback(() => {
+    if (Platform.OS !== 'web') {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setExpanded(prev => !prev);
+  }, []);
+
+  const handleSelect = useCallback((mode: AIMode) => {
+    if (Platform.OS !== 'web') {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    if (manualMode === mode) {
+      onSelectMode(null);
+    } else {
+      onSelectMode(mode);
+    }
+    setExpanded(false);
+  }, [manualMode, onSelectMode]);
+
+  if (!visible) return null;
+
+  const currentConfig = activeMode ? getModeConfig(activeMode) : null;
+
+  return (
+    <View style={styles.modeSelectorContainer}>
+      {currentConfig && (
+        <TouchableOpacity
+          style={[styles.modeIndicatorPill, { backgroundColor: currentConfig.color + '18' }]}
+          onPress={handleToggle}
+          activeOpacity={0.7}
+          testID="mode-indicator"
+        >
+          <Text style={styles.modeIndicatorIcon}>{currentConfig.icon}</Text>
+          <Text style={[styles.modeIndicatorLabel, { color: currentConfig.color }]}>
+            {currentConfig.label}
+          </Text>
+          {manualMode && (
+            <View style={[styles.modeManualDot, { backgroundColor: currentConfig.color }]} />
+          )}
+        </TouchableOpacity>
+      )}
+      {!currentConfig && (
+        <TouchableOpacity
+          style={styles.modeIndicatorPill}
+          onPress={handleToggle}
+          activeOpacity={0.7}
+          testID="mode-toggle"
+        >
+          <Text style={styles.modeIndicatorIcon}>🎯</Text>
+          <Text style={styles.modeIndicatorLabelDefault}>Choose support style</Text>
+        </TouchableOpacity>
+      )}
+      {expanded && (
+        <View style={styles.modeChipsRow}>
+          {MODE_OPTIONS.map((opt) => {
+            const isActive = manualMode === opt.mode;
+            const config = getModeConfig(opt.mode);
+            return (
+              <TouchableOpacity
+                key={opt.mode}
+                style={[
+                  styles.modeChip,
+                  isActive && { backgroundColor: config.color + '20', borderColor: config.color + '40' },
+                ]}
+                onPress={() => handleSelect(opt.mode)}
+                activeOpacity={0.7}
+                testID={`mode-chip-${opt.mode}`}
+              >
+                <Text style={styles.modeChipIcon}>{opt.icon}</Text>
+                <Text style={[
+                  styles.modeChipLabel,
+                  isActive && { color: config.color, fontWeight: '600' as const },
+                ]}>{opt.label}</Text>
+              </TouchableOpacity>
+            );
+          })}
+          {manualMode && (
+            <TouchableOpacity
+              style={styles.modeClearChip}
+              onPress={() => { onSelectMode(null); setExpanded(false); }}
+              activeOpacity={0.7}
+              testID="mode-clear"
+            >
+              <Text style={styles.modeClearText}>Auto-detect</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+    </View>
+  );
+});
+
 export default function ChatScreen() {
   const router = useRouter();
   const {
@@ -294,6 +400,10 @@ export default function ChatScreen() {
     toggleSaveConversation,
     startNewConversation,
     deleteConversation,
+    manualMode,
+    currentActiveMode,
+    currentModeConfig,
+    setMode,
   } = useAICompanion();
 
   const [inputText, setInputText] = useState<string>('');
@@ -407,12 +517,19 @@ export default function ChatScreen() {
               <Text style={styles.headerTitleText} numberOfLines={1}>
                 {activeConversation?.title || 'New Chat'}
               </Text>
-              {hasMemoryData && (
+              {currentModeConfig ? (
+                <View style={[styles.memoryIndicator, { gap: 4 }]}>
+                  <Text style={{ fontSize: 9 }}>{currentModeConfig.icon}</Text>
+                  <Text style={[styles.memoryIndicatorText, { color: currentModeConfig.color }]}>
+                    {currentModeConfig.label}
+                  </Text>
+                </View>
+              ) : hasMemoryData ? (
                 <View style={styles.memoryIndicator}>
                   <Brain size={10} color={Colors.primary} />
                   <Text style={styles.memoryIndicatorText}>Memory active</Text>
                 </View>
-              )}
+              ) : null}
             </View>
           ),
           headerLeft: () => (
@@ -462,6 +579,13 @@ export default function ChatScreen() {
         />
 
         {isGenerating && <TypingIndicator />}
+
+        <ModeSelector
+          activeMode={currentActiveMode}
+          manualMode={manualMode}
+          onSelectMode={setMode}
+          visible={hasMessages}
+        />
 
         <View style={styles.inputBar}>
           <View style={styles.inputRow}>
@@ -844,5 +968,78 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: Colors.borderLight,
     marginHorizontal: 12,
+  },
+  modeSelectorContainer: {
+    paddingHorizontal: 14,
+    paddingTop: 6,
+    paddingBottom: 2,
+    backgroundColor: Colors.background,
+  },
+  modeIndicatorPill: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    alignSelf: 'flex-start' as const,
+    gap: 5,
+    backgroundColor: Colors.surface,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+  },
+  modeIndicatorIcon: {
+    fontSize: 12,
+  },
+  modeIndicatorLabel: {
+    fontSize: 11,
+    fontWeight: '600' as const,
+  },
+  modeIndicatorLabelDefault: {
+    fontSize: 11,
+    fontWeight: '500' as const,
+    color: Colors.textMuted,
+  },
+  modeManualDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    marginLeft: 2,
+  },
+  modeChipsRow: {
+    flexDirection: 'row' as const,
+    flexWrap: 'wrap' as const,
+    gap: 6,
+    marginTop: 8,
+    paddingBottom: 4,
+  },
+  modeChip: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 5,
+    backgroundColor: Colors.card,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+  },
+  modeChipIcon: {
+    fontSize: 13,
+  },
+  modeChipLabel: {
+    fontSize: 12,
+    fontWeight: '500' as const,
+    color: Colors.text,
+  },
+  modeClearChip: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  modeClearText: {
+    fontSize: 12,
+    fontWeight: '500' as const,
+    color: Colors.textMuted,
   },
 });

@@ -7,6 +7,10 @@ import {
   EmotionDistributionItem,
   CopingSuccessItem,
   Milestone,
+  RegulationBehavior,
+  ConsistencyStreak,
+  TriggerFrequencyItem,
+  EncouragingInsight,
 } from '@/types/progress';
 
 const EMOTION_COLORS = ['#6B9080', '#D4956A', '#E17055', '#00B894', '#3B82F6', '#8B5CF6', '#E84393', '#FDCB6E'];
@@ -48,7 +52,6 @@ function computeMetrics(entries: JournalEntry[], drafts: MessageDraft[]): Progre
     : 0;
 
   const copingCount = entries.reduce((s, e) => s + (e.checkIn.copingUsed?.length ?? 0), 0);
-
   const pausedMessages = drafts.filter(d => d.paused).length;
 
   const recentConflicts = entries.filter(e =>
@@ -179,6 +182,7 @@ function computeMilestones(entries: JournalEntry[], drafts: MessageDraft[]): Mil
   const totalCheckIns = entries.length;
   const copingCount = entries.reduce((s, e) => s + (e.checkIn.copingUsed?.length ?? 0), 0);
   const pausedCount = drafts.filter(d => d.paused).length;
+  const rewriteCount = drafts.filter(d => d.rewrittenText).length;
 
   return [
     {
@@ -217,13 +221,205 @@ function computeMilestones(entries: JournalEntry[], drafts: MessageDraft[]): Mil
       description: 'Successfully pause 3 messages',
     },
     {
+      id: 'rewrite_master',
+      label: 'Rewrite Mastery',
+      achieved: rewriteCount >= 5,
+      icon: '✍️',
+      description: 'Rewrite 5 messages mindfully',
+    },
+    {
       id: 'month_warrior',
       label: 'Month Warrior',
       achieved: totalCheckIns >= 30,
       icon: '🏆',
       description: 'Complete 30 check-ins',
     },
+    {
+      id: 'regulation_pro',
+      label: 'Regulation Pro',
+      achieved: copingCount >= 20,
+      icon: '🎯',
+      description: 'Use coping tools 20 times',
+    },
   ];
+}
+
+function computeRegulation(entries: JournalEntry[], drafts: MessageDraft[]): RegulationBehavior {
+  const recentEntries = entries.filter(e => isWithinDays(e.timestamp, 30));
+  const recentDrafts = drafts.filter(d => isWithinDays(d.timestamp, 30));
+
+  const pausesBeforeSending = recentDrafts.filter(d => d.paused).length;
+  const rewritesUsed = recentDrafts.filter(d => d.rewrittenText).length;
+  const constructiveOutcomes = recentDrafts.filter(d => d.outcome === 'helped' || d.outcome === 'not_sent').length;
+
+  const groundingUsed = recentEntries.reduce((count, e) => {
+    const copingTools = e.checkIn.copingUsed ?? [];
+    return count + copingTools.filter(t =>
+      t.toLowerCase().includes('ground') ||
+      t.toLowerCase().includes('breath') ||
+      t.toLowerCase().includes('sooth')
+    ).length;
+  }, 0);
+
+  const safetyModeActivations = recentEntries.filter(e =>
+    e.checkIn.intensityLevel >= 8
+  ).length;
+
+  return {
+    pausesBeforeSending,
+    groundingUsed,
+    safetyModeActivations,
+    rewritesUsed,
+    constructiveOutcomes,
+  };
+}
+
+function computeConsistency(entries: JournalEntry[], ritualStreak: number): ConsistencyStreak {
+  const journalStreak = computeStreak(entries);
+  const weekEntries = entries.filter(e => isWithinDays(e.timestamp, 7));
+  const uniqueDays = new Set<string>();
+  weekEntries.forEach(e => uniqueDays.add(getDateKey(e.timestamp)));
+
+  return {
+    journalStreak,
+    ritualStreak,
+    companionSessions: 0,
+    weeklyActiveDays: uniqueDays.size,
+  };
+}
+
+function computeTriggerFrequency(entries: JournalEntry[]): TriggerFrequencyItem[] {
+  const recentEntries = entries.filter(e => isWithinDays(e.timestamp, 30));
+  const counts: Record<string, { count: number; category: string }> = {};
+
+  recentEntries.forEach(entry => {
+    entry.checkIn.triggers.forEach(t => {
+      if (!counts[t.label]) counts[t.label] = { count: 0, category: t.category };
+      counts[t.label].count += 1;
+    });
+  });
+
+  return Object.entries(counts)
+    .map(([label, data]) => ({ label, count: data.count, category: data.category }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 6);
+}
+
+function computeEncouragingInsights(
+  metrics: ProgressMetrics,
+  weekComparison: WeekComparison,
+  regulation: RegulationBehavior,
+  consistency: ConsistencyStreak,
+  entries: JournalEntry[],
+  _drafts: MessageDraft[],
+): EncouragingInsight[] {
+  const insights: EncouragingInsight[] = [];
+  let idCounter = 0;
+  const makeId = () => `insight_${++idCounter}`;
+
+  if (regulation.pausesBeforeSending > 0) {
+    insights.push({
+      id: makeId(),
+      text: `You paused before sending ${regulation.pausesBeforeSending} message${regulation.pausesBeforeSending !== 1 ? 's' : ''} recently. That takes real self-awareness.`,
+      type: 'regulation',
+      icon: '⏸️',
+    });
+  }
+
+  if (regulation.rewritesUsed > 0) {
+    insights.push({
+      id: makeId(),
+      text: `You rewrote ${regulation.rewritesUsed} message${regulation.rewritesUsed !== 1 ? 's' : ''} to express yourself more clearly. That's meaningful growth.`,
+      type: 'regulation',
+      icon: '✍️',
+    });
+  }
+
+  if (weekComparison.direction === 'improved') {
+    insights.push({
+      id: makeId(),
+      text: `Your average distress dropped ${weekComparison.changePercent}% compared to last week. You seem to be finding more stability.`,
+      type: 'growth',
+      icon: '📉',
+    });
+  }
+
+  if (consistency.journalStreak >= 3) {
+    insights.push({
+      id: makeId(),
+      text: `${consistency.journalStreak} days checking in consistently. Showing up for yourself is a quiet form of strength.`,
+      type: 'consistency',
+      icon: '🔥',
+    });
+  }
+
+  if (consistency.weeklyActiveDays >= 5) {
+    insights.push({
+      id: makeId(),
+      text: `You were active ${consistency.weeklyActiveDays} out of 7 days this week. Consistency builds resilience.`,
+      type: 'consistency',
+      icon: '📅',
+    });
+  }
+
+  if (regulation.groundingUsed > 0) {
+    insights.push({
+      id: makeId(),
+      text: `You used grounding or breathing ${regulation.groundingUsed} time${regulation.groundingUsed !== 1 ? 's' : ''} recently. Those moments of regulation add up.`,
+      type: 'coping',
+      icon: '🌿',
+    });
+  }
+
+  if (regulation.constructiveOutcomes > 0) {
+    insights.push({
+      id: makeId(),
+      text: `${regulation.constructiveOutcomes} of your recent messages had a constructive outcome. You're building better patterns.`,
+      type: 'regulation',
+      icon: '💬',
+    });
+  }
+
+  if (metrics.copingExercisesUsed >= 5) {
+    insights.push({
+      id: makeId(),
+      text: `You've used coping tools ${metrics.copingExercisesUsed} times. Reaching for support instead of reacting is real progress.`,
+      type: 'coping',
+      icon: '🧰',
+    });
+  }
+
+  const recentHigh = entries.filter(e => isWithinDays(e.timestamp, 7) && e.checkIn.intensityLevel >= 7).length;
+  const olderHigh = entries.filter(e => !isWithinDays(e.timestamp, 7) && isWithinDays(e.timestamp, 14) && e.checkIn.intensityLevel >= 7).length;
+  if (olderHigh > 0 && recentHigh < olderHigh) {
+    insights.push({
+      id: makeId(),
+      text: 'You seem to have fewer high-intensity moments this week. That may suggest growing stabilization.',
+      type: 'growth',
+      icon: '🌤️',
+    });
+  }
+
+  const reflections = entries.filter(e => isWithinDays(e.timestamp, 14) && e.reflection && e.reflection.length > 20).length;
+  if (reflections >= 3) {
+    insights.push({
+      id: makeId(),
+      text: `You reflected thoughtfully ${reflections} times recently. Self-reflection deepens your emotional awareness.`,
+      type: 'awareness',
+      icon: '🪞',
+    });
+  }
+
+  if (insights.length === 0) {
+    insights.push({
+      id: makeId(),
+      text: 'Every check-in, every pause, every breath — they all count. Keep going.',
+      type: 'growth',
+      icon: '🌱',
+    });
+  }
+
+  return insights.slice(0, 6);
 }
 
 function generateEncouragingMessage(comparison: WeekComparison, metrics: ProgressMetrics): string {
@@ -248,12 +444,15 @@ function generateEncouragingMessage(comparison: WeekComparison, metrics: Progres
 export function computeProgressSummary(
   entries: JournalEntry[],
   drafts: MessageDraft[],
+  ritualStreak?: number,
 ): ProgressSummary {
   const sorted = [...entries].sort((a, b) => b.timestamp - a.timestamp);
   const monthEntries = sorted.filter(e => isWithinDays(e.timestamp, 30));
 
   const metrics = computeMetrics(sorted, drafts);
   const weekComparison = computeWeekComparison(sorted);
+  const regulation = computeRegulation(sorted, drafts);
+  const consistency = computeConsistency(sorted, ritualStreak ?? 0);
 
   return {
     metrics,
@@ -263,5 +462,10 @@ export function computeProgressSummary(
     copingSuccess: computeCopingSuccess(sorted),
     encouragingMessage: generateEncouragingMessage(weekComparison, metrics),
     milestones: computeMilestones(sorted, drafts),
+    regulation,
+    consistency,
+    triggerFrequency: computeTriggerFrequency(sorted),
+    encouragingInsights: computeEncouragingInsights(metrics, weekComparison, regulation, consistency, sorted, drafts),
+    hasEnoughData: entries.length >= 2,
   };
 }

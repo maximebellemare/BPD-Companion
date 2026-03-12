@@ -35,6 +35,42 @@ export interface CopingSuccessItem {
   successRate: number;
 }
 
+export interface Milestone {
+  id: string;
+  label: string;
+  achieved: boolean;
+  icon: string;
+  description: string;
+}
+
+export interface RegulationBehavior {
+  pausesBeforeSending: number;
+  groundingUsed: number;
+  safetyModeActivations: number;
+  rewritesUsed: number;
+  constructiveOutcomes: number;
+}
+
+export interface ConsistencyStreak {
+  journalStreak: number;
+  ritualStreak: number;
+  companionSessions: number;
+  weeklyActiveDays: number;
+}
+
+export interface TriggerFrequencyItem {
+  label: string;
+  count: number;
+  category: string;
+}
+
+export interface EncouragingInsight {
+  id: string;
+  text: string;
+  type: 'regulation' | 'consistency' | 'growth' | 'coping' | 'awareness';
+  icon: string;
+}
+
 export interface ProgressSummary {
   metrics: ProgressMetrics;
   weekComparison: WeekComparison;
@@ -43,12 +79,9 @@ export interface ProgressSummary {
   copingSuccess: CopingSuccessItem[];
   encouragingMessage: string;
   milestones: Milestone[];
-}
-
-export interface Milestone {
-  id: string;
-  label: string;
-  achieved: boolean;
-  icon: string;
-  description: string;
+  regulation: RegulationBehavior;
+  consistency: ConsistencyStreak;
+  triggerFrequency: TriggerFrequencyItem[];
+  encouragingInsights: EncouragingInsight[];
+  hasEnoughData: boolean;
 }

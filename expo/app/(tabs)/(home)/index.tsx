@@ -18,9 +18,11 @@ import SmartCopingCard from '@/components/SmartCopingCard';
 import EarlySupportCard from '@/components/EarlySupportCard';
 import AICompanionHomeCard from '@/components/AICompanionHomeCard';
 import HomeInsightsPreview from '@/components/HomeInsightsPreview';
+import EmotionalStormCard from '@/components/EmotionalStormCard';
 import { useEarlyWarning } from '@/hooks/useEarlyWarning';
 import { useRecommendations } from '@/hooks/useRecommendations';
 import { useCrisisPrediction } from '@/hooks/useCrisisPrediction';
+import { useEmotionalStorm } from '@/hooks/useEmotionalStorm';
 import { useQuery } from '@tanstack/react-query';
 import { ritualRepository } from '@/services/repositories';
 import { getTodayEntry, getWeeklyReflection } from '@/services/ritual/dailyCheckInService';
@@ -36,6 +38,7 @@ export default function HomeScreen() {
   const earlyWarning = useEarlyWarning();
   const { recommendations, topRecommendation } = useRecommendations();
   const crisisPrediction = useCrisisPrediction();
+  const emotionalStorm = useEmotionalStorm();
 
   const ritualQuery = useQuery({
     queryKey: ['ritual'],
@@ -289,6 +292,10 @@ export default function HomeScreen() {
 
         <Animated.View style={{ opacity: fadeAnim }}>
           <HomeInsightsPreview />
+        </Animated.View>
+
+        <Animated.View style={{ opacity: fadeAnim }}>
+          <EmotionalStormCard storm={emotionalStorm} />
         </Animated.View>
 
         <Animated.View style={{ opacity: fadeAnim }}>

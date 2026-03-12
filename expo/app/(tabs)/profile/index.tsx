@@ -32,6 +32,7 @@ import {
   Award,
   Calendar,
   LayoutDashboard,
+  FileText,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
@@ -237,6 +238,27 @@ export default function ProfileScreen() {
               <View style={styles.patternsBannerContent}>
                 <Text style={styles.patternsBannerTitle}>Relationship Patterns</Text>
                 <Text style={styles.patternsBannerDesc}>Understand your emotional reactions</Text>
+              </View>
+            </View>
+            <ChevronRight size={18} color={Colors.white} style={{ opacity: 0.7 }} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.reflectionBanner}
+            onPress={() => {
+              handleHaptic();
+              router.push('/profile/reflection-report' as never);
+            }}
+            activeOpacity={0.7}
+            testID="reflection-report-btn"
+          >
+            <View style={styles.patternsBannerLeft}>
+              <View style={[styles.patternsBannerIcon, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                <FileText size={20} color={Colors.white} />
+              </View>
+              <View style={styles.patternsBannerContent}>
+                <Text style={styles.patternsBannerTitle}>Reflection Report</Text>
+                <Text style={styles.patternsBannerDesc}>AI-powered therapy-style summaries</Text>
               </View>
             </View>
             <ChevronRight size={18} color={Colors.white} style={{ opacity: 0.7 }} />
@@ -842,6 +864,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     backgroundColor: '#E84393',
+    padding: 18,
+    borderRadius: 18,
+    marginTop: 10,
+  },
+  reflectionBanner: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    backgroundColor: '#2D8B7A',
     padding: 18,
     borderRadius: 18,
     marginTop: 10,

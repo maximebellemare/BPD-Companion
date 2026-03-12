@@ -1,5 +1,11 @@
 import { JournalEntry } from '@/types';
 import { MemoryProfile, PatternItem, InsightCard } from '@/types/memory';
+import {
+  buildRelationshipPatterns,
+  buildImprovements,
+  calculateCopingSuccessRate,
+  calculateWeeklyCheckInAvg,
+} from '@/services/memory/emotionalMemoryService';
 
 function getTopItems(counts: Record<string, number>, limit: number = 5): PatternItem[] {
   const total = Object.values(counts).reduce((sum, c) => sum + c, 0);
@@ -85,16 +91,23 @@ export function buildMemoryProfile(
     ? recentEntries.reduce((sum, e) => sum + e.checkIn.intensityLevel, 0) / recentEntries.length
     : 0;
 
+  const copingItems = getTopItems(copingCounts);
+
   return {
     topTriggers: getTopItems(triggerCounts),
     topEmotions: getTopItems(emotionCounts),
     topUrges: getTopItems(urgeCounts),
-    copingToolsUsed: getTopItems(copingCounts),
+    copingToolsUsed: copingItems,
+    relationshipPatterns: buildRelationshipPatterns(journalEntries),
+    recentImprovements: buildImprovements(journalEntries),
     recentCheckInCount: journalEntries.length,
     averageIntensity: Math.round(avgIntensity * 10) / 10,
     intensityTrend: calculateIntensityTrend(journalEntries),
     recentThemes: extractThemes(journalEntries),
     lastCheckInDate: journalEntries.length > 0 ? journalEntries[0].timestamp : null,
+    copingSuccessRate: calculateCopingSuccessRate(journalEntries),
+    mostEffectiveCoping: copingItems.length > 0 ? copingItems[0] : null,
+    weeklyCheckInAvg: calculateWeeklyCheckInAvg(journalEntries),
   };
 }
 

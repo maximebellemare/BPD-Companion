@@ -30,6 +30,7 @@ import {
   Users,
   RefreshCw,
   Award,
+  Calendar,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
@@ -172,6 +173,27 @@ export default function ProfileScreen() {
               <View style={styles.patternsBannerContent}>
                 <Text style={styles.patternsBannerTitle}>Recovery Progress</Text>
                 <Text style={styles.patternsBannerDesc}>Track your growth and milestones</Text>
+              </View>
+            </View>
+            <ChevronRight size={18} color={Colors.white} style={{ opacity: 0.7 }} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.therapyBanner}
+            onPress={() => {
+              handleHaptic();
+              router.push('/profile/therapy-plan' as never);
+            }}
+            activeOpacity={0.7}
+            testID="therapy-plan-btn"
+          >
+            <View style={styles.patternsBannerLeft}>
+              <View style={[styles.patternsBannerIcon, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                <Calendar size={20} color={Colors.white} />
+              </View>
+              <View style={styles.patternsBannerContent}>
+                <Text style={styles.patternsBannerTitle}>Therapy Plan</Text>
+                <Text style={styles.patternsBannerDesc}>Your personalized weekly plan</Text>
               </View>
             </View>
             <ChevronRight size={18} color={Colors.white} style={{ opacity: 0.7 }} />
@@ -753,6 +775,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     backgroundColor: '#D4956A',
+    padding: 18,
+    borderRadius: 18,
+    marginTop: 10,
+  },
+  therapyBanner: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    backgroundColor: '#8B5CF6',
     padding: 18,
     borderRadius: 18,
     marginTop: 10,

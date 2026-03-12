@@ -29,6 +29,7 @@ import {
   BarChart3,
   Users,
   RefreshCw,
+  Award,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
@@ -150,6 +151,27 @@ export default function ProfileScreen() {
               <View style={styles.patternsBannerContent}>
                 <Text style={styles.patternsBannerTitle}>Insights</Text>
                 <Text style={styles.patternsBannerDesc}>Charts, trends, and emotional patterns</Text>
+              </View>
+            </View>
+            <ChevronRight size={18} color={Colors.white} style={{ opacity: 0.7 }} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.progressBanner}
+            onPress={() => {
+              handleHaptic();
+              router.push('/profile/progress' as never);
+            }}
+            activeOpacity={0.7}
+            testID="progress-btn"
+          >
+            <View style={styles.patternsBannerLeft}>
+              <View style={[styles.patternsBannerIcon, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                <Award size={20} color={Colors.white} />
+              </View>
+              <View style={styles.patternsBannerContent}>
+                <Text style={styles.patternsBannerTitle}>Recovery Progress</Text>
+                <Text style={styles.patternsBannerDesc}>Track your growth and milestones</Text>
               </View>
             </View>
             <ChevronRight size={18} color={Colors.white} style={{ opacity: 0.7 }} />
@@ -723,6 +745,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     backgroundColor: '#507A66',
+    padding: 18,
+    borderRadius: 18,
+    marginTop: 10,
+  },
+  progressBanner: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    backgroundColor: '#D4956A',
     padding: 18,
     borderRadius: 18,
     marginTop: 10,

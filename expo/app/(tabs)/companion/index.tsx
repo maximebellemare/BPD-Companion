@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Stack } from 'expo-router';
-import { MessageCircle, Sparkles, BookmarkCheck, BarChart3, ChevronRight, Plus } from 'lucide-react-native';
+import { MessageCircle, Sparkles, BookmarkCheck, BarChart3, ChevronRight, Plus, Zap } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useAICompanion, SUGGESTED_PROMPTS } from '@/providers/AICompanionProvider';
@@ -166,6 +166,21 @@ export default function CompanionScreen() {
             <View style={styles.exploreCardContent}>
               <Text style={styles.exploreCardTitle}>Your Insights</Text>
               <Text style={styles.exploreCardDesc}>Patterns, triggers & emotional trends</Text>
+            </View>
+            <ChevronRight size={18} color={Colors.textMuted} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.exploreCard}
+            onPress={() => router.push('/companion/simulator' as never)}
+            activeOpacity={0.7}
+            testID="simulator-btn"
+          >
+            <View style={[styles.exploreCardIcon, { backgroundColor: Colors.accentLight }]}>
+              <Zap size={20} color={Colors.accent} />
+            </View>
+            <View style={styles.exploreCardContent}>
+              <Text style={styles.exploreCardTitle}>Emotional Simulator</Text>
+              <Text style={styles.exploreCardDesc}>Explore responses before you react</Text>
             </View>
             <ChevronRight size={18} color={Colors.textMuted} />
           </TouchableOpacity>

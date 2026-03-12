@@ -41,6 +41,8 @@ import WeeklyReflectionCard from '@/components/WeeklyReflectionCard';
 import { generateWeeklyReflection } from '@/services/reflection/weeklyReflectionService';
 import EmotionalLoopsCard from '@/components/EmotionalLoopsCard';
 import { useEmotionalLoops } from '@/hooks/useEmotionalLoops';
+import CrisisModeCard from '@/components/CrisisModeCard';
+import { useCrisisDetection } from '@/hooks/useCrisisDetection';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -53,6 +55,7 @@ export default function HomeScreen() {
   const { dailyCoaching } = useCoaching();
   const relationshipSpiral = useRelationshipSpiral();
   const emotionalLoops = useEmotionalLoops();
+  const crisisDetection = useCrisisDetection();
 
   const weeklyReflection = useMemo(
     () => generateWeeklyReflection(journalEntries, messageDrafts),
@@ -311,6 +314,10 @@ export default function HomeScreen() {
             analytics={ritualAnalytics}
             onPress={() => router.push('/daily-ritual')}
           />
+        </Animated.View>
+
+        <Animated.View style={{ opacity: fadeAnim }}>
+          <CrisisModeCard detection={crisisDetection} />
         </Animated.View>
 
         {dailyCoaching && (

@@ -99,6 +99,13 @@ function RootLayoutNav() {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="crisis-mode"
+        options={{
+          presentation: "fullScreenModal",
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }

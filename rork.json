@@ -1,0 +1,9 @@
+{
+  "apps": [
+    {
+      "name": "Steady",
+      "path": "expo",
+      "framework": "react-native"
+    }
+  ]
+}

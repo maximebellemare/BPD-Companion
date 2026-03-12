@@ -10,6 +10,10 @@ import { LocalCheckInRepository } from './checkInRepository';
 import { LocalMemoryRepository } from './memoryRepository';
 import { LocalAnalyticsRepository } from './analyticsRepository';
 import { LocalRitualRepository } from './ritualRepository';
+import { LocalSubscriptionRepository } from './subscriptionRepository';
+import { LocalTherapyPlanRepository } from './therapyPlanRepository';
+import { LocalDBTRepository } from './dbtRepository';
+import { LocalSettingsRepository } from './settingsRepository';
 import {
   IJournalRepository,
   IMessageRepository,
@@ -21,6 +25,10 @@ import {
   ICheckInRepository,
   IMemoryRepository,
   IAnalyticsRepository,
+  ISubscriptionRepository,
+  ITherapyPlanRepository,
+  IDBTRepository,
+  ISettingsRepository,
 } from './types';
 import { IRitualRepository } from './ritualRepository';
 
@@ -35,6 +43,10 @@ export const checkInRepository: ICheckInRepository = new LocalCheckInRepository(
 export const memoryRepository: IMemoryRepository = new LocalMemoryRepository(storageService);
 export const analyticsRepository: IAnalyticsRepository = new LocalAnalyticsRepository();
 export const ritualRepository: IRitualRepository = new LocalRitualRepository(storageService);
+export const subscriptionRepository: ISubscriptionRepository = new LocalSubscriptionRepository(storageService);
+export const therapyPlanRepository: ITherapyPlanRepository = new LocalTherapyPlanRepository(storageService);
+export const dbtRepository: IDBTRepository = new LocalDBTRepository(storageService);
+export const settingsRepository: ISettingsRepository = new LocalSettingsRepository(storageService);
 
 export type {
   IJournalRepository,
@@ -47,5 +59,9 @@ export type {
   ICheckInRepository,
   IMemoryRepository,
   IAnalyticsRepository,
+  ISubscriptionRepository,
+  ITherapyPlanRepository,
+  IDBTRepository,
+  ISettingsRepository,
 } from './types';
 export type { IRitualRepository } from './ritualRepository';

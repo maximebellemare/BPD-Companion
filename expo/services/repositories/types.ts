@@ -5,6 +5,9 @@ import { AnalyticsEvent, AnalyticsUserProperties } from '@/types/analytics';
 import { UserProfile } from '@/types/profile';
 import { LearnState } from '@/types/learn';
 import { MemoryProfile } from '@/types/memory';
+import { SubscriptionState } from '@/types/subscription';
+import { TherapyPlanState } from '@/types/therapy';
+import { DBTProgress } from '@/types/dbt';
 import {
   CommunityPost,
   PostReply,
@@ -102,4 +105,27 @@ export interface IAnalyticsRepository {
   setUserProperties(properties: AnalyticsUserProperties): Promise<void>;
   getEvents(): Promise<AnalyticsEvent[]>;
   flush(): Promise<void>;
+}
+
+export interface ISubscriptionRepository {
+  loadState(): Promise<SubscriptionState>;
+  saveState(state: SubscriptionState): Promise<void>;
+  getDailyAIUsage(dateKey: string): Promise<number>;
+  saveDailyAIUsage(dateKey: string, count: number): Promise<void>;
+}
+
+export interface ITherapyPlanRepository {
+  loadState(): Promise<TherapyPlanState>;
+  saveState(state: TherapyPlanState): Promise<void>;
+}
+
+export interface IDBTRepository {
+  getProgress(): Promise<DBTProgress>;
+  saveProgress(progress: DBTProgress): Promise<void>;
+}
+
+export interface ISettingsRepository {
+  get(key: string): Promise<string | null>;
+  set(key: string, value: string): Promise<void>;
+  remove(key: string): Promise<void>;
 }

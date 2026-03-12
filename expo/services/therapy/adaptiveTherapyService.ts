@@ -6,9 +6,7 @@ import {
   TherapyPlanState,
   FOCUS_AREA_META,
 } from '@/types/therapy';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const STORAGE_KEY = 'adaptive_therapy_plan';
+import { therapyPlanRepository } from '@/services/repositories';
 
 function isWithinDays(timestamp: number, days: number): boolean {
   return Date.now() - timestamp < days * 24 * 60 * 60 * 1000;
@@ -528,10 +526,7 @@ function generatePlanItems(focus: TherapyFocusArea, analysis: ReturnType<typeof 
 
 export async function loadTherapyPlanState(): Promise<TherapyPlanState> {
   try {
-    const stored = await AsyncStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      return JSON.parse(stored);
-    }
+    return await therapyPlanRepository.loadState();
   } catch (error) {
     console.log('[AdaptiveTherapy] Error loading state:', error);
   }
@@ -540,7 +535,7 @@ export async function loadTherapyPlanState(): Promise<TherapyPlanState> {
 
 export async function saveTherapyPlanState(state: TherapyPlanState): Promise<void> {
   try {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    await therapyPlanRepository.saveState(state);
     console.log('[AdaptiveTherapy] State saved');
   } catch (error) {
     console.log('[AdaptiveTherapy] Error saving state:', error);

@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   SubscriptionState,
   SubscriptionPlan,
@@ -6,9 +5,7 @@ import {
   PremiumFeature,
   FREE_DAILY_AI_LIMIT,
 } from '@/types/subscription';
-
-const STORAGE_KEY = 'bpd_subscription_state';
-const AI_USAGE_KEY = 'bpd_ai_daily_usage';
+import { subscriptionRepository } from '@/services/repositories';
 
 const DEFAULT_STATE: SubscriptionState = {
   tier: 'free',
@@ -19,26 +16,30 @@ const DEFAULT_STATE: SubscriptionState = {
   isTrialActive: false,
 };
 
+function getTodayKey(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+}
+
 export async function loadSubscriptionState(): Promise<SubscriptionState> {
   try {
-    const stored = await AsyncStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const state = JSON.parse(stored) as SubscriptionState;
-      if (state.expiresAt && state.expiresAt < Date.now()) {
-        console.log('[SubscriptionService] Subscription expired, reverting to free');
-        const expired: SubscriptionState = { ...DEFAULT_STATE };
-        await saveSubscriptionState(expired);
-        return expired;
-      }
-      if (state.isTrialActive && state.trialEndsAt && state.trialEndsAt < Date.now()) {
-        console.log('[SubscriptionService] Trial expired');
-        const trialExpired: SubscriptionState = { ...DEFAULT_STATE };
-        await saveSubscriptionState(trialExpired);
-        return trialExpired;
-      }
+    const state = await subscriptionRepository.loadState();
+    if (state.tier === 'free' && !state.plan) {
       return state;
     }
-    return DEFAULT_STATE;
+    if (state.expiresAt && state.expiresAt < Date.now()) {
+      console.log('[SubscriptionService] Subscription expired, reverting to free');
+      const expired: SubscriptionState = { ...DEFAULT_STATE };
+      await saveSubscriptionState(expired);
+      return expired;
+    }
+    if (state.isTrialActive && state.trialEndsAt && state.trialEndsAt < Date.now()) {
+      console.log('[SubscriptionService] Trial expired');
+      const trialExpired: SubscriptionState = { ...DEFAULT_STATE };
+      await saveSubscriptionState(trialExpired);
+      return trialExpired;
+    }
+    return state;
   } catch (error) {
     console.log('[SubscriptionService] Error loading state:', error);
     return DEFAULT_STATE;
@@ -47,7 +48,7 @@ export async function loadSubscriptionState(): Promise<SubscriptionState> {
 
 export async function saveSubscriptionState(state: SubscriptionState): Promise<void> {
   try {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    await subscriptionRepository.saveState(state);
     console.log('[SubscriptionService] State saved:', state.tier);
   } catch (error) {
     console.log('[SubscriptionService] Error saving state:', error);
@@ -109,21 +110,9 @@ export function isPremiumFeature(feature: PremiumFeature, tier: SubscriptionTier
   return false;
 }
 
-function getTodayKey(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
-}
-
 export async function getDailyAIUsage(): Promise<number> {
   try {
-    const stored = await AsyncStorage.getItem(AI_USAGE_KEY);
-    if (stored) {
-      const data = JSON.parse(stored) as { date: string; count: number };
-      if (data.date === getTodayKey()) {
-        return data.count;
-      }
-    }
-    return 0;
+    return await subscriptionRepository.getDailyAIUsage(getTodayKey());
   } catch {
     return 0;
   }
@@ -133,10 +122,7 @@ export async function incrementDailyAIUsage(): Promise<number> {
   const current = await getDailyAIUsage();
   const newCount = current + 1;
   try {
-    await AsyncStorage.setItem(AI_USAGE_KEY, JSON.stringify({
-      date: getTodayKey(),
-      count: newCount,
-    }));
+    await subscriptionRepository.saveDailyAIUsage(getTodayKey(), newCount);
   } catch {
     console.log('[SubscriptionService] Error incrementing AI usage');
   }

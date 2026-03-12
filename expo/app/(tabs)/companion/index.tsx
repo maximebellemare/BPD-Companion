@@ -11,7 +11,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Stack } from 'expo-router';
 import { MessageCircle, Sparkles, BookmarkCheck, BarChart3, ChevronRight, Plus, Zap, Brain, TrendingDown, TrendingUp, Minus, Eye } from 'lucide-react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { settingsRepository } from '@/services/repositories';
 import AICompanionOnboarding from '@/components/AICompanionOnboarding';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
@@ -38,7 +38,7 @@ export default function CompanionScreen() {
   const slideAnim = useRef(new Animated.Value(20)).current;
 
   useEffect(() => {
-    AsyncStorage.getItem(ONBOARDING_KEY).then((val) => {
+    settingsRepository.get(ONBOARDING_KEY).then((val) => {
       if (val !== 'true') {
         setShowOnboarding(true);
       }
@@ -50,7 +50,7 @@ export default function CompanionScreen() {
 
   const handleDismissOnboarding = useCallback(() => {
     setShowOnboarding(false);
-    AsyncStorage.setItem(ONBOARDING_KEY, 'true').catch(() => {});
+    settingsRepository.set(ONBOARDING_KEY, 'true').catch(() => {});
   }, []);
 
   useEffect(() => {

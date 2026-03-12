@@ -1,13 +1,10 @@
 import { DBT_SKILLS, DBT_MODULES } from '@/data/dbtSkills';
 import { DBTSkill, DBTModuleInfo, DBTModule, DBTProgress, DBTRecommendation, DEFAULT_DBT_PROGRESS } from '@/types/dbt';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const STORAGE_KEY = 'dbt_progress';
+import { dbtRepository } from '@/services/repositories';
 
 export async function getDBTProgress(): Promise<DBTProgress> {
   try {
-    const stored = await AsyncStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : DEFAULT_DBT_PROGRESS;
+    return await dbtRepository.getProgress();
   } catch (error) {
     console.log('Error loading DBT progress:', error);
     return DEFAULT_DBT_PROGRESS;
@@ -16,7 +13,7 @@ export async function getDBTProgress(): Promise<DBTProgress> {
 
 export async function saveDBTProgress(progress: DBTProgress): Promise<void> {
   try {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+    await dbtRepository.saveProgress(progress);
   } catch (error) {
     console.log('Error saving DBT progress:', error);
   }

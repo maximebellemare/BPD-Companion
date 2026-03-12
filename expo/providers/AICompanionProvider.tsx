@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import createContextHook from '@nkzw/create-context-hook';
 import { AIConversation, AIMessage, SuggestedPrompt } from '@/types/ai';
@@ -7,8 +6,7 @@ import { MemoryProfile, InsightCard } from '@/types/memory';
 import { useApp } from '@/providers/AppProvider';
 import { generateMockResponse, generateConversationTitle } from '@/services/ai/mockAIService';
 import { buildMemoryProfile, buildInsightCards, buildContextSummary } from '@/services/memory/memoryProfileService';
-
-const CONVERSATIONS_KEY = 'bpd_ai_conversations';
+import { conversationRepository } from '@/services/repositories';
 
 export const SUGGESTED_PROMPTS: SuggestedPrompt[] = [
   { id: 'sp1', label: 'I feel abandoned right now', icon: '💔', prompt: 'I feel abandoned right now' },
@@ -29,10 +27,7 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
 
   const conversationsQuery = useQuery({
     queryKey: ['ai-conversations'],
-    queryFn: async () => {
-      const stored = await AsyncStorage.getItem(CONVERSATIONS_KEY);
-      return stored ? JSON.parse(stored) as AIConversation[] : [];
-    },
+    queryFn: () => conversationRepository.getAll(),
   });
 
   useEffect(() => {
@@ -42,10 +37,7 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
   }, [conversationsQuery.data]);
 
   const saveConversationsMutation = useMutation({
-    mutationFn: async (convos: AIConversation[]) => {
-      await AsyncStorage.setItem(CONVERSATIONS_KEY, JSON.stringify(convos));
-      return convos;
-    },
+    mutationFn: (convos: AIConversation[]) => conversationRepository.save(convos),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['ai-conversations'] });
     },

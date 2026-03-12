@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import createContextHook from '@nkzw/create-context-hook';
-import { UserProfile, PatternSummary, DEFAULT_PROFILE } from '@/types/profile';
-import { loadProfile, saveProfile, computePatternSummary } from '@/services/profile/profileService';
+import { UserProfile, PatternSummary } from '@/types/profile';
+import { DEFAULT_PROFILE } from '@/types/profile';
+import { profileRepository } from '@/services/repositories';
+import { computePatternSummary } from '@/services/profile/profileService';
 import { useApp } from '@/providers/AppProvider';
 
 export const [ProfileProvider, useProfile] = createContextHook(() => {
@@ -12,7 +14,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
   const profileQuery = useQuery({
     queryKey: ['profile'],
-    queryFn: loadProfile,
+    queryFn: () => profileRepository.load(),
   });
 
   useEffect(() => {
@@ -22,7 +24,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   }, [profileQuery.data]);
 
   const saveMutation = useMutation({
-    mutationFn: saveProfile,
+    mutationFn: (p: UserProfile) => profileRepository.save(p),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['profile'] });
     },

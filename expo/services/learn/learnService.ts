@@ -1,34 +1,13 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LESSONS, LEARN_CATEGORIES } from '@/data/lessons';
 import { Lesson, LessonCategory, LessonProgress, LearnState } from '@/types/learn';
-
-const LEARN_STATE_KEY = 'bpd_learn_state';
-
-const DEFAULT_STATE: LearnState = {
-  progress: {},
-  recentlyViewed: [],
-  bookmarkedIds: [],
-};
+import { learnRepository } from '@/services/repositories';
 
 export async function getLearnState(): Promise<LearnState> {
-  try {
-    const stored = await AsyncStorage.getItem(LEARN_STATE_KEY);
-    if (stored) {
-      return JSON.parse(stored);
-    }
-    return DEFAULT_STATE;
-  } catch (error) {
-    console.log('Error reading learn state:', error);
-    return DEFAULT_STATE;
-  }
+  return learnRepository.getState();
 }
 
 export async function saveLearnState(state: LearnState): Promise<void> {
-  try {
-    await AsyncStorage.setItem(LEARN_STATE_KEY, JSON.stringify(state));
-  } catch (error) {
-    console.log('Error saving learn state:', error);
-  }
+  return learnRepository.saveState(state);
 }
 
 export function getCategories(): LessonCategory[] {
@@ -88,7 +67,7 @@ export async function markLessonViewed(lessonId: string, state: LearnState): Pro
     },
   };
   const newState = { ...state, recentlyViewed, progress };
-  await saveLearnState(newState);
+  await learnRepository.saveState(newState);
   return newState;
 }
 
@@ -103,7 +82,7 @@ export async function markLessonCompleted(lessonId: string, state: LearnState): 
     },
   };
   const newState = { ...state, progress };
-  await saveLearnState(newState);
+  await learnRepository.saveState(newState);
   return newState;
 }
 
@@ -121,6 +100,6 @@ export async function toggleBookmark(lessonId: string, state: LearnState): Promi
     },
   };
   const newState = { ...state, bookmarkedIds, progress };
-  await saveLearnState(newState);
+  await learnRepository.saveState(newState);
   return newState;
 }

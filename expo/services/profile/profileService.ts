@@ -1,41 +1,21 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { UserProfile, PatternSummary, DEFAULT_PROFILE } from '@/types/profile';
+import { UserProfile, PatternSummary } from '@/types/profile';
 import { JournalEntry } from '@/types';
-
-const PROFILE_KEY = 'bpd_companion_profile';
+import { profileRepository } from '@/services/repositories';
 
 export async function loadProfile(): Promise<UserProfile> {
-  try {
-    const stored = await AsyncStorage.getItem(PROFILE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored) as Partial<UserProfile>;
-      return { ...DEFAULT_PROFILE, ...parsed };
-    }
-    return { ...DEFAULT_PROFILE, createdAt: Date.now() };
-  } catch (error) {
-    console.log('Error loading profile:', error);
-    return { ...DEFAULT_PROFILE, createdAt: Date.now() };
-  }
+  return profileRepository.load();
 }
 
 export async function saveProfile(profile: UserProfile): Promise<UserProfile> {
-  try {
-    await AsyncStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
-    console.log('Profile saved successfully');
-    return profile;
-  } catch (error) {
-    console.log('Error saving profile:', error);
-    throw error;
-  }
+  return profileRepository.save(profile);
 }
 
 export function computePatternSummary(journalEntries: JournalEntry[]): PatternSummary {
   const now = Date.now();
   const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
-  const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+  const _sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
 
   const recentEntries = journalEntries.filter(e => e.timestamp >= thirtyDaysAgo);
-  const _weekEntries = journalEntries.filter(e => e.timestamp >= sevenDaysAgo);
 
   const triggerCounts: Record<string, number> = {};
   const urgeCounts: Record<string, number> = {};

@@ -1,11 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import createContextHook from '@nkzw/create-context-hook';
 import { JournalEntry, MessageDraft, DistressLevel } from '@/types';
-
-const JOURNAL_KEY = 'steady_journal';
-const MESSAGES_KEY = 'steady_messages';
+import { journalRepository, messageRepository } from '@/services/repositories';
 
 export const [AppProvider, useApp] = createContextHook(() => {
   const queryClient = useQueryClient();
@@ -16,18 +13,12 @@ export const [AppProvider, useApp] = createContextHook(() => {
 
   const journalQuery = useQuery({
     queryKey: ['journal'],
-    queryFn: async () => {
-      const stored = await AsyncStorage.getItem(JOURNAL_KEY);
-      return stored ? JSON.parse(stored) as JournalEntry[] : [];
-    },
+    queryFn: () => journalRepository.getAll(),
   });
 
   const messagesQuery = useQuery({
     queryKey: ['messages'],
-    queryFn: async () => {
-      const stored = await AsyncStorage.getItem(MESSAGES_KEY);
-      return stored ? JSON.parse(stored) as MessageDraft[] : [];
-    },
+    queryFn: () => messageRepository.getAll(),
   });
 
   useEffect(() => {
@@ -43,20 +34,14 @@ export const [AppProvider, useApp] = createContextHook(() => {
   }, [messagesQuery.data]);
 
   const saveJournalMutation = useMutation({
-    mutationFn: async (entries: JournalEntry[]) => {
-      await AsyncStorage.setItem(JOURNAL_KEY, JSON.stringify(entries));
-      return entries;
-    },
+    mutationFn: (entries: JournalEntry[]) => journalRepository.save(entries),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['journal'] });
     },
   });
 
   const saveMessagesMutation = useMutation({
-    mutationFn: async (drafts: MessageDraft[]) => {
-      await AsyncStorage.setItem(MESSAGES_KEY, JSON.stringify(drafts));
-      return drafts;
-    },
+    mutationFn: (drafts: MessageDraft[]) => messageRepository.save(drafts),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['messages'] });
     },

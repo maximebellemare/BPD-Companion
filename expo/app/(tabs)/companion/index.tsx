@@ -10,12 +10,13 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Stack } from 'expo-router';
-import { MessageCircle, Sparkles, BookmarkCheck, BarChart3, ChevronRight, Plus, Zap, Brain, TrendingDown, TrendingUp, Minus, Eye } from 'lucide-react-native';
+import { MessageCircle, Sparkles, BookmarkCheck, BarChart3, ChevronRight, Plus, Zap, Brain, TrendingDown, TrendingUp, Minus, Eye, Compass } from 'lucide-react-native';
 import { settingsRepository } from '@/services/repositories';
 import AICompanionOnboarding from '@/components/AICompanionOnboarding';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useAICompanion, SUGGESTED_PROMPTS } from '@/providers/AICompanionProvider';
+import { useCoaching } from '@/hooks/useCoaching';
 
 const ONBOARDING_KEY = 'ai_companion_onboarded';
 
@@ -30,6 +31,8 @@ export default function CompanionScreen() {
     setActiveConversationId,
     sendMessage,
   } = useAICompanion();
+
+  const { dailyCoaching } = useCoaching();
 
   const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
   const [onboardingChecked, setOnboardingChecked] = useState<boolean>(false);
@@ -293,6 +296,28 @@ export default function CompanionScreen() {
                   interp.sentiment === 'observational' && styles.interpretationAccentObservational,
                 ]} />
                 <Text style={styles.interpretationText}>{interp.text}</Text>
+              </View>
+            ))}
+          </Animated.View>
+        )}
+
+        {dailyCoaching && dailyCoaching.insights.length > 0 && (
+          <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionTitle}>Coaching Insights</Text>
+              <Compass size={16} color={Colors.textMuted} />
+            </View>
+            {dailyCoaching.insights.slice(0, 2).map((insight) => (
+              <View key={insight.id} style={styles.interpretationCard}>
+                <View style={[
+                  styles.interpretationAccent,
+                  insight.confidence === 'high' && styles.interpretationAccentEncouraging,
+                  insight.confidence === 'medium' && styles.interpretationAccentObservational,
+                ]} />
+                <View>
+                  <Text style={[styles.insightMiniLabel, { marginBottom: 4 }]}>{insight.pattern}</Text>
+                  <Text style={styles.interpretationText}>{insight.suggestion}</Text>
+                </View>
               </View>
             ))}
           </Animated.View>

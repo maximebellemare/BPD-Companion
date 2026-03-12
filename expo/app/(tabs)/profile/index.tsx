@@ -38,12 +38,14 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useProfile } from '@/providers/ProfileProvider';
 import { useSubscription } from '@/providers/SubscriptionProvider';
-import { Crown } from 'lucide-react-native';
+import { Crown, Compass } from 'lucide-react-native';
+import { useCoaching } from '@/hooks/useCoaching';
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { profile, patternSummary, updateProfile, updateNotifications, updatePrivacy } = useProfile();
   const { isPremium, daysRemaining, state: subState } = useSubscription();
+  const { wins } = useCoaching();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
@@ -296,6 +298,20 @@ export default function ProfileScreen() {
             <ChevronRight size={18} color={Colors.white} style={{ opacity: 0.7 }} />
           </TouchableOpacity>
         </Animated.View>
+
+        {wins.length > 0 && (
+          <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
+            <Text style={styles.sectionTitle}>Coaching Wins</Text>
+            {wins.slice(0, 3).map(win => (
+              <View key={win.id} style={styles.coachingWinCard}>
+                <View style={styles.coachingWinIcon}>
+                  <Compass size={16} color={Colors.success} />
+                </View>
+                <Text style={styles.coachingWinText}>{win.description}</Text>
+              </View>
+            ))}
+          </Animated.View>
+        )}
 
         <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
           <Text style={styles.sectionTitle}>Support Profile</Text>
@@ -915,5 +931,29 @@ const styles = StyleSheet.create({
     padding: 18,
     borderRadius: 18,
     marginBottom: 24,
+  },
+  coachingWinCard: {
+    flexDirection: 'row' as const,
+    alignItems: 'flex-start' as const,
+    backgroundColor: Colors.successLight,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 8,
+    gap: 12,
+  },
+  coachingWinIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: Colors.white,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  coachingWinText: {
+    flex: 1,
+    fontSize: 13,
+    color: Colors.text,
+    lineHeight: 19,
+    marginTop: 6,
   },
 });

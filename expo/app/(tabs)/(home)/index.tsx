@@ -33,6 +33,8 @@ import Colors from '@/constants/colors';
 import { VALIDATION_MESSAGES } from '@/constants/data';
 import { useApp } from '@/providers/AppProvider';
 import UpgradePromptCard from '@/components/UpgradePromptCard';
+import BehavioralCoachingCard from '@/components/BehavioralCoachingCard';
+import { useCoaching } from '@/hooks/useCoaching';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -42,6 +44,7 @@ export default function HomeScreen() {
   const { recommendations, topRecommendation } = useRecommendations();
   const crisisPrediction = useCrisisPrediction();
   const emotionalStorm = useEmotionalStorm();
+  const { dailyCoaching } = useCoaching();
 
   const ritualQuery = useQuery({
     queryKey: ['ritual'],
@@ -296,6 +299,12 @@ export default function HomeScreen() {
             onPress={() => router.push('/daily-ritual')}
           />
         </Animated.View>
+
+        {dailyCoaching && (
+          <Animated.View style={{ opacity: fadeAnim }}>
+            <BehavioralCoachingCard coaching={dailyCoaching} />
+          </Animated.View>
+        )}
 
         <Animated.View style={{ opacity: fadeAnim }}>
           <AICompanionHomeCard />

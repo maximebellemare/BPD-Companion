@@ -34,6 +34,8 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useApp } from '@/providers/AppProvider';
 import { useMessageRewrite } from '@/hooks/useMessageRewrite';
+import CoachingNudgeBanner from '@/components/CoachingNudgeBanner';
+import { useMessageCoaching } from '@/hooks/useCoaching';
 import {
   RELATIONSHIP_OPTIONS,
   EMOTIONAL_STATE_OPTIONS,
@@ -210,6 +212,9 @@ export default function MessagesScreen() {
     goBack,
   } = useMessageRewrite();
 
+  const messageCoachingNudge = useMessageCoaching();
+  const [coachingDismissed, setCoachingDismissed] = useState<boolean>(false);
+
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const slideAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -346,6 +351,14 @@ export default function MessagesScreen() {
           <Text style={styles.charCount}>{inputText.length} characters</Text>
         )}
       </View>
+
+      {messageCoachingNudge && !coachingDismissed && inputText.trim().length === 0 && (
+        <CoachingNudgeBanner
+          nudge={messageCoachingNudge}
+          onDismiss={() => setCoachingDismissed(true)}
+          compact
+        />
+      )}
 
       {inputText.trim().length > 0 && (
         <TouchableOpacity

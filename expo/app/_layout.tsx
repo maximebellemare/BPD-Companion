@@ -49,6 +49,13 @@ function RootLayoutNav() {
           presentation: "modal",
         }}
       />
+      <Stack.Screen
+        name="relationship-insights"
+        options={{
+          headerShown: false,
+          presentation: "modal",
+        }}
+      />
     </Stack>
   );
 }

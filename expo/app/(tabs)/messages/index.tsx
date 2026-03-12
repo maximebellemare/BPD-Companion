@@ -10,6 +10,7 @@ import {
   Platform,
   KeyboardAvoidingView,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowLeft,
@@ -26,6 +27,7 @@ import {
   Copy,
   Check,
   Shield,
+  Users,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
@@ -182,6 +184,7 @@ function formatPauseTime(seconds: number): string {
 }
 
 export default function MessagesScreen() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const { messageDrafts } = useApp();
   const {
@@ -399,6 +402,27 @@ export default function MessagesScreen() {
           )}
         </View>
       )}
+
+      <TouchableOpacity
+        style={styles.relInsightsBanner}
+        onPress={() => {
+          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          router.push('/relationship-insights');
+        }}
+        activeOpacity={0.7}
+        testID="relationship-insights-btn"
+      >
+        <View style={styles.relInsightsBannerLeft}>
+          <View style={styles.relInsightsBannerIcon}>
+            <Users size={18} color={Colors.white} />
+          </View>
+          <View style={styles.relInsightsBannerText}>
+            <Text style={styles.relInsightsBannerTitle}>Relationship Patterns</Text>
+            <Text style={styles.relInsightsBannerDesc}>Understand how you connect</Text>
+          </View>
+        </View>
+        <ChevronRight size={16} color={Colors.white} style={{ opacity: 0.7 }} />
+      </TouchableOpacity>
 
       {messageDrafts.length > 0 && (
         <View style={styles.historySection}>
@@ -1681,5 +1705,40 @@ const styles = StyleSheet.create({
   historyOutcomeText: {
     fontSize: 11,
     fontWeight: '600' as const,
+  },
+  relInsightsBanner: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    backgroundColor: '#5B8FB9',
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 20,
+  },
+  relInsightsBannerLeft: {
+    flex: 1,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+  },
+  relInsightsBannerIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    marginRight: 12,
+  },
+  relInsightsBannerText: {
+    flex: 1,
+  },
+  relInsightsBannerTitle: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+    marginBottom: 2,
+  },
+  relInsightsBannerDesc: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.8)',
   },
 });

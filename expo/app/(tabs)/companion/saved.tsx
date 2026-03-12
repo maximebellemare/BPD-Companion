@@ -81,6 +81,15 @@ export default function SavedConversationsScreen() {
           {item.preview ? (
             <Text style={styles.cardPreview} numberOfLines={2}>{item.preview}</Text>
           ) : null}
+          {item.tags && item.tags.length > 0 && (
+            <View style={styles.tagRow}>
+              {item.tags.slice(0, 4).map((tag) => (
+                <View key={tag} style={styles.tagChip}>
+                  <Text style={styles.tagText}>{tag}</Text>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
         <View style={styles.cardActions}>
           <TouchableOpacity
@@ -186,6 +195,23 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textSecondary,
     lineHeight: 19,
+  },
+  tagRow: {
+    flexDirection: 'row' as const,
+    flexWrap: 'wrap' as const,
+    gap: 5,
+    marginTop: 8,
+  },
+  tagChip: {
+    backgroundColor: Colors.primaryLight,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    borderRadius: 7,
+  },
+  tagText: {
+    fontSize: 11,
+    fontWeight: '500' as const,
+    color: Colors.primaryDark,
   },
   cardActions: {
     gap: 12,

@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import createContextHook from '@nkzw/create-context-hook';
-import { AIConversation, AIMessage, SuggestedPrompt } from '@/types/ai';
+import { AIConversation, AIMessage, SuggestedPrompt, SupportiveInterpretation } from '@/types/ai';
 import { MemoryProfile, InsightCard } from '@/types/memory';
 import { useApp } from '@/providers/AppProvider';
 import { generateMockResponse, generateConversationTitle } from '@/services/ai/mockAIService';
 import { buildMemoryProfile, buildInsightCards, buildContextSummary } from '@/services/memory/memoryProfileService';
+import { buildConversationTags } from '@/services/ai/aiPromptBuilder';
+import { generateSupportiveInterpretations } from '@/services/insights/aiInsightsService';
 import { conversationRepository } from '@/services/repositories';
 
 export const SUGGESTED_PROMPTS: SuggestedPrompt[] = [
@@ -81,6 +83,7 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
       updatedAt: Date.now(),
       saved: false,
       preview: '',
+      tags: [],
     };
     const updated = [newConvo, ...conversations];
     setConversations(updated);
@@ -111,12 +114,16 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
     const updatedConvos = conversations.map(c => {
       if (c.id === activeConversationId) {
         const isFirst = c.messages.length === 0;
+        const newTags = buildConversationTags(content);
+        const existingTags = c.tags ?? [];
+        const mergedTags = [...new Set([...existingTags, ...newTags])].slice(0, 6);
         return {
           ...c,
           messages: [...c.messages, userMessage],
           title: isFirst ? generateConversationTitle(content) : c.title,
           preview: content.substring(0, 80),
           updatedAt: Date.now(),
+          tags: mergedTags,
         };
       }
       return c;
@@ -172,6 +179,10 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
     saveConversationsMutation.mutate(updated);
   }, [conversations, activeConversationId, saveConversationsMutation]);
 
+  const supportiveInterpretations = useMemo<SupportiveInterpretation[]>(() => {
+    return generateSupportiveInterpretations(memoryProfile);
+  }, [memoryProfile]);
+
   return useMemo(() => ({
     conversations,
     activeConversation,
@@ -181,6 +192,7 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
     isGenerating,
     memoryProfile,
     insightCards,
+    supportiveInterpretations,
     isLoading: conversationsQuery.isLoading,
     setActiveConversationId,
     startNewConversation,
@@ -197,6 +209,7 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
     isGenerating,
     memoryProfile,
     insightCards,
+    supportiveInterpretations,
     conversationsQuery.isLoading,
     setActiveConversationId,
     startNewConversation,

@@ -13,6 +13,24 @@ export interface AIConversation {
   updatedAt: number;
   saved: boolean;
   preview: string;
+  tags: string[];
+}
+
+export interface AIConversationSummary {
+  id: string;
+  title: string;
+  preview: string;
+  updatedAt: number;
+  messageCount: number;
+  tags: string[];
+  saved: boolean;
+}
+
+export interface SupportiveInterpretation {
+  id: string;
+  text: string;
+  category: 'trigger' | 'coping' | 'emotion' | 'relationship' | 'pattern';
+  sentiment: 'gentle' | 'encouraging' | 'observational';
 }
 
 export interface AIServiceResponse {

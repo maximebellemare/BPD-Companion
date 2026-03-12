@@ -9,12 +9,13 @@ import {
   Platform,
 } from 'react-native';
 import { Stack } from 'expo-router';
-import { TrendingUp, TrendingDown, Minus, Zap, Heart, AlertTriangle, Shield, Layers, Lightbulb, ChevronRight, Wind, Anchor, BookOpen, RefreshCw, Search, MessageCircle, Timer } from 'lucide-react-native';
+import { TrendingUp, TrendingDown, Minus, Zap, Heart, AlertTriangle, Shield, Layers, Lightbulb, ChevronRight, Wind, Anchor, BookOpen, RefreshCw, Search, MessageCircle, Timer, Eye } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useAICompanion } from '@/providers/AICompanionProvider';
 import { InsightCard } from '@/types/memory';
+import { SupportiveInterpretation } from '@/types/ai';
 import { useRecommendations } from '@/hooks/useRecommendations';
 import { CopingRecommendation } from '@/types/recommendation';
 
@@ -116,8 +117,45 @@ function RecRow({ rec }: { rec: CopingRecommendation }) {
   );
 }
 
+function InterpretationRow({ item, index }: { item: SupportiveInterpretation; index: number }) {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 400,
+      delay: index * 100,
+      useNativeDriver: true,
+    }).start();
+  }, [fadeAnim, index]);
+
+  const accentColor = item.sentiment === 'encouraging'
+    ? Colors.success
+    : item.sentiment === 'observational'
+      ? Colors.accent
+      : Colors.primary;
+
+  const bgColor = item.sentiment === 'encouraging'
+    ? Colors.successLight
+    : item.sentiment === 'observational'
+      ? Colors.accentLight
+      : Colors.primaryLight;
+
+  return (
+    <Animated.View style={[interpStyles.card, { opacity: fadeAnim }]}>
+      <View style={[interpStyles.accent, { backgroundColor: accentColor }]} />
+      <View style={[interpStyles.categoryBadge, { backgroundColor: bgColor }]}>
+        <Text style={[interpStyles.categoryText, { color: accentColor }]}>
+          {item.category}
+        </Text>
+      </View>
+      <Text style={interpStyles.text}>{item.text}</Text>
+    </Animated.View>
+  );
+}
+
 export default function InsightsScreen() {
-  const { insightCards, memoryProfile } = useAICompanion();
+  const { insightCards, memoryProfile, supportiveInterpretations } = useAICompanion();
   const { recommendations, hasData: hasRecData } = useRecommendations();
 
   const hasData = memoryProfile.recentCheckInCount > 0;
@@ -193,6 +231,21 @@ export default function InsightsScreen() {
                 </View>
                 <Text style={styles.barValue}>{item.percentage}%</Text>
               </View>
+            ))}
+          </View>
+        )}
+
+        {supportiveInterpretations.length > 0 && (
+          <View style={interpStyles.section}>
+            <View style={interpStyles.headerRow}>
+              <Eye size={16} color={Colors.primary} />
+              <Text style={interpStyles.headerTitle}>What We Notice</Text>
+            </View>
+            <Text style={interpStyles.headerHint}>
+              Gentle observations based on your patterns
+            </Text>
+            {supportiveInterpretations.map((interp, i) => (
+              <InterpretationRow key={interp.id} item={interp} index={i} />
             ))}
           </View>
         )}
@@ -413,5 +466,65 @@ const recStyles = StyleSheet.create({
   msg: {
     fontSize: 12,
     color: Colors.textSecondary,
+  },
+});
+
+const interpStyles = StyleSheet.create({
+  section: {
+    marginBottom: 28,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  headerTitle: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: Colors.text,
+  },
+  headerHint: {
+    fontSize: 13,
+    color: Colors.textMuted,
+    marginBottom: 12,
+  },
+  card: {
+    backgroundColor: Colors.card,
+    borderRadius: 16,
+    padding: 16,
+    paddingLeft: 20,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    position: 'relative' as const,
+    overflow: 'hidden' as const,
+  },
+  accent: {
+    position: 'absolute' as const,
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+    borderTopLeftRadius: 16,
+    borderBottomLeftRadius: 16,
+  },
+  categoryBadge: {
+    alignSelf: 'flex-start' as const,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  categoryText: {
+    fontSize: 11,
+    fontWeight: '600' as const,
+    textTransform: 'capitalize' as const,
+  },
+  text: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    lineHeight: 21,
+    fontStyle: 'italic' as const,
   },
 });

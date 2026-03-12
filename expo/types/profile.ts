@@ -1,11 +1,20 @@
+export interface TrustedContact {
+  id: string;
+  name: string;
+  phone: string;
+  relationship: string;
+}
+
 export interface UserProfile {
   displayName: string;
   createdAt: number;
   commonTriggers: string[];
   commonUrges: string[];
+  emotionalSpirals: string[];
   whatHelpsMe: string[];
   preferredGroundingTools: string[];
   relationshipTriggers: string[];
+  trustedContacts: TrustedContact[];
   messageDelaySeconds: number;
   crisisSupport: CrisisSupportPreferences;
   notifications: NotificationPreferences;
@@ -49,9 +58,11 @@ export const DEFAULT_PROFILE: UserProfile = {
   createdAt: Date.now(),
   commonTriggers: [],
   commonUrges: [],
+  emotionalSpirals: [],
   whatHelpsMe: [],
   preferredGroundingTools: [],
   relationshipTriggers: [],
+  trustedContacts: [],
   messageDelaySeconds: 30,
   crisisSupport: {
     emergencyContact: '',

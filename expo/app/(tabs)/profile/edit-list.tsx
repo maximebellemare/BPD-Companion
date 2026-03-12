@@ -18,15 +18,16 @@ import {
   COPING_OPTIONS,
   GROUNDING_TOOL_OPTIONS,
   RELATIONSHIP_TRIGGER_OPTIONS,
+  EMOTIONAL_SPIRAL_OPTIONS,
 } from '@/services/profile/profileService';
 
-type ListType = 'triggers' | 'urges' | 'coping' | 'grounding' | 'relationship';
+type ListType = 'triggers' | 'urges' | 'coping' | 'grounding' | 'relationship' | 'spirals';
 
 interface ListConfig {
   title: string;
   subtitle: string;
   options: string[];
-  profileKey: 'commonTriggers' | 'commonUrges' | 'whatHelpsMe' | 'preferredGroundingTools' | 'relationshipTriggers';
+  profileKey: 'commonTriggers' | 'commonUrges' | 'whatHelpsMe' | 'preferredGroundingTools' | 'relationshipTriggers' | 'emotionalSpirals';
 }
 
 const LIST_CONFIGS: Record<ListType, ListConfig> = {
@@ -59,6 +60,12 @@ const LIST_CONFIGS: Record<ListType, ListConfig> = {
     subtitle: 'Situations in relationships that tend to activate strong feelings.',
     options: RELATIONSHIP_TRIGGER_OPTIONS,
     profileKey: 'relationshipTriggers',
+  },
+  spirals: {
+    title: 'My Emotional Spirals',
+    subtitle: 'Recognizing your spiral patterns is a powerful step. Select the ones that feel familiar.',
+    options: EMOTIONAL_SPIRAL_OPTIONS,
+    profileKey: 'emotionalSpirals',
   },
 };
 

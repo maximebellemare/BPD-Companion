@@ -154,3 +154,26 @@ export const GROUNDING_TOOL_OPTIONS = [
   'Splash face with water',
   'Strong scent',
 ];
+
+export const EMOTIONAL_SPIRAL_OPTIONS = [
+  'Rejection → rage → guilt → shame',
+  'Abandonment fear → clinginess → pushing away',
+  'Criticism → self-hatred → isolation',
+  'Jealousy → obsessive checking → confrontation',
+  'Emptiness → impulsive behavior → regret',
+  'Idealization → disappointment → devaluation',
+  'Anxiety → overthinking → emotional shutdown',
+  'Feeling unseen → anger → self-blame',
+  'Love-bombing → withdrawing → panic',
+  'Numbness → risky behavior → guilt spiral',
+];
+
+export const RELATIONSHIP_TYPE_OPTIONS = [
+  'Partner',
+  'Parent',
+  'Sibling',
+  'Friend',
+  'Therapist',
+  'Coworker',
+  'Other',
+];

@@ -27,6 +27,8 @@ import {
   AlertTriangle,
   Phone,
   BarChart3,
+  Users,
+  RefreshCw,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
@@ -271,6 +273,29 @@ export default function ProfileScreen() {
             </View>
             <ChevronRight size={16} color={Colors.textMuted} />
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.settingCard}
+            onPress={() => {
+              handleHaptic();
+              router.push('/profile/edit-list?type=spirals' as never);
+            }}
+            activeOpacity={0.7}
+            testID="edit-spirals-btn"
+          >
+            <View style={[styles.settingCardIcon, { backgroundColor: '#FFF0E6' }]}>
+              <RefreshCw size={18} color="#D4956A" />
+            </View>
+            <View style={styles.settingCardContent}>
+              <Text style={styles.settingCardTitle}>My Emotional Spirals</Text>
+              <Text style={styles.settingCardValue}>
+                {(profile.emotionalSpirals?.length ?? 0) > 0
+                  ? `${profile.emotionalSpirals.length} identified`
+                  : 'Recognize your patterns'}
+              </Text>
+            </View>
+            <ChevronRight size={16} color={Colors.textMuted} />
+          </TouchableOpacity>
         </Animated.View>
 
         <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
@@ -330,6 +355,29 @@ export default function ProfileScreen() {
                 {profile.crisisSupport.emergencyContact
                   ? 'Contact set up'
                   : 'Set up your safety net'}
+              </Text>
+            </View>
+            <ChevronRight size={16} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.settingCard}
+            onPress={() => {
+              handleHaptic();
+              router.push('/profile/trusted-contacts' as never);
+            }}
+            activeOpacity={0.7}
+            testID="trusted-contacts-btn"
+          >
+            <View style={[styles.settingCardIcon, { backgroundColor: '#E6F0FF' }]}>
+              <Users size={18} color="#3B82F6" />
+            </View>
+            <View style={styles.settingCardContent}>
+              <Text style={styles.settingCardTitle}>Trusted Support Contacts</Text>
+              <Text style={styles.settingCardValue}>
+                {(profile.trustedContacts?.length ?? 0) > 0
+                  ? `${profile.trustedContacts.length} contact${profile.trustedContacts.length !== 1 ? 's' : ''}`
+                  : 'Add people you trust'}
               </Text>
             </View>
             <ChevronRight size={16} color={Colors.textMuted} />

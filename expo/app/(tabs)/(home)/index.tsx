@@ -39,6 +39,8 @@ import { useCoaching } from '@/hooks/useCoaching';
 import { useRelationshipSpiral } from '@/hooks/useRelationshipSpiral';
 import WeeklyReflectionCard from '@/components/WeeklyReflectionCard';
 import { generateWeeklyReflection } from '@/services/reflection/weeklyReflectionService';
+import EmotionalLoopsCard from '@/components/EmotionalLoopsCard';
+import { useEmotionalLoops } from '@/hooks/useEmotionalLoops';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -50,6 +52,7 @@ export default function HomeScreen() {
   const emotionalStorm = useEmotionalStorm();
   const { dailyCoaching } = useCoaching();
   const relationshipSpiral = useRelationshipSpiral();
+  const emotionalLoops = useEmotionalLoops();
 
   const weeklyReflection = useMemo(
     () => generateWeeklyReflection(journalEntries, messageDrafts),
@@ -331,6 +334,10 @@ export default function HomeScreen() {
             openingNarrative={weeklyReflection.openingNarrative}
             improvementCount={weeklyReflection.growthSignals.improvements.length}
           />
+        </Animated.View>
+
+        <Animated.View style={{ opacity: fadeAnim }}>
+          <EmotionalLoopsCard report={emotionalLoops} />
         </Animated.View>
 
         <Animated.View style={{ opacity: fadeAnim }}>

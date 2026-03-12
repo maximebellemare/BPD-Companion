@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -26,6 +26,8 @@ import { useEmotionalStorm } from '@/hooks/useEmotionalStorm';
 import { useQuery } from '@tanstack/react-query';
 import { ritualRepository } from '@/services/repositories';
 import { getTodayEntry, getWeeklyReflection } from '@/services/ritual/dailyCheckInService';
+import { computeRitualAnalytics } from '@/services/ritual/dailyRitualService';
+import WeeklyRitualSummary from '@/components/WeeklyRitualSummary';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { VALIDATION_MESSAGES } from '@/constants/data';
@@ -45,10 +47,11 @@ export default function HomeScreen() {
     queryFn: () => ritualRepository.getState(),
   });
 
-  const ritualEntries = ritualQuery.data?.entries ?? [];
+  const ritualEntries = useMemo(() => ritualQuery.data?.entries ?? [], [ritualQuery.data?.entries]);
   const ritualStreak = ritualQuery.data?.streak ?? { currentStreak: 0, longestStreak: 0, lastCheckInDate: '', totalCheckIns: 0 };
   const todayRitualEntry = getTodayEntry(ritualEntries);
   const weeklySummary = getWeeklyReflection(ritualEntries);
+  const ritualAnalytics = useMemo(() => computeRitualAnalytics(ritualEntries), [ritualEntries]);
   const [validationIndex, setValidationIndex] = useState<number>(0);
 
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -284,6 +287,13 @@ export default function HomeScreen() {
             <Text style={styles.quickActionLabel}>Reality Check</Text>
             <Text style={styles.quickActionDesc}>Check facts</Text>
           </TouchableOpacity>
+        </Animated.View>
+
+        <Animated.View style={{ opacity: fadeAnim }}>
+          <WeeklyRitualSummary
+            analytics={ritualAnalytics}
+            onPress={() => router.push('/daily-ritual')}
+          />
         </Animated.View>
 
         <Animated.View style={{ opacity: fadeAnim }}>

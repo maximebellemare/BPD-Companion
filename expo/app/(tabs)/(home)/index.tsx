@@ -71,11 +71,20 @@ interface CardSlot {
   render: () => React.ReactNode;
 }
 
+const MAX_CARDS_BY_ZONE: Record<string, number> = {
+  crisis: 4,
+  relationship_distress: 6,
+  activated: 6,
+  recovering: 8,
+  calm: 10,
+};
+
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { journalEntries, messageDrafts } = useApp();
   const { zone, getCardPriority, isCardVisible } = useEmotionalContext();
+  const [showAllCards, setShowAllCards] = useState<boolean>(false);
   const earlyWarning = useEarlyWarning();
   const { recommendations, topRecommendation } = useRecommendations();
   const crisisPrediction = useCrisisPrediction();
@@ -427,6 +436,22 @@ export default function HomeScreen() {
     crisisPrediction, earlyWarning, recommendations, topRecommendation, router,
   ]);
 
+  const maxCards = MAX_CARDS_BY_ZONE[zone] ?? 10;
+  const visibleCardSlots = useMemo(() => {
+    if (showAllCards) return cardSlots;
+    return cardSlots.slice(0, maxCards);
+  }, [cardSlots, showAllCards, maxCards]);
+
+  const hasHiddenCards = cardSlots.length > maxCards && !showAllCards;
+
+  const handleShowMore = useCallback(() => {
+    if (Platform.OS !== 'web') {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setShowAllCards(true);
+    trackEvent('home_show_more_tapped', { zone, hidden_count: cardSlots.length - maxCards });
+  }, [zone, cardSlots.length, maxCards, trackEvent]);
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <ScrollView
@@ -555,11 +580,27 @@ export default function HomeScreen() {
           />
         </Animated.View>
 
-        {cardSlots.map(slot => (
+        {visibleCardSlots.map(slot => (
           <Animated.View key={slot.key} style={{ opacity: fadeAnim }}>
             {slot.render()}
           </Animated.View>
         ))}
+
+        {hasHiddenCards && (
+          <Animated.View style={{ opacity: fadeAnim }}>
+            <TouchableOpacity
+              style={styles.showMoreButton}
+              onPress={handleShowMore}
+              activeOpacity={0.7}
+              testID="show-more-cards"
+            >
+              <Text style={styles.showMoreText}>
+                Show {cardSlots.length - maxCards} more tool{cardSlots.length - maxCards !== 1 ? 's' : ''}
+              </Text>
+              <ChevronRight size={14} color={Colors.primary} />
+            </TouchableOpacity>
+          </Animated.View>
+        )}
 
         {recentCount > 0 && (
           <Animated.View style={[styles.insightCard, { opacity: fadeAnim }]}>
@@ -819,5 +860,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.textSecondary,
     marginTop: 2,
+  },
+  showMoreButton: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: 6,
+    backgroundColor: Colors.card,
+    borderRadius: 16,
+    paddingVertical: 14,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+  },
+  showMoreText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.primary,
   },
 });

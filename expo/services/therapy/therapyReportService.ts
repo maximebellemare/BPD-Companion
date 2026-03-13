@@ -330,6 +330,8 @@ function buildOverview(entries: JournalEntry[], drafts: MessageDraft[], days: nu
   const avgDistress = recent.reduce((s, e) => s + e.checkIn.intensityLevel, 0) / recent.length;
   const topEmo = getTopItem(recent.flatMap(e => e.checkIn.emotions.map(em => em.label)));
   const topTrig = getTopItem(recent.flatMap(e => e.checkIn.triggers.map(t => t.label)));
+  const managedCount = recent.filter(e => e.outcome === 'managed').length;
+  const struggledCount = recent.filter(e => e.outcome === 'struggled').length;
 
   if (topEmo) parts.push(`The most frequently reported emotion was ${topEmo.toLowerCase()}.`);
   if (topTrig) parts.push(`"${topTrig}" was the most common trigger.`);
@@ -342,9 +344,19 @@ function buildOverview(entries: JournalEntry[], drafts: MessageDraft[], days: nu
     parts.push(`Average distress was moderate at ${Math.round(avgDistress * 10) / 10}/10.`);
   }
 
+  if (managedCount > 0 && struggledCount > 0) {
+    parts.push(`The client reported managing emotions well ${managedCount} time${managedCount !== 1 ? 's' : ''} and struggling ${struggledCount} time${struggledCount !== 1 ? 's' : ''}.`);
+  } else if (managedCount > 0) {
+    parts.push(`The client reported managing emotions well ${managedCount} time${managedCount !== 1 ? 's' : ''}.`);
+  }
+
   const pauseCount = recentDrafts.filter(d => d.paused).length;
-  if (pauseCount > 0) {
-    parts.push(`The client paused before sending messages ${pauseCount} time${pauseCount !== 1 ? 's' : ''}.`);
+  const rewriteCount = recentDrafts.filter(d => d.rewrittenText).length;
+  if (pauseCount > 0 || rewriteCount > 0) {
+    const regulationParts: string[] = [];
+    if (pauseCount > 0) regulationParts.push(`paused before sending ${pauseCount} time${pauseCount !== 1 ? 's' : ''}`);
+    if (rewriteCount > 0) regulationParts.push(`rewrote ${rewriteCount} message${rewriteCount !== 1 ? 's' : ''}`);
+    parts.push(`The client ${regulationParts.join(' and ')}, suggesting growing intentionality in communication.`);
   }
 
   return parts.join(' ');
@@ -373,6 +385,18 @@ function buildTherapistNote(entries: JournalEntry[], drafts: MessageDraft[], day
   const rapidRewrites = recentDrafts.filter(d => d.rewrittenText).length;
   if (rapidRewrites >= 3) {
     parts.push(`${rapidRewrites} messages were rewritten, which may indicate communication anxiety.`);
+  }
+
+  const madeWorseOutcomes = recentDrafts.filter(d => d.outcome === 'made_worse').length;
+  if (madeWorseOutcomes > 0) {
+    parts.push(`${madeWorseOutcomes} communication outcome${madeWorseOutcomes !== 1 ? 's were' : ' was'} self-reported as making things worse, which may indicate patterns worth exploring.`);
+  }
+
+  const helpedOutcomes = recentDrafts.filter(d => d.outcome === 'helped').length;
+  const totalOutcomes = recentDrafts.filter(d => d.outcome).length;
+  if (helpedOutcomes > 0 && totalOutcomes > 0) {
+    const helpRate = Math.round((helpedOutcomes / totalOutcomes) * 100);
+    parts.push(`Of ${totalOutcomes} recorded communication outcomes, ${helpRate}% were rated as helpful.`);
   }
 
   if (parts.length === 0) {

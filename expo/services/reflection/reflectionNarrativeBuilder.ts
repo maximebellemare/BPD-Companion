@@ -471,26 +471,33 @@ export function buildOpeningNarrative(
   const topEmotion = getTopItem(thisWeek.flatMap(e => e.checkIn.emotions.map(em => em.label)));
   const checkInCount = thisWeek.length;
   const pauseCount = thisWeekDrafts.filter(d => d.paused).length;
+  const rewriteCount = thisWeekDrafts.filter(d => d.rewrittenText).length;
+  const hasRelTriggers = thisWeek.some(e => e.checkIn.triggers.some(t => t.category === 'relationship'));
+  const managedCount = thisWeek.filter(e => e.outcome === 'managed').length;
 
   const parts: string[] = [];
 
   if (avgDistress >= 7) {
-    parts.push('This was a heavy week emotionally.');
+    parts.push('This week held a lot of emotional intensity. The fact that you kept showing up through it says something important about your resilience.');
   } else if (avgDistress >= 4) {
-    parts.push('This week carried its share of emotional weight.');
+    parts.push('This week carried its share of emotional weight, though there were moments of steadiness too.');
+  } else if (managedCount > 0 && avgDistress < 4) {
+    parts.push('This seems to have been a quieter week — a sign that something may be settling.');
   } else {
-    parts.push('This week seems to have been relatively calmer.');
+    parts.push('This week felt relatively calm. That calm is worth noticing and appreciating.');
   }
 
   if (topEmotion) {
-    parts.push(`${topEmotion} was your most present emotion.`);
+    parts.push(`${topEmotion} was the emotion that appeared most often.`);
   }
 
-  parts.push(`You checked in ${checkInCount} time${checkInCount !== 1 ? 's' : ''}.`);
-
-  if (pauseCount > 0) {
-    parts.push(`You paused before sending ${pauseCount} message${pauseCount !== 1 ? 's' : ''}.`);
+  if (hasRelTriggers && rewriteCount > 0) {
+    parts.push(`Relationship themes were present, and you chose to rewrite ${rewriteCount} message${rewriteCount !== 1 ? 's' : ''} before sending — a meaningful act of self-regulation.`);
+  } else if (pauseCount > 0) {
+    parts.push(`You paused before sending ${pauseCount} message${pauseCount !== 1 ? 's' : ''}, which takes real awareness in activated moments.`);
   }
+
+  parts.push(`You checked in ${checkInCount} time${checkInCount !== 1 ? 's' : ''} this week.`);
 
   return parts.join(' ');
 }
@@ -503,19 +510,30 @@ export function buildClosingMessage(
     return 'Your journey is unfolding. Every small check-in builds a deeper understanding of yourself.';
   }
 
+  const hasRelWork = thisWeek.some(e => e.checkIn.triggers.some(t => t.category === 'relationship'));
+  const avgDistress = thisWeek.reduce((s, e) => s + e.checkIn.intensityLevel, 0) / thisWeek.length;
+
+  if (avgDistress >= 7 && growthSignals.improvements.length > 0) {
+    return 'This was a hard week, and you still found ways to grow through it. That is not nothing — it is courage.';
+  }
+
   if (growthSignals.improvements.length >= 2) {
-    return 'This week showed meaningful signs of growth. You are building something real — keep going.';
+    return 'This week showed meaningful signs of growth. You are building something real — keep going, even on the days it feels invisible.';
+  }
+
+  if (hasRelWork && growthSignals.communicationWins.length > 0) {
+    return 'The way you are approaching relationships is shifting. Choosing care over urgency is one of the hardest things to do — and you did it this week.';
   }
 
   if (growthSignals.communicationWins.length > 0) {
-    return 'Your communication patterns are shifting. The effort you are putting in matters more than you might realize.';
+    return 'Your communication patterns are shifting. The effort you are putting in matters more than you might realize right now.';
   }
 
   if (growthSignals.awarenessGains.length > 0) {
     return 'Your awareness is deepening. Understanding your patterns is one of the most powerful things you can do for yourself.';
   }
 
-  return 'Another week of showing up for yourself. That consistency, even when it feels small, is building resilience.';
+  return 'Another week of showing up for yourself. That consistency, even when it feels small, is building something stronger underneath.';
 }
 
 export function buildWhatEscalated(

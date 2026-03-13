@@ -26,7 +26,10 @@ import {
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
+import { useEmotionalContext } from '@/providers/EmotionalContextProvider';
+import { useSubscription } from '@/providers/SubscriptionProvider';
 import { AnalyticsEvent, AnalyticsSummary } from '@/types/analytics';
+import { PREMIUM_FEATURES } from '@/types/subscription';
 
 function formatTimestamp(ts: number): string {
   const d = new Date(ts);
@@ -100,10 +103,12 @@ function getEventCategoryColor(name: string): string {
 
 export default function AnalyticsDebugScreen() {
   const { getSummary, getRecentEvents, clearEvents, trackEvent } = useAnalytics();
+  const emotionalContext = useEmotionalContext();
+  const { tier, isPremium, canAccessFeature, dailyAIUsage, aiLimitReached, remainingAIMessages } = useSubscription();
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [recentEvents, setRecentEvents] = useState<AnalyticsEvent[]>([]);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'events' | 'summary' | 'flows' | 'premium'>('events');
+  const [activeTab, setActiveTab] = useState<'events' | 'summary' | 'flows' | 'premium' | 'context'>('events');
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const loadData = useCallback(async () => {
@@ -200,14 +205,14 @@ export default function AnalyticsDebugScreen() {
         </View>
 
         <View style={styles.tabBar}>
-          {(['events', 'summary', 'flows', 'premium'] as const).map(tab => (
+          {(['events', 'context', 'summary', 'flows', 'premium'] as const).map(tab => (
             <TouchableOpacity
               key={tab}
               style={[styles.tab, activeTab === tab && styles.tabActive]}
               onPress={() => setActiveTab(tab)}
             >
               <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
-                {tab === 'events' ? 'Live' : tab === 'summary' ? 'Summary' : tab === 'flows' ? 'Flows' : 'Premium'}
+                {tab === 'events' ? 'Live' : tab === 'context' ? 'State' : tab === 'summary' ? 'Summary' : tab === 'flows' ? 'Flows' : 'Premium'}
               </Text>
             </TouchableOpacity>
           ))}
@@ -331,6 +336,120 @@ export default function AnalyticsDebugScreen() {
                 })
               )}
             </View>
+          )}
+
+          {activeTab === 'context' && (
+            <>
+              <View style={styles.sectionCard}>
+                <Text style={styles.sectionTitle}>Emotional Zone</Text>
+                <View style={styles.contextRow}>
+                  <Text style={styles.contextLabel}>Zone</Text>
+                  <View style={[styles.contextBadge, { backgroundColor: getZoneColor(emotionalContext.zone) + '20' }]}>
+                    <View style={[styles.contextDot, { backgroundColor: getZoneColor(emotionalContext.zone) }]} />
+                    <Text style={[styles.contextBadgeText, { color: getZoneColor(emotionalContext.zone) }]}>
+                      {emotionalContext.zone}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.contextRow}>
+                  <Text style={styles.contextLabel}>Journey Phase</Text>
+                  <Text style={styles.contextValue}>{emotionalContext.journeyPhase}</Text>
+                </View>
+                {emotionalContext.journeyLabel && (
+                  <View style={styles.contextRow}>
+                    <Text style={styles.contextLabel}>Label</Text>
+                    <Text style={styles.contextValue} numberOfLines={2}>{emotionalContext.journeyLabel}</Text>
+                  </View>
+                )}
+                {emotionalContext.journeySuggestion && (
+                  <View style={styles.contextRow}>
+                    <Text style={styles.contextLabel}>Suggestion</Text>
+                    <Text style={styles.contextValue}>{emotionalContext.journeySuggestion.label}</Text>
+                  </View>
+                )}
+              </View>
+
+              <View style={styles.sectionCard}>
+                <Text style={styles.sectionTitle}>Active Context</Text>
+                <View style={styles.contextRow}>
+                  <Text style={styles.contextLabel}>Latest Trigger</Text>
+                  <Text style={styles.contextValue}>{emotionalContext.activeContext.latestTrigger ?? '—'}</Text>
+                </View>
+                <View style={styles.contextRow}>
+                  <Text style={styles.contextLabel}>Latest Emotion</Text>
+                  <Text style={styles.contextValue}>{emotionalContext.activeContext.latestEmotion ?? '—'}</Text>
+                </View>
+                <View style={styles.contextRow}>
+                  <Text style={styles.contextLabel}>Latest Urge</Text>
+                  <Text style={styles.contextValue}>{emotionalContext.activeContext.latestUrge ?? '—'}</Text>
+                </View>
+                <View style={styles.contextRow}>
+                  <Text style={styles.contextLabel}>Intensity</Text>
+                  <Text style={styles.contextValue}>{emotionalContext.activeContext.latestIntensity}/10</Text>
+                </View>
+                <View style={styles.contextRow}>
+                  <Text style={styles.contextLabel}>Relationship Active</Text>
+                  <Text style={styles.contextValue}>{emotionalContext.activeContext.activeRelationshipContext ? 'Yes' : 'No'}</Text>
+                </View>
+                <View style={styles.contextRow}>
+                  <Text style={styles.contextLabel}>High Distress</Text>
+                  <Text style={styles.contextValue}>{emotionalContext.activeContext.highDistressRecent ? 'Yes' : 'No'}</Text>
+                </View>
+                <View style={styles.contextRow}>
+                  <Text style={styles.contextLabel}>Rewrites (week)</Text>
+                  <Text style={styles.contextValue}>{emotionalContext.activeContext.recentRewriteCount}</Text>
+                </View>
+                <View style={styles.contextRow}>
+                  <Text style={styles.contextLabel}>Pauses (week)</Text>
+                  <Text style={styles.contextValue}>{emotionalContext.activeContext.recentPauseCount}</Text>
+                </View>
+                <View style={styles.contextRow}>
+                  <Text style={styles.contextLabel}>Check-ins (week)</Text>
+                  <Text style={styles.contextValue}>{emotionalContext.activeContext.recentCheckInCount}</Text>
+                </View>
+                <View style={styles.contextRow}>
+                  <Text style={styles.contextLabel}>Top Coping</Text>
+                  <Text style={styles.contextValue}>{emotionalContext.activeContext.topCopingRecommendation ?? '—'}</Text>
+                </View>
+              </View>
+
+              <View style={styles.sectionCard}>
+                <Text style={styles.sectionTitle}>Premium Gate Status</Text>
+                <View style={styles.contextRow}>
+                  <Text style={styles.contextLabel}>Tier</Text>
+                  <View style={[styles.contextBadge, { backgroundColor: isPremium ? Colors.successLight : Colors.surface }]}>
+                    <Text style={[styles.contextBadgeText, { color: isPremium ? Colors.success : Colors.textSecondary }]}>
+                      {tier}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.contextRow}>
+                  <Text style={styles.contextLabel}>AI Usage Today</Text>
+                  <Text style={styles.contextValue}>{dailyAIUsage} ({aiLimitReached ? 'LIMIT REACHED' : `${remainingAIMessages} remaining`})</Text>
+                </View>
+                {PREMIUM_FEATURES.slice(0, 6).map(f => (
+                  <View key={f.id} style={styles.contextRow}>
+                    <Text style={styles.contextLabel} numberOfLines={1}>{f.title}</Text>
+                    <View style={[styles.contextBadge, { backgroundColor: canAccessFeature(f.id) ? Colors.successLight : '#FFF0E3' }]}>
+                      <Text style={[styles.contextBadgeText, { color: canAccessFeature(f.id) ? Colors.success : '#D4956A' }]}>
+                        {canAccessFeature(f.id) ? 'Unlocked' : 'Locked'}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+
+              <View style={styles.sectionCard}>
+                <Text style={styles.sectionTitle}>Outcomes Recorded</Text>
+                <Text style={styles.contextValue}>{emotionalContext.outcomes.length} total</Text>
+                {emotionalContext.outcomes.slice(0, 5).map((o, i) => (
+                  <View key={o.id} style={[styles.contextRow, i === 0 && { marginTop: 8 }]}>
+                    <Text style={styles.contextLabel}>{formatRelativeTime(o.timestamp)}</Text>
+                    <Text style={styles.contextValue}>{o.outcome}</Text>
+                  </View>
+                ))}
+              </View>
+            </>
           )}
 
           {activeTab === 'premium' && (
@@ -672,4 +791,54 @@ const styles = StyleSheet.create({
   bottomSpacer: {
     height: 30,
   },
+  contextRow: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+    paddingVertical: 7,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+  },
+  contextLabel: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    fontWeight: '500' as const,
+    flex: 1,
+    marginRight: 8,
+  },
+  contextValue: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: Colors.text,
+    textAlign: 'right' as const,
+    maxWidth: '50%' as const,
+  },
+  contextBadge: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  contextBadgeText: {
+    fontSize: 12,
+    fontWeight: '700' as const,
+  },
+  contextDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
 });
+
+function getZoneColor(zone: string): string {
+  switch (zone) {
+    case 'crisis': return Colors.danger;
+    case 'relationship_distress': return '#E84393';
+    case 'activated': return '#E17055';
+    case 'recovering': return Colors.success;
+    case 'calm': return Colors.primary;
+    default: return Colors.textMuted;
+  }
+}

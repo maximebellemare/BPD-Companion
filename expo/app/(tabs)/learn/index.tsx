@@ -45,7 +45,7 @@ import {
   getCategoryProgress,
 } from '@/services/learn/learnService';
 import { LearnState, LessonCategory, Lesson } from '@/types/learn';
-import { LEARN_CATEGORIES } from '@/data/lessons';
+import { LEARN_CATEGORIES } from '@/data/lessonCategories';
 import { useLearningRecommendations } from '@/hooks/useLearningRecommendations';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
 import { getAllCoachModules } from '@/services/coach/coachService';

@@ -13,7 +13,7 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useLearningRecommendations, LearningRecommendationWithLesson } from '@/hooks/useLearningRecommendations';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
-import { LEARN_CATEGORIES } from '@/data/lessons';
+import { LEARN_CATEGORIES } from '@/data/lessonCategories';
 
 const LearningRecommendationCard = React.memo(function LearningRecommendationCard() {
   const router = useRouter();

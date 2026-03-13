@@ -1,7 +1,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect } from "react";
+import React, { useEffect, lazy, Suspense } from "react";
+import { Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AppProvider } from "@/providers/AppProvider";
 import { AICompanionProvider } from "@/providers/AICompanionProvider";
@@ -11,9 +12,14 @@ import { EmotionalContextProvider } from "@/providers/EmotionalContextProvider";
 import { AnalyticsProvider } from "@/providers/AnalyticsProvider";
 import { NotificationEntryProvider } from "@/providers/NotificationEntryProvider";
 import Colors from "@/constants/colors";
-import NotificationManager from "@/components/NotificationManager";
+import DeferredProviders from "@/components/DeferredProviders";
+const NotificationManagerLazy = Platform.OS !== 'web' 
+  ? lazy(() => import("@/components/NotificationManager"))
+  : null;
 
-void SplashScreen.preventAutoHideAsync();
+if (Platform.OS !== 'web') {
+  void SplashScreen.preventAutoHideAsync();
+}
 
 const queryClient = new QueryClient();
 
@@ -343,14 +349,20 @@ export default function RootLayout() {
           <AnalyticsProvider>
             <SubscriptionProvider>
               <ProfileProvider>
-                <AICompanionProvider>
-                  <EmotionalContextProvider>
-                    <NotificationEntryProvider>
-                      <NotificationManager />
-                      <RootLayoutNav />
-                    </NotificationEntryProvider>
-                  </EmotionalContextProvider>
-                </AICompanionProvider>
+                <DeferredProviders>
+                  <AICompanionProvider>
+                    <EmotionalContextProvider>
+                      <NotificationEntryProvider>
+                        {NotificationManagerLazy && (
+                          <Suspense fallback={null}>
+                            <NotificationManagerLazy />
+                          </Suspense>
+                        )}
+                        <RootLayoutNav />
+                      </NotificationEntryProvider>
+                    </EmotionalContextProvider>
+                  </AICompanionProvider>
+                </DeferredProviders>
               </ProfileProvider>
             </SubscriptionProvider>
           </AnalyticsProvider>

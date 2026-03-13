@@ -14,15 +14,17 @@ const NOTIFICATION_EVENTS_KEY = 'bpd_notification_events';
 const SCHEDULED_REMINDERS_KEY = 'bpd_scheduled_reminders';
 const DEBUG_LOG_KEY = 'bpd_notification_debug_log';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+if (Platform.OS !== 'web') {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: false,
+      shouldSetBadge: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+}
 
 class NotificationService {
   private initialized = false;

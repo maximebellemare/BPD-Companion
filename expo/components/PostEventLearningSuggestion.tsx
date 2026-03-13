@@ -13,7 +13,7 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { getLessonById } from '@/services/learn/learnService';
 import { PostEventSuggestion } from '@/types/learningRecommendation';
-import { LEARN_CATEGORIES } from '@/data/lessons';
+import { LEARN_CATEGORIES } from '@/data/lessonCategories';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
 
 interface Props {

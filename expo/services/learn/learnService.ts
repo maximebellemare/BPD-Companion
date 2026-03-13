@@ -1,4 +1,5 @@
-import { LESSONS, LEARN_CATEGORIES } from '@/data/lessons';
+import { LESSONS } from '@/data/lessons';
+import { LEARN_CATEGORIES } from '@/data/lessonCategories';
 import { Lesson, LessonCategory, LessonProgress, LearnState } from '@/types/learn';
 import { learnRepository } from '@/services/repositories';
 

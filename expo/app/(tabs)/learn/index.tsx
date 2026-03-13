@@ -26,6 +26,9 @@ import {
   Wrench,
   Sunrise,
   X,
+  MessageCircle,
+  CloudLightning,
+  Sprout,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
@@ -48,6 +51,9 @@ const ICON_MAP: Record<string, React.ComponentType<{ size: number; color: string
   fingerprint: Fingerprint,
   tool: Wrench,
   sunrise: Sunrise,
+  'message-circle': MessageCircle,
+  'cloud-lightning': CloudLightning,
+  sprout: Sprout,
 };
 
 export default function LearnScreen() {

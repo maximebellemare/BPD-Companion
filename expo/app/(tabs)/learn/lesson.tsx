@@ -13,12 +13,12 @@ import {
   Bookmark,
   CheckCircle,
   Lightbulb,
-
   Target,
   Dumbbell,
   Wrench,
   ArrowRight,
   BookOpen,
+  MessageSquareHeart,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
@@ -37,6 +37,60 @@ const SECTION_ICONS: Record<string, React.ComponentType<{ size: number; color: s
   takeaway: Target,
   exercise: Dumbbell,
 };
+
+const REFLECTION_PROMPTS: Record<string, string[]> = {
+  'understanding-bpd': [
+    'Does anything in this lesson feel familiar in your own experience?',
+    'What part of this resonated most with you?',
+    'How does understanding this change the way you see yourself?',
+  ],
+  'emotional-regulation': [
+    'Can you think of a recent moment when this skill could have helped?',
+    'What is one small thing you could try from this lesson today?',
+    'How do you usually respond when emotions feel overwhelming?',
+  ],
+  'relationships': [
+    'Does this pattern show up in any of your current relationships?',
+    'What would change if you tried one thing from this lesson?',
+    'How do you feel after reading this — is anything shifting?',
+  ],
+  'triggers-abandonment': [
+    'Can you identify a recent trigger that connects to what you read?',
+    'What would it feel like to respond differently next time?',
+    'Is there an old wound this lesson is helping you understand?',
+  ],
+  'identity-selfworth': [
+    'What is one thing you know to be true about yourself right now?',
+    'How do you talk to yourself when things go wrong?',
+    'What would self-compassion look like for you today?',
+  ],
+  'communication': [
+    'Think of a recent conversation that felt hard. What could you try differently?',
+    'What is one need you find difficult to express?',
+    'How does it feel to imagine communicating more openly?',
+  ],
+  'crisis-storms': [
+    'What has helped you get through difficult moments before?',
+    'What is one safe thing you could reach for during the next storm?',
+    'How do you feel knowing that every storm eventually passes?',
+  ],
+  'daily-stability': [
+    'What is one small routine that already helps you feel grounded?',
+    'What would a slightly more stable day look like for you?',
+    'How does your body feel when your basic needs are met?',
+  ],
+  'therapy-healing': [
+    'What does recovery mean to you personally?',
+    'What is one sign of progress you can see in yourself?',
+    'How does it feel to know that healing is possible?',
+  ],
+};
+
+function getReflectionPrompt(categoryId: string): string {
+  const prompts = REFLECTION_PROMPTS[categoryId] ?? REFLECTION_PROMPTS['understanding-bpd'] ?? [];
+  if (prompts.length === 0) return 'What stood out to you in this lesson?';
+  return prompts[Math.floor(Math.random() * prompts.length)] ?? prompts[0];
+}
 
 const SECTION_COLORS: Record<string, { bg: string; border: string; icon: string }> = {
   callout: { bg: '#EEF4F0', border: '#6B9080', icon: '#6B9080' },
@@ -204,6 +258,18 @@ export default function LessonScreen() {
 
         <View style={styles.content}>
           {lesson.sections.map((section, index) => renderSection(section, index))}
+        </View>
+
+        <View style={styles.reflectionSection}>
+          <View style={styles.reflectionCard}>
+            <View style={styles.reflectionIconRow}>
+              <MessageSquareHeart size={20} color={Colors.accent} />
+              <Text style={styles.reflectionLabel}>Reflect</Text>
+            </View>
+            <Text style={styles.reflectionPrompt}>
+              {getReflectionPrompt(lesson.categoryId)}
+            </Text>
+          </View>
         </View>
 
         {(lesson.relatedToolIds.length > 0 || lesson.relatedExerciseIds.length > 0) && (
@@ -463,5 +529,35 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600' as const,
     color: Colors.text,
+  },
+  reflectionSection: {
+    paddingHorizontal: 24,
+    marginTop: 32,
+  },
+  reflectionCard: {
+    backgroundColor: Colors.accentLight,
+    borderRadius: 16,
+    padding: 20,
+    borderLeftWidth: 4,
+    borderLeftColor: Colors.accent,
+  },
+  reflectionIconRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 10,
+  },
+  reflectionLabel: {
+    fontSize: 13,
+    fontWeight: '700' as const,
+    color: Colors.accent,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.8,
+  },
+  reflectionPrompt: {
+    fontSize: 16,
+    color: Colors.text,
+    lineHeight: 24,
+    fontStyle: 'italic',
   },
 });

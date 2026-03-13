@@ -51,6 +51,8 @@ import IdentityBuilderCard from '@/components/IdentityBuilderCard';
 import MessageGuardCard from '@/components/MessageGuardCard';
 import StormEarlyWarningCard from '@/components/StormEarlyWarningCard';
 import { useStormEarlyWarning } from '@/hooks/useStormEarlyWarning';
+import ReflectionMirrorCard from '@/components/ReflectionMirrorCard';
+import { generateReflectionMirror } from '@/services/reflection/reflectionMirrorService';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -69,6 +71,11 @@ export default function HomeScreen() {
 
   const weeklyReflection = useMemo(
     () => generateWeeklyReflection(journalEntries, messageDrafts),
+    [journalEntries, messageDrafts],
+  );
+
+  const reflectionMirror = useMemo(
+    () => generateReflectionMirror(journalEntries, messageDrafts),
     [journalEntries, messageDrafts],
   );
 
@@ -382,6 +389,14 @@ export default function HomeScreen() {
 
         <Animated.View style={{ opacity: fadeAnim }}>
           <MessageGuardCard recentDraftCount={messageDrafts.length} />
+        </Animated.View>
+
+        <Animated.View style={{ opacity: fadeAnim }}>
+          <ReflectionMirrorCard
+            hasEnoughData={reflectionMirror.hasEnoughData}
+            topTheme={reflectionMirror.emotionalThemes[0]?.label ?? null}
+            growthCount={reflectionMirror.growthSignals.length}
+          />
         </Animated.View>
 
         <Animated.View style={{ opacity: fadeAnim }}>

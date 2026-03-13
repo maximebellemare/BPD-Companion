@@ -64,6 +64,8 @@ import PersonalizedSuggestionsCard from '@/components/PersonalizedSuggestionsCar
 import JourneyFlowBanner from '@/components/JourneyFlowBanner';
 import { useEmotionalContext } from '@/providers/EmotionalContextProvider';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
+import ConflictReplayCard from '@/components/ConflictReplayCard';
+import { useConflictReplay } from '@/hooks/useConflictReplay';
 
 interface CardSlot {
   key: string;
@@ -97,6 +99,7 @@ export default function HomeScreen() {
   const stormWarning = useStormEarlyWarning();
   const relationshipGuard = useRelationshipGuard();
   const { trackEvent } = useAnalytics();
+  const conflictReplay = useConflictReplay();
 
   useEffect(() => {
     trackEvent('screen_view', { screen: 'home' });
@@ -363,6 +366,15 @@ export default function HomeScreen() {
       <RelationshipHubCard key="relationship_hub" />
     ));
 
+    addSlot('conflict_replay', () => (
+      <ConflictReplayCard
+        key="conflict_replay"
+        eventCount={conflictReplay.events.length}
+        latestTrigger={conflictReplay.events[0]?.triggerDetail}
+        latestOutcome={conflictReplay.events[0]?.outcome}
+      />
+    ));
+
     addSlot('emotional_profile', () => (
       <EmotionalProfileCard key="emotional_profile" />
     ));
@@ -434,6 +446,7 @@ export default function HomeScreen() {
     dailyCoaching, weeklyReflection, therapyReport, emotionalLoops,
     reflectionMirror, episodeReplayState, stormWarning, emotionalStorm,
     crisisPrediction, earlyWarning, recommendations, topRecommendation, router,
+    conflictReplay,
   ]);
 
   const maxCards = MAX_CARDS_BY_ZONE[zone] ?? 10;

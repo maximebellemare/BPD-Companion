@@ -661,6 +661,17 @@ export default function MessageGuardScreen() {
             ))}
           </View>
         </View>
+
+        <TouchableOpacity
+          style={styles.simulatorLink}
+          onPress={() => router.push('/scenario-simulator')}
+          activeOpacity={0.7}
+          testID="guard-simulator-link"
+        >
+          <Sparkles size={15} color={Colors.primary} />
+          <Text style={styles.simulatorLinkText}>Practice different responses</Text>
+          <ChevronRight size={14} color={Colors.textMuted} />
+        </TouchableOpacity>
       </>
     );
   };
@@ -1368,5 +1379,20 @@ const styles = StyleSheet.create({
   },
   pauseCompleteActions: {
     width: '100%',
+  },
+  simulatorLink: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    backgroundColor: Colors.primaryLight,
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 16,
+    gap: 6,
+  },
+  simulatorLinkText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '500' as const,
+    color: Colors.primary,
   },
 });

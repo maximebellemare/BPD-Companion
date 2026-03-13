@@ -479,6 +479,16 @@ export default function RelationshipCopilotScreen() {
             <MessageSquare size={16} color={Colors.white} />
             <Text style={styles.messageButtonText}>Open Message Support</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.simulatorLink}
+            onPress={() => handleNextStep('/scenario-simulator')}
+            activeOpacity={0.7}
+            testID="scenario-simulator-link"
+          >
+            <Sparkles size={15} color={Colors.primary} />
+            <Text style={styles.simulatorLinkText}>Practice responses first</Text>
+            <ChevronRight size={14} color={Colors.textMuted} />
+          </TouchableOpacity>
         </View>
 
         <PostActionReflection
@@ -886,6 +896,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600' as const,
     color: Colors.textSecondary,
+  },
+  simulatorLink: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    backgroundColor: Colors.primaryLight,
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 8,
+    gap: 6,
+  },
+  simulatorLinkText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '500' as const,
+    color: Colors.primary,
   },
   skipButton: {
     flexDirection: 'row' as const,

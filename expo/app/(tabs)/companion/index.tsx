@@ -355,7 +355,7 @@ export default function CompanionScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.exploreCard}
-            onPress={() => router.push('/companion/simulator' as never)}
+            onPress={() => router.push('/scenario-simulator' as never)}
             activeOpacity={0.7}
             testID="simulator-btn"
           >

@@ -71,6 +71,8 @@ import SafetyPredictorCard from '@/components/SafetyPredictorCard';
 import { useEmotionalSafety } from '@/hooks/useEmotionalSafety';
 import BreakthroughCard from '@/components/BreakthroughCard';
 import { useBreakthroughs } from '@/hooks/useBreakthroughs';
+import DailyRitualsCard from '@/components/DailyRitualsCard';
+import { dailyRitualsRepository } from '@/services/repositories';
 
 interface CardSlot {
   key: string;
@@ -107,6 +109,12 @@ export default function HomeScreen() {
   const conflictReplay = useConflictReplay();
   const safetyPrediction = useEmotionalSafety();
   const breakthroughs = useBreakthroughs();
+
+  const dailyRitualsQuery = useQuery({
+    queryKey: ['daily_rituals'],
+    queryFn: () => dailyRitualsRepository.getState(),
+  });
+  const dailyRitualCompletions = useMemo(() => dailyRitualsQuery.data?.completions ?? [], [dailyRitualsQuery.data]);
 
   useEffect(() => {
     trackEvent('screen_view', { screen: 'home' });
@@ -454,6 +462,14 @@ export default function HomeScreen() {
       />
     ));
 
+    addSlot('daily_rituals', () => (
+      <DailyRitualsCard
+        key="daily_rituals"
+        completions={dailyRitualCompletions}
+        onPress={() => router.push('/daily-rituals')}
+      />
+    ));
+
     addSlot('upgrade_prompt', () => (
       <UpgradePromptCard key="upgrade_prompt" />
     ));
@@ -465,7 +481,7 @@ export default function HomeScreen() {
     dailyCoaching, weeklyReflection, therapyReport, emotionalLoops,
     reflectionMirror, episodeReplayState, stormWarning, emotionalStorm,
     crisisPrediction, earlyWarning, recommendations, topRecommendation, router,
-    conflictReplay, safetyPrediction, breakthroughs.summary,
+    conflictReplay, safetyPrediction, breakthroughs.summary, dailyRitualCompletions,
   ]);
 
   const maxCards = MAX_CARDS_BY_ZONE[zone] ?? 10;

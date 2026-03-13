@@ -41,3 +41,41 @@ export interface RitualState {
   entries: DailyRitualEntry[];
   streak: RitualStreak;
 }
+
+export type RitualType = 'morning' | 'midday' | 'evening';
+
+export interface RitualCompletion {
+  id: string;
+  date: string;
+  timestamp: number;
+  type: RitualType;
+  emotion?: string;
+  energyLevel?: number;
+  intention?: string;
+  keyMoment?: string;
+  copingUsed?: string[];
+  lessonLearned?: string;
+  breathingCompleted?: boolean;
+  groundingCompleted?: boolean;
+}
+
+export interface RitualDayStatus {
+  date: string;
+  morning: boolean;
+  midday: boolean;
+  evening: boolean;
+  completedCount: number;
+}
+
+export interface RitualStreakData {
+  currentStreak: number;
+  longestStreak: number;
+  lastRitualDate: string;
+  totalCompletions: number;
+  weeklyCompletionRate: number;
+}
+
+export interface DailyRitualsState {
+  completions: RitualCompletion[];
+  streak: RitualStreakData;
+}

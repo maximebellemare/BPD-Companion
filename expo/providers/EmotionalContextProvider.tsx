@@ -236,6 +236,7 @@ function computeHomePriorities(
   add('emotional_trends', !isCrisis ? 32 : 99, !isCrisis);
   add('smart_coping', !isCrisis ? 33 : 99, !isCrisis);
   add('upgrade_prompt', isCalm || isRecovering ? 35 : 99, isCalm || isRecovering);
+  add('daily_rituals', isCalm || isRecovering ? 13 : 18, true);
   add('insights_banner', 36, true);
 
   return priorities.sort((a, b) => a.priority - b.priority);

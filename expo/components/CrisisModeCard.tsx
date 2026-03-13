@@ -57,6 +57,13 @@ export default React.memo(function CrisisModeCard({ detection }: Props) {
     if (Platform.OS !== 'web') {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
+    router.push('/crisis-regulation');
+  }, [router]);
+
+  const handleCrisisMode = useCallback(() => {
+    if (Platform.OS !== 'web') {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    }
     router.push('/crisis-mode');
   }, [router]);
 
@@ -99,16 +106,16 @@ export default React.memo(function CrisisModeCard({ detection }: Props) {
         </View>
 
         <View style={styles.actionsRow}>
-          <View style={styles.actionChip}>
+          <TouchableOpacity style={styles.actionChip} onPress={handlePress} activeOpacity={0.7}>
             <Wind size={14} color={accentColor} />
-            <Text style={[styles.actionChipText, { color: accentColor }]}>Breathe</Text>
-          </View>
-          <View style={styles.actionChip}>
-            <Text style={[styles.actionChipText, { color: accentColor }]}>Ground</Text>
-          </View>
-          <View style={styles.actionChip}>
+            <Text style={[styles.actionChipText, { color: accentColor }]}>Regulate</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionChip} onPress={handleCrisisMode} activeOpacity={0.7}>
+            <Text style={[styles.actionChipText, { color: accentColor }]}>Crisis Mode</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionChip} onPress={handlePress} activeOpacity={0.7}>
             <Text style={[styles.actionChipText, { color: accentColor }]}>Pause</Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.signalCount}>

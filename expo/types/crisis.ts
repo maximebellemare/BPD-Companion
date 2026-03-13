@@ -49,3 +49,49 @@ export interface CrisisModeState {
   currentPhase: CrisisModePhase;
   messageDelayMinutes: number | null;
 }
+
+export type RegulationStep =
+  | 'entry'
+  | 'breathing'
+  | 'grounding'
+  | 'urge_surfing'
+  | 'help_not_text'
+  | 'calm_next';
+
+export type BreathingDuration = 30 | 60 | 120;
+
+export interface RegulationUrge {
+  id: string;
+  label: string;
+  emoji: string;
+}
+
+export interface RegulationEntryChoice {
+  id: string;
+  label: string;
+  targetStep: RegulationStep;
+  icon: string;
+}
+
+export interface UrgeSurfingState {
+  selectedUrge: string | null;
+  intensity: number;
+}
+
+export interface HelpNotTextState {
+  draftText: string;
+  selectedDelay: number | null;
+  draftSaved: boolean;
+}
+
+export interface RegulationSession {
+  id: string;
+  startedAt: number;
+  completedAt: number | null;
+  stepsVisited: RegulationStep[];
+  selectedUrges: string[];
+  urgeIntensity: number | null;
+  breathingDuration: BreathingDuration | null;
+  delayMinutes: number | null;
+  draftSaved: boolean;
+}

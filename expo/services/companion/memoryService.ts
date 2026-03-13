@@ -288,6 +288,33 @@ export function extractConversationSignals(
   return { triggers, emotions, isHighDistress, isRelationship, hasCopingMention, hasInsight };
 }
 
+export function deleteMemoryById(
+  store: CompanionMemoryStore,
+  memoryId: string,
+): CompanionMemoryStore {
+  store.shortTermMemories = store.shortTermMemories.filter(m => m.id !== memoryId);
+  store.episodicMemories = store.episodicMemories.filter(m => m.id !== memoryId);
+  store.semanticMemories = store.semanticMemories.filter(m => m.id !== memoryId);
+  store.sessionSummaries = store.sessionSummaries.filter(m => m.id !== memoryId);
+  store.lastUpdated = Date.now();
+  console.log('[CompanionMemory] Deleted memory:', memoryId);
+  return store;
+}
+
+export function editEpisodicMemoryLesson(
+  store: CompanionMemoryStore,
+  memoryId: string,
+  newLesson: string,
+): CompanionMemoryStore {
+  const memory = store.episodicMemories.find(m => m.id === memoryId);
+  if (memory) {
+    memory.lesson = newLesson;
+    store.lastUpdated = Date.now();
+    console.log('[CompanionMemory] Edited episodic memory lesson:', memoryId);
+  }
+  return store;
+}
+
 export function shouldCreateMemory(
   messages: Array<{ role: string; content: string }>,
 ): boolean {

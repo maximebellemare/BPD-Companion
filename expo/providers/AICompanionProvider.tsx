@@ -20,6 +20,8 @@ import {
   addShortTermMemory,
   shouldCreateMemory,
   detectEmotionalState,
+  deleteMemoryById,
+  editEpisodicMemoryLesson,
 } from '@/services/companion/memoryService';
 import { retrieveRelevantMemories } from '@/services/companion/memoryRetrieval';
 import {
@@ -397,6 +399,23 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
     }
   }, []);
 
+  const deleteMemory = useCallback(async (memoryId: string) => {
+    if (!companionMemoryStore) return;
+    const updated = deleteMemoryById(companionMemoryStore, memoryId);
+    setCompanionMemoryStore(updated);
+    await saveMemoryStore(updated);
+    void trackEvent('memory_deleted', { memory_id: memoryId });
+    console.log('[AICompanion] Memory deleted:', memoryId);
+  }, [companionMemoryStore]);
+
+  const editMemoryLesson = useCallback(async (memoryId: string, newLesson: string) => {
+    if (!companionMemoryStore) return;
+    const updated = editEpisodicMemoryLesson(companionMemoryStore, memoryId, newLesson);
+    setCompanionMemoryStore(updated);
+    await saveMemoryStore(updated);
+    console.log('[AICompanion] Memory lesson edited:', memoryId);
+  }, [companionMemoryStore]);
+
   const currentModeConfig = useMemo(() => {
     if (currentActiveMode) {
       return getModeConfig(currentActiveMode);
@@ -422,6 +441,8 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
     weeklyInsights,
     psychProfile,
     companionMemoryStore,
+    deleteMemory,
+    editMemoryLesson,
     setActiveConversationId,
     startNewConversation,
     continueLastConversation,
@@ -447,6 +468,8 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
     weeklyInsights,
     psychProfile,
     companionMemoryStore,
+    deleteMemory,
+    editMemoryLesson,
     setActiveConversationId,
     startNewConversation,
     continueLastConversation,

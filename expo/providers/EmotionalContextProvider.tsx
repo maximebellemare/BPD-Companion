@@ -162,10 +162,100 @@ function computeJourneyPhase(
   return 'idle';
 }
 
+export interface Intervention {
+  label: string;
+  route: string;
+  reason: string;
+  category: 'crisis' | 'relationship' | 'regulation' | 'reflection' | 'growth';
+}
+
 export interface HomePriority {
   key: string;
   priority: number;
   visible: boolean;
+}
+
+function computeBestNextIntervention(
+  zone: EmotionalZone,
+  context: ActiveContext,
+  phase: JourneyPhase,
+): Intervention {
+  if (zone === 'crisis') {
+    return {
+      label: 'Crisis Regulation',
+      route: '/crisis-regulation',
+      reason: 'Your distress is very high right now.',
+      category: 'crisis',
+    };
+  }
+
+  if (phase === 'awaiting_outcome') {
+    return {
+      label: 'Record how it went',
+      route: '/(tabs)/messages',
+      reason: 'You recently sent a message — recording the outcome helps track patterns.',
+      category: 'reflection',
+    };
+  }
+
+  if (zone === 'relationship_distress') {
+    if (context.recentRewriteCount > 0) {
+      return {
+        label: 'Message Guard',
+        route: '/message-guard',
+        reason: 'Relationship stress is active. Pause before sending.',
+        category: 'relationship',
+      };
+    }
+    return {
+      label: 'Relationship Copilot',
+      route: '/relationship-copilot',
+      reason: 'Relationship distress detected. Let\'s work through it.',
+      category: 'relationship',
+    };
+  }
+
+  if (zone === 'activated') {
+    return {
+      label: 'Guided Regulation',
+      route: '/guided-regulation',
+      reason: 'You seem activated. A guided regulation can help.',
+      category: 'regulation',
+    };
+  }
+
+  if (zone === 'recovering') {
+    if (context.recentCheckInCount >= 2) {
+      return {
+        label: 'Weekly Reflection',
+        route: '/weekly-reflection',
+        reason: 'You\'re recovering well. Reflecting can solidify growth.',
+        category: 'reflection',
+      };
+    }
+    return {
+      label: 'Check In',
+      route: '/check-in',
+      reason: 'A check-in can help track your recovery.',
+      category: 'reflection',
+    };
+  }
+
+  if (context.recentCheckInCount === 0) {
+    return {
+      label: 'Daily Check-In',
+      route: '/check-in',
+      reason: 'Start your day with a quick emotional check-in.',
+      category: 'growth',
+    };
+  }
+
+  return {
+    label: 'Daily Ritual',
+    route: '/daily-ritual',
+    reason: 'A calm moment for your daily ritual.',
+    category: 'growth',
+  };
 }
 
 function computeHomePriorities(
@@ -192,52 +282,58 @@ function computeHomePriorities(
 
   add('journey_flow', phase !== 'idle' ? 3 : 99, phase !== 'idle');
 
+  add('safety_predictor', safetyState !== 'calm' ? (safetyState === 'critical' ? 2 : safetyState === 'high_distress' ? 4 : 9) : 99, safetyState !== 'calm');
+
   add('relationship_guard', isRelDistress ? 4 : 99, isRelDistress);
   add('relationship_copilot', isRelDistress || context.activeRelationshipContext ? 5 : 99,
     isRelDistress || context.activeRelationshipContext);
-  add('relationship_spiral', isRelDistress ? 6 : 99, isRelDistress);
-
-  add('message_guard', (isRelDistress || context.recentRewriteCount > 0) ? 7 : 99,
+  add('message_guard', (isRelDistress || context.recentRewriteCount > 0) ? 6 : 99,
     isRelDistress || context.recentRewriteCount > 0);
 
-  add('personalized_suggestions', !isCrisis ? 10 : 99, !isCrisis);
-  add('ai_companion', !isCrisis ? 11 : 99, !isCrisis);
-  add('coaching', !isCrisis && context.recentCheckInCount >= 1 ? 12 : 99,
+  add('outcome_prompt', phase === 'awaiting_outcome' ? 3 : 99, phase === 'awaiting_outcome');
+
+  add('ai_companion', !isCrisis ? 10 : 99, !isCrisis);
+  add('personalized_suggestions', !isCrisis && !isRelDistress ? 11 : 99, !isCrisis && !isRelDistress);
+
+  add('daily_rituals', isCalm || isRecovering ? 12 : 18, true);
+
+  add('weekly_reflection', isRecovering || isCalm ? 14 : 22,
+    context.recentCheckInCount >= 2);
+  add('therapy_report', isRecovering || isCalm ? 15 : 23,
+    context.recentCheckInCount >= 2);
+
+  add('breakthrough_moments', isCalm || isRecovering ? 16 : 24, !isCrisis);
+  add('emotional_playbook', !isCrisis ? 17 : 99, !isCrisis);
+
+  add('progress_dashboard', isCalm || isRecovering ? 18 : 25, true);
+  add('emotional_loops', !isCrisis ? 19 : 99, !isCrisis);
+
+  add('coaching', !isCrisis && context.recentCheckInCount >= 1 ? 20 : 99,
     !isCrisis && context.recentCheckInCount >= 1);
 
-  add('daily_reflection', isCalm || isRecovering ? 13 : 20, true);
-  add('weekly_ritual', isCalm || isRecovering ? 14 : 21, true);
-
-  add('weekly_reflection', isRecovering || isCalm ? 15 : 22,
-    context.recentCheckInCount >= 2);
-  add('therapy_report', isRecovering || isCalm ? 16 : 23,
-    context.recentCheckInCount >= 2);
-
-  add('emotional_loops', !isCrisis ? 17 : 99, !isCrisis);
-  add('progress_dashboard', isCalm || isRecovering ? 18 : 25, true);
-
-  add('relationship_hub', !isCrisis && !isRelDistress ? 19 : 8,
+  add('relationship_hub', !isCrisis && !isRelDistress ? 21 : 8,
     isRelDistress || context.recentRewriteCount > 0);
+  add('relationship_spiral', isRelDistress ? 7 : 99, isRelDistress);
 
-  add('home_insights', isCalm || isRecovering ? 20 : 30, true);
-  add('emotional_profile', !isCrisis ? 24 : 99, !isCrisis);
+  add('emotional_insights', isCalm || isRecovering ? 22 : 28, !isCrisis);
+  add('home_insights', isCalm || isRecovering ? 23 : 30, isCalm || isRecovering);
+
+  add('emotional_profile', isCalm ? 24 : 99, isCalm);
   add('reflection_mirror', isRecovering || isCalm ? 25 : 99, isRecovering || isCalm);
-  add('emotional_timeline', !isCrisis ? 26 : 99, !isCrisis);
+  add('emotional_timeline', isCalm ? 26 : 99, isCalm);
   add('identity_builder', isCalm ? 27 : 99, isCalm);
 
-  add('safety_predictor', safetyState !== 'calm' ? (safetyState === 'critical' ? 2 : safetyState === 'high_distress' ? 4 : 9) : 99, safetyState !== 'calm');
+  add('storm_warning', 28, false);
+  add('emotional_storm', 29, false);
+  add('early_support', !isCrisis ? 30 : 99, false);
+  add('early_warning', !isCrisis ? 31 : 99, false);
+  add('emotional_trends', !isCrisis ? 32 : 99, false);
+  add('smart_coping', !isCrisis ? 33 : 99, false);
 
-  add('storm_warning', 28, true);
-  add('emotional_storm', 29, true);
-  add('early_support', !isCrisis ? 30 : 99, !isCrisis);
-  add('early_warning', !isCrisis ? 31 : 99, !isCrisis);
-  add('breakthrough_moments', isCalm || isRecovering ? 19 : 24, !isCrisis);
-  add('emotional_insights', isCalm || isRecovering ? 21 : 28, !isCrisis);
-  add('emotional_trends', !isCrisis ? 32 : 99, !isCrisis);
-  add('smart_coping', !isCrisis ? 33 : 99, !isCrisis);
+  add('trusted_support', isCrisis || (isActivated && context.highDistressRecent) ? 5 : 99,
+    isCrisis || (isActivated && context.highDistressRecent));
+
   add('upgrade_prompt', isCalm || isRecovering ? 35 : 99, isCalm || isRecovering);
-  add('daily_rituals', isCalm || isRecovering ? 13 : 18, true);
-  add('insights_banner', 36, true);
 
   return priorities.sort((a, b) => a.priority - b.priority);
 };
@@ -295,6 +391,11 @@ export const [EmotionalContextProvider, useEmotionalContext] = createContextHook
   const homePriorities = useMemo(
     () => computeHomePriorities(zone, activeContext, journeyPhase, safetyPrediction.state),
     [zone, activeContext, journeyPhase, safetyPrediction.state],
+  );
+
+  const bestNextIntervention = useMemo<Intervention>(
+    () => computeBestNextIntervention(zone, activeContext, journeyPhase),
+    [zone, activeContext, journeyPhase],
   );
 
   const recordOutcome = useCallback((record: OutcomeRecord) => {
@@ -359,6 +460,7 @@ export const [EmotionalContextProvider, useEmotionalContext] = createContextHook
     journeyPhase,
     journeyLabel,
     journeySuggestion,
+    bestNextIntervention,
     homePriorities,
     outcomes,
     recordOutcome,
@@ -373,6 +475,7 @@ export const [EmotionalContextProvider, useEmotionalContext] = createContextHook
     journeyPhase,
     journeyLabel,
     journeySuggestion,
+    bestNextIntervention,
     homePriorities,
     outcomes,
     recordOutcome,

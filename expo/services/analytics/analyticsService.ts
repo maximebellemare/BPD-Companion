@@ -85,3 +85,48 @@ export async function trackRegulationOutcome(
     timestamp: Date.now(),
   });
 }
+
+export async function trackOutcomeRecorded(
+  outcome: string,
+  journeyPhase: string,
+  draftId?: string,
+): Promise<void> {
+  return analyticsEngine.trackEvent(`outcome_${outcome}`, {
+    outcome,
+    journey_phase: journeyPhase,
+    ...(draftId ? { draft_id: draftId } : {}),
+  });
+}
+
+export async function trackJourneyPhaseChange(
+  fromPhase: string,
+  toPhase: string,
+  zone: string,
+): Promise<void> {
+  return analyticsEngine.trackEvent('journey_phase_changed', {
+    from_phase: fromPhase,
+    to_phase: toPhase,
+    zone,
+  });
+}
+
+export async function trackPremiumGate(
+  action: 'shown' | 'dismissed' | 'accepted',
+  feature: string,
+  context?: string,
+): Promise<void> {
+  return analyticsEngine.trackEvent(`premium_gate_${action}`, {
+    feature,
+    ...(context ? { context } : {}),
+  });
+}
+
+export async function trackCoreJourneyStep(
+  step: string,
+  properties?: Record<string, string | number | boolean>,
+): Promise<void> {
+  return analyticsEngine.trackEvent('core_journey_step', {
+    step,
+    ...properties,
+  });
+}

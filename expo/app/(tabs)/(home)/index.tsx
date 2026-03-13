@@ -76,6 +76,8 @@ import { dailyRitualsRepository } from '@/services/repositories';
 import TrustedSupportCard from '@/components/TrustedSupportCard';
 import PlaybookCard from '@/components/PlaybookCard';
 import { usePlaybook } from '@/hooks/usePlaybook';
+import NextInterventionCard from '@/components/NextInterventionCard';
+import OutcomePromptBanner from '@/components/OutcomePromptBanner';
 
 interface CardSlot {
   key: string;
@@ -84,18 +86,18 @@ interface CardSlot {
 }
 
 const MAX_CARDS_BY_ZONE: Record<string, number> = {
-  crisis: 4,
-  relationship_distress: 6,
-  activated: 6,
-  recovering: 8,
-  calm: 10,
+  crisis: 3,
+  relationship_distress: 5,
+  activated: 5,
+  recovering: 6,
+  calm: 7,
 };
 
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { journalEntries, messageDrafts } = useApp();
-  const { zone, getCardPriority, isCardVisible } = useEmotionalContext();
+  const { zone, getCardPriority, isCardVisible, journeyPhase } = useEmotionalContext();
   const [showAllCards, setShowAllCards] = useState<boolean>(false);
   const earlyWarning = useEarlyWarning();
   const { recommendations, topRecommendation } = useRecommendations();
@@ -427,27 +429,35 @@ export default function HomeScreen() {
       <IdentityBuilderCard key="identity_builder" />
     ));
 
-    addSlot('storm_warning', () => (
-      <StormEarlyWarningCard key="storm_warning" warning={stormWarning} />
-    ));
+    if (stormWarning.shouldShow) {
+      addSlot('storm_warning', () => (
+        <StormEarlyWarningCard key="storm_warning" warning={stormWarning} />
+      ));
+    }
 
-    addSlot('emotional_storm', () => (
-      <EmotionalStormCard key="emotional_storm" storm={emotionalStorm} />
-    ));
+    if (emotionalStorm.intensity !== 'calm') {
+      addSlot('emotional_storm', () => (
+        <EmotionalStormCard key="emotional_storm" storm={emotionalStorm} />
+      ));
+    }
 
-    addSlot('early_support', () => (
-      <EarlySupportCard key="early_support" prediction={crisisPrediction} />
-    ));
+    if (crisisPrediction.riskLevel !== 'low') {
+      addSlot('early_support', () => (
+        <EarlySupportCard key="early_support" prediction={crisisPrediction} />
+      ));
+    }
 
-    addSlot('early_warning', () => (
-      <EarlyWarningBanner
-        key="early_warning"
-        warningLevel={earlyWarning.warningLevel}
-        message={earlyWarning.message}
-        patterns={earlyWarning.patterns}
-        suggestions={earlyWarning.suggestions}
-      />
-    ));
+    if (earlyWarning.warningLevel !== 'none') {
+      addSlot('early_warning', () => (
+        <EarlyWarningBanner
+          key="early_warning"
+          warningLevel={earlyWarning.warningLevel}
+          message={earlyWarning.message}
+          patterns={earlyWarning.patterns}
+          suggestions={earlyWarning.suggestions}
+        />
+      ));
+    }
 
     addSlot('emotional_trends', () => (
       <EmotionalTrendsCard
@@ -522,6 +532,16 @@ export default function HomeScreen() {
           <Text style={styles.greeting}>BPD Companion</Text>
           <Text style={styles.subtitle}>{zoneSubtitle}</Text>
         </Animated.View>
+
+        <Animated.View style={{ opacity: fadeAnim }}>
+          <NextInterventionCard />
+        </Animated.View>
+
+        {journeyPhase === 'awaiting_outcome' && (
+          <Animated.View style={{ opacity: fadeAnim }}>
+            <OutcomePromptBanner />
+          </Animated.View>
+        )}
 
         <Animated.View style={{ opacity: fadeAnim }}>
           <DailyReflectionCard

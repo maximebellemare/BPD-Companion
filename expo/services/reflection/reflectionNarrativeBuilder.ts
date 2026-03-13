@@ -253,6 +253,8 @@ export function buildWhatHelped(
     });
 
   const successfulPauses = thisWeekDrafts.filter(d => d.paused).length;
+  const helpedOutcomes = thisWeekDrafts.filter(d => d.outcome === 'helped').length;
+  const totalOutcomes = thisWeekDrafts.filter(d => d.outcome).length;
 
   const helpfulPractices: string[] = [];
   const reflections = thisWeek.filter(e => e.reflection && e.reflection.length > 15).length;
@@ -260,6 +262,7 @@ export function buildWhatHelped(
   if (successfulPauses > 0) helpfulPractices.push('Pausing before sending messages');
   if (effectiveTools.length > 0) helpfulPractices.push(`Using ${effectiveTools[0].tool}`);
   if (thisWeek.length >= 3) helpfulPractices.push('Consistent check-ins');
+  if (helpedOutcomes > 0) helpfulPractices.push('Recording and learning from communication outcomes');
 
   const narrativeParts: string[] = [];
   if (effectiveTools.length > 0) {
@@ -267,6 +270,10 @@ export function buildWhatHelped(
   }
   if (successfulPauses > 0) {
     narrativeParts.push(`Pausing before sending helped ${successfulPauses} time${successfulPauses !== 1 ? 's' : ''}.`);
+  }
+  if (helpedOutcomes > 0 && totalOutcomes > 0) {
+    const helpRate = Math.round((helpedOutcomes / totalOutcomes) * 100);
+    narrativeParts.push(`${helpRate}% of recorded communication outcomes were rated as helpful — your intentionality is making a difference.`);
   }
   if (reflections >= 2) {
     narrativeParts.push('Writing deeper reflections seems to be supporting your awareness.');

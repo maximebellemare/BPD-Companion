@@ -108,7 +108,7 @@ export default function AnalyticsDebugScreen() {
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [recentEvents, setRecentEvents] = useState<AnalyticsEvent[]>([]);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'events' | 'summary' | 'flows' | 'premium' | 'context'>('events');
+  const [activeTab, setActiveTab] = useState<'events' | 'summary' | 'flows' | 'premium' | 'context' | 'home'>('events');
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const loadData = useCallback(async () => {
@@ -205,14 +205,14 @@ export default function AnalyticsDebugScreen() {
         </View>
 
         <View style={styles.tabBar}>
-          {(['events', 'context', 'summary', 'flows', 'premium'] as const).map(tab => (
+          {(['events', 'context', 'home', 'summary', 'flows', 'premium'] as const).map(tab => (
             <TouchableOpacity
               key={tab}
               style={[styles.tab, activeTab === tab && styles.tabActive]}
               onPress={() => setActiveTab(tab)}
             >
               <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
-                {tab === 'events' ? 'Live' : tab === 'context' ? 'State' : tab === 'summary' ? 'Summary' : tab === 'flows' ? 'Flows' : 'Premium'}
+                {tab === 'events' ? 'Live' : tab === 'context' ? 'State' : tab === 'home' ? 'Home' : tab === 'summary' ? 'Summary' : tab === 'flows' ? 'Flows' : 'Premium'}
               </Text>
             </TouchableOpacity>
           ))}
@@ -448,6 +448,72 @@ export default function AnalyticsDebugScreen() {
                     <Text style={styles.contextValue}>{o.outcome}</Text>
                   </View>
                 ))}
+              </View>
+            </>
+          )}
+
+          {activeTab === 'home' && (
+            <>
+              <View style={styles.sectionCard}>
+                <Text style={styles.sectionTitle}>Best Next Intervention</Text>
+                <View style={styles.contextRow}>
+                  <Text style={styles.contextLabel}>Label</Text>
+                  <Text style={styles.contextValue}>{emotionalContext.bestNextIntervention.label}</Text>
+                </View>
+                <View style={styles.contextRow}>
+                  <Text style={styles.contextLabel}>Route</Text>
+                  <Text style={styles.contextValue}>{emotionalContext.bestNextIntervention.route}</Text>
+                </View>
+                <View style={styles.contextRow}>
+                  <Text style={styles.contextLabel}>Category</Text>
+                  <View style={[styles.contextBadge, { backgroundColor: getInterventionCategoryColor(emotionalContext.bestNextIntervention.category) + '20' }]}>
+                    <Text style={[styles.contextBadgeText, { color: getInterventionCategoryColor(emotionalContext.bestNextIntervention.category) }]}>
+                      {emotionalContext.bestNextIntervention.category}
+                    </Text>
+                  </View>
+                </View>
+                <View style={[styles.contextRow, { borderBottomWidth: 0 }]}>
+                  <Text style={styles.contextLabel}>Reason</Text>
+                  <Text style={[styles.contextValue, { maxWidth: '60%' }]} numberOfLines={3}>{emotionalContext.bestNextIntervention.reason}</Text>
+                </View>
+              </View>
+
+              <View style={styles.sectionCard}>
+                <Text style={styles.sectionTitle}>Home Card Priorities</Text>
+                <Text style={[styles.noData, { textAlign: 'left', paddingVertical: 4, fontSize: 12 }]}>
+                  Sorted by priority. Visible cards shown first.
+                </Text>
+                {emotionalContext.homePriorities
+                  .filter(p => p.visible)
+                  .slice(0, 15)
+                  .map((p) => (
+                    <View key={p.key} style={styles.metricRow}>
+                      <View style={[styles.metricDot, { backgroundColor: Colors.primary }]} />
+                      <Text style={styles.metricName} numberOfLines={1}>{p.key}</Text>
+                      <View style={styles.metricBadge}>
+                        <Text style={styles.metricCount}>#{p.priority}</Text>
+                      </View>
+                    </View>
+                  ))}
+                {emotionalContext.homePriorities.filter(p => !p.visible).length > 0 && (
+                  <>
+                    <Text style={[styles.noData, { textAlign: 'left', paddingVertical: 8, fontSize: 11 }]}>
+                      Hidden cards:
+                    </Text>
+                    {emotionalContext.homePriorities
+                      .filter(p => !p.visible)
+                      .slice(0, 10)
+                      .map(p => (
+                        <View key={p.key} style={styles.metricRow}>
+                          <View style={[styles.metricDot, { backgroundColor: Colors.textMuted }]} />
+                          <Text style={[styles.metricName, { color: Colors.textMuted }]} numberOfLines={1}>{p.key}</Text>
+                          <View style={[styles.metricBadge, { backgroundColor: Colors.surface }]}>
+                            <Text style={[styles.metricCount, { color: Colors.textMuted }]}>hidden</Text>
+                          </View>
+                        </View>
+                      ))}
+                  </>
+                )}
               </View>
             </>
           )}
@@ -839,6 +905,17 @@ function getZoneColor(zone: string): string {
     case 'activated': return '#E17055';
     case 'recovering': return Colors.success;
     case 'calm': return Colors.primary;
+    default: return Colors.textMuted;
+  }
+}
+
+function getInterventionCategoryColor(category: string): string {
+  switch (category) {
+    case 'crisis': return Colors.danger;
+    case 'relationship': return '#E84393';
+    case 'regulation': return Colors.primary;
+    case 'reflection': return '#8B5CF6';
+    case 'growth': return '#F59E0B';
     default: return Colors.textMuted;
   }
 }

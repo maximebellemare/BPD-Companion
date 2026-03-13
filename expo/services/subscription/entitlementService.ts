@@ -15,7 +15,7 @@ export const FEATURE_ENTITLEMENTS: FeatureEntitlement[] = [
   {
     feature: 'unlimited_ai',
     category: 'premium',
-    label: 'AI Companion',
+    label: 'Unlimited AI Companion',
     description: 'Unlimited conversations with your AI companion',
     freeLimit: FREE_DAILY_AI_LIMIT,
     premiumLimit: null,
@@ -23,38 +23,38 @@ export const FEATURE_ENTITLEMENTS: FeatureEntitlement[] = [
   {
     feature: 'relationship_analysis',
     category: 'premium',
-    label: 'Advanced Relationship Insights',
-    description: 'Deep relationship pattern analysis and intelligence',
+    label: 'Advanced Relationship Intelligence',
+    description: 'Deep relationship pattern analysis across time',
   },
   {
     feature: 'relationship_copilot',
     category: 'premium',
-    label: 'Relationship Copilot',
-    description: 'Guided relationship-triggered distress support',
+    label: 'Advanced Relationship Copilot',
+    description: 'Extended guided support with memory and pattern tracking',
   },
   {
     feature: 'weekly_reflection',
     category: 'premium',
     label: 'Weekly Reflection History',
-    description: 'Access past weekly reflections and trends',
+    description: 'Access past weekly reflections and long-term trends',
   },
   {
     feature: 'therapist_report',
     category: 'premium',
-    label: 'Therapist Report History',
-    description: 'Save and review past therapist reports',
+    label: 'Therapist Report History & Export',
+    description: 'Save, review, and export past therapist reports',
   },
   {
     feature: 'emotional_profile',
     category: 'premium',
-    label: 'Emotional Pattern Intelligence',
-    description: 'Long-term emotional pattern tracking and summaries',
+    label: 'Long-Term Emotional Patterns',
+    description: 'Months-long emotional pattern summaries and intelligence',
   },
   {
     feature: 'emotional_timeline',
     category: 'premium',
     label: 'Emotional Timeline',
-    description: 'Detailed emotional history and trend visualization',
+    description: 'Detailed emotional history and episode replay',
   },
   {
     feature: 'predictive_insights',
@@ -71,8 +71,8 @@ export const FEATURE_ENTITLEMENTS: FeatureEntitlement[] = [
   {
     feature: 'long_term_memory',
     category: 'premium',
-    label: 'Long-Term AI Memory',
-    description: 'AI remembers your patterns across sessions',
+    label: 'AI Memory & Insight Depth',
+    description: 'AI remembers your patterns and grows with you',
   },
   {
     feature: 'emotional_simulator',
@@ -111,6 +111,13 @@ const FREE_FEATURES: Set<string> = new Set([
   'grounding',
   'breathing',
   'dbt_basics',
+  'crisis_regulation',
+  'guided_regulation',
+  'daily_ritual',
+  'basic_weekly_reflection',
+  'basic_therapy_report',
+  'message_guard_basic',
+  'basic_relationship_copilot',
 ]);
 
 export function canAccess(feature: PremiumFeature, tier: SubscriptionTier): boolean {
@@ -143,20 +150,20 @@ export function getUpgradeReason(feature: PremiumFeature): string {
   if (!entitlement) return 'Unlock this feature with Premium.';
 
   const reasons: Record<PremiumFeature, string> = {
-    unlimited_ai: 'Upgrade for unlimited AI companion conversations.',
-    relationship_analysis: 'Upgrade to unlock deeper relationship pattern insights.',
-    relationship_copilot: 'Upgrade for guided relationship support during distress.',
-    weekly_reflection: 'Upgrade to access your full weekly reflection history.',
-    therapist_report: 'Upgrade to save and review past therapist reports.',
-    emotional_profile: 'Upgrade for long-term emotional pattern intelligence.',
-    emotional_timeline: 'Upgrade to see your detailed emotional timeline.',
-    predictive_insights: 'Upgrade for early pattern detection and predictions.',
-    advanced_progress: 'Upgrade for detailed progress metrics and growth tracking.',
-    long_term_memory: 'Upgrade so your AI companion remembers your patterns.',
-    emotional_simulator: 'Upgrade to explore different response outcomes.',
-    therapy_plan: 'Upgrade for personalized adaptive therapy plans.',
-    ai_summaries: 'Upgrade for AI-generated pattern summaries.',
-    reflection_mirror: 'Upgrade for deep self-reflection with AI guidance.',
+    unlimited_ai: 'Continue with unlimited AI conversations.',
+    relationship_analysis: 'See deeper relationship patterns over time.',
+    relationship_copilot: 'Access extended relationship support with pattern memory.',
+    weekly_reflection: 'Review past reflections and track long-term growth.',
+    therapist_report: 'Save and export therapy reports for your sessions.',
+    emotional_profile: 'Explore months of emotional pattern intelligence.',
+    emotional_timeline: 'Replay emotional episodes and see your full timeline.',
+    predictive_insights: 'Get early warnings before patterns escalate.',
+    advanced_progress: 'See detailed growth metrics and milestone tracking.',
+    long_term_memory: 'Let your AI companion remember and grow with you.',
+    emotional_simulator: 'Practice different responses before acting.',
+    therapy_plan: 'Get personalized weekly plans that adapt to you.',
+    ai_summaries: 'Read AI-generated summaries of your patterns.',
+    reflection_mirror: 'Access deeper self-reflection with AI guidance.',
   };
 
   return reasons[feature] ?? entitlement.description;

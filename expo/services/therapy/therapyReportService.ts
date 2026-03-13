@@ -504,6 +504,35 @@ function buildDiscussionPrompts(
     });
   }
 
+  const helpedOutcomes = recentDrafts.filter(d => d.outcome === 'helped').length;
+  const madeWorseOutcomes = recentDrafts.filter(d => d.outcome === 'made_worse').length;
+  const totalOutcomes = recentDrafts.filter(d => d.outcome).length;
+
+  if (totalOutcomes > 0 && helpedOutcomes > 0 && madeWorseOutcomes > 0) {
+    prompts.push({
+      topic: 'What was different about conversations that went well versus those that didn\'t?',
+      context: `Of ${totalOutcomes} recorded outcomes, ${helpedOutcomes} helped and ${madeWorseOutcomes} made things harder.`,
+      category: 'relational',
+    });
+  }
+
+  if (madeWorseOutcomes >= 2) {
+    prompts.push({
+      topic: 'What patterns do I notice in the conversations that made things harder?',
+      context: `${madeWorseOutcomes} communication outcomes were self-reported as making things worse.`,
+      category: 'behavioral',
+    });
+  }
+
+  const pausedThenHelped = recentDrafts.filter(d => d.paused && d.outcome === 'helped').length;
+  if (pausedThenHelped > 0) {
+    prompts.push({
+      topic: 'How does pausing before responding change the outcome of conversations?',
+      context: `${pausedThenHelped} paused message${pausedThenHelped !== 1 ? 's' : ''} led to helpful outcomes.`,
+      category: 'growth',
+    });
+  }
+
   if (prompts.length === 0) {
     prompts.push({
       topic: 'What felt most emotionally significant this week?',
@@ -517,7 +546,7 @@ function buildDiscussionPrompts(
     });
   }
 
-  return prompts.slice(0, 5);
+  return prompts.slice(0, 6);
 }
 
 function buildRegulation(drafts: MessageDraft[], days: number): TherapyReportRegulationSection {

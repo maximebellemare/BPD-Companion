@@ -30,12 +30,13 @@ import {
   ArrowRight,
   ChevronRight,
   CheckCircle,
+  BookOpen,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useApp } from '@/providers/AppProvider';
 import { generateTherapyReport, formatReportAsText } from '@/services/therapy/therapyReportService';
-import { TherapyReport, TherapyReportPeriod } from '@/types/therapyReport';
+import { TherapyReport, TherapyReportPeriod, TherapyDiscussionPrompt } from '@/types/therapyReport';
 
 const PERIOD_OPTIONS: { label: string; value: TherapyReportPeriod }[] = [
   { label: '7 Days', value: '7' },
@@ -501,6 +502,73 @@ export default function TherapyReportScreen() {
           </View>
           <Text style={styles.therapistNoteText}>{report.therapistNote}</Text>
         </Animated.View>
+
+        {report.discussionPrompts.length > 0 && (
+          <Animated.View style={[styles.sectionCard, styles.discussionCard, { opacity: slideOpacities[8], transform: [{ translateY: slideAnims[8] }] }]}>
+            <View style={styles.sectionHeader}>
+              <View style={[styles.sectionIconWrap, { backgroundColor: '#F3E8FF' }]}>
+                <MessageCircle size={18} color="#8B5CF6" />
+              </View>
+              <Text style={styles.sectionTitle}>Possible Therapy Topics</Text>
+            </View>
+
+            <Text style={styles.discussionIntro}>
+              These topics emerged from your data and may be worth exploring in session.
+            </Text>
+
+            <View style={styles.discussionList}>
+              {report.discussionPrompts.map((prompt: TherapyDiscussionPrompt, i: number) => (
+                <View key={i} style={styles.discussionItem}>
+                  <View style={[styles.discussionCategoryDot, {
+                    backgroundColor: prompt.category === 'emotional' ? '#E17055' :
+                      prompt.category === 'relational' ? '#3B82F6' :
+                      prompt.category === 'behavioral' ? Colors.accent :
+                      Colors.success,
+                  }]} />
+                  <View style={styles.discussionContent}>
+                    <Text style={styles.discussionTopic}>{prompt.topic}</Text>
+                    <Text style={styles.discussionContext}>{prompt.context}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+
+            <View style={styles.discussionCategoryLegend}>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: '#E17055' }]} />
+                <Text style={styles.legendText}>Emotional</Text>
+              </View>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: '#3B82F6' }]} />
+                <Text style={styles.legendText}>Relational</Text>
+              </View>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: Colors.accent }]} />
+                <Text style={styles.legendText}>Behavioral</Text>
+              </View>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: Colors.success }]} />
+                <Text style={styles.legendText}>Growth</Text>
+              </View>
+            </View>
+          </Animated.View>
+        )}
+
+        <TouchableOpacity
+          style={styles.reflectionLink}
+          onPress={() => router.push('/weekly-reflection')}
+          activeOpacity={0.7}
+          testID="open-weekly-reflection"
+        >
+          <View style={styles.reflectionLinkIcon}>
+            <BookOpen size={18} color={Colors.primary} />
+          </View>
+          <View style={styles.reflectionLinkContent}>
+            <Text style={styles.reflectionLinkTitle}>Weekly Reflection</Text>
+            <Text style={styles.reflectionLinkDesc}>Read your personal narrative reflection</Text>
+          </View>
+          <ChevronRight size={16} color={Colors.textMuted} />
+        </TouchableOpacity>
 
         <View style={styles.disclaimerSection}>
           <Text style={styles.disclaimerText}>
@@ -1105,5 +1173,106 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600' as const,
     color: Colors.white,
+  },
+  discussionCard: {
+    borderWidth: 1,
+    borderColor: '#F3E8FF',
+  },
+  discussionIntro: {
+    fontSize: 14,
+    lineHeight: 21,
+    color: Colors.textSecondary,
+    marginBottom: 16,
+    fontStyle: 'italic',
+  },
+  discussionList: {
+    gap: 14,
+    marginBottom: 16,
+  },
+  discussionItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    backgroundColor: Colors.surface,
+    padding: 14,
+    borderRadius: 12,
+  },
+  discussionCategoryDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginTop: 6,
+  },
+  discussionContent: {
+    flex: 1,
+  },
+  discussionTopic: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.text,
+    lineHeight: 20,
+    marginBottom: 4,
+  },
+  discussionContext: {
+    fontSize: 12,
+    lineHeight: 18,
+    color: Colors.textMuted,
+  },
+  discussionCategoryLegend: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  legendDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  legendText: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    fontWeight: '500' as const,
+  },
+  reflectionLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.card,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: Colors.primaryLight,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  reflectionLinkIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: Colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  reflectionLinkContent: {
+    flex: 1,
+  },
+  reflectionLinkTitle: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: Colors.text,
+    marginBottom: 2,
+  },
+  reflectionLinkDesc: {
+    fontSize: 12,
+    color: Colors.textSecondary,
   },
 });

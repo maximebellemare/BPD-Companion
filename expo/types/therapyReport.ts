@@ -47,6 +47,12 @@ export interface TherapyReportUrgeSection {
   narrative: string;
 }
 
+export interface TherapyDiscussionPrompt {
+  topic: string;
+  context: string;
+  category: 'emotional' | 'relational' | 'behavioral' | 'growth';
+}
+
 export type TherapyReportPeriod = '7' | '14' | '30';
 
 export interface TherapyReport {
@@ -66,5 +72,6 @@ export interface TherapyReport {
   therapistNote: string;
   checkInCount: number;
   journalReflectionCount: number;
+  discussionPrompts: TherapyDiscussionPrompt[];
   hasEnoughData: boolean;
 }

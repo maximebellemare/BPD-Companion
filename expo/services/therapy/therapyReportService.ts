@@ -8,6 +8,7 @@ import {
   TherapyReportCopingSection,
   TherapyReportProgressSection,
   TherapyReportUrgeSection,
+  TherapyDiscussionPrompt,
 } from '@/types/therapyReport';
 
 function isWithinDays(timestamp: number, days: number): boolean {
@@ -387,6 +388,113 @@ function getTopItem(items: string[]): string | null {
   return sorted[0]?.[0] ?? null;
 }
 
+function buildDiscussionPrompts(
+  entries: JournalEntry[],
+  drafts: MessageDraft[],
+  days: number,
+): TherapyDiscussionPrompt[] {
+  const recent = entries.filter(e => isWithinDays(e.timestamp, days));
+  const recentDrafts = drafts.filter(d => isWithinDays(d.timestamp, days));
+  const prompts: TherapyDiscussionPrompt[] = [];
+
+  const relTriggerCount = recent.filter(e =>
+    e.checkIn.triggers.some(t => t.category === 'relationship')
+  ).length;
+  if (relTriggerCount >= 2) {
+    prompts.push({
+      topic: 'Why does uncertainty in communication feel so destabilizing?',
+      context: `Relationship-related triggers appeared in ${relTriggerCount} check-ins during this period.`,
+      category: 'relational',
+    });
+  }
+
+  const reassuranceUrges = recent.filter(e =>
+    e.checkIn.urges.some(u => u.label.toLowerCase().includes('reassurance'))
+  ).length;
+  if (reassuranceUrges > 0) {
+    prompts.push({
+      topic: 'What happens internally before reassurance-seeking becomes urgent?',
+      context: `Reassurance-seeking urges appeared ${reassuranceUrges} time${reassuranceUrges !== 1 ? 's' : ''}.`,
+      category: 'behavioral',
+    });
+  }
+
+  const highDistress = recent.filter(e => e.checkIn.intensityLevel >= 7);
+  if (highDistress.length >= 2) {
+    prompts.push({
+      topic: 'What makes certain moments feel so much more intense than others?',
+      context: `There were ${highDistress.length} high-distress moments (7+/10) this period.`,
+      category: 'emotional',
+    });
+  }
+
+  const shameEntries = recent.filter(e =>
+    e.checkIn.emotions.some(em => ['Shame', 'Guilt', 'Worthless'].includes(em.label))
+  );
+  if (shameEntries.length >= 2) {
+    prompts.push({
+      topic: 'How can I respond to shame without withdrawing or overexplaining?',
+      context: `Shame-related emotions appeared in ${shameEntries.length} check-ins.`,
+      category: 'emotional',
+    });
+  }
+
+  const rewriteCount = recentDrafts.filter(d => d.rewrittenText).length;
+  if (rewriteCount >= 2) {
+    prompts.push({
+      topic: 'How can I protect my dignity while still asking for connection?',
+      context: `${rewriteCount} messages were rewritten, suggesting communication anxiety.`,
+      category: 'relational',
+    });
+  }
+
+  const abandonmentTriggers = recent.filter(e =>
+    e.checkIn.triggers.some(t =>
+      t.label.toLowerCase().includes('abandon') || t.label.toLowerCase().includes('rejection')
+    )
+  ).length;
+  if (abandonmentTriggers > 0) {
+    prompts.push({
+      topic: 'What does abandonment fear feel like in the body, and what helps ground it?',
+      context: `Abandonment or rejection triggers appeared ${abandonmentTriggers} time${abandonmentTriggers !== 1 ? 's' : ''}.`,
+      category: 'emotional',
+    });
+  }
+
+  const copingCount = recent.reduce((s, e) => s + (e.checkIn.copingUsed?.length ?? 0), 0);
+  if (copingCount >= 3) {
+    prompts.push({
+      topic: 'Which coping strategies feel most natural, and which still feel forced?',
+      context: `Coping tools were used ${copingCount} times this period.`,
+      category: 'growth',
+    });
+  }
+
+  const reflections = recent.filter(e => e.reflection && e.reflection.length > 15).length;
+  if (reflections >= 3) {
+    prompts.push({
+      topic: 'What patterns am I noticing in my own reflections?',
+      context: `${reflections} detailed reflections were written this period.`,
+      category: 'growth',
+    });
+  }
+
+  if (prompts.length === 0) {
+    prompts.push({
+      topic: 'What felt most emotionally significant this week?',
+      context: 'A general reflection to open the session.',
+      category: 'emotional',
+    });
+    prompts.push({
+      topic: 'What is one thing I am learning about myself through tracking?',
+      context: 'Exploring self-awareness growth.',
+      category: 'growth',
+    });
+  }
+
+  return prompts.slice(0, 5);
+}
+
 function getPeriodLabel(days: number): string {
   if (days <= 7) return 'This Week';
   if (days <= 14) return 'Past Two Weeks';
@@ -417,6 +525,7 @@ export function generateTherapyReport(
     urges: buildUrges(journalEntries, periodDays),
     progress: buildProgress(journalEntries, messageDrafts, periodDays),
     therapistNote: buildTherapistNote(journalEntries, messageDrafts, periodDays),
+    discussionPrompts: buildDiscussionPrompts(journalEntries, messageDrafts, periodDays),
     checkInCount: recent.length,
     journalReflectionCount: recent.filter(e => e.reflection && e.reflection.length > 10).length,
     hasEnoughData: recent.length >= 2,

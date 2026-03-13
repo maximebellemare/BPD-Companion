@@ -45,6 +45,8 @@ import CrisisModeCard from '@/components/CrisisModeCard';
 import { useCrisisDetection } from '@/hooks/useCrisisDetection';
 import RelationshipCopilotCard from '@/components/RelationshipCopilotCard';
 import { useRelationshipCopilot } from '@/hooks/useRelationshipCopilot';
+import TherapistReportCard from '@/components/TherapistReportCard';
+import { generateTherapyReport } from '@/services/therapy/therapyReportService';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -62,6 +64,11 @@ export default function HomeScreen() {
 
   const weeklyReflection = useMemo(
     () => generateWeeklyReflection(journalEntries, messageDrafts),
+    [journalEntries, messageDrafts],
+  );
+
+  const therapyReport = useMemo(
+    () => generateTherapyReport(journalEntries, messageDrafts, 7),
     [journalEntries, messageDrafts],
   );
 
@@ -343,6 +350,15 @@ export default function HomeScreen() {
             hasEnoughData={weeklyReflection.hasEnoughData}
             openingNarrative={weeklyReflection.openingNarrative}
             improvementCount={weeklyReflection.growthSignals.improvements.length}
+          />
+        </Animated.View>
+
+        <Animated.View style={{ opacity: fadeAnim }}>
+          <TherapistReportCard
+            checkInCount={therapyReport.checkInCount}
+            hasEnoughData={therapyReport.hasEnoughData}
+            overviewNarrative={therapyReport.overviewNarrative}
+            discussionPromptCount={therapyReport.discussionPrompts.length}
           />
         </Animated.View>
 

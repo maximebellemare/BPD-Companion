@@ -27,6 +27,8 @@ import {
   Bookmark,
   CheckCircle,
   Target,
+  FileText,
+  ChevronRight,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
@@ -395,6 +397,29 @@ export default function WeeklyReflectionScreen() {
         {/* Closing */}
         <Animated.View style={[styles.closingCard, { opacity: slideOpacities[5], transform: [{ translateY: slideAnims[5] }] }]}>
           <Text style={styles.closingText}>{reflection.closingMessage}</Text>
+        </Animated.View>
+
+        <Animated.View style={[styles.reportLink, { opacity: slideOpacities[6], transform: [{ translateY: slideAnims[6] }] }]}>
+          <TouchableOpacity
+            style={styles.reportLinkButton}
+            onPress={() => {
+              if (Platform.OS !== 'web') {
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }
+              router.push('/therapy-report');
+            }}
+            activeOpacity={0.7}
+            testID="open-therapy-report"
+          >
+            <View style={styles.reportLinkIcon}>
+              <FileText size={18} color={Colors.primaryDark} />
+            </View>
+            <View style={styles.reportLinkContent}>
+              <Text style={styles.reportLinkTitle}>Therapist Report</Text>
+              <Text style={styles.reportLinkDesc}>View structured summary for your therapist</Text>
+            </View>
+            <ChevronRight size={16} color={Colors.textMuted} />
+          </TouchableOpacity>
         </Animated.View>
 
         {/* Feedback */}
@@ -1007,5 +1032,44 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600' as const,
     color: Colors.white,
+  },
+  reportLink: {
+    marginBottom: 20,
+  },
+  reportLinkButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.card,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: Colors.primaryLight,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  reportLinkIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: Colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  reportLinkContent: {
+    flex: 1,
+  },
+  reportLinkTitle: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: Colors.text,
+    marginBottom: 2,
+  },
+  reportLinkDesc: {
+    fontSize: 12,
+    color: Colors.textSecondary,
   },
 });

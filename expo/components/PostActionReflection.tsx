@@ -15,7 +15,6 @@ import {
   Sparkles,
   BookOpen,
   ChevronRight,
-  MessageCircle,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
@@ -160,7 +159,7 @@ export default function PostActionReflection({
           <Text style={styles.recordedTitle}>Recorded</Text>
           <Text style={styles.recordedSubtitle}>
             {selectedOutcome === 'helped'
-              ? 'That's a sign of growth. Notice what worked.'
+              ? "That's a sign of growth. Notice what worked."
               : selectedOutcome === 'made_worse'
                 ? "It's okay. Every experience teaches something."
                 : selectedOutcome === 'not_sent'

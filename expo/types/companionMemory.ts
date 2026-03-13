@@ -106,7 +106,7 @@ export interface WeeklyCompanionInsight {
 export interface SkillExercise {
   id: string;
   name: string;
-  category: 'grounding' | 'breathing' | 'pause' | 'reframing' | 'urge_surfing' | 'self_compassion';
+  category: 'grounding' | 'breathing' | 'pause' | 'reframing' | 'urge_surfing' | 'self_compassion' | 'distress_tolerance' | 'emotional_wave';
   steps: SkillExerciseStep[];
   estimatedMinutes: number;
   forEmotionalStates: EmotionalState[];

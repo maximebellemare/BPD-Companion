@@ -231,6 +231,7 @@ function computeHomePriorities(
   add('emotional_storm', 29, true);
   add('early_support', !isCrisis ? 30 : 99, !isCrisis);
   add('early_warning', !isCrisis ? 31 : 99, !isCrisis);
+  add('breakthrough_moments', isCalm || isRecovering ? 19 : 24, !isCrisis);
   add('emotional_insights', isCalm || isRecovering ? 21 : 28, !isCrisis);
   add('emotional_trends', !isCrisis ? 32 : 99, !isCrisis);
   add('smart_coping', !isCrisis ? 33 : 99, !isCrisis);

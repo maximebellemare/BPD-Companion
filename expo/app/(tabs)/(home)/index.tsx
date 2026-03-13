@@ -69,6 +69,8 @@ import { useConflictReplay } from '@/hooks/useConflictReplay';
 import EmotionalInsightsCard from '@/components/EmotionalInsightsCard';
 import SafetyPredictorCard from '@/components/SafetyPredictorCard';
 import { useEmotionalSafety } from '@/hooks/useEmotionalSafety';
+import BreakthroughCard from '@/components/BreakthroughCard';
+import { useBreakthroughs } from '@/hooks/useBreakthroughs';
 
 interface CardSlot {
   key: string;
@@ -104,6 +106,7 @@ export default function HomeScreen() {
   const { trackEvent } = useAnalytics();
   const conflictReplay = useConflictReplay();
   const safetyPrediction = useEmotionalSafety();
+  const breakthroughs = useBreakthroughs();
 
   useEffect(() => {
     trackEvent('screen_view', { screen: 'home' });
@@ -383,6 +386,10 @@ export default function HomeScreen() {
       <SafetyPredictorCard key="safety_predictor" prediction={safetyPrediction} />
     ));
 
+    addSlot('breakthrough_moments', () => (
+      <BreakthroughCard key="breakthrough_moments" summary={breakthroughs.summary} />
+    ));
+
     addSlot('emotional_insights', () => (
       <EmotionalInsightsCard key="emotional_insights" />
     ));
@@ -458,7 +465,7 @@ export default function HomeScreen() {
     dailyCoaching, weeklyReflection, therapyReport, emotionalLoops,
     reflectionMirror, episodeReplayState, stormWarning, emotionalStorm,
     crisisPrediction, earlyWarning, recommendations, topRecommendation, router,
-    conflictReplay, safetyPrediction,
+    conflictReplay, safetyPrediction, breakthroughs.summary,
   ]);
 
   const maxCards = MAX_CARDS_BY_ZONE[zone] ?? 10;

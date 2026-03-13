@@ -35,6 +35,8 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { BRAND } from '@/constants/branding';
 import BrandLogo from '@/components/branding/BrandLogo';
+import OnboardingIllustration from '@/components/branding/illustrations/OnboardingIllustration';
+import type { OnboardingTheme } from '@/components/branding/illustrations/OnboardingIllustration';
 import { useOnboarding } from '@/providers/OnboardingProvider';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
 import {
@@ -263,15 +265,26 @@ export default function OnboardingScreen() {
     outputRange: ['0%', '100%'],
   });
 
+  const STEP_ILLUSTRATION_MAP: Record<number, OnboardingTheme> = {
+    0: 'welcome',
+    1: 'emotions',
+    2: 'relationships',
+    3: 'growth',
+    4: 'pause',
+    5: 'awareness',
+    6: 'growth',
+  };
+
   const renderWelcome = () => (
     <View style={styles.welcomeContainer}>
       <View style={styles.welcomeHeroBg}>
         <View style={styles.welcomeOrbitOuter} />
         <View style={styles.welcomeOrbitInner} />
+        <View style={styles.welcomeGlow} />
         <View style={styles.welcomeHeroContent}>
-          <BrandLogo size={64} variant="light" animated />
+          <BrandLogo size={72} variant="light" animated />
           <Text style={styles.welcomeTitle}>{BRAND.name}</Text>
-          <Text style={styles.welcomeTagline}>{BRAND.tagline}</Text>
+          <Text style={styles.welcomeTagline}>{BRAND.shortTagline}</Text>
         </View>
       </View>
       <Text style={styles.welcomeSubtitle}>
@@ -542,6 +555,12 @@ export default function OnboardingScreen() {
       >
         {currentStep > 0 && (
           <Animated.View style={[styles.stepHeader, { opacity: fadeAnim, transform: [{ translateX: slideAnim }] }]}>
+            <View style={styles.stepIllustrationWrap}>
+              <OnboardingIllustration
+                theme={STEP_ILLUSTRATION_MAP[currentStep] ?? 'default'}
+                size={100}
+              />
+            </View>
             <Text style={styles.stepTitle}>{stepConfig?.title}</Text>
             <Text style={styles.stepSubtitle}>{stepConfig?.subtitle}</Text>
           </Animated.View>
@@ -600,15 +619,15 @@ const styles = StyleSheet.create({
   },
   progressTrack: {
     flex: 1,
-    height: 4,
-    backgroundColor: Colors.border,
-    borderRadius: 2,
+    height: 5,
+    backgroundColor: 'rgba(74, 139, 141, 0.12)',
+    borderRadius: 3,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
     backgroundColor: Colors.brandTeal,
-    borderRadius: 2,
+    borderRadius: 3,
   },
   stepIndicator: {
     fontSize: 12,
@@ -633,8 +652,13 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 24,
   },
+  stepIllustrationWrap: {
+    alignItems: 'center' as const,
+    marginBottom: 20,
+    marginTop: 8,
+  },
   stepHeader: {
-    marginTop: 24,
+    marginTop: 16,
     marginBottom: 24,
   },
   stepTitle: {
@@ -663,10 +687,10 @@ const styles = StyleSheet.create({
   },
   welcomeHeroBg: {
     backgroundColor: Colors.brandNavy,
-    borderRadius: 24,
-    paddingVertical: 40,
+    borderRadius: 28,
+    paddingVertical: 44,
     paddingHorizontal: 24,
-    marginBottom: 24,
+    marginBottom: 28,
     overflow: 'hidden' as const,
     position: 'relative' as const,
   },
@@ -693,6 +717,15 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     borderWidth: 1,
     borderColor: 'rgba(155, 142, 196, 0.1)',
+  },
+  welcomeGlow: {
+    position: 'absolute' as const,
+    top: '30%' as unknown as number,
+    left: '25%' as unknown as number,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(74, 139, 141, 0.06)',
   },
   welcomeTitle: {
     fontSize: 30,
@@ -1022,15 +1055,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    backgroundColor: Colors.brandTeal,
-    borderRadius: 14,
-    paddingVertical: 16,
+    backgroundColor: Colors.brandNavy,
+    borderRadius: 16,
+    paddingVertical: 17,
     gap: 6,
     shadowColor: Colors.brandNavy,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 14,
+    elevation: 5,
   },
   continueButtonDisabled: {
     backgroundColor: Colors.border,

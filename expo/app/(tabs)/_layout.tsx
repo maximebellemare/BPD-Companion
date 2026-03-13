@@ -11,14 +11,19 @@ export default function TabLayout() {
         tabBarInactiveTintColor: Colors.textMuted,
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#FDFCFA',
-          borderTopColor: 'rgba(27,40,56,0.06)',
-          borderTopWidth: 1,
+          backgroundColor: '#FAFAF8',
+          borderTopColor: 'rgba(27,40,56,0.05)',
+          borderTopWidth: 0.5,
+          shadowColor: 'rgba(27,40,56,0.06)',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 1,
+          shadowRadius: 8,
+          elevation: 4,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: '600' as const,
-          letterSpacing: 0.1,
+          letterSpacing: 0.2,
         },
       }}
     >

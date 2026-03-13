@@ -32,20 +32,24 @@ export default function BrandHero({ contextMessage, showFullBrand = true }: Bran
     <Animated.View style={[styles.container, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
       <View style={styles.heroBackground}>
         <View style={styles.orbitRingOuter} />
+        <View style={styles.orbitRingMid} />
         <View style={styles.orbitRingInner} />
         <View style={styles.heroContent}>
           <View style={styles.logoRow}>
-            <BrandLogo size={50} variant="light" animated />
+            <BrandLogo size={54} variant="light" animated />
           </View>
           <Text style={styles.brandName}>{BRAND.name}</Text>
           {showFullBrand && (
-            <Text style={styles.tagline}>{BRAND.tagline}</Text>
+            <Text style={styles.tagline}>{BRAND.shortTagline}</Text>
           )}
           {contextMessage && (
-            <Text style={styles.contextMessage}>{contextMessage}</Text>
+            <View style={styles.contextPill}>
+              <Text style={styles.contextMessage}>{contextMessage}</Text>
+            </View>
           )}
         </View>
         <View style={styles.glowAccent} />
+        <View style={styles.glowAccent2} />
       </View>
     </Animated.View>
   );
@@ -57,8 +61,8 @@ const styles = StyleSheet.create({
   },
   heroBackground: {
     backgroundColor: Colors.brandNavy,
-    borderRadius: 24,
-    paddingVertical: 32,
+    borderRadius: 26,
+    paddingVertical: 30,
     paddingHorizontal: 24,
     overflow: 'hidden' as const,
     position: 'relative' as const,
@@ -68,57 +72,82 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   logoRow: {
-    marginBottom: 16,
+    marginBottom: 14,
   },
   brandName: {
-    fontSize: 28,
-    fontWeight: '800' as const,
+    fontSize: 26,
+    fontWeight: '700' as const,
     color: '#F0EDE9',
-    letterSpacing: -0.8,
+    letterSpacing: -0.6,
     textAlign: 'center' as const,
   },
   tagline: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '500' as const,
-    color: 'rgba(74, 139, 141, 0.9)',
-    marginTop: 6,
+    color: 'rgba(107, 170, 171, 0.9)',
+    marginTop: 5,
     textAlign: 'center' as const,
-    letterSpacing: 0.3,
+    letterSpacing: 0.4,
+  },
+  contextPill: {
+    marginTop: 14,
+    backgroundColor: 'rgba(74, 139, 141, 0.12)',
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 18,
   },
   contextMessage: {
     ...BrandTypography.body,
-    color: 'rgba(240, 237, 233, 0.7)',
-    marginTop: 12,
+    color: 'rgba(240, 237, 233, 0.75)',
     textAlign: 'center' as const,
-    paddingHorizontal: 16,
+    fontSize: 14,
   },
   orbitRingOuter: {
     position: 'absolute' as const,
-    top: -60,
-    right: -60,
-    width: 180,
-    height: 180,
-    borderRadius: 90,
+    top: -70,
+    right: -70,
+    width: 200,
+    height: 200,
+    borderRadius: 100,
     borderWidth: 1,
-    borderColor: 'rgba(74, 139, 141, 0.12)',
+    borderColor: 'rgba(74, 139, 141, 0.08)',
   },
-  orbitRingInner: {
+  orbitRingMid: {
     position: 'absolute' as const,
-    bottom: -40,
-    left: -40,
+    top: -20,
+    right: -20,
     width: 120,
     height: 120,
     borderRadius: 60,
+    borderWidth: 0.8,
+    borderColor: 'rgba(155, 142, 196, 0.06)',
+  },
+  orbitRingInner: {
+    position: 'absolute' as const,
+    bottom: -45,
+    left: -45,
+    width: 130,
+    height: 130,
+    borderRadius: 65,
     borderWidth: 1,
-    borderColor: 'rgba(155, 142, 196, 0.1)',
+    borderColor: 'rgba(155, 142, 196, 0.07)',
   },
   glowAccent: {
     position: 'absolute' as const,
-    top: 20,
-    left: '40%' as unknown as number,
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(74, 139, 141, 0.08)',
+    top: 15,
+    right: 30,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: 'rgba(74, 139, 141, 0.06)',
+  },
+  glowAccent2: {
+    position: 'absolute' as const,
+    bottom: 10,
+    left: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(155, 142, 196, 0.04)',
   },
 });

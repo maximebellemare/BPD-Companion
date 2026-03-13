@@ -43,8 +43,23 @@ export interface NotificationPreferences {
   gentleNudges: boolean;
   weeklyInsights: boolean;
   weeklyReflectionReminder: boolean;
+  weeklyReflectionDay: number;
+  weeklyReflectionTime: string;
   relationshipSupportReminders: boolean;
   regulationFollowUps: boolean;
+  ritualReminders: boolean;
+  morningRitualTime: string;
+  eveningRitualTime: string;
+  calmFollowups: boolean;
+  premiumReflections: boolean;
+  therapistReportReminder: boolean;
+  reengagementReminders: boolean;
+  streakSupport: boolean;
+  quietHoursEnabled: boolean;
+  quietHoursStart: string;
+  quietHoursEnd: string;
+  weekendReminders: boolean;
+  frequency: 'minimal' | 'balanced' | 'supportive';
 }
 
 export interface PrivacySettings {
@@ -88,8 +103,23 @@ export const DEFAULT_PROFILE: UserProfile = {
     gentleNudges: true,
     weeklyInsights: true,
     weeklyReflectionReminder: true,
+    weeklyReflectionDay: 1,
+    weeklyReflectionTime: '10:00',
     relationshipSupportReminders: true,
     regulationFollowUps: true,
+    ritualReminders: true,
+    morningRitualTime: '08:00',
+    eveningRitualTime: '20:00',
+    calmFollowups: true,
+    premiumReflections: true,
+    therapistReportReminder: true,
+    reengagementReminders: true,
+    streakSupport: true,
+    quietHoursEnabled: false,
+    quietHoursStart: '22:00',
+    quietHoursEnd: '07:00',
+    weekendReminders: true,
+    frequency: 'balanced',
   },
   privacy: {
     anonymousCommunityPosts: true,

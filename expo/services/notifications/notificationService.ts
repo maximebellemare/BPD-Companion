@@ -1,10 +1,18 @@
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { NotificationCategory, ScheduledReminder, NotificationEvent } from '@/types/notifications';
+import {
+  NotificationCategory,
+  ScheduledReminder,
+  NotificationEvent,
+  NotificationDebugEntry,
+  QuietHours,
+} from '@/types/notifications';
+import { getCategoryConfig } from './notificationCategories';
 
 const NOTIFICATION_EVENTS_KEY = 'bpd_notification_events';
 const SCHEDULED_REMINDERS_KEY = 'bpd_scheduled_reminders';
+const DEBUG_LOG_KEY = 'bpd_notification_debug_log';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -67,6 +75,51 @@ class NotificationService {
     }
   }
 
+  async getPermissionStatus(): Promise<string> {
+    if (Platform.OS === 'web') return 'web_unsupported';
+    try {
+      const { status } = await Notifications.getPermissionsAsync();
+      return status;
+    } catch {
+      return 'unknown';
+    }
+  }
+
+  isWithinQuietHours(quietHours: QuietHours): boolean {
+    if (!quietHours.enabled) return false;
+
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+    const [startH, startM] = quietHours.startTime.split(':').map(Number);
+    const [endH, endM] = quietHours.endTime.split(':').map(Number);
+    const startMinutes = startH * 60 + startM;
+    const endMinutes = endH * 60 + endM;
+
+    if (startMinutes <= endMinutes) {
+      return currentMinutes >= startMinutes && currentMinutes < endMinutes;
+    }
+    return currentMinutes >= startMinutes || currentMinutes < endMinutes;
+  }
+
+  shouldBlockForSafety(
+    category: NotificationCategory,
+    currentDistress: number,
+  ): boolean {
+    const safetyBlockCategories: NotificationCategory[] = [
+      'premium_reflection',
+      'reengagement',
+      'streak_support',
+    ];
+
+    if (safetyBlockCategories.includes(category) && currentDistress >= 7) {
+      console.log('[NotificationService] Blocked for safety:', category, 'distress:', currentDistress);
+      return true;
+    }
+
+    return false;
+  }
+
   async scheduleReminder(
     category: NotificationCategory,
     title: string,
@@ -74,9 +127,46 @@ class NotificationService {
     triggerSeconds: number,
     repeating: boolean = false,
     data?: Record<string, string>,
+    quietHours?: QuietHours,
+    currentDistress?: number,
   ): Promise<string | null> {
+    const config = getCategoryConfig(category);
+
+    if (quietHours && config?.respectsQuietHours && this.isWithinQuietHours(quietHours)) {
+      console.log('[NotificationService] Blocked by quiet hours:', category);
+      await this.logDebug({
+        type: 'blocked_quiet',
+        category,
+        title,
+        body,
+        timestamp: Date.now(),
+        reason: `Quiet hours active (${quietHours.startTime}–${quietHours.endTime})`,
+      });
+      return null;
+    }
+
+    if (currentDistress !== undefined && this.shouldBlockForSafety(category, currentDistress)) {
+      await this.logDebug({
+        type: 'blocked_safety',
+        category,
+        title,
+        body,
+        timestamp: Date.now(),
+        reason: `High distress (${currentDistress}) — category blocked for emotional safety`,
+      });
+      return null;
+    }
+
     if (Platform.OS === 'web') {
       console.log('[NotificationService] [Web] Would schedule:', { category, title, body });
+      await this.logDebug({
+        type: 'scheduled',
+        category,
+        title,
+        body,
+        timestamp: Date.now(),
+        reason: 'Web platform (simulated)',
+      });
       return `web_${Date.now()}`;
     }
 
@@ -110,6 +200,14 @@ class NotificationService {
       };
 
       await this.saveScheduledReminder(reminder);
+      await this.logDebug({
+        type: 'scheduled',
+        category,
+        title,
+        body,
+        timestamp: Date.now(),
+        reason: `In ${triggerSeconds}s, repeating: ${repeating}`,
+      });
       console.log('[NotificationService] Scheduled:', category, '→', notificationId);
       return notificationId;
     } catch (error) {
@@ -127,6 +225,14 @@ class NotificationService {
   ): Promise<string | null> {
     if (Platform.OS === 'web') {
       console.log('[NotificationService] [Web] Would schedule daily:', { hour, minute, title });
+      await this.logDebug({
+        type: 'scheduled',
+        category,
+        title,
+        body,
+        timestamp: Date.now(),
+        reason: `Daily at ${hour}:${String(minute).padStart(2, '0')} (web simulated)`,
+      });
       return `web_daily_${Date.now()}`;
     }
 
@@ -158,6 +264,14 @@ class NotificationService {
       };
 
       await this.saveScheduledReminder(reminder);
+      await this.logDebug({
+        type: 'scheduled',
+        category,
+        title,
+        body,
+        timestamp: Date.now(),
+        reason: `Daily at ${hour}:${String(minute).padStart(2, '0')}`,
+      });
       console.log('[NotificationService] Scheduled daily:', category, 'at', `${hour}:${minute}`);
       return notificationId;
     } catch (error) {
@@ -176,6 +290,14 @@ class NotificationService {
   ): Promise<string | null> {
     if (Platform.OS === 'web') {
       console.log('[NotificationService] [Web] Would schedule weekly:', { weekday, hour, minute, title });
+      await this.logDebug({
+        type: 'scheduled',
+        category,
+        title,
+        body,
+        timestamp: Date.now(),
+        reason: `Weekly day ${weekday} at ${hour}:${String(minute).padStart(2, '0')} (web simulated)`,
+      });
       return `web_weekly_${Date.now()}`;
     }
 
@@ -208,6 +330,14 @@ class NotificationService {
       };
 
       await this.saveScheduledReminder(reminder);
+      await this.logDebug({
+        type: 'scheduled',
+        category,
+        title,
+        body,
+        timestamp: Date.now(),
+        reason: `Weekly day ${weekday} at ${hour}:${String(minute).padStart(2, '0')}`,
+      });
       console.log('[NotificationService] Scheduled weekly:', category, 'on day', weekday);
       return notificationId;
     } catch (error) {
@@ -239,6 +369,17 @@ class NotificationService {
       await this.cancelReminder(r.id);
     }
 
+    if (matching.length > 0) {
+      await this.logDebug({
+        type: 'cancelled',
+        category,
+        title: `Cancelled ${matching.length} reminders`,
+        body: '',
+        timestamp: Date.now(),
+        reason: `Category: ${category}`,
+      });
+    }
+
     console.log('[NotificationService] Cancelled all for category:', category, `(${matching.length})`);
   }
 
@@ -255,8 +396,10 @@ class NotificationService {
     title: string,
     body: string,
     data?: Record<string, string>,
+    quietHours?: QuietHours,
+    currentDistress?: number,
   ): Promise<string | null> {
-    return this.scheduleReminder(category, title, body, 1, false, data);
+    return this.scheduleReminder(category, title, body, 1, false, data, quietHours, currentDistress);
   }
 
   async recordEvent(event: Omit<NotificationEvent, 'id' | 'sentAt' | 'tapped'>): Promise<void> {
@@ -289,6 +432,40 @@ class NotificationService {
     }
   }
 
+  async getScheduledReminders(): Promise<ScheduledReminder[]> {
+    try {
+      const stored = await AsyncStorage.getItem(SCHEDULED_REMINDERS_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  async getDebugLog(limit: number = 100): Promise<NotificationDebugEntry[]> {
+    try {
+      const stored = await AsyncStorage.getItem(DEBUG_LOG_KEY);
+      const entries: NotificationDebugEntry[] = stored ? JSON.parse(stored) : [];
+      return entries.slice(0, limit);
+    } catch {
+      return [];
+    }
+  }
+
+  async clearDebugLog(): Promise<void> {
+    await AsyncStorage.removeItem(DEBUG_LOG_KEY);
+  }
+
+  private async logDebug(entry: NotificationDebugEntry): Promise<void> {
+    try {
+      const stored = await AsyncStorage.getItem(DEBUG_LOG_KEY);
+      const entries: NotificationDebugEntry[] = stored ? JSON.parse(stored) : [];
+      const updated = [entry, ...entries].slice(0, 500);
+      await AsyncStorage.setItem(DEBUG_LOG_KEY, JSON.stringify(updated));
+    } catch (error) {
+      console.error('[NotificationService] Debug log failed:', error);
+    }
+  }
+
   private async saveScheduledReminder(reminder: ScheduledReminder): Promise<void> {
     try {
       const reminders = await this.getScheduledReminders();
@@ -306,15 +483,6 @@ class NotificationService {
       await AsyncStorage.setItem(SCHEDULED_REMINDERS_KEY, JSON.stringify(updated));
     } catch (error) {
       console.error('[NotificationService] Remove reminder failed:', error);
-    }
-  }
-
-  async getScheduledReminders(): Promise<ScheduledReminder[]> {
-    try {
-      const stored = await AsyncStorage.getItem(SCHEDULED_REMINDERS_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
     }
   }
 }

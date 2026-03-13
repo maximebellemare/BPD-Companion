@@ -1,9 +1,34 @@
 export type NotificationCategory =
   | 'daily_checkin'
   | 'weekly_reflection'
-  | 'regulation_followup'
+  | 'ritual_reminder'
   | 'relationship_support'
+  | 'calm_followup'
+  | 'premium_reflection'
+  | 'therapist_report'
+  | 'reengagement'
+  | 'streak_support'
+  | 'regulation_followup'
   | 'gentle_nudge';
+
+export type ReminderFrequency = 'minimal' | 'balanced' | 'supportive';
+
+export interface QuietHours {
+  enabled: boolean;
+  startTime: string;
+  endTime: string;
+}
+
+export interface NotificationCategoryConfig {
+  id: NotificationCategory;
+  label: string;
+  description: string;
+  defaultEnabled: boolean;
+  defaultTimeWindow: { hour: number; minute: number } | null;
+  respectsQuietHours: boolean;
+  premiumOnly: boolean;
+  safetyExempt: boolean;
+}
 
 export interface ScheduledReminder {
   id: string;
@@ -15,24 +40,6 @@ export interface ScheduledReminder {
   data?: Record<string, string>;
 }
 
-export interface NotificationSettings {
-  dailyCheckInReminder: boolean;
-  checkInReminderTime: string;
-  weeklyReflectionReminder: boolean;
-  relationshipSupportReminders: boolean;
-  regulationFollowUps: boolean;
-  gentleNudges: boolean;
-}
-
-export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
-  dailyCheckInReminder: true,
-  checkInReminderTime: '20:00',
-  weeklyReflectionReminder: true,
-  relationshipSupportReminders: true,
-  regulationFollowUps: true,
-  gentleNudges: true,
-};
-
 export interface NotificationEvent {
   id: string;
   category: NotificationCategory;
@@ -41,4 +48,22 @@ export interface NotificationEvent {
   sentAt: number;
   tapped: boolean;
   data?: Record<string, string>;
+}
+
+export interface NotificationTemplate {
+  category: NotificationCategory;
+  variants: Array<{
+    title: string;
+    body: string;
+  }>;
+  deepLink: string;
+}
+
+export interface NotificationDebugEntry {
+  type: 'scheduled' | 'triggered' | 'cancelled' | 'blocked_quiet' | 'blocked_safety';
+  category: NotificationCategory;
+  title: string;
+  body: string;
+  timestamp: number;
+  reason?: string;
 }

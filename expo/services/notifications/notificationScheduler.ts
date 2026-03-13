@@ -1,18 +1,70 @@
 import { notificationService } from './notificationService';
-import { NotificationSettings } from '@/types/notifications';
+import { getRandomTemplate } from './notificationTemplates';
+import { QuietHours, ReminderFrequency, NotificationCategory } from '@/types/notifications';
 import { JournalEntry } from '@/types';
 
+export interface FullNotificationSettings {
+  dailyCheckInReminder: boolean;
+  checkInReminderTime: string;
+  weeklyReflectionReminder: boolean;
+  weeklyReflectionDay: number;
+  weeklyReflectionTime: string;
+  relationshipSupportReminders: boolean;
+  regulationFollowUps: boolean;
+  gentleNudges: boolean;
+  ritualReminders: boolean;
+  morningRitualTime: string;
+  eveningRitualTime: string;
+  calmFollowups: boolean;
+  premiumReflections: boolean;
+  therapistReportReminder: boolean;
+  reengagementReminders: boolean;
+  streakSupport: boolean;
+  quietHours: QuietHours;
+  weekendReminders: boolean;
+  frequency: ReminderFrequency;
+}
+
+export const DEFAULT_FULL_SETTINGS: FullNotificationSettings = {
+  dailyCheckInReminder: true,
+  checkInReminderTime: '09:00',
+  weeklyReflectionReminder: true,
+  weeklyReflectionDay: 1,
+  weeklyReflectionTime: '10:00',
+  relationshipSupportReminders: true,
+  regulationFollowUps: true,
+  gentleNudges: true,
+  ritualReminders: true,
+  morningRitualTime: '08:00',
+  eveningRitualTime: '20:00',
+  calmFollowups: true,
+  premiumReflections: true,
+  therapistReportReminder: true,
+  reengagementReminders: true,
+  streakSupport: true,
+  quietHours: {
+    enabled: false,
+    startTime: '22:00',
+    endTime: '07:00',
+  },
+  weekendReminders: true,
+  frequency: 'balanced',
+};
+
 class NotificationScheduler {
-  async syncReminders(settings: NotificationSettings): Promise<void> {
+  async syncReminders(settings: FullNotificationSettings): Promise<void> {
     console.log('[NotificationScheduler] Syncing reminders with settings');
 
     await this.syncDailyCheckIn(settings);
     await this.syncWeeklyReflection(settings);
+    await this.syncRitualReminders(settings);
+    await this.syncStreakSupport(settings);
+    await this.syncTherapistReport(settings);
 
     console.log('[NotificationScheduler] Sync complete');
   }
 
-  private async syncDailyCheckIn(settings: NotificationSettings): Promise<void> {
+  private async syncDailyCheckIn(settings: FullNotificationSettings): Promise<void> {
     await notificationService.cancelAllByCategory('daily_checkin');
 
     if (!settings.dailyCheckInReminder) {
@@ -24,22 +76,24 @@ class NotificationScheduler {
     const hour = parseInt(hourStr, 10);
     const minute = parseInt(minuteStr, 10);
 
+    const template = getRandomTemplate('daily_checkin');
+
     await notificationService.scheduleDailyReminder(
       hour,
       minute,
-      'Time to check in',
-      'Take a moment to check in with yourself.',
+      template.title,
+      template.body,
       'daily_checkin',
     );
 
     await notificationService.recordEvent({
       category: 'daily_checkin',
-      title: 'Time to check in',
-      body: 'Take a moment to check in with yourself.',
+      title: template.title,
+      body: template.body,
     });
   }
 
-  private async syncWeeklyReflection(settings: NotificationSettings): Promise<void> {
+  private async syncWeeklyReflection(settings: FullNotificationSettings): Promise<void> {
     await notificationService.cancelAllByCategory('weekly_reflection');
 
     if (!settings.weeklyReflectionReminder) {
@@ -47,93 +101,175 @@ class NotificationScheduler {
       return;
     }
 
+    const [hourStr, minuteStr] = settings.weeklyReflectionTime.split(':');
+    const hour = parseInt(hourStr, 10);
+    const minute = parseInt(minuteStr, 10);
+
+    const template = getRandomTemplate('weekly_reflection');
+
     await notificationService.scheduleWeeklyReminder(
-      1,
-      10,
-      0,
-      'Your weekly reflection is ready',
-      'Look back on this week with compassion and curiosity.',
+      settings.weeklyReflectionDay,
+      hour,
+      minute,
+      template.title,
+      template.body,
       'weekly_reflection',
     );
 
     await notificationService.recordEvent({
       category: 'weekly_reflection',
-      title: 'Your weekly reflection is ready',
-      body: 'Look back on this week with compassion and curiosity.',
+      title: template.title,
+      body: template.body,
     });
+  }
+
+  private async syncRitualReminders(settings: FullNotificationSettings): Promise<void> {
+    await notificationService.cancelAllByCategory('ritual_reminder');
+
+    if (!settings.ritualReminders) {
+      console.log('[NotificationScheduler] Ritual reminders disabled');
+      return;
+    }
+
+    const [morH, morM] = settings.morningRitualTime.split(':').map(Number);
+    await notificationService.scheduleDailyReminder(
+      morH,
+      morM,
+      'Morning ritual',
+      'Start your day by noticing how you feel.',
+      'ritual_reminder',
+    );
+
+    const [eveH, eveM] = settings.eveningRitualTime.split(':').map(Number);
+    await notificationService.scheduleDailyReminder(
+      eveH,
+      eveM,
+      'Evening reflection',
+      'What stood out emotionally today?',
+      'ritual_reminder',
+    );
+  }
+
+  private async syncStreakSupport(settings: FullNotificationSettings): Promise<void> {
+    await notificationService.cancelAllByCategory('streak_support');
+
+    if (!settings.streakSupport) return;
+    if (settings.frequency === 'minimal') return;
+
+    const template = getRandomTemplate('streak_support');
+    await notificationService.scheduleDailyReminder(
+      20,
+      0,
+      template.title,
+      template.body,
+      'streak_support',
+    );
+  }
+
+  private async syncTherapistReport(settings: FullNotificationSettings): Promise<void> {
+    await notificationService.cancelAllByCategory('therapist_report');
+
+    if (!settings.therapistReportReminder) return;
+
+    const template = getRandomTemplate('therapist_report');
+    await notificationService.scheduleWeeklyReminder(
+      5,
+      10,
+      0,
+      template.title,
+      template.body,
+      'therapist_report',
+    );
   }
 
   async scheduleRegulationFollowUp(
     distressLevel: number,
     enabled: boolean,
+    quietHours?: QuietHours,
   ): Promise<void> {
     if (!enabled) return;
-
     if (distressLevel < 6) return;
 
     const delayHours = distressLevel >= 8 ? 2 : 3;
     const delaySec = delayHours * 60 * 60;
 
+    const template = getRandomTemplate('regulation_followup');
+
     await notificationService.scheduleReminder(
       'regulation_followup',
-      'How are you feeling now?',
-      'Things felt intense earlier. You showed up for yourself — how are you now?',
+      template.title,
+      template.body,
       delaySec,
       false,
       { originalDistress: String(distressLevel) },
+      quietHours,
     );
 
     await notificationService.recordEvent({
       category: 'regulation_followup',
-      title: 'How are you feeling now?',
-      body: 'Things felt intense earlier. You showed up for yourself — how are you now?',
+      title: template.title,
+      body: template.body,
     });
 
     console.log('[NotificationScheduler] Regulation follow-up scheduled in', delayHours, 'hours');
+  }
+
+  async scheduleCalmFollowUp(
+    enabled: boolean,
+    quietHours?: QuietHours,
+  ): Promise<void> {
+    if (!enabled) return;
+
+    const delaySec = 4 * 60 * 60;
+    const template = getRandomTemplate('calm_followup');
+
+    await notificationService.scheduleReminder(
+      'calm_followup',
+      template.title,
+      template.body,
+      delaySec,
+      false,
+      undefined,
+      quietHours,
+    );
+
+    await notificationService.recordEvent({
+      category: 'calm_followup',
+      title: template.title,
+      body: template.body,
+    });
+
+    console.log('[NotificationScheduler] Calm follow-up scheduled in 4 hours');
   }
 
   async scheduleRelationshipSupport(
     enabled: boolean,
     recentRelTrigger: boolean,
     recentRewriteCount: number,
+    quietHours?: QuietHours,
   ): Promise<void> {
     if (!enabled) return;
 
     const shouldNudge = recentRelTrigger || recentRewriteCount >= 2;
     if (!shouldNudge) return;
 
-    const messages = [
-      {
-        title: 'A gentle pause',
-        body: 'You might benefit from slowing down before responding.',
-      },
-      {
-        title: 'Relationship support',
-        body: 'Communication stress can be intense. The Copilot is here if you need it.',
-      },
-      {
-        title: 'Before you respond',
-        body: 'A short pause may help protect what matters to you right now.',
-      },
-    ];
-
-    const msg = messages[Math.floor(Math.random() * messages.length)];
-
+    const template = getRandomTemplate('relationship_support');
     const delaySec = 30 * 60;
 
     await notificationService.scheduleReminder(
       'relationship_support',
-      msg.title,
-      msg.body,
+      template.title,
+      template.body,
       delaySec,
       false,
       { trigger: recentRelTrigger ? 'relationship_trigger' : 'rewrite_activity' },
+      quietHours,
     );
 
     await notificationService.recordEvent({
       category: 'relationship_support',
-      title: msg.title,
-      body: msg.body,
+      title: template.title,
+      body: template.body,
     });
 
     console.log('[NotificationScheduler] Relationship support reminder scheduled');
@@ -142,6 +278,7 @@ class NotificationScheduler {
   async scheduleEveningCheckInNudge(
     entries: JournalEntry[],
     enabled: boolean,
+    quietHours?: QuietHours,
   ): Promise<void> {
     if (!enabled) return;
 
@@ -161,22 +298,84 @@ class NotificationScheduler {
     const eveningHour = 20;
 
     if (now.getHours() >= eveningHour) {
+      const template = getRandomTemplate('gentle_nudge');
+
       await notificationService.scheduleReminder(
         'gentle_nudge',
-        'End-of-day check-in',
-        'You haven\'t checked in today. Even a quick one can help.',
+        template.title,
+        template.body,
         60 * 5,
         false,
+        undefined,
+        quietHours,
       );
 
       await notificationService.recordEvent({
         category: 'gentle_nudge',
-        title: 'End-of-day check-in',
-        body: 'You haven\'t checked in today. Even a quick one can help.',
+        title: template.title,
+        body: template.body,
       });
 
       console.log('[NotificationScheduler] Evening nudge scheduled');
     }
+  }
+
+  async scheduleReengagement(
+    enabled: boolean,
+    quietHours?: QuietHours,
+    currentDistress?: number,
+  ): Promise<void> {
+    if (!enabled) return;
+
+    const template = getRandomTemplate('reengagement');
+    const delaySec = 48 * 60 * 60;
+
+    await notificationService.scheduleReminder(
+      'reengagement',
+      template.title,
+      template.body,
+      delaySec,
+      false,
+      undefined,
+      quietHours,
+      currentDistress,
+    );
+  }
+
+  async schedulePremiumReflection(
+    enabled: boolean,
+    isPremium: boolean,
+    quietHours?: QuietHours,
+    currentDistress?: number,
+  ): Promise<void> {
+    if (!enabled || !isPremium) return;
+
+    const template = getRandomTemplate('premium_reflection');
+    const delaySec = 6 * 60 * 60;
+
+    await notificationService.scheduleReminder(
+      'premium_reflection',
+      template.title,
+      template.body,
+      delaySec,
+      false,
+      undefined,
+      quietHours,
+      currentDistress,
+    );
+  }
+
+  async triggerTestNotification(category: NotificationCategory): Promise<void> {
+    const template = getRandomTemplate(category);
+    await notificationService.scheduleReminder(
+      category,
+      `[TEST] ${template.title}`,
+      template.body,
+      2,
+      false,
+      { test: 'true' },
+    );
+    console.log('[NotificationScheduler] Test notification triggered for:', category);
   }
 
   async cancelAllReminders(): Promise<void> {

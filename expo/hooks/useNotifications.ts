@@ -1,13 +1,14 @@
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useMemo } from 'react';
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { useRouter } from 'expo-router';
 import { notificationService } from '@/services/notifications/notificationService';
-import { notificationScheduler } from '@/services/notifications/notificationScheduler';
+import { notificationScheduler, FullNotificationSettings } from '@/services/notifications/notificationScheduler';
+import { getDeepLinkForCategory } from '@/services/notifications/notificationCategories';
 import { useProfile } from '@/providers/ProfileProvider';
 import { useEmotionalContext } from '@/providers/EmotionalContextProvider';
 import { useApp } from '@/providers/AppProvider';
-import { NotificationSettings } from '@/types/notifications';
+import { QuietHours } from '@/types/notifications';
 
 export function useNotifications() {
   const router = useRouter();
@@ -17,42 +18,50 @@ export function useNotifications() {
   const lastSyncRef = useRef<string>('');
   const contextCheckRef = useRef<number>(0);
 
-  const dailyCheckInReminder = profile.notifications.dailyCheckInReminder;
-  const checkInReminderTime = profile.notifications.checkInReminderTime;
-  const weeklyReflectionReminder = profile.notifications.weeklyReflectionReminder ?? profile.notifications.weeklyInsights;
-  const relationshipSupportReminders = profile.notifications.relationshipSupportReminders ?? profile.notifications.gentleNudges;
-  const regulationFollowUps = profile.notifications.regulationFollowUps ?? profile.notifications.gentleNudges;
-  const gentleNudges = profile.notifications.gentleNudges;
+  const quietHours = useMemo<QuietHours>(() => ({
+    enabled: profile.notifications.quietHoursEnabled,
+    startTime: profile.notifications.quietHoursStart,
+    endTime: profile.notifications.quietHoursEnd,
+  }), [
+    profile.notifications.quietHoursEnabled,
+    profile.notifications.quietHoursStart,
+    profile.notifications.quietHoursEnd,
+  ]);
 
-  const settings: NotificationSettings = {
-    dailyCheckInReminder,
-    checkInReminderTime,
-    weeklyReflectionReminder,
-    relationshipSupportReminders,
-    regulationFollowUps,
-    gentleNudges,
-  };
+  const fullSettings = useMemo<FullNotificationSettings>(() => ({
+    dailyCheckInReminder: profile.notifications.dailyCheckInReminder,
+    checkInReminderTime: profile.notifications.checkInReminderTime,
+    weeklyReflectionReminder: profile.notifications.weeklyReflectionReminder ?? profile.notifications.weeklyInsights,
+    weeklyReflectionDay: profile.notifications.weeklyReflectionDay ?? 1,
+    weeklyReflectionTime: profile.notifications.weeklyReflectionTime ?? '10:00',
+    relationshipSupportReminders: profile.notifications.relationshipSupportReminders ?? profile.notifications.gentleNudges,
+    regulationFollowUps: profile.notifications.regulationFollowUps ?? profile.notifications.gentleNudges,
+    gentleNudges: profile.notifications.gentleNudges,
+    ritualReminders: profile.notifications.ritualReminders ?? true,
+    morningRitualTime: profile.notifications.morningRitualTime ?? '08:00',
+    eveningRitualTime: profile.notifications.eveningRitualTime ?? '20:00',
+    calmFollowups: profile.notifications.calmFollowups ?? true,
+    premiumReflections: profile.notifications.premiumReflections ?? true,
+    therapistReportReminder: profile.notifications.therapistReportReminder ?? true,
+    reengagementReminders: profile.notifications.reengagementReminders ?? true,
+    streakSupport: profile.notifications.streakSupport ?? true,
+    quietHours,
+    weekendReminders: profile.notifications.weekendReminders ?? true,
+    frequency: profile.notifications.frequency ?? 'balanced',
+  }), [profile.notifications, quietHours]);
 
   useEffect(() => {
     void notificationService.initialize();
   }, []);
 
   useEffect(() => {
-    const currentSettings: NotificationSettings = {
-      dailyCheckInReminder,
-      checkInReminderTime,
-      weeklyReflectionReminder,
-      relationshipSupportReminders,
-      regulationFollowUps,
-      gentleNudges,
-    };
-    const settingsKey = JSON.stringify(currentSettings);
+    const settingsKey = JSON.stringify(fullSettings);
     if (settingsKey === lastSyncRef.current) return;
     lastSyncRef.current = settingsKey;
 
-    void notificationScheduler.syncReminders(currentSettings);
+    void notificationScheduler.syncReminders(fullSettings);
     console.log('[useNotifications] Reminders synced with profile settings');
-  }, [dailyCheckInReminder, checkInReminderTime, weeklyReflectionReminder, relationshipSupportReminders, regulationFollowUps, gentleNudges]);
+  }, [fullSettings]);
 
   useEffect(() => {
     if (Platform.OS === 'web') return;
@@ -64,22 +73,9 @@ export function useNotifications() {
 
         console.log('[useNotifications] Notification tapped:', category);
 
-        switch (category) {
-          case 'daily_checkin':
-          case 'gentle_nudge':
-            router.push('/check-in' as never);
-            break;
-          case 'weekly_reflection':
-            router.push('/weekly-reflection' as never);
-            break;
-          case 'regulation_followup':
-            router.push('/check-in' as never);
-            break;
-          case 'relationship_support':
-            router.push('/relationship-copilot' as never);
-            break;
-          default:
-            break;
+        if (category) {
+          const deepLink = getDeepLinkForCategory(category);
+          router.push(deepLink as never);
         }
       },
     );
@@ -97,44 +93,58 @@ export function useNotifications() {
     if (activeContext.highDistressRecent && activeContext.latestIntensity >= 6) {
       void notificationScheduler.scheduleRegulationFollowUp(
         activeContext.latestIntensity,
-        settings.regulationFollowUps,
+        fullSettings.regulationFollowUps,
+        quietHours,
       );
     }
 
     if (activeContext.activeRelationshipContext || activeContext.recentRewriteCount >= 2) {
       void notificationScheduler.scheduleRelationshipSupport(
-        settings.relationshipSupportReminders,
+        fullSettings.relationshipSupportReminders,
         activeContext.activeRelationshipContext,
         activeContext.recentRewriteCount,
+        quietHours,
       );
     }
-  }, [activeContext, settings.regulationFollowUps, settings.relationshipSupportReminders]);
+  }, [activeContext, fullSettings.regulationFollowUps, fullSettings.relationshipSupportReminders, quietHours]);
 
   useEffect(() => {
     void notificationScheduler.scheduleEveningCheckInNudge(
       journalEntries,
-      settings.dailyCheckInReminder,
+      fullSettings.dailyCheckInReminder,
+      quietHours,
     );
-  }, [journalEntries, settings.dailyCheckInReminder]);
+  }, [journalEntries, fullSettings.dailyCheckInReminder, quietHours]);
 
   const triggerRegulationFollowUp = useCallback((distressLevel: number) => {
     void notificationScheduler.scheduleRegulationFollowUp(
       distressLevel,
-      settings.regulationFollowUps,
+      fullSettings.regulationFollowUps,
+      quietHours,
     );
-  }, [settings.regulationFollowUps]);
+  }, [fullSettings.regulationFollowUps, quietHours]);
 
   const triggerRelationshipSupport = useCallback(() => {
     void notificationScheduler.scheduleRelationshipSupport(
-      settings.relationshipSupportReminders,
+      fullSettings.relationshipSupportReminders,
       true,
       0,
+      quietHours,
     );
-  }, [settings.relationshipSupportReminders]);
+  }, [fullSettings.relationshipSupportReminders, quietHours]);
+
+  const triggerCalmFollowUp = useCallback(() => {
+    void notificationScheduler.scheduleCalmFollowUp(
+      fullSettings.calmFollowups,
+      quietHours,
+    );
+  }, [fullSettings.calmFollowups, quietHours]);
 
   return {
     triggerRegulationFollowUp,
     triggerRelationshipSupport,
-    settings,
+    triggerCalmFollowUp,
+    settings: fullSettings,
+    quietHours,
   };
 }

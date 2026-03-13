@@ -1,8 +1,16 @@
+export type ContactRelationshipType = 'friend' | 'partner' | 'therapist' | 'family' | 'other';
+export type ContactMethod = 'call' | 'text' | 'email';
+
 export interface TrustedContact {
   id: string;
   name: string;
+  relationshipType: ContactRelationshipType;
   phone: string;
-  relationship: string;
+  email: string;
+  preferredContactMethod: ContactMethod;
+  notes: string;
+  showInCrisisMode: boolean;
+  createdAt: number;
 }
 
 export interface UserProfile {

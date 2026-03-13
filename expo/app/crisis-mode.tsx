@@ -26,12 +26,12 @@ import {
   ChevronLeft,
   Sparkles,
   Check,
-  Users,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { CrisisModePhase } from '@/types/crisis';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
+import TrustedSupportCard from '@/components/TrustedSupportCard';
 import {
   GROUNDING_PROMPTS,
   MESSAGE_DELAY_OPTIONS,
@@ -510,15 +510,11 @@ export default function CrisisModeScreen() {
 
   const renderContactPhase = () => (
     <View style={styles.phaseContent}>
-      <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-        <View style={styles.contactIconWrap}>
-          <Users size={28} color="#5B8FB9" />
-        </View>
-      </Animated.View>
-      <Text style={styles.contactTitle}>Reach Out</Text>
-      <Text style={styles.contactSubtitle}>
-        You don't have to go through this alone
-      </Text>
+      <TrustedSupportCard variant="crisis" maxContacts={5} />
+
+      <View style={styles.crisisLinesSpacer} />
+
+      <Text style={styles.crisisLinesHeader}>Crisis Lines</Text>
 
       <TouchableOpacity
         style={styles.contactCard}
@@ -1135,5 +1131,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500' as const,
     color: Colors.textSecondary,
+  },
+  crisisLinesSpacer: {
+    height: 20,
+  },
+  crisisLinesHeader: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.textSecondary,
+    letterSpacing: 0.3,
+    marginBottom: 12,
+    alignSelf: 'flex-start',
   },
 });

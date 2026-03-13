@@ -73,6 +73,7 @@ import BreakthroughCard from '@/components/BreakthroughCard';
 import { useBreakthroughs } from '@/hooks/useBreakthroughs';
 import DailyRitualsCard from '@/components/DailyRitualsCard';
 import { dailyRitualsRepository } from '@/services/repositories';
+import TrustedSupportCard from '@/components/TrustedSupportCard';
 
 interface CardSlot {
   key: string;
@@ -468,6 +469,10 @@ export default function HomeScreen() {
         completions={dailyRitualCompletions}
         onPress={() => router.push('/daily-rituals')}
       />
+    ));
+
+    addSlot('trusted_support', () => (
+      <TrustedSupportCard key="trusted_support" variant="home" />
     ));
 
     addSlot('upgrade_prompt', () => (

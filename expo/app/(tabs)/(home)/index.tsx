@@ -47,6 +47,7 @@ import RelationshipCopilotCard from '@/components/RelationshipCopilotCard';
 import { useRelationshipCopilot } from '@/hooks/useRelationshipCopilot';
 import TherapistReportCard from '@/components/TherapistReportCard';
 import { generateTherapyReport } from '@/services/therapy/therapyReportService';
+import IdentityBuilderCard from '@/components/IdentityBuilderCard';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -373,6 +374,10 @@ export default function HomeScreen() {
             recentDraftCount={recentRelationshipDistress.recentDraftCount}
             lastSessionLabel={lastSession ? 'recent' : null}
           />
+        </Animated.View>
+
+        <Animated.View style={{ opacity: fadeAnim }}>
+          <IdentityBuilderCard />
         </Animated.View>
 
         <Animated.View style={{ opacity: fadeAnim }}>

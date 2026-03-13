@@ -38,7 +38,7 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useProfile } from '@/providers/ProfileProvider';
 import { useSubscription } from '@/providers/SubscriptionProvider';
-import { Crown, Compass, HeartHandshake } from 'lucide-react-native';
+import { Crown, Compass, HeartHandshake, Fingerprint } from 'lucide-react-native';
 import { useCoaching } from '@/hooks/useCoaching';
 
 export default function ProfileScreen() {
@@ -314,6 +314,27 @@ export default function ProfileScreen() {
               <View style={styles.patternsBannerContent}>
                 <Text style={styles.patternsBannerTitle}>Relationship Profiles</Text>
                 <Text style={styles.patternsBannerDesc}>Track patterns with specific people</Text>
+              </View>
+            </View>
+            <ChevronRight size={18} color={Colors.white} style={{ opacity: 0.7 }} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.identityBanner}
+            onPress={() => {
+              handleHaptic();
+              router.push('/values-explorer' as never);
+            }}
+            activeOpacity={0.7}
+            testID="identity-values-btn"
+          >
+            <View style={styles.patternsBannerLeft}>
+              <View style={[styles.patternsBannerIcon, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                <Fingerprint size={20} color={Colors.white} />
+              </View>
+              <View style={styles.patternsBannerContent}>
+                <Text style={styles.patternsBannerTitle}>Identity & Values</Text>
+                <Text style={styles.patternsBannerDesc}>Build self-trust and a stable sense of self</Text>
               </View>
             </View>
             <ChevronRight size={18} color={Colors.white} style={{ opacity: 0.7 }} />
@@ -975,6 +996,14 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   reflectionBanner: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    backgroundColor: '#2D8B7A',
+    padding: 18,
+    borderRadius: 18,
+    marginTop: 10,
+  },
+  identityBanner: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     backgroundColor: '#2D8B7A',

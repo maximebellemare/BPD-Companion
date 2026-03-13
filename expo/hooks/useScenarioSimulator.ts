@@ -172,6 +172,10 @@ export function useScenarioSimulator() {
     }
   }, [step]);
 
+  const clearFeedback = useCallback(() => {
+    setCurrentFeedback(null);
+  }, []);
+
   return {
     step,
     input,
@@ -193,5 +197,6 @@ export function useScenarioSimulator() {
     completeSession,
     reset,
     goBack,
+    clearFeedback,
   };
 }

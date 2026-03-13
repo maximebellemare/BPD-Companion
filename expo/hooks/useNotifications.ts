@@ -47,6 +47,8 @@ export function useNotifications() {
     therapistReportReminder: profile.notifications.therapistReportReminder ?? true,
     reengagementReminders: profile.notifications.reengagementReminders ?? true,
     streakSupport: profile.notifications.streakSupport ?? true,
+    premiumInsightReminders: profile.notifications.premiumInsightReminders ?? true,
+    upgradeReminders: profile.notifications.upgradeReminders ?? true,
     quietHours,
     weekendReminders: profile.notifications.weekendReminders ?? true,
     frequency: profile.notifications.frequency ?? 'balanced',

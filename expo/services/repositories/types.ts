@@ -18,7 +18,7 @@ import {
   BlockedUser,
 } from '@/types/community';
 
-export interface ServiceResult<T> {
+export type ServiceResult<T> = {
   data: T;
   error: null;
 } | {

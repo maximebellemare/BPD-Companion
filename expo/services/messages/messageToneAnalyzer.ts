@@ -28,7 +28,7 @@ const ANGRY_PATTERNS = [
   /i('m| am) (so |)(sick|tired|done|fed up)/i,
   /how (could|dare) you/i,
   /you don('t|t) (even |)(care|give)/i,
-  /f(u|*)ck/i,
+  /f(u|\*)ck/i,
   /screw (you|this)/i,
   /i hate/i,
   /what('s|s| is) wrong with you/i,

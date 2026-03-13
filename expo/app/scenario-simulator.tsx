@@ -121,6 +121,7 @@ export default function ScenarioSimulatorScreen() {
     completeSession,
     reset,
     goBack,
+    clearFeedback,
   } = useScenarioSimulator();
 
   const [selectedContext, setSelectedContext] = useState<string | null>(null);
@@ -528,7 +529,7 @@ export default function ScenarioSimulatorScreen() {
               style={styles.secondaryBtn}
               onPress={() => {
                 setPracticeText('');
-                setCurrentFeedback(null);
+                clearFeedback();
               }}
               activeOpacity={0.7}
             >

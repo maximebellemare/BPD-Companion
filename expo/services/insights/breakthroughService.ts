@@ -169,7 +169,7 @@ function detectConsistentCheckins(entries: JournalEntry[]): BreakthroughMoment[]
       type: 'consistent_checkin',
       title: 'Consistent self-awareness',
       description: `${recentEntries.length} check-ins this week. You're building a powerful habit.`,
-      supportiveNote: 'Showing up for yourself, even when it's hard, is growth.',
+      supportiveNote: "Showing up for yourself, even when it's hard, is growth.",
       saved: false,
       shared: false,
     });

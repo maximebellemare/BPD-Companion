@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -25,18 +25,36 @@ import {
   AlertTriangle,
   TrendingUp,
   Link2,
+  PenLine,
+  Eye,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useRelationshipSpiral } from '@/hooks/useRelationshipSpiral';
+import { useRelationshipGuard } from '@/hooks/useRelationshipGuard';
 import { SpiralRiskLevel, SpiralIntervention, SpiralChain, SpiralSignal } from '@/types/relationshipPrediction';
 import { RiskInterpretation } from '@/services/prediction/relationshipRiskInterpreter';
+import {
+  GuardAlertLevel,
+  GuardIntervention,
+  GuardSignalSummary,
+  ResponseSimulation,
+} from '@/types/relationshipSpiral';
 
 const RISK_THEME: Record<SpiralRiskLevel, { bg: string; accent: string; label: string; icon: string }> = {
   calm: { bg: Colors.primaryLight, accent: Colors.primary, label: 'Calm', icon: '🌿' },
   watchful: { bg: '#FFF9F0', accent: '#C8975A', label: 'Watchful', icon: '👀' },
   rising: { bg: '#FFF5EE', accent: '#D4764E', label: 'Rising', icon: '🌊' },
   urgent: { bg: '#FFF0ED', accent: '#C94438', label: 'Needs Attention', icon: '⚡' },
+};
+
+const ALERT_THEME: Record<GuardAlertLevel, { bg: string; accent: string; label: string }> = {
+  none: { bg: Colors.primaryLight, accent: Colors.primary, label: 'Clear' },
+  gentle: { bg: '#F0F7F3', accent: '#6B9080', label: 'Gentle notice' },
+  moderate: { bg: '#FFF9F0', accent: '#C8975A', label: 'Take care' },
+  strong: { bg: '#FFF0ED', accent: '#D4764E', label: 'Slow down' },
 };
 
 const INTERVENTION_ICONS: Record<string, typeof Timer> = {
@@ -46,14 +64,19 @@ const INTERVENTION_ICONS: Record<string, typeof Timer> = {
   BookOpen,
   Sparkles,
   Wind,
+  PenLine,
+  Eye,
 };
 
 export default function RelationshipSpiralScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const spiral = useRelationshipSpiral();
+  const guard = useRelationshipGuard();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
+  const [expandedSim, setExpandedSim] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'guard' | 'signals'>('guard');
 
   useEffect(() => {
     Animated.parallel([
@@ -76,8 +99,16 @@ export default function RelationshipSpiralScreen() {
     router.push(route as never);
   }, [router]);
 
+  const handleToggleSim = useCallback((id: string) => {
+    if (Platform.OS !== 'web') {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setExpandedSim(prev => prev === id ? null : id);
+  }, []);
+
   const theme = RISK_THEME[spiral.riskLevel];
-  const hasData = spiral.signals.length > 0 || spiral.chains.length > 0;
+  const alertTheme = ALERT_THEME[guard.alertLevel];
+  const hasData = guard.signals.length > 0 || spiral.signals.length > 0;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -97,90 +128,170 @@ export default function RelationshipSpiralScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
-          <View style={[styles.heroSection, { backgroundColor: theme.bg }]}>
-            <View style={styles.heroIconRow}>
-              <View style={[styles.heroIcon, { backgroundColor: theme.accent + '14' }]}>
-                <HeartCrack size={28} color={theme.accent} />
-              </View>
+          <View style={[styles.heroSection, { backgroundColor: alertTheme.bg }]}>
+            <View style={[styles.heroIcon, { backgroundColor: alertTheme.accent + '14' }]}>
+              <HeartCrack size={28} color={alertTheme.accent} />
             </View>
-            <Text style={styles.heroTitle}>Relationship Risk Signals</Text>
+            <Text style={styles.heroTitle}>Relationship Spiral Guard</Text>
             <Text style={styles.heroSubtitle}>
-              Patterns that may indicate a relationship spiral is building
+              Detecting patterns that may lead to impulsive communication or emotional spirals
             </Text>
 
-            <View style={[styles.riskIndicator, { backgroundColor: theme.accent + '12' }]}>
-              <Text style={styles.riskEmoji}>{theme.icon}</Text>
-              <View style={styles.riskTextWrap}>
-                <Text style={[styles.riskLabel, { color: theme.accent }]}>
-                  Current Level: {theme.label}
+            <View style={[styles.alertIndicator, { backgroundColor: alertTheme.accent + '12' }]}>
+              <View style={[styles.alertDot, { backgroundColor: alertTheme.accent }]} />
+              <View style={styles.alertTextWrap}>
+                <Text style={[styles.alertLabel, { color: alertTheme.accent }]}>
+                  {alertTheme.label}
                 </Text>
-                <Text style={styles.riskScore}>
-                  {spiral.score > 0 ? `${spiral.signals.length} active signal${spiral.signals.length !== 1 ? 's' : ''}` : 'No signals detected'}
+                <Text style={styles.alertMeta}>
+                  {guard.signals.length > 0
+                    ? `${guard.signals.length} signal${guard.signals.length !== 1 ? 's' : ''} detected`
+                    : 'No active signals'}
                 </Text>
               </View>
             </View>
           </View>
 
-          {spiral.message && (
+          {guard.primaryMessage && (
             <View style={styles.messageCard}>
-              <ShieldCheck size={16} color={theme.accent} />
-              <Text style={styles.messageText}>{spiral.message}</Text>
+              <ShieldCheck size={16} color={alertTheme.accent} />
+              <Text style={styles.messageText}>{guard.primaryMessage}</Text>
             </View>
           )}
 
-          {spiral.supportMessage && (
+          {guard.supportNarrative && (
             <View style={styles.supportCard}>
-              <Text style={styles.supportText}>{spiral.supportMessage}</Text>
+              <Text style={styles.supportText}>{guard.supportNarrative}</Text>
             </View>
           )}
 
-          {spiral.interventions.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>What may help right now</Text>
-              {spiral.interventions.map(intervention => (
-                <InterventionCard
-                  key={intervention.id}
-                  intervention={intervention}
-                  onPress={() => handleIntervention(intervention.route)}
-                />
-              ))}
+          {hasData && (
+            <View style={styles.tabRow}>
+              <TouchableOpacity
+                style={[styles.tab, activeTab === 'guard' && styles.tabActive]}
+                onPress={() => setActiveTab('guard')}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.tabText, activeTab === 'guard' && styles.tabTextActive]}>
+                  Guard
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.tab, activeTab === 'signals' && styles.tabActive]}
+                onPress={() => setActiveTab('signals')}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.tabText, activeTab === 'signals' && styles.tabTextActive]}>
+                  Signals
+                </Text>
+              </TouchableOpacity>
             </View>
           )}
 
-          {spiral.signals.length > 0 && (
-            <View style={styles.section}>
-              <View style={styles.sectionHeaderRow}>
-                <TrendingUp size={16} color={Colors.textMuted} />
-                <Text style={styles.sectionTitle}>Active Signals</Text>
-              </View>
-              {spiral.signals.map(signal => (
-                <SignalCard key={signal.id} signal={signal} accentColor={theme.accent} />
-              ))}
-            </View>
+          {activeTab === 'guard' && (
+            <>
+              {guard.interventions.length > 0 && (
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>What may help right now</Text>
+                  {guard.interventions.slice(0, 4).map(intervention => (
+                    <GuardInterventionCard
+                      key={intervention.id}
+                      intervention={intervention}
+                      onPress={() => handleIntervention(intervention.route)}
+                    />
+                  ))}
+                </View>
+              )}
+
+              {guard.simulations.length > 0 && (
+                <View style={styles.section}>
+                  <View style={styles.sectionHeaderRow}>
+                    <Eye size={16} color={Colors.textMuted} />
+                    <Text style={styles.sectionTitle}>Response Simulations</Text>
+                  </View>
+                  <Text style={styles.sectionHint}>
+                    See how different responses might feel and affect the relationship
+                  </Text>
+                  {guard.simulations.map(sim => (
+                    <SimulationCard
+                      key={sim.id}
+                      simulation={sim}
+                      expanded={expandedSim === sim.id}
+                      onToggle={() => handleToggleSim(sim.id)}
+                    />
+                  ))}
+                </View>
+              )}
+
+              {guard.signals.length > 0 && (
+                <View style={styles.section}>
+                  <View style={styles.sectionHeaderRow}>
+                    <TrendingUp size={16} color={Colors.textMuted} />
+                    <Text style={styles.sectionTitle}>Active Guard Signals</Text>
+                  </View>
+                  {guard.signals.map(signal => (
+                    <GuardSignalCard
+                      key={signal.id}
+                      signal={signal}
+                      accentColor={alertTheme.accent}
+                    />
+                  ))}
+                </View>
+              )}
+            </>
           )}
 
-          {spiral.chains.length > 0 && (
-            <View style={styles.section}>
-              <View style={styles.sectionHeaderRow}>
-                <Link2 size={16} color={Colors.textMuted} />
-                <Text style={styles.sectionTitle}>Common Spiral Chains</Text>
-              </View>
-              <Text style={styles.sectionHint}>
-                Patterns that tend to appear together in your data
-              </Text>
-              {spiral.chains.map(chain => (
-                <ChainCard key={chain.id} chain={chain} />
-              ))}
-            </View>
-          )}
+          {activeTab === 'signals' && (
+            <>
+              {spiral.interventions.length > 0 && (
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Interventions</Text>
+                  {spiral.interventions.map(intervention => (
+                    <SpiralInterventionCard
+                      key={intervention.id}
+                      intervention={intervention}
+                      onPress={() => handleIntervention(intervention.route)}
+                    />
+                  ))}
+                </View>
+              )}
 
-          {spiral.interpretations.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>What this means</Text>
-              {spiral.interpretations.map(interp => (
-                <InterpretationCard key={interp.id} interpretation={interp} />
-              ))}
-            </View>
+              {spiral.signals.length > 0 && (
+                <View style={styles.section}>
+                  <View style={styles.sectionHeaderRow}>
+                    <TrendingUp size={16} color={Colors.textMuted} />
+                    <Text style={styles.sectionTitle}>Spiral Signals</Text>
+                  </View>
+                  {spiral.signals.map(signal => (
+                    <SignalCard key={signal.id} signal={signal} accentColor={theme.accent} />
+                  ))}
+                </View>
+              )}
+
+              {spiral.chains.length > 0 && (
+                <View style={styles.section}>
+                  <View style={styles.sectionHeaderRow}>
+                    <Link2 size={16} color={Colors.textMuted} />
+                    <Text style={styles.sectionTitle}>Common Spiral Chains</Text>
+                  </View>
+                  <Text style={styles.sectionHint}>
+                    Patterns that tend to appear together in your data
+                  </Text>
+                  {spiral.chains.map(chain => (
+                    <ChainCard key={chain.id} chain={chain} />
+                  ))}
+                </View>
+              )}
+
+              {spiral.interpretations.length > 0 && (
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>What this means</Text>
+                  {spiral.interpretations.map(interp => (
+                    <InterpretationCard key={interp.id} interpretation={interp} />
+                  ))}
+                </View>
+              )}
+            </>
           )}
 
           {!hasData && (
@@ -190,7 +301,7 @@ export default function RelationshipSpiralScreen() {
               </View>
               <Text style={styles.emptyTitle}>No signals right now</Text>
               <Text style={styles.emptyDesc}>
-                As you use the app more, this screen will show relationship patterns and early signals to help you stay grounded.
+                As you use the app more, this screen will detect relationship-triggered emotional patterns and help you intervene before spirals build.
               </Text>
             </View>
           )}
@@ -207,7 +318,141 @@ export default function RelationshipSpiralScreen() {
   );
 }
 
-function InterventionCard({ intervention, onPress }: { intervention: SpiralIntervention; onPress: () => void }) {
+function SimulationCard({
+  simulation,
+  expanded,
+  onToggle,
+}: {
+  simulation: ResponseSimulation;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  const animHeight = useRef(new Animated.Value(expanded ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.timing(animHeight, {
+      toValue: expanded ? 1 : 0,
+      duration: 250,
+      useNativeDriver: false,
+    }).start();
+  }, [expanded, animHeight]);
+
+  return (
+    <View style={[
+      styles.simCard,
+      simulation.isRecommended && styles.simCardRecommended,
+    ]}>
+      <TouchableOpacity
+        style={styles.simHeader}
+        onPress={onToggle}
+        activeOpacity={0.7}
+      >
+        <Text style={styles.simEmoji}>{simulation.emoji}</Text>
+        <View style={styles.simHeaderText}>
+          <View style={styles.simLabelRow}>
+            <Text style={[styles.simLabel, { color: simulation.color }]}>{simulation.label}</Text>
+            {simulation.isRecommended && (
+              <View style={[styles.recommendedBadge, { backgroundColor: simulation.color + '18' }]}>
+                <Text style={[styles.recommendedText, { color: simulation.color }]}>recommended</Text>
+              </View>
+            )}
+          </View>
+        </View>
+        {expanded ? (
+          <ChevronUp size={16} color={Colors.textMuted} />
+        ) : (
+          <ChevronDown size={16} color={Colors.textMuted} />
+        )}
+      </TouchableOpacity>
+
+      {expanded && (
+        <View style={styles.simBody}>
+          <View style={styles.simMessageWrap}>
+            <Text style={styles.simMessageLabel}>Example message</Text>
+            <Text style={styles.simMessage}>"{simulation.exampleMessage}"</Text>
+          </View>
+
+          <View style={styles.simImpactRow}>
+            <View style={styles.simImpactCard}>
+              <Text style={styles.simImpactLabel}>Emotional impact</Text>
+              <Text style={styles.simImpactText}>{simulation.emotionalImpact}</Text>
+            </View>
+            <View style={styles.simImpactCard}>
+              <Text style={styles.simImpactLabel}>Relationship impact</Text>
+              <Text style={styles.simImpactText}>{simulation.relationshipImpact}</Text>
+            </View>
+          </View>
+        </View>
+      )}
+    </View>
+  );
+}
+
+function GuardInterventionCard({
+  intervention,
+  onPress,
+}: {
+  intervention: GuardIntervention;
+  onPress: () => void;
+}) {
+  const IconComp = INTERVENTION_ICONS[intervention.icon] ?? Wind;
+
+  return (
+    <TouchableOpacity
+      style={styles.interventionCard}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
+      <View style={styles.interventionIconWrap}>
+        <IconComp size={18} color={Colors.primary} />
+      </View>
+      <View style={styles.interventionContent}>
+        <Text style={styles.interventionTitle}>{intervention.title}</Text>
+        <Text style={styles.interventionDesc}>{intervention.description}</Text>
+      </View>
+      <ChevronRight size={16} color={Colors.textMuted} />
+    </TouchableOpacity>
+  );
+}
+
+function GuardSignalCard({
+  signal,
+  accentColor,
+}: {
+  signal: GuardSignalSummary;
+  accentColor: string;
+}) {
+  return (
+    <View style={styles.signalCard}>
+      <View style={styles.signalHeader}>
+        <View style={[styles.signalStrength, { backgroundColor: accentColor + '18' }]}>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <View
+              key={i}
+              style={[
+                styles.strengthDot,
+                { backgroundColor: i < signal.strength ? accentColor : accentColor + '25' },
+              ]}
+            />
+          ))}
+        </View>
+      </View>
+      <Text style={styles.signalLabel}>{signal.title}</Text>
+      <Text style={styles.signalDesc}>{signal.narrative}</Text>
+      {signal.relatedTriggers.length > 0 && (
+        <View style={styles.triggerRow}>
+          {signal.relatedTriggers.slice(0, 3).map((trigger, i) => (
+            <View key={i} style={styles.triggerChip}>
+              <Text style={styles.triggerChipText}>{trigger}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
+function SpiralInterventionCard({ intervention, onPress }: { intervention: SpiralIntervention; onPress: () => void }) {
   const IconComp = INTERVENTION_ICONS[intervention.icon] ?? Wind;
 
   return (
@@ -348,15 +593,13 @@ const styles = StyleSheet.create({
     marginTop: 12,
     alignItems: 'center',
   },
-  heroIconRow: {
-    marginBottom: 16,
-  },
   heroIcon: {
     width: 64,
     height: 64,
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 16,
   },
   heroTitle: {
     fontSize: 24,
@@ -374,7 +617,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingHorizontal: 10,
   },
-  riskIndicator: {
+  alertIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 16,
@@ -382,17 +625,19 @@ const styles = StyleSheet.create({
     gap: 12,
     alignSelf: 'stretch',
   },
-  riskEmoji: {
-    fontSize: 24,
+  alertDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
   },
-  riskTextWrap: {
+  alertTextWrap: {
     flex: 1,
   },
-  riskLabel: {
+  alertLabel: {
     fontSize: 15,
     fontWeight: '700' as const,
   },
-  riskScore: {
+  alertMeta: {
     fontSize: 12,
     color: Colors.textSecondary,
     marginTop: 2,
@@ -430,6 +675,37 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     lineHeight: 19,
     fontStyle: 'italic',
+  },
+  tabRow: {
+    flexDirection: 'row',
+    backgroundColor: Colors.surface,
+    borderRadius: 14,
+    padding: 4,
+    marginTop: 24,
+    marginBottom: 4,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderRadius: 11,
+  },
+  tabActive: {
+    backgroundColor: Colors.white,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 1,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '500' as const,
+    color: Colors.textMuted,
+  },
+  tabTextActive: {
+    color: Colors.text,
+    fontWeight: '600' as const,
   },
   section: {
     marginTop: 28,
@@ -488,6 +764,98 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.textSecondary,
     lineHeight: 17,
+  },
+  simCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 18,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    overflow: 'hidden',
+  },
+  simCardRecommended: {
+    borderColor: Colors.primary + '40',
+    borderWidth: 1.5,
+  },
+  simHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    gap: 12,
+  },
+  simEmoji: {
+    fontSize: 22,
+  },
+  simHeaderText: {
+    flex: 1,
+  },
+  simLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  simLabel: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+  },
+  recommendedBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  recommendedText: {
+    fontSize: 10,
+    fontWeight: '600' as const,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.3,
+  },
+  simBody: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    borderTopWidth: 1,
+    borderTopColor: Colors.borderLight,
+    paddingTop: 14,
+  },
+  simMessageWrap: {
+    backgroundColor: Colors.surface,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 14,
+  },
+  simMessageLabel: {
+    fontSize: 10,
+    fontWeight: '600' as const,
+    color: Colors.textMuted,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.5,
+    marginBottom: 6,
+  },
+  simMessage: {
+    fontSize: 14,
+    color: Colors.text,
+    lineHeight: 21,
+    fontStyle: 'italic',
+  },
+  simImpactRow: {
+    gap: 10,
+  },
+  simImpactCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    padding: 12,
+  },
+  simImpactLabel: {
+    fontSize: 10,
+    fontWeight: '600' as const,
+    color: Colors.textMuted,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.4,
+    marginBottom: 4,
+  },
+  simImpactText: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    lineHeight: 19,
   },
   signalCard: {
     backgroundColor: Colors.white,

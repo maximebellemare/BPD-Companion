@@ -56,6 +56,8 @@ import { generateReflectionMirror } from '@/services/reflection/reflectionMirror
 import EmotionalProfileCard from '@/components/EmotionalProfileCard';
 import EmotionalTimelineCard from '@/components/EmotionalTimelineCard';
 import { buildEpisodeReplayState } from '@/services/timeline/emotionalEpisodeService';
+import RelationshipGuardBanner from '@/components/RelationshipGuardBanner';
+import { useRelationshipGuard } from '@/hooks/useRelationshipGuard';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -71,6 +73,7 @@ export default function HomeScreen() {
   const crisisDetection = useCrisisDetection();
   const { recentRelationshipDistress, lastSession } = useRelationshipCopilot();
   const stormWarning = useStormEarlyWarning();
+  const relationshipGuard = useRelationshipGuard();
 
   const weeklyReflection = useMemo(
     () => generateWeeklyReflection(journalEntries, messageDrafts),
@@ -417,6 +420,17 @@ export default function HomeScreen() {
 
         <Animated.View style={{ opacity: fadeAnim }}>
           <IdentityBuilderCard />
+        </Animated.View>
+
+        <Animated.View style={{ opacity: fadeAnim }}>
+          <RelationshipGuardBanner
+            alertLevel={relationshipGuard.alertLevel}
+            primaryMessage={relationshipGuard.primaryMessage}
+            supportNarrative={relationshipGuard.supportNarrative}
+            signals={relationshipGuard.signals}
+            interventions={relationshipGuard.interventions}
+            shouldShowGuard={relationshipGuard.shouldShowGuard}
+          />
         </Animated.View>
 
         <Animated.View style={{ opacity: fadeAnim }}>

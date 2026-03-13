@@ -44,13 +44,20 @@ const STARTER_CHIPS = [
   { id: 's6', label: 'Help me understand what I need', icon: '🔍', prompt: 'Help me understand what I actually need right now' },
 ];
 
-const QUICK_ACTION_CONFIG: Record<string, { icon: React.ReactNode; route?: string }> = {
-  'Ground me': { icon: <Wind size={13} color={Colors.primary} />, route: '/exercise' },
+interface QuickActionConfig {
+  icon: React.ReactNode;
+  route?: string;
+  message?: string;
+}
+
+const QUICK_ACTION_CONFIG: Record<string, QuickActionConfig> = {
+  'Ground me': { icon: <Wind size={13} color={Colors.primary} />, route: '/exercise?id=c1' },
   'Show coping tools': { icon: <Compass size={13} color={Colors.primary} />, route: '/(tabs)/tools' },
   'Journal this': { icon: <PenLine size={13} color={Colors.primary} />, route: '/(tabs)/journal' },
   'Help me rewrite a message': { icon: <MessageSquareText size={13} color={Colors.primary} />, route: '/(tabs)/messages' },
-  'Slow this down': { icon: <Wind size={13} color={Colors.primary} /> },
+  'Slow this down': { icon: <Wind size={13} color={Colors.primary} />, message: 'I need to slow this down. Can we take it one small step at a time?' },
   'Safety mode': { icon: <Shield size={13} color={Colors.danger} />, route: '/safety-mode' },
+  'Reflection': { icon: <PenLine size={13} color={Colors.primary} />, message: 'I want to reflect on what I\'m feeling right now. Can you help me explore this?' },
 };
 
 function TypingIndicator() {
@@ -458,8 +465,8 @@ export default function ChatScreen() {
 
     const config = QUICK_ACTION_CONFIG[action];
 
-    if (action === 'Slow this down') {
-      void sendMessage('I need to slow this down. Can we take it one small step at a time?');
+    if (config?.message) {
+      void sendMessage(config.message);
       return;
     }
 

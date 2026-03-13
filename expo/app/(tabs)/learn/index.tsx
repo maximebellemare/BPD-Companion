@@ -30,6 +30,9 @@ import {
   CloudLightning,
   Sprout,
   Sparkles,
+  GraduationCap,
+  Target,
+  ArrowRight,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
@@ -45,6 +48,9 @@ import { LearnState, LessonCategory, Lesson } from '@/types/learn';
 import { LEARN_CATEGORIES } from '@/data/lessons';
 import { useLearningRecommendations } from '@/hooks/useLearningRecommendations';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
+import { getAllCoachModules } from '@/services/coach/coachService';
+import { getCoachProgressState } from '@/services/coach/coachProgressService';
+import { COACH_CATEGORY_META, CoachProgressState } from '@/types/coachModule';
 
 const ICON_MAP: Record<string, React.ComponentType<{ size: number; color: string }>> = {
   brain: Brain,
@@ -72,6 +78,9 @@ export default function LearnScreen() {
   const [searchResults, setSearchResults] = useState<Lesson[]>([]);
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'explore' | 'bookmarks'>('explore');
+  const [coachProgress, setCoachProgress] = useState<CoachProgressState | null>(null);
+
+  const coachModules = useMemo(() => getAllCoachModules(), []);
 
   const categories = useMemo(() => getCategories(), []);
 
@@ -90,6 +99,7 @@ export default function LearnScreen() {
 
   useEffect(() => {
     void loadState();
+    void getCoachProgressState().then(setCoachProgress);
   }, [loadState]);
 
   useEffect(() => {
@@ -113,6 +123,21 @@ export default function LearnScreen() {
     if (!learnState) return [];
     return getBookmarkedLessons(learnState);
   }, [learnState]);
+
+  const handleModulePress = useCallback((moduleId: string) => {
+    if (Platform.OS !== 'web') {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    trackEvent('coach_module_started', { module_id: moduleId, source: 'learn_tab' });
+    router.push(`/learning-coach?moduleId=${moduleId}` as any);
+  }, [router, trackEvent]);
+
+  const handleViewProgress = useCallback(() => {
+    if (Platform.OS !== 'web') {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    router.push('/learning-progress' as any);
+  }, [router]);
 
   const handleCategoryPress = useCallback((categoryId: string) => {
     if (Platform.OS !== 'web') {
@@ -335,6 +360,51 @@ export default function LearnScreen() {
                     </ScrollView>
                   </View>
                 )}
+
+                <View style={styles.section}>
+                  <View style={styles.sectionHeader}>
+                    <GraduationCap size={16} color={Colors.primary} />
+                    <Text style={styles.sectionTitle}>Guided Learning</Text>
+                  </View>
+                  <Text style={styles.guidedSubtitle}>Interactive coaching sessions with reflections and exercises</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalScroll}>
+                    {coachModules.slice(0, 5).map(mod => {
+                      const catMeta = COACH_CATEGORY_META[mod.category];
+                      const isCompleted = coachProgress?.completedModuleIds.includes(mod.id) ?? false;
+                      return (
+                        <TouchableOpacity
+                          key={mod.id}
+                          style={styles.coachCard}
+                          onPress={() => handleModulePress(mod.id)}
+                          activeOpacity={0.7}
+                          testID={`coach-${mod.id}`}
+                        >
+                          <View style={[styles.coachAccent, { backgroundColor: catMeta.color }]} />
+                          <View style={styles.coachCardInner}>
+                            <Text style={styles.coachCardTitle} numberOfLines={2}>{mod.title}</Text>
+                            <Text style={[styles.coachCardCategory, { color: catMeta.color }]}>{catMeta.label}</Text>
+                            <View style={styles.coachCardMeta}>
+                              <Clock size={11} color={Colors.textMuted} />
+                              <Text style={styles.coachCardTime}>{mod.estimatedDuration} min</Text>
+                              {isCompleted && (
+                                <View style={styles.coachCompletedBadge}>
+                                  <Text style={styles.coachCompletedText}>Done</Text>
+                                </View>
+                              )}
+                            </View>
+                          </View>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </ScrollView>
+                  {(coachProgress?.completedModuleIds.length ?? 0) > 0 && (
+                    <TouchableOpacity style={styles.viewProgressButton} onPress={handleViewProgress}>
+                      <Target size={14} color={Colors.primary} />
+                      <Text style={styles.viewProgressText}>View Learning Progress</Text>
+                      <ArrowRight size={14} color={Colors.primary} />
+                    </TouchableOpacity>
+                  )}
+                </View>
 
                 <View style={styles.section}>
                   <Text style={styles.sectionLabel}>Categories</Text>
@@ -692,5 +762,83 @@ const styles = StyleSheet.create({
   recCardTime: {
     fontSize: 12,
     color: Colors.textMuted,
+  },
+  guidedSubtitle: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    paddingHorizontal: 24,
+    marginTop: -4,
+    marginBottom: 12,
+  },
+  coachCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    width: 180,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 2,
+    minHeight: 130,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    overflow: 'hidden' as const,
+  },
+  coachAccent: {
+    height: 4,
+    width: '100%',
+  },
+  coachCardInner: {
+    padding: 14,
+    flex: 1,
+    justifyContent: 'space-between' as const,
+  },
+  coachCardTitle: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.text,
+    lineHeight: 20,
+  },
+  coachCardCategory: {
+    fontSize: 11,
+    fontWeight: '500' as const,
+    marginTop: 4,
+  },
+  coachCardMeta: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 5,
+    marginTop: 10,
+  },
+  coachCardTime: {
+    fontSize: 12,
+    color: Colors.textMuted,
+  },
+  coachCompletedBadge: {
+    backgroundColor: Colors.successLight,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  coachCompletedText: {
+    fontSize: 10,
+    fontWeight: '600' as const,
+    color: Colors.success,
+  },
+  viewProgressButton: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: 8,
+    marginHorizontal: 24,
+    marginTop: 12,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: Colors.primaryLight,
+  },
+  viewProgressText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.primary,
   },
 });

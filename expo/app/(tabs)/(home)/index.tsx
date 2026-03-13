@@ -53,6 +53,7 @@ import StormEarlyWarningCard from '@/components/StormEarlyWarningCard';
 import { useStormEarlyWarning } from '@/hooks/useStormEarlyWarning';
 import ReflectionMirrorCard from '@/components/ReflectionMirrorCard';
 import { generateReflectionMirror } from '@/services/reflection/reflectionMirrorService';
+import EmotionalProfileCard from '@/components/EmotionalProfileCard';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -389,6 +390,10 @@ export default function HomeScreen() {
 
         <Animated.View style={{ opacity: fadeAnim }}>
           <MessageGuardCard recentDraftCount={messageDrafts.length} />
+        </Animated.View>
+
+        <Animated.View style={{ opacity: fadeAnim }}>
+          <EmotionalProfileCard />
         </Animated.View>
 
         <Animated.View style={{ opacity: fadeAnim }}>

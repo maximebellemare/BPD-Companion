@@ -136,7 +136,7 @@ export default function OnboardingScreen() {
       const finalProfile = { ...profile, completedAt: Date.now() };
       completeOnboarding(finalProfile);
       trackEvent('onboarding_completed', {
-        primary_reason: finalProfile.primaryReason ?? 'none',
+        primary_reasons: finalProfile.primaryReasons.join(',') || 'none',
         tools_count: finalProfile.preferredTools.length,
         outcomes_count: finalProfile.desiredOutcomes.length,
       });
@@ -156,11 +156,19 @@ export default function OnboardingScreen() {
     router.replace('/');
   }, [skipOnboarding, trackEvent, currentStep, router]);
 
-  const setPrimaryReason = useCallback((reason: PrimaryReason) => {
+  const togglePrimaryReason = useCallback((reason: PrimaryReason) => {
     if (Platform.OS !== 'web') {
       void Haptics.selectionAsync();
     }
-    setProfile(prev => ({ ...prev, primaryReason: reason }));
+    setProfile(prev => {
+      const exists = prev.primaryReasons.includes(reason);
+      return {
+        ...prev,
+        primaryReasons: exists
+          ? prev.primaryReasons.filter(r => r !== reason)
+          : [...prev.primaryReasons, reason],
+      };
+    });
   }, []);
 
   const toggleHardestMoment = useCallback((moment: HardestMoment) => {
@@ -247,7 +255,7 @@ export default function OnboardingScreen() {
   const canProceed = useMemo(() => {
     switch (currentStep) {
       case 0: return true;
-      case 1: return profile.primaryReason !== null;
+      case 1: return profile.primaryReasons.length > 0;
       case 2: return profile.hardestMoments.length > 0;
       case 3: return true;
       case 4: return profile.preferredTools.length > 0;
@@ -315,14 +323,15 @@ export default function OnboardingScreen() {
 
   const renderPrimaryReason = () => (
     <View style={styles.stepContent}>
+      <Text style={styles.multiSelectHint}>Select all that apply</Text>
       {PRIMARY_REASON_OPTIONS.map(option => {
         const IconComponent = ICON_MAP[option.icon];
-        const isSelected = profile.primaryReason === option.value;
+        const isSelected = profile.primaryReasons.includes(option.value);
         return (
           <TouchableOpacity
             key={option.value}
             style={[styles.reasonCard, isSelected && styles.reasonCardSelected]}
-            onPress={() => setPrimaryReason(option.value)}
+            onPress={() => togglePrimaryReason(option.value)}
             activeOpacity={0.7}
             testID={`reason-${option.value}`}
           >

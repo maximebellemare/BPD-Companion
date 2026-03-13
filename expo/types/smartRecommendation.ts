@@ -88,7 +88,7 @@ export interface UserContextSnapshot {
   appointmentWithinHours: number | null;
   recentMovementCount: number;
   isLateNight: boolean;
-  primaryReason: string | null;
+  primaryReasons: string[];
   hardestMoments: string[];
   preferredTools: string[];
   topEmotionsThisWeek: string[];

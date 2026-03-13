@@ -39,10 +39,11 @@ function applyOnboardingBoost(
 ): number {
   let boost = 0;
 
-  if (ctx.primaryReason) {
-    const preferred = ONBOARDING_TOOL_MAP[ctx.primaryReason] ?? [];
+  for (const reason of ctx.primaryReasons) {
+    const preferred = ONBOARDING_TOOL_MAP[reason] ?? [];
     if (preferred.includes(rec.toolId)) {
       boost += 12;
+      break;
     }
   }
 

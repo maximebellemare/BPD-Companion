@@ -112,7 +112,7 @@ export function buildContextSnapshot(
     appointmentWithinHours,
     recentMovementCount: recentMovement.length,
     isLateNight,
-    primaryReason: onboardingProfile.primaryReason,
+    primaryReasons: onboardingProfile.primaryReasons,
     hardestMoments: onboardingProfile.hardestMoments,
     preferredTools: onboardingProfile.preferredTools,
     topEmotionsThisWeek: getTopCounts(weekEmotions),
@@ -133,7 +133,7 @@ export function generateSmartRecommendations(
     || ctx.hasMedicationDue
     || ctx.hasUpcomingAppointment;
 
-  if (!hasAnyData && ctx.averageDistressThisWeek === 0 && !ctx.primaryReason) {
+  if (!hasAnyData && ctx.averageDistressThisWeek === 0 && ctx.primaryReasons.length === 0) {
     console.log('[RecommendationEngine] No data available');
     return {
       recommendations: [],

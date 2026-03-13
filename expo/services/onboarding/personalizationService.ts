@@ -9,11 +9,11 @@ export interface HomeCardBoost {
 export function getPersonalizedCardBoosts(profile: OnboardingProfile): HomeCardBoost[] {
   const boosts: HomeCardBoost[] = [];
 
-  if (!profile.primaryReason && profile.preferredTools.length === 0) {
+  if (profile.primaryReasons.length === 0 && profile.preferredTools.length === 0) {
     return boosts;
   }
 
-  const reasonBoosts = getReasonBoosts(profile.primaryReason);
+  const reasonBoosts = getReasonBoosts(profile.primaryReasons);
   const toolBoosts = getToolBoosts(profile.preferredTools);
 
   const merged = new Map<string, HomeCardBoost>();
@@ -31,62 +31,66 @@ export function getPersonalizedCardBoosts(profile: OnboardingProfile): HomeCardB
   return Array.from(merged.values());
 }
 
-function getReasonBoosts(reason: PrimaryReason | null): HomeCardBoost[] {
-  if (!reason) return [];
+const REASON_BOOST_MAP: Record<PrimaryReason, HomeCardBoost[]> = {
+  relationship_spirals: [
+    { key: 'relationship_copilot', priorityBoost: -15, forceVisible: true },
+    { key: 'message_guard', priorityBoost: -12, forceVisible: true },
+    { key: 'relationship_hub', priorityBoost: -10, forceVisible: true },
+    { key: 'relationship_spiral', priorityBoost: -8, forceVisible: true },
+    { key: 'conflict_replay', priorityBoost: -5, forceVisible: true },
+  ],
+  fear_of_abandonment: [
+    { key: 'relationship_copilot', priorityBoost: -15, forceVisible: true },
+    { key: 'message_guard', priorityBoost: -12, forceVisible: true },
+    { key: 'relationship_hub', priorityBoost: -10, forceVisible: true },
+    { key: 'relationship_spiral', priorityBoost: -8, forceVisible: true },
+    { key: 'conflict_replay', priorityBoost: -5, forceVisible: true },
+  ],
+  impulsive_messaging: [
+    { key: 'message_guard', priorityBoost: -15, forceVisible: true },
+    { key: 'relationship_copilot', priorityBoost: -10, forceVisible: true },
+    { key: 'ai_companion', priorityBoost: -5, forceVisible: true },
+  ],
+  emotional_overwhelm: [
+    { key: 'ai_companion', priorityBoost: -15, forceVisible: true },
+    { key: 'crisis_mode', priorityBoost: -10, forceVisible: true },
+    { key: 'emotional_playbook', priorityBoost: -8, forceVisible: true },
+    { key: 'smart_coping', priorityBoost: -5, forceVisible: true },
+  ],
+  therapy_support: [
+    { key: 'therapy_report', priorityBoost: -15, forceVisible: true },
+    { key: 'weekly_reflection', priorityBoost: -12, forceVisible: true },
+    { key: 'emotional_insights', priorityBoost: -8, forceVisible: true },
+    { key: 'progress_dashboard', priorityBoost: -5, forceVisible: true },
+  ],
+  building_stability: [
+    { key: 'daily_rituals', priorityBoost: -15, forceVisible: true },
+    { key: 'progress_dashboard', priorityBoost: -12, forceVisible: true },
+    { key: 'coaching', priorityBoost: -8, forceVisible: true },
+    { key: 'emotional_playbook', priorityBoost: -5, forceVisible: true },
+  ],
+  understanding_patterns: [
+    { key: 'emotional_insights', priorityBoost: -15, forceVisible: true },
+    { key: 'emotional_loops', priorityBoost: -12, forceVisible: true },
+    { key: 'emotional_profile', priorityBoost: -10, forceVisible: true },
+    { key: 'home_insights', priorityBoost: -8, forceVisible: true },
+    { key: 'emotional_timeline', priorityBoost: -5, forceVisible: true },
+  ],
+  medication_routine: [
+    { key: 'daily_rituals', priorityBoost: -15, forceVisible: true },
+    { key: 'progress_dashboard', priorityBoost: -10, forceVisible: true },
+  ],
+};
 
-  switch (reason) {
-    case 'relationship_spirals':
-    case 'fear_of_abandonment':
-      return [
-        { key: 'relationship_copilot', priorityBoost: -15, forceVisible: true },
-        { key: 'message_guard', priorityBoost: -12, forceVisible: true },
-        { key: 'relationship_hub', priorityBoost: -10, forceVisible: true },
-        { key: 'relationship_spiral', priorityBoost: -8, forceVisible: true },
-        { key: 'conflict_replay', priorityBoost: -5, forceVisible: true },
-      ];
-    case 'impulsive_messaging':
-      return [
-        { key: 'message_guard', priorityBoost: -15, forceVisible: true },
-        { key: 'relationship_copilot', priorityBoost: -10, forceVisible: true },
-        { key: 'ai_companion', priorityBoost: -5, forceVisible: true },
-      ];
-    case 'emotional_overwhelm':
-      return [
-        { key: 'ai_companion', priorityBoost: -15, forceVisible: true },
-        { key: 'crisis_mode', priorityBoost: -10, forceVisible: true },
-        { key: 'emotional_playbook', priorityBoost: -8, forceVisible: true },
-        { key: 'smart_coping', priorityBoost: -5, forceVisible: true },
-      ];
-    case 'therapy_support':
-      return [
-        { key: 'therapy_report', priorityBoost: -15, forceVisible: true },
-        { key: 'weekly_reflection', priorityBoost: -12, forceVisible: true },
-        { key: 'emotional_insights', priorityBoost: -8, forceVisible: true },
-        { key: 'progress_dashboard', priorityBoost: -5, forceVisible: true },
-      ];
-    case 'building_stability':
-      return [
-        { key: 'daily_rituals', priorityBoost: -15, forceVisible: true },
-        { key: 'progress_dashboard', priorityBoost: -12, forceVisible: true },
-        { key: 'coaching', priorityBoost: -8, forceVisible: true },
-        { key: 'emotional_playbook', priorityBoost: -5, forceVisible: true },
-      ];
-    case 'understanding_patterns':
-      return [
-        { key: 'emotional_insights', priorityBoost: -15, forceVisible: true },
-        { key: 'emotional_loops', priorityBoost: -12, forceVisible: true },
-        { key: 'emotional_profile', priorityBoost: -10, forceVisible: true },
-        { key: 'home_insights', priorityBoost: -8, forceVisible: true },
-        { key: 'emotional_timeline', priorityBoost: -5, forceVisible: true },
-      ];
-    case 'medication_routine':
-      return [
-        { key: 'daily_rituals', priorityBoost: -15, forceVisible: true },
-        { key: 'progress_dashboard', priorityBoost: -10, forceVisible: true },
-      ];
-    default:
-      return [];
+function getReasonBoosts(reasons: PrimaryReason[]): HomeCardBoost[] {
+  if (reasons.length === 0) return [];
+
+  const allBoosts: HomeCardBoost[] = [];
+  for (const reason of reasons) {
+    const boosts = REASON_BOOST_MAP[reason] ?? [];
+    allBoosts.push(...boosts);
   }
+  return allBoosts;
 }
 
 function getToolBoosts(tools: PreferredTool[]): HomeCardBoost[] {
@@ -132,39 +136,20 @@ function getToolBoosts(tools: PreferredTool[]): HomeCardBoost[] {
 export function getCompanionSuggestedPrompts(profile: OnboardingProfile): string[] {
   const prompts: string[] = [];
 
-  switch (profile.primaryReason) {
-    case 'relationship_spirals':
-      prompts.push("I'm spiraling about a relationship right now");
-      prompts.push("Help me understand why I react this way in relationships");
-      break;
-    case 'fear_of_abandonment':
-      prompts.push("I'm scared someone is going to leave me");
-      prompts.push("Help me sit with the uncertainty");
-      break;
-    case 'impulsive_messaging':
-      prompts.push("I want to send a message I might regret");
-      prompts.push("Help me pause before I react");
-      break;
-    case 'emotional_overwhelm':
-      prompts.push("Everything feels too much right now");
-      prompts.push("Help me ground myself");
-      break;
-    case 'therapy_support':
-      prompts.push("I want to prepare for my next therapy session");
-      prompts.push("Help me reflect on what I've been working on");
-      break;
-    case 'building_stability':
-      prompts.push("Help me build a routine that sticks");
-      prompts.push("I want to feel more stable day to day");
-      break;
-    case 'understanding_patterns':
-      prompts.push("What patterns have you noticed in my check-ins?");
-      prompts.push("Help me understand my emotional triggers");
-      break;
-    case 'medication_routine':
-      prompts.push("Help me stay on track with my routine");
-      prompts.push("I'm struggling with consistency");
-      break;
+  const REASON_PROMPTS: Record<PrimaryReason, string[]> = {
+    relationship_spirals: ["I'm spiraling about a relationship right now", "Help me understand why I react this way in relationships"],
+    fear_of_abandonment: ["I'm scared someone is going to leave me", "Help me sit with the uncertainty"],
+    impulsive_messaging: ["I want to send a message I might regret", "Help me pause before I react"],
+    emotional_overwhelm: ["Everything feels too much right now", "Help me ground myself"],
+    therapy_support: ["I want to prepare for my next therapy session", "Help me reflect on what I've been working on"],
+    building_stability: ["Help me build a routine that sticks", "I want to feel more stable day to day"],
+    understanding_patterns: ["What patterns have you noticed in my check-ins?", "Help me understand my emotional triggers"],
+    medication_routine: ["Help me stay on track with my routine", "I'm struggling with consistency"],
+  };
+
+  for (const reason of profile.primaryReasons) {
+    const reasonPrompts = REASON_PROMPTS[reason] ?? [];
+    prompts.push(...reasonPrompts);
   }
 
   prompts.push("I just need someone to talk to");
@@ -185,7 +170,7 @@ export function getMessageDefaultSuggestions(profile: OnboardingProfile): string
   if (profile.hardestMoments.includes('conflict')) {
     suggestions.push("I want to address this without escalating");
   }
-  if (profile.primaryReason === 'impulsive_messaging') {
+  if (profile.primaryReasons.includes('impulsive_messaging')) {
     suggestions.push("Let me pause and think about this first");
   }
 

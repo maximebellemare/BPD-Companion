@@ -52,7 +52,7 @@ export interface ReminderPreferences {
 }
 
 export interface OnboardingProfile {
-  primaryReason: PrimaryReason | null;
+  primaryReasons: PrimaryReason[];
   hardestMoments: HardestMoment[];
   treatmentContext: TreatmentContext;
   preferredTools: PreferredTool[];
@@ -63,7 +63,7 @@ export interface OnboardingProfile {
 }
 
 export const DEFAULT_ONBOARDING_PROFILE: OnboardingProfile = {
-  primaryReason: null,
+  primaryReasons: [],
   hardestMoments: [],
   treatmentContext: {
     inTherapy: false,

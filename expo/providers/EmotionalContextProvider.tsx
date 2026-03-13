@@ -4,6 +4,8 @@ import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useApp } from '@/providers/AppProvider';
 import { JournalEntry, MessageDraft } from '@/types';
+import { SafetyState } from '@/types/safetyPredictor';
+import { predictEmotionalSafety } from '@/services/prediction/emotionalPredictor';
 
 export type EmotionalZone = 'calm' | 'activated' | 'relationship_distress' | 'crisis' | 'recovering';
 
@@ -170,6 +172,7 @@ function computeHomePriorities(
   zone: EmotionalZone,
   context: ActiveContext,
   phase: JourneyPhase,
+  safetyState: SafetyState = 'calm',
 ): HomePriority[] {
   const priorities: HomePriority[] = [];
 
@@ -221,6 +224,8 @@ function computeHomePriorities(
   add('reflection_mirror', isRecovering || isCalm ? 25 : 99, isRecovering || isCalm);
   add('emotional_timeline', !isCrisis ? 26 : 99, !isCrisis);
   add('identity_builder', isCalm ? 27 : 99, isCalm);
+
+  add('safety_predictor', safetyState !== 'calm' ? (safetyState === 'critical' ? 2 : safetyState === 'high_distress' ? 4 : 9) : 99, safetyState !== 'calm');
 
   add('storm_warning', 28, true);
   add('emotional_storm', 29, true);
@@ -280,9 +285,14 @@ export const [EmotionalContextProvider, useEmotionalContext] = createContextHook
 
   const journeyPhase = journeyOverride ?? computedPhase;
 
+  const safetyPrediction = useMemo(
+    () => predictEmotionalSafety(journalEntries, messageDrafts),
+    [journalEntries, messageDrafts],
+  );
+
   const homePriorities = useMemo(
-    () => computeHomePriorities(zone, activeContext, journeyPhase),
-    [zone, activeContext, journeyPhase],
+    () => computeHomePriorities(zone, activeContext, journeyPhase, safetyPrediction.state),
+    [zone, activeContext, journeyPhase, safetyPrediction.state],
   );
 
   const recordOutcome = useCallback((record: OutcomeRecord) => {
@@ -353,6 +363,7 @@ export const [EmotionalContextProvider, useEmotionalContext] = createContextHook
     advanceJourney,
     getCardPriority,
     isCardVisible,
+    safetyPrediction,
     isLoading: outcomesQuery.isLoading,
   }), [
     zone,
@@ -366,6 +377,7 @@ export const [EmotionalContextProvider, useEmotionalContext] = createContextHook
     advanceJourney,
     getCardPriority,
     isCardVisible,
+    safetyPrediction,
     outcomesQuery.isLoading,
   ]);
 });

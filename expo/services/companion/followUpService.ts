@@ -88,34 +88,34 @@ const FOLLOW_UP_TEMPLATES: Record<FollowUpPrompt['type'], {
   suggestedPrompt: string;
 }> = {
   post_distress: {
-    title: 'Checking in',
-    message: 'Things felt intense earlier. Want to take a calmer look now?',
-    suggestedPrompt: 'I want to reflect on what happened earlier when I was really distressed.',
+    title: 'The intensity has passed',
+    message: 'Earlier was rough. Now that some distance exists, would it help to look at what happened with fresh eyes?',
+    suggestedPrompt: 'I want to look back at what happened earlier when things felt overwhelming. What was really going on underneath the intensity?',
   },
   post_conflict: {
-    title: 'After the storm',
-    message: 'Would it help to process what happened before you respond again?',
-    suggestedPrompt: 'I had a conflict and I want to understand what happened and what I could do differently.',
+    title: 'Before the next move',
+    message: 'Conflict leaves a lot of emotions behind. Processing them now can protect you and the relationship from a reactive next step.',
+    suggestedPrompt: 'I had a conflict and I want to separate what actually happened from what my emotions are telling me it means.',
   },
   post_pause: {
-    title: 'Nice pause',
-    message: 'You handled a difficult moment with more pause than usual. Want to reflect on that?',
-    suggestedPrompt: 'I managed to pause before reacting. I want to reflect on that.',
+    title: 'You paused',
+    message: 'You chose to wait instead of react. That gap between impulse and action is where real change happens.',
+    suggestedPrompt: 'I managed to pause before reacting this time. I want to understand what made it possible and how to do it again.',
   },
   post_reflection: {
-    title: 'Your weekly reflection is ready',
-    message: 'Want to talk through what came up this week?',
-    suggestedPrompt: 'I want to discuss my weekly reflection and what patterns I noticed.',
+    title: 'Weekly patterns are ready',
+    message: 'Your week had some patterns worth noticing. Want to explore what your emotional data is showing?',
+    suggestedPrompt: 'Walk me through my weekly patterns. What triggers and emotions kept showing up, and what does that tell me?',
   },
   post_therapy_report: {
-    title: 'Therapy report ready',
-    message: 'Your therapy summary is ready. Want to walk through the key insights together?',
-    suggestedPrompt: 'Help me understand my therapy report and what stands out.',
+    title: 'Therapy insights ready',
+    message: 'Your therapy summary has some threads worth pulling on. Want to explore the key patterns together?',
+    suggestedPrompt: 'Help me understand my therapy report. What patterns stand out and what should I bring to my next session?',
   },
   reinforcement: {
-    title: 'Growth moment',
-    message: 'You have been showing up for yourself consistently. That takes real courage.',
-    suggestedPrompt: 'Tell me more about the progress you have noticed in my patterns.',
+    title: 'Something shifted',
+    message: 'Your recent patterns show real movement — not perfection, but genuine change in how you respond to difficult moments.',
+    suggestedPrompt: 'What specific changes have you noticed in my patterns recently? I want to understand what I\'m doing differently.',
   },
 };
 
@@ -136,6 +136,10 @@ export function shouldCreateFollowUp(
 
   if (hasCopingSuccess) {
     return 'post_pause';
+  }
+
+  if (conversationLength >= 8 && !hasHighDistress && !hasRelationshipConflict) {
+    return 'reinforcement';
   }
 
   return null;

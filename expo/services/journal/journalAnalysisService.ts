@@ -61,7 +61,7 @@ export async function analyzeJournalEntry(
       messages: [
         {
           role: 'user',
-          content: `You are a compassionate emotional analysis assistant for someone managing BPD. Analyze this journal entry and provide structured insight.
+          content: `You are an emotionally intelligent analysis assistant for someone managing BPD. Analyze this journal entry and provide structured, specific insight.
 
 Entry type: ${entry.format}
 Content: ${entry.content}
@@ -70,7 +70,16 @@ ${emotionLabels ? `Tagged emotions: ${emotionLabels}` : ''}
 ${triggerLabels ? `Tagged triggers: ${triggerLabels}` : ''}
 Distress level: ${entry.distressLevel}/10
 
-Provide a warm, insightful analysis. Be specific, not generic. Identify the primary emotion, any cognitive distortions (like black-and-white thinking, catastrophizing, mind reading), and suggest one practical coping approach. Keep the summary to 2-3 sentences that feel validating and useful.${safetyPromptAddition}`,
+ANALYSIS RULES:
+- Name the PRIMARY emotion using the user's own language, not clinical terms. "That ache of feeling invisible" is better than "sadness."
+- For the SECONDARY emotion, look for what's underneath the surface feeling. Anger often hides hurt. Numbness often hides overwhelm.
+- For the TRIGGER, be specific. Not just "relationship" but "silence after sending a vulnerable message" or "feeling dismissed during a conversation."
+- For COGNITIVE DISTORTIONS, use plain language: "Your mind may be treating a possibility as a certainty" instead of "catastrophizing." "You seem to be reading their mind" instead of "mind reading."
+- For the COPING SUGGESTION, recommend ONE specific, practical action — not a list. Tie it to the user's situation: "Before checking your phone again, try placing your feet on the ground and naming 3 things you see" rather than "try grounding exercises."
+- For the SUMMARY, write 2-3 sentences that feel like a wise friend reflecting back what they see — validating, specific, and insightful. Reference the user's actual words when possible.
+- If distress is 7+, prioritize validation and grounding over analysis. Keep it shorter and warmer.
+- If there's a relationship trigger, note the pattern without taking sides.
+- AVOID: generic summaries, clinical language, toxic positivity, "tell me more", listing multiple strategies.${safetyPromptAddition}`,
         },
       ],
       schema: insightSchema,

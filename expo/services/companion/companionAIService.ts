@@ -102,16 +102,19 @@ function buildFullSystemPrompt(
   parts.push('');
   parts.push(`CRITICAL RESPONSE RULES:
 - Respond DIRECTLY to what the user said. Do NOT give a generic response.
-- If the user shares a specific situation, respond to THAT situation specifically.
-- If the user answers a question you asked, acknowledge their answer before moving on.
-- Reference specific words or phrases the user used to show you are truly listening.
-- Do NOT start every response with "I hear you" or "That makes sense" — vary your openings.
-- Use the user's own language and emotional vocabulary when reflecting back.
-- If you have memory context about this user, weave it in naturally — do not dump it.
-- Never list multiple coping tools at once. Suggest ONE specific thing.
-- Avoid ending every message with a question. Sometimes a reflection or validation is enough.
+- If the user shares a specific situation, respond to THAT situation specifically — name the people, the actions, the context they described.
+- If the user answers a question you asked, ENGAGE WITH THEIR ANSWER first. Do not ignore it and ask a new question.
+- Reference specific words or phrases the user used to show you are truly listening. If they said "it feels like being erased", use that phrase back.
+- Do NOT start every response with "I hear you" or "That makes sense" or "That sounds" — vary your openings every single time.
+- Use the user's own language and emotional vocabulary when reflecting back. If they say "freaking out", don't translate to "experiencing distress."
+- If you have memory context about this user, weave in ONE relevant reference naturally — do not dump all memories at once.
+- Never list multiple coping tools at once. Suggest ONE specific thing tied to their current situation.
+- Vary your endings: sometimes a question, sometimes a reflection, sometimes a practical suggestion, sometimes just sitting with what was said.
 - Be specific, not generic. "That fear of being forgotten when they don't reply" is better than "That feeling of abandonment."
-- When the user shares something vulnerable, sit with it before moving to solutions.
+- When the user shares something vulnerable, validate the vulnerability before moving to solutions or questions.
+- Name the emotion underneath the emotion: anger often hides hurt, numbness often hides overwhelm, people-pleasing often hides fear of abandonment.
+- When appropriate, gently suggest ONE tool: journaling, grounding, message rewrite, or a DBT skill — but only when it fits naturally.
+- If you notice a pattern repeating across the conversation, name it gently: "I notice this keeps coming back to..."
 - ${responseLengthRule}`);
 
   return parts.join('\n');
@@ -388,8 +391,14 @@ function generateFallbackResponse(
     content = `Shame is so heavy because it tells us we ARE the problem, not that we HAVE a problem. But that's the shame talking, not the truth.\n\nYou're here, sharing this — that takes real courage. What happened that brought this feeling up?`;
   } else if (mode === 'relationship') {
     content = `When relationships activate us, everything can feel urgent — like we need to act right now. But that urgency is usually the emotion talking, not the situation.\n\nLet's slow this down. What happened, and what is your mind telling you it means?`;
+  } else if (mode === 'clarity') {
+    content = `There are a few things tangled together here. Let's separate them.\n\nThere's what happened, what your mind is telling you it means, and what you're feeling about the story your mind built. Which piece feels heaviest right now?`;
+  } else if (mode === 'post_conflict_repair') {
+    content = `After conflict, the shame can hit harder than the conflict itself. It tells you that you ARE the mistake, not that you MADE one. Those aren't the same thing.\n\nWhat happened, and what part of it is sitting heaviest with you right now?`;
+  } else if (mode === 'insight_review') {
+    content = `I've been paying attention to what you've shared over time, and there are some patterns worth looking at together.\n\nWould you like to explore what I've noticed, or is there a specific pattern you've been seeing on your own?`;
   } else {
-    content = `I hear what you're sharing, and I want to make sure I understand it fully.\n\nWhat feels most important about what you just said? I want to focus on the part that matters most to you right now.`;
+    content = `Something about what you're describing carries real weight — even if it's hard to pin down exactly why.\n\nIf you had to name the one part of this that your mind keeps circling back to, what would it be?`;
   }
 
   const quickActions = selectQuickActions(mode, reasoning);

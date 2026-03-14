@@ -121,10 +121,10 @@ export const RESPONSE_TEMPLATES: Record<EmotionalIntent, ResponseTemplate> = {
   },
   general: {
     responses: [
-      "Thank you for sharing that with me. Whatever you're feeling right now is completely valid.\n\nTell me more about what's going on. I'm here to listen, and we can figure out the next small step together.",
-      "I'm glad you're talking to me about this. You don't have to have it all figured out — that's what this space is for.\n\nWhat feels most important to address right now? We can take it one piece at a time.",
-      "I hear you. This sounds hard, and I appreciate you trusting me with it.\n\nHow intense is what you're feeling right now, on a scale of 1-10? That helps me understand where you are so I can support you the right way.",
-      "That makes sense. Let's sit with this together for a moment.\n\nWhat would feel most helpful right now — talking it through, getting some grounding, or just having someone listen?",
+      "There's something real in what you're describing, even if it's hard to put into words right now.\n\nIf you had to name the one feeling that's strongest — not what you think you should feel, but what's actually there — what would it be?",
+      "What you're going through sounds like it carries some weight. You don't have to untangle all of it at once.\n\nWhat's the piece of this that keeps pulling at you? That's usually where the most important thing lives.",
+      "Something brought you here right now, and that matters. Whether it's a specific moment or a feeling that won't let go — both are worth exploring.\n\nWhat happened, or what shifted, that made this feel like the right time to talk about it?",
+      "I notice you're holding something that feels significant. Sometimes the hardest part is figuring out where to start.\n\nWould it help to focus on what happened, or on what you're feeling about it? Either path can lead somewhere useful.",
     ],
     quickActions: ['Ground me', 'Journal this', 'Show coping tools'],
   },
@@ -132,17 +132,18 @@ export const RESPONSE_TEMPLATES: Record<EmotionalIntent, ResponseTemplate> = {
 
 export const FOLLOW_UP_RESPONSES: Record<string, string[]> = {
   after_grounding: [
-    "How are you feeling after that? Even a small shift counts.",
-    "Take a moment. There's no rush. How does your body feel now?",
-    "Good. You're here, you're present. What feels like the next thing to address?",
+    "Check in with your body for a second. Does anything feel different — even slightly? Sometimes the shift is subtle, like going from a 9 to an 8.",
+    "Notice where you are right now. Not where you were five minutes ago, but right here. Has anything loosened, even a little?",
+    "You just gave your nervous system a moment to catch up. Whatever you're noticing now — calmer, still activated, somewhere in between — that's useful information.",
   ],
   after_venting: [
-    "Thank you for letting that out. Sometimes we need to just say it before we can process it.\n\nNow that it's out — what feels like the core of it?",
-    "I hear all of that. It's a lot. Let's pick the piece that feels most urgent and start there.",
+    "You needed to get that out, and now it's here between us instead of only inside you. That shift matters.\n\nOf everything you just said, what part carries the most weight?",
+    "That was a lot to hold. Now that it's out — if you had to pick the one thread that feels most tangled, which would it be?",
+    "Sometimes saying it out loud changes how it feels. Does anything land differently now that you've said it?",
   ],
   encouragement: [
-    "You're doing something really important by being here and talking about this.",
-    "The fact that you're reflecting on this shows real growth, even if it doesn't feel like it.",
-    "This is hard work, and you're doing it. That matters.",
+    "Sitting with difficult emotions instead of running from them is a skill you're building. Each time gets a little more familiar.",
+    "You're choosing to look at something painful instead of pushing it away. That's not easy, and it's not nothing.",
+    "Growth in emotional work rarely feels like progress in the moment. But the fact that you're here, doing this — that's the evidence.",
   ],
 };

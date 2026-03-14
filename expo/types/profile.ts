@@ -62,6 +62,10 @@ export interface NotificationPreferences {
   quietHoursEnd: string;
   weekendReminders: boolean;
   frequency: 'minimal' | 'balanced' | 'supportive';
+  behaviorCheckIns: boolean;
+  behaviorDistressSupport: boolean;
+  behaviorJournalPrompts: boolean;
+  behaviorProgressCelebrations: boolean;
 }
 
 export interface PrivacySettings {
@@ -124,6 +128,10 @@ export const DEFAULT_PROFILE: UserProfile = {
     quietHoursEnd: '07:00',
     weekendReminders: true,
     frequency: 'balanced',
+    behaviorCheckIns: true,
+    behaviorDistressSupport: true,
+    behaviorJournalPrompts: true,
+    behaviorProgressCelebrations: true,
   },
   privacy: {
     anonymousCommunityPosts: true,

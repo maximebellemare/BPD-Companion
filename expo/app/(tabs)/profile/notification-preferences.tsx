@@ -436,6 +436,53 @@ export default function NotificationPreferencesScreen() {
           </View>
 
           <View style={styles.section}>
+            <Text style={styles.sectionLabel}>SMART BEHAVIOR NOTIFICATIONS</Text>
+            <View style={styles.card}>
+              {renderToggle(
+                <Heart size={16} color="#10B981" />,
+                'Gentle Check-ins',
+                'Supportive nudge if you haven\'t visited in a while',
+                n.behaviorCheckIns ?? true,
+                (val) => updateNotifications({ behaviorCheckIns: val }),
+                'toggle-behavior-checkins',
+              )}
+              <View style={styles.divider} />
+
+              {renderToggle(
+                <Shield size={16} color={Colors.danger} />,
+                'Distress Support',
+                'Support nudges when emotional patterns are intense',
+                n.behaviorDistressSupport ?? true,
+                (val) => updateNotifications({ behaviorDistressSupport: val }),
+                'toggle-behavior-distress',
+              )}
+              <View style={styles.divider} />
+
+              {renderToggle(
+                <FileText size={16} color="#6366F1" />,
+                'Reflection Prompts',
+                'Journal prompts after intense message sessions',
+                n.behaviorJournalPrompts ?? true,
+                (val) => updateNotifications({ behaviorJournalPrompts: val }),
+                'toggle-behavior-journal',
+              )}
+              <View style={styles.divider} />
+
+              {renderToggle(
+                <Sparkles size={16} color="#F59E0B" />,
+                'Progress Celebrations',
+                'Celebrate streaks, insights, and emotional growth',
+                n.behaviorProgressCelebrations ?? true,
+                (val) => updateNotifications({ behaviorProgressCelebrations: val }),
+                'toggle-behavior-progress',
+              )}
+            </View>
+            <Text style={styles.premiumNote}>
+              These notifications adapt to your behavior and emotional patterns. They are always respectful of your current emotional state.
+            </Text>
+          </View>
+
+          <View style={styles.section}>
             <Text style={styles.sectionLabel}>QUIET HOURS</Text>
             <View style={styles.card}>
               {renderToggle(

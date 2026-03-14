@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -15,20 +15,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowLeft,
   Clock,
-  MessageSquare,
   ChevronRight,
-  ChevronDown,
-  Lightbulb,
-  Heart,
-  Info,
-  Timer,
   Sparkles,
-  RotateCcw,
-  Copy,
   Check,
   Shield,
-  Users,
-  Zap,
+  Archive,
+  BarChart3,
+  Compass,
+  Eye,
+  Pause,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
@@ -41,76 +36,58 @@ import { useMessageCoaching } from '@/hooks/useCoaching';
 import { useRelationshipSpiral } from '@/hooks/useRelationshipSpiral';
 import { useActiveLoops } from '@/hooks/useActiveLoops';
 import {
-  RELATIONSHIP_OPTIONS,
-  EMOTIONAL_STATE_OPTIONS,
-  INTENT_OPTIONS,
-  OUTCOME_OPTIONS,
-  PAUSE_DURATIONS,
   MessageContext,
   MESSAGE_OUTCOME_OPTIONS,
-  MessageOutcome,
 } from '@/types/messages';
 import { REWRITE_STYLE_META } from '@/services/messages/messageRewriteService';
+import {
+  QUICK_ENTRY_CARDS,
+  EMOTIONAL_STATE_OPTIONS,
+  INTERPRETATION_OPTIONS,
+  URGE_OPTIONS,
+  DESIRED_OUTCOME_OPTIONS,
+  EnhancedMessageContext,
+  QuickEntrySituation,
+} from '@/types/messageHealth';
+import { analyzeMessageHealth } from '@/services/messages/messageHealthService';
+import { saveToDraftVault } from '@/services/messages/messageOutcomeService';
 
 type ContextKey = keyof MessageContext;
 
+type MainView = 'home' | 'flow';
+type FlowStep = 'situation' | 'draft' | 'emotion' | 'interpretation' | 'urge' | 'outcome' | 'analysis';
 
-
-const STEPS = ['input', 'context', 'pause', 'rewrites', 'result'] as const;
-const STEP_LABELS: Record<string, string> = {
-  input: 'Write',
-  context: 'Context',
-  pause: 'Pause',
-  rewrites: 'Options',
-  result: 'Done',
+const FLOW_STEPS: FlowStep[] = ['situation', 'draft', 'emotion', 'interpretation', 'urge', 'outcome', 'analysis'];
+const FLOW_LABELS: Record<FlowStep, string> = {
+  situation: 'Context',
+  draft: 'Message',
+  emotion: 'Feeling',
+  interpretation: 'Meaning',
+  urge: 'Urge',
+  outcome: 'Goal',
+  analysis: 'Insight',
 };
 
-interface ChipOption<T extends string> {
-  value: T;
-  label: string;
-  emoji: string;
-}
-
-function StepIndicator({ currentStep }: { currentStep: string }) {
-  const visibleSteps = STEPS.filter(s => {
-    if (currentStep === 'pause') return true;
-    return s !== 'pause';
-  });
-
-  const currentIndex = visibleSteps.indexOf(currentStep as typeof visibleSteps[number]);
+function FlowStepIndicator({ currentStep }: { currentStep: FlowStep }) {
+  const currentIndex = FLOW_STEPS.indexOf(currentStep);
+  const visibleSteps = FLOW_STEPS.slice(0, Math.min(FLOW_STEPS.length, 5));
 
   return (
-    <View style={styles.stepIndicator}>
+    <View style={styles.flowStepBar}>
       {visibleSteps.map((s, i) => {
-        const isActive = i === currentIndex;
-        const isCompleted = i < currentIndex;
+        const isActive = FLOW_STEPS.indexOf(s) === currentIndex;
+        const isCompleted = FLOW_STEPS.indexOf(s) < currentIndex;
         return (
-          <View key={s} style={styles.stepItem}>
+          <View key={s} style={styles.flowStepItem}>
             <View
               style={[
-                styles.stepDot,
-                isActive && styles.stepDotActive,
-                isCompleted && styles.stepDotCompleted,
+                styles.flowStepDot,
+                isActive && styles.flowStepDotActive,
+                isCompleted && styles.flowStepDotCompleted,
               ]}
-            >
-              {isCompleted && <Check size={8} color={Colors.white} />}
-            </View>
-            <Text
-              style={[
-                styles.stepLabel,
-                isActive && styles.stepLabelActive,
-                isCompleted && styles.stepLabelCompleted,
-              ]}
-            >
-              {STEP_LABELS[s]}
-            </Text>
+            />
             {i < visibleSteps.length - 1 && (
-              <View
-                style={[
-                  styles.stepLine,
-                  isCompleted && styles.stepLineCompleted,
-                ]}
-              />
+              <View style={[styles.flowStepLine, isCompleted && styles.flowStepLineCompleted]} />
             )}
           </View>
         );
@@ -119,55 +96,40 @@ function StepIndicator({ currentStep }: { currentStep: string }) {
   );
 }
 
-function ContextChips<T extends string>({
+interface FlowChipOption<T extends string> {
+  value: T;
+  label: string;
+  emoji: string;
+}
+
+function FlowChips<T extends string>({
   options,
   selected,
   onSelect,
 }: {
-  options: ChipOption<T>[];
+  options: FlowChipOption<T>[];
   selected: T | null;
   onSelect: (value: T) => void;
 }) {
-  const scaleAnims = useRef(options.map(() => new Animated.Value(1))).current;
-
-  const handlePress = useCallback((value: T, index: number) => {
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    Animated.sequence([
-      Animated.timing(scaleAnims[index], {
-        toValue: 0.92,
-        duration: 80,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnims[index], {
-        toValue: 1,
-        friction: 4,
-        tension: 200,
-        useNativeDriver: true,
-      }),
-    ]).start();
-    onSelect(value);
-  }, [onSelect, scaleAnims]);
-
   return (
-    <View style={styles.chipRow}>
-      {options.map((opt, index) => {
+    <View style={styles.flowChipRow}>
+      {options.map((opt) => {
         const isSelected = selected === opt.value;
         return (
-          <Animated.View
+          <TouchableOpacity
             key={opt.value}
-            style={{ transform: [{ scale: scaleAnims[index] }] }}
+            style={[styles.flowChip, isSelected && styles.flowChipSelected]}
+            onPress={() => {
+              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              onSelect(opt.value);
+            }}
+            activeOpacity={0.7}
           >
-            <TouchableOpacity
-              style={[styles.chip, isSelected && styles.chipSelected]}
-              onPress={() => handlePress(opt.value, index)}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.chipEmoji}>{opt.emoji}</Text>
-              <Text style={[styles.chipLabel, isSelected && styles.chipLabelSelected]}>
-                {opt.label}
-              </Text>
-            </TouchableOpacity>
-          </Animated.View>
+            <Text style={styles.flowChipEmoji}>{opt.emoji}</Text>
+            <Text style={[styles.flowChipLabel, isSelected && styles.flowChipLabelSelected]}>
+              {opt.label}
+            </Text>
+          </TouchableOpacity>
         );
       })}
     </View>
@@ -183,63 +145,39 @@ function formatTimestamp(ts: number): string {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-function formatPauseTime(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  if (m > 0) return `${m}:${s.toString().padStart(2, '0')}`;
-  return `0:${s.toString().padStart(2, '0')}`;
-}
-
 export default function MessagesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { messageDrafts } = useApp();
-  const {
-    inputText,
-    setInputText,
-    step,
-    context,
-    updateContext,
-    rewrites,
-    selectedRewrite,
-    pauseRemaining,
-    isPausing,
-    triggerSuggestions,
-    proceedToContext,
-    proceedToRewrites,
-    startPause,
-    skipPause,
-    finishPause,
-    selectRewrite,
-    recordOutcome,
-    reset,
-    goBack,
-  } = useMessageRewrite();
-
+  const messageRewrite = useMessageRewrite();
   const messageCoachingNudge = useMessageCoaching();
   const relationshipSpiral = useRelationshipSpiral();
   const activeLoops = useActiveLoops();
+
+  const [mainView, setMainView] = useState<MainView>('home');
+  const [flowStep, setFlowStep] = useState<FlowStep>('situation');
+  const [enhancedContext, setEnhancedContext] = useState<EnhancedMessageContext>({
+    situation: '',
+    draft: '',
+    emotionalState: null,
+    interpretation: null,
+    urge: null,
+    desiredOutcome: null,
+  });
+
   const [coachingDismissed, setCoachingDismissed] = useState<boolean>(false);
+  const [expandedDraftId, setExpandedDraftId] = useState<string | null>(null);
 
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const slideAnim = useRef(new Animated.Value(0)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  const breatheAnim = useRef(new Animated.Value(0)).current;
-  const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
-  const [showPauseOptions, setShowPauseOptions] = useState<boolean>(false);
-  const [expandedDraftId, setExpandedDraftId] = useState<string | null>(null);
-  const [copiedRewriteStyle, setCopiedRewriteStyle] = useState<string | null>(null);
-  const [selectedOutcome, setSelectedOutcome] = useState<MessageOutcome | null>(null);
-  const pauseExpandAnim = useRef(new Animated.Value(0)).current;
-  const suggestionsExpandAnim = useRef(new Animated.Value(0)).current;
 
   const animateTransition = useCallback(() => {
     fadeAnim.setValue(0);
-    slideAnim.setValue(24);
+    slideAnim.setValue(20);
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 300,
+        duration: 250,
         useNativeDriver: true,
       }),
       Animated.spring(slideAnim, {
@@ -253,123 +191,169 @@ export default function MessagesScreen() {
 
   useEffect(() => {
     animateTransition();
-  }, [step, animateTransition]);
+  }, [flowStep, mainView, animateTransition]);
 
-  useEffect(() => {
-    Animated.spring(pauseExpandAnim, {
-      toValue: showPauseOptions ? 1 : 0,
-      friction: 10,
-      tension: 80,
-      useNativeDriver: false,
-    }).start();
-  }, [showPauseOptions, pauseExpandAnim]);
+  const healthAnalysis = useMemo(() => {
+    if (enhancedContext.draft.trim().length < 5) return null;
+    return analyzeMessageHealth(enhancedContext.draft, enhancedContext);
+  }, [enhancedContext]);
 
-  useEffect(() => {
-    Animated.spring(suggestionsExpandAnim, {
-      toValue: showSuggestions ? 1 : 0,
-      friction: 10,
-      tension: 80,
-      useNativeDriver: false,
-    }).start();
-  }, [showSuggestions, suggestionsExpandAnim]);
+  const startFlow = useCallback((situation?: QuickEntrySituation) => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const card = situation ? QUICK_ENTRY_CARDS.find(c => c.id === situation) : null;
+    setEnhancedContext({
+      situation: '',
+      draft: '',
+      emotionalState: card?.defaultEmotion ?? null,
+      interpretation: null,
+      urge: null,
+      desiredOutcome: null,
+    });
 
-  useEffect(() => {
-    if (step === 'pause' && isPausing) {
-      const loop = Animated.loop(
-        Animated.sequence([
-          Animated.timing(breatheAnim, {
-            toValue: 1,
-            duration: 4000,
-            useNativeDriver: true,
-          }),
-          Animated.timing(breatheAnim, {
-            toValue: 0,
-            duration: 4000,
-            useNativeDriver: true,
-          }),
-        ]),
-      );
-      loop.start();
-      return () => loop.stop();
+    if (situation === 'calm_before_reply') {
+      setMainView('flow');
+      setFlowStep('situation');
+    } else {
+      setMainView('flow');
+      setFlowStep('situation');
     }
-  }, [step, isPausing, breatheAnim]);
+  }, []);
 
-  useEffect(() => {
-    if (step === 'pause' && !isPausing && pauseRemaining === 0) {
-      const pulse = Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulseAnim, {
-            toValue: 1.05,
-            duration: 800,
-            useNativeDriver: true,
-          }),
-          Animated.timing(pulseAnim, {
-            toValue: 1,
-            duration: 800,
-            useNativeDriver: true,
-          }),
-        ]),
-      );
-      pulse.start();
-      return () => pulse.stop();
+  const goToFlowStep = useCallback((step: FlowStep) => {
+    setFlowStep(step);
+  }, []);
+
+  const goBackFlow = useCallback(() => {
+    const idx = FLOW_STEPS.indexOf(flowStep);
+    if (idx <= 0) {
+      setMainView('home');
+      return;
     }
-  }, [step, isPausing, pauseRemaining, pulseAnim]);
+    setFlowStep(FLOW_STEPS[idx - 1]);
+  }, [flowStep]);
 
-  const handleCopyRewrite = useCallback((style: string, _text: string) => {
-    setCopiedRewriteStyle(style);
+  const goNextFlow = useCallback(() => {
+    const idx = FLOW_STEPS.indexOf(flowStep);
+    if (idx < FLOW_STEPS.length - 1) {
+      setFlowStep(FLOW_STEPS[idx + 1]);
+    }
+  }, [flowStep]);
+
+  const handleSaveToVault = useCallback(async () => {
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setTimeout(() => setCopiedRewriteStyle(null), 2000);
-  }, []);
+    await saveToDraftVault({
+      id: `v_${Date.now()}`,
+      timestamp: Date.now(),
+      originalText: enhancedContext.draft,
+      rewrittenText: null,
+      rewriteStyle: null,
+      situation: enhancedContext.situation,
+      emotionalState: enhancedContext.emotionalState,
+      reason: 'saved_for_later',
+      reviewed: false,
+      reviewNotes: null,
+      notSendingHelped: null,
+    });
+  }, [enhancedContext]);
 
-  const togglePauseOptions = useCallback(() => {
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setShowPauseOptions(prev => !prev);
-  }, []);
+  const navigateToAnalysis = useCallback(() => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.push({
+      pathname: '/message-analysis',
+      params: {
+        draft: enhancedContext.draft,
+        situation: enhancedContext.situation,
+        emotionalState: enhancedContext.emotionalState ?? '',
+        interpretation: enhancedContext.interpretation ?? '',
+        urge: enhancedContext.urge ?? '',
+        desiredOutcome: enhancedContext.desiredOutcome ?? '',
+      },
+    } as never);
+  }, [enhancedContext, router]);
 
-  const contextFilledCount = [
-    context.relationship,
-    context.emotionalState,
-    context.intent,
-    context.desiredOutcome,
-  ].filter(Boolean).length;
+  const navigateToSimulation = useCallback(() => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.push({
+      pathname: '/message-simulation',
+      params: {
+        draft: enhancedContext.draft,
+        situation: enhancedContext.situation,
+        emotionalState: enhancedContext.emotionalState ?? '',
+        interpretation: enhancedContext.interpretation ?? '',
+        urge: enhancedContext.urge ?? '',
+        desiredOutcome: enhancedContext.desiredOutcome ?? '',
+      },
+    } as never);
+  }, [enhancedContext, router]);
 
-  const renderInputStep = () => (
+  const proceedToLegacyRewrites = useCallback(() => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    messageRewrite.setInputText(enhancedContext.draft);
+    const emotionMap: Record<string, string> = {
+      angry: 'angry',
+      hurt: 'hurt',
+      anxious: 'anxious',
+      ashamed: 'ashamed',
+      rejected: 'abandoned',
+      overwhelmed: 'confused',
+      confused: 'confused',
+      calm_unsure: 'numb',
+    };
+    if (enhancedContext.emotionalState) {
+      messageRewrite.updateContext('emotionalState' as ContextKey, (emotionMap[enhancedContext.emotionalState] ?? null) as never);
+    }
+    setMainView('home');
+    messageRewrite.proceedToContext();
+  }, [enhancedContext, messageRewrite]);
+
+  const renderHome = () => (
     <>
-      <View style={styles.inputSection}>
-        <View style={styles.inputHeaderRow}>
-          <MessageSquare size={18} color={Colors.primary} />
-          <Text style={styles.inputLabel}>What do you want to say?</Text>
+      <View style={styles.heroSection}>
+        <View style={styles.heroIconRow}>
+          <View style={styles.heroIconBadge}>
+            <Shield size={20} color={Colors.white} />
+          </View>
+          <Text style={styles.heroTitle}>Message Safety</Text>
         </View>
-        <Text style={styles.inputHint}>
-          Write the message you're thinking of sending — raw and unfiltered is okay here.
+        <Text style={styles.heroSubtitle}>
+          Decide whether to send, understand what you feel, and communicate with clarity.
         </Text>
-        <TextInput
-          style={styles.messageInput}
-          placeholder="Type your message here..."
-          placeholderTextColor={Colors.textMuted}
-          multiline
-          value={inputText}
-          onChangeText={setInputText}
-          textAlignVertical="top"
-          testID="message-input"
-        />
-        {inputText.trim().length > 0 && (
-          <Text style={styles.charCount}>{inputText.length} characters</Text>
-        )}
       </View>
 
-      {activeLoops.length > 0 && inputText.trim().length === 0 && (
+      <View style={styles.quickEntrySection}>
+        <Text style={styles.sectionLabel}>What's happening?</Text>
+        <View style={styles.quickEntryGrid}>
+          {QUICK_ENTRY_CARDS.map((card) => (
+            <TouchableOpacity
+              key={card.id}
+              style={[styles.quickEntryCard, { borderLeftColor: card.color }]}
+              onPress={() => startFlow(card.id)}
+              activeOpacity={0.7}
+              testID={`quick-entry-${card.id}`}
+            >
+              <Text style={styles.quickEntryEmoji}>{card.emoji}</Text>
+              <View style={styles.quickEntryTextWrap}>
+                <Text style={styles.quickEntryLabel}>{card.label}</Text>
+                <Text style={styles.quickEntrySub}>{card.subtitle}</Text>
+              </View>
+              <ChevronRight size={14} color={Colors.textMuted} />
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      {activeLoops.length > 0 && (
         <ActiveLoopBanner signals={activeLoops} />
       )}
 
-      {relationshipSpiral.isActive && relationshipSpiral.messageIntervention && inputText.trim().length === 0 && (
+      {relationshipSpiral.isActive && relationshipSpiral.messageIntervention && (
         <SpiralMessageBanner
           message={relationshipSpiral.messageIntervention}
           riskLevel={relationshipSpiral.riskLevel === 'calm' ? 'watchful' : relationshipSpiral.riskLevel}
         />
       )}
 
-      {messageCoachingNudge && !coachingDismissed && inputText.trim().length === 0 && (
+      {messageCoachingNudge && !coachingDismissed && (
         <CoachingNudgeBanner
           nudge={messageCoachingNudge}
           onDismiss={() => setCoachingDismissed(true)}
@@ -377,587 +361,427 @@ export default function MessagesScreen() {
         />
       )}
 
-      {inputText.trim().length > 0 && (
+      <View style={styles.toolStrip}>
         <TouchableOpacity
-          style={styles.primaryButton}
-          onPress={() => {
-            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            proceedToContext();
-          }}
-          activeOpacity={0.8}
-          testID="proceed-context-btn"
+          style={styles.toolStripCard}
+          onPress={() => router.push('/draft-vault' as never)}
+          activeOpacity={0.7}
+          testID="draft-vault-btn"
         >
-          <Shield size={18} color={Colors.white} />
-          <Text style={styles.primaryButtonText}>Before you send...</Text>
-          <ChevronRight size={18} color={Colors.white} />
+          <View style={[styles.toolStripIcon, { backgroundColor: '#9B8EC4' + '18' }]}>
+            <Archive size={16} color="#9B8EC4" />
+          </View>
+          <Text style={styles.toolStripLabel}>Draft Vault</Text>
         </TouchableOpacity>
-      )}
 
-      {triggerSuggestions.length > 0 && (
-        <View style={styles.suggestionsSection}>
-          <TouchableOpacity
-            style={styles.suggestionsToggle}
-            onPress={() => {
-              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setShowSuggestions(!showSuggestions);
-            }}
-            activeOpacity={0.7}
-          >
-            <View style={styles.suggestionsIconBadge}>
-              <Lightbulb size={14} color={Colors.accent} />
-            </View>
-            <Text style={styles.suggestionsToggleText}>Trigger-aware insights</Text>
-            <Animated.View
-              style={{
-                transform: [{
-                  rotate: suggestionsExpandAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: ['0deg', '180deg'],
-                  }),
-                }],
-              }}
-            >
-              <ChevronDown size={16} color={Colors.textMuted} />
-            </Animated.View>
-          </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.toolStripCard}
+          onPress={() => router.push('/communication-patterns' as never)}
+          activeOpacity={0.7}
+          testID="patterns-btn"
+        >
+          <View style={[styles.toolStripIcon, { backgroundColor: Colors.primary + '18' }]}>
+            <BarChart3 size={16} color={Colors.primary} />
+          </View>
+          <Text style={styles.toolStripLabel}>My Patterns</Text>
+        </TouchableOpacity>
 
-          {showSuggestions && (
-            <View style={styles.suggestionsList}>
-              {triggerSuggestions.map((s, i) => (
-                <View key={i} style={styles.suggestionCard}>
-                  <Text style={styles.suggestionLabel}>{s.label}</Text>
-                  <Text style={styles.suggestionDesc}>{s.description}</Text>
-                </View>
-              ))}
-            </View>
-          )}
-        </View>
-      )}
-
-      <TouchableOpacity
-        style={styles.guardBanner}
-        onPress={() => {
-          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          router.push('/message-guard');
-        }}
-        activeOpacity={0.7}
-        testID="message-guard-btn"
-      >
-        <View style={styles.guardBannerLeft}>
-          <View style={styles.guardBannerIcon}>
-            <Shield size={18} color={Colors.primary} />
+        <TouchableOpacity
+          style={styles.toolStripCard}
+          onPress={() => router.push('/message-guard' as never)}
+          activeOpacity={0.7}
+          testID="guard-btn"
+        >
+          <View style={[styles.toolStripIcon, { backgroundColor: '#5B8FB9' + '18' }]}>
+            <Eye size={16} color="#5B8FB9" />
           </View>
-          <View style={styles.guardBannerText}>
-            <Text style={styles.guardBannerTitle}>Message Guard</Text>
-            <Text style={styles.guardBannerDesc}>See how your message may land first</Text>
-          </View>
-        </View>
-        <ChevronRight size={16} color={Colors.primary} />
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.simulatorBanner}
-        onPress={() => {
-          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          router.push('/companion/simulator' as never);
-        }}
-        activeOpacity={0.7}
-        testID="simulator-entry-btn"
-      >
-        <View style={styles.simulatorBannerLeft}>
-          <View style={styles.simulatorBannerIcon}>
-            <Zap size={16} color={Colors.accent} />
-          </View>
-          <View style={styles.simulatorBannerText}>
-            <Text style={styles.simulatorBannerTitle}>Simulate before sending</Text>
-            <Text style={styles.simulatorBannerDesc}>See how different responses may play out</Text>
-          </View>
-        </View>
-        <ChevronRight size={16} color={Colors.accent} />
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.relInsightsBanner}
-        onPress={() => {
-          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          router.push('/relationship-insights');
-        }}
-        activeOpacity={0.7}
-        testID="relationship-insights-btn"
-      >
-        <View style={styles.relInsightsBannerLeft}>
-          <View style={styles.relInsightsBannerIcon}>
-            <Users size={18} color={Colors.white} />
-          </View>
-          <View style={styles.relInsightsBannerText}>
-            <Text style={styles.relInsightsBannerTitle}>Relationship Patterns</Text>
-            <Text style={styles.relInsightsBannerDesc}>Understand how you connect</Text>
-          </View>
-        </View>
-        <ChevronRight size={16} color={Colors.white} style={{ opacity: 0.7 }} />
-      </TouchableOpacity>
+          <Text style={styles.toolStripLabel}>Guard</Text>
+        </TouchableOpacity>
+      </View>
 
       {messageDrafts.length > 0 && (
         <View style={styles.historySection}>
-          <Text style={styles.historyTitle}>Recent messages</Text>
-          {messageDrafts.slice(0, 5).map(draft => {
-            const isExpanded = expandedDraftId === draft.id;
-            return (
-              <TouchableOpacity
-                key={draft.id}
-                style={[styles.historyCard, isExpanded && styles.historyCardExpanded]}
-                onPress={() => {
-                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  setExpandedDraftId(isExpanded ? null : draft.id);
-                }}
-                activeOpacity={0.7}
-              >
-                <View style={styles.historyHeader}>
-                  <View style={styles.historyMeta}>
-                    <Clock size={12} color={Colors.textMuted} />
-                    <Text style={styles.historyTime}>{formatTimestamp(draft.timestamp)}</Text>
-                  </View>
-                  {draft.rewriteType && (
-                    <View style={[
-                      styles.historyBadge,
-                      { backgroundColor: (REWRITE_STYLE_META[draft.rewriteType as keyof typeof REWRITE_STYLE_META]?.color ?? Colors.primary) + '18' },
-                    ]}>
-                      <Text style={[
-                        styles.historyBadgeText,
-                        { color: REWRITE_STYLE_META[draft.rewriteType as keyof typeof REWRITE_STYLE_META]?.color ?? Colors.primary },
-                      ]}>
-                        {REWRITE_STYLE_META[draft.rewriteType as keyof typeof REWRITE_STYLE_META]?.emoji ?? ''}{' '}
-                        {REWRITE_STYLE_META[draft.rewriteType as keyof typeof REWRITE_STYLE_META]?.label ?? draft.rewriteType}
-                      </Text>
-                    </View>
-                  )}
-                  {draft.paused && !draft.rewriteType && (
-                    <View style={[styles.historyBadge, { backgroundColor: Colors.accentLight }]}>
-                      <Text style={[styles.historyBadgeText, { color: Colors.accent }]}>⏸️ paused</Text>
-                    </View>
-                  )}
+          <Text style={styles.sectionLabel}>Recent</Text>
+          {messageDrafts.slice(0, 4).map(draft => (
+            <TouchableOpacity
+              key={draft.id}
+              style={[styles.historyCard, expandedDraftId === draft.id && styles.historyCardExpanded]}
+              onPress={() => {
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setExpandedDraftId(expandedDraftId === draft.id ? null : draft.id);
+              }}
+              activeOpacity={0.7}
+            >
+              <View style={styles.historyHeader}>
+                <View style={styles.historyMeta}>
+                  <Clock size={11} color={Colors.textMuted} />
+                  <Text style={styles.historyTime}>{formatTimestamp(draft.timestamp)}</Text>
                 </View>
-                <Text style={styles.historyOriginal} numberOfLines={isExpanded ? undefined : 2}>
-                  {draft.originalText}
-                </Text>
-                {isExpanded && draft.rewrittenText && (
-                  <View style={styles.historyRewriteSection}>
-                    <View style={styles.historyDivider} />
-                    <Text style={styles.historyRewriteLabel}>Rewritten as</Text>
-                    <Text style={styles.historyRewriteText}>{draft.rewrittenText.replace(/\[.*?\]\n\n/, '').replace(/\n---\n.*/, '')}</Text>
-                  </View>
-                )}
-                {isExpanded && draft.outcome && (
-                  <View style={styles.historyOutcomeRow}>
-                    <Text style={styles.historyOutcomeLabel}>Outcome:</Text>
-                    <View style={[
-                      styles.historyOutcomeBadge,
-                      { backgroundColor: (MESSAGE_OUTCOME_OPTIONS.find(o => o.value === draft.outcome)?.color ?? Colors.primary) + '18' },
+                {draft.rewriteType && (
+                  <View style={[
+                    styles.historyBadge,
+                    { backgroundColor: (REWRITE_STYLE_META[draft.rewriteType as keyof typeof REWRITE_STYLE_META]?.color ?? Colors.primary) + '18' },
+                  ]}>
+                    <Text style={[
+                      styles.historyBadgeText,
+                      { color: REWRITE_STYLE_META[draft.rewriteType as keyof typeof REWRITE_STYLE_META]?.color ?? Colors.primary },
                     ]}>
-                      <Text style={styles.historyOutcomeEmoji}>
-                        {MESSAGE_OUTCOME_OPTIONS.find(o => o.value === draft.outcome)?.emoji ?? ''}
-                      </Text>
-                      <Text style={[
-                        styles.historyOutcomeText,
-                        { color: MESSAGE_OUTCOME_OPTIONS.find(o => o.value === draft.outcome)?.color ?? Colors.primary },
-                      ]}>
-                        {MESSAGE_OUTCOME_OPTIONS.find(o => o.value === draft.outcome)?.label ?? draft.outcome}
-                      </Text>
-                    </View>
+                      {REWRITE_STYLE_META[draft.rewriteType as keyof typeof REWRITE_STYLE_META]?.emoji ?? ''}{' '}
+                      {REWRITE_STYLE_META[draft.rewriteType as keyof typeof REWRITE_STYLE_META]?.label ?? draft.rewriteType}
+                    </Text>
                   </View>
                 )}
-              </TouchableOpacity>
-            );
-          })}
+              </View>
+              <Text style={styles.historyOriginal} numberOfLines={expandedDraftId === draft.id ? undefined : 2}>
+                {draft.originalText}
+              </Text>
+              {expandedDraftId === draft.id && draft.rewrittenText && (
+                <View style={styles.historyRewriteSection}>
+                  <View style={styles.historyDivider} />
+                  <Text style={styles.historyRewriteLabel}>Rewritten</Text>
+                  <Text style={styles.historyRewriteText}>
+                    {draft.rewrittenText.replace(/\[.*?\]\n\n/, '').replace(/\n---\n.*/, '')}
+                  </Text>
+                </View>
+              )}
+              {expandedDraftId === draft.id && draft.outcome && (
+                <View style={styles.historyOutcomeRow}>
+                  <Text style={styles.historyOutcomeLabel}>Outcome:</Text>
+                  <View style={[
+                    styles.historyOutcomeBadge,
+                    { backgroundColor: (MESSAGE_OUTCOME_OPTIONS.find(o => o.value === draft.outcome)?.color ?? Colors.primary) + '18' },
+                  ]}>
+                    <Text style={styles.historyOutcomeEmoji}>
+                      {MESSAGE_OUTCOME_OPTIONS.find(o => o.value === draft.outcome)?.emoji ?? ''}
+                    </Text>
+                    <Text style={[
+                      styles.historyOutcomeText,
+                      { color: MESSAGE_OUTCOME_OPTIONS.find(o => o.value === draft.outcome)?.color ?? Colors.primary },
+                    ]}>
+                      {MESSAGE_OUTCOME_OPTIONS.find(o => o.value === draft.outcome)?.label ?? draft.outcome}
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </TouchableOpacity>
+          ))}
         </View>
       )}
     </>
   );
 
-  const renderContextStep = () => (
-    <>
-      <View style={styles.contextIntro}>
-        <Heart size={18} color={Colors.primary} />
-        <View style={styles.contextIntroContent}>
-          <Text style={styles.contextIntroText}>
-            A little context helps craft a more thoughtful response.
-          </Text>
-          <Text style={styles.contextProgress}>
-            {contextFilledCount}/4 selected
-          </Text>
-        </View>
-      </View>
+  const renderFlowSituation = () => (
+    <View style={styles.flowSection}>
+      <Text style={styles.flowQuestion}>What happened?</Text>
+      <Text style={styles.flowHint}>Briefly describe the situation. This helps generate better insights.</Text>
+      <TextInput
+        style={styles.flowTextInput}
+        placeholder="e.g. They haven't replied in 3 hours and I'm spiraling..."
+        placeholderTextColor={Colors.textMuted}
+        multiline
+        value={enhancedContext.situation}
+        onChangeText={(text) => setEnhancedContext(prev => ({ ...prev, situation: text }))}
+        textAlignVertical="top"
+        testID="situation-input"
+      />
+      <TouchableOpacity
+        style={[styles.flowNextBtn, !enhancedContext.situation.trim() && styles.flowNextBtnDisabled]}
+        onPress={goNextFlow}
+        activeOpacity={0.8}
+        disabled={!enhancedContext.situation.trim()}
+        testID="next-situation"
+      >
+        <Text style={styles.flowNextBtnText}>Next</Text>
+        <ChevronRight size={16} color={Colors.white} />
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.flowSkipBtn} onPress={goNextFlow} activeOpacity={0.7}>
+        <Text style={styles.flowSkipText}>Skip this step</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
-      <View style={styles.contextPreview}>
-        <Text style={styles.contextPreviewLabel}>Your message</Text>
-        <Text style={styles.contextPreviewText} numberOfLines={3}>{inputText}</Text>
-      </View>
+  const renderFlowDraft = () => (
+    <View style={styles.flowSection}>
+      <Text style={styles.flowQuestion}>What do you want to say?</Text>
+      <Text style={styles.flowHint}>Write the message you're thinking of sending — raw and unfiltered is okay.</Text>
+      <TextInput
+        style={[styles.flowTextInput, { minHeight: 120 }]}
+        placeholder="Type your message here..."
+        placeholderTextColor={Colors.textMuted}
+        multiline
+        value={enhancedContext.draft}
+        onChangeText={(text) => setEnhancedContext(prev => ({ ...prev, draft: text }))}
+        textAlignVertical="top"
+        testID="draft-input"
+      />
+      {enhancedContext.draft.trim().length > 0 && (
+        <Text style={styles.charCount}>{enhancedContext.draft.length} characters</Text>
+      )}
+      <TouchableOpacity
+        style={[styles.flowNextBtn, !enhancedContext.draft.trim() && styles.flowNextBtnDisabled]}
+        onPress={goNextFlow}
+        activeOpacity={0.8}
+        disabled={!enhancedContext.draft.trim()}
+        testID="next-draft"
+      >
+        <Text style={styles.flowNextBtnText}>Next</Text>
+        <ChevronRight size={16} color={Colors.white} />
+      </TouchableOpacity>
+    </View>
+  );
 
-      <View style={styles.contextSection}>
-        <Text style={styles.contextLabel}>Who is this to?</Text>
-        <ContextChips
-          options={RELATIONSHIP_OPTIONS}
-          selected={context.relationship}
-          onSelect={(v) => updateContext('relationship' as ContextKey, v)}
-        />
-      </View>
+  const renderFlowEmotion = () => (
+    <View style={styles.flowSection}>
+      <Text style={styles.flowQuestion}>How are you feeling?</Text>
+      <Text style={styles.flowHint}>Your emotional state shapes how messages come across.</Text>
+      <FlowChips
+        options={EMOTIONAL_STATE_OPTIONS}
+        selected={enhancedContext.emotionalState}
+        onSelect={(v) => setEnhancedContext(prev => ({ ...prev, emotionalState: v }))}
+      />
+      <TouchableOpacity
+        style={[styles.flowNextBtn, !enhancedContext.emotionalState && styles.flowNextBtnDisabled]}
+        onPress={goNextFlow}
+        activeOpacity={0.8}
+        disabled={!enhancedContext.emotionalState}
+        testID="next-emotion"
+      >
+        <Text style={styles.flowNextBtnText}>Next</Text>
+        <ChevronRight size={16} color={Colors.white} />
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.flowSkipBtn} onPress={goNextFlow} activeOpacity={0.7}>
+        <Text style={styles.flowSkipText}>Skip</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
-      <View style={styles.contextSection}>
-        <Text style={styles.contextLabel}>How are you feeling?</Text>
-        <ContextChips
-          options={EMOTIONAL_STATE_OPTIONS}
-          selected={context.emotionalState}
-          onSelect={(v) => updateContext('emotionalState' as ContextKey, v)}
-        />
-      </View>
+  const renderFlowInterpretation = () => (
+    <View style={styles.flowSection}>
+      <Text style={styles.flowQuestion}>What do you think this means?</Text>
+      <Text style={styles.flowHint}>Our interpretation of a situation often drives the message more than what actually happened.</Text>
+      <FlowChips
+        options={INTERPRETATION_OPTIONS}
+        selected={enhancedContext.interpretation}
+        onSelect={(v) => setEnhancedContext(prev => ({ ...prev, interpretation: v }))}
+      />
+      <TouchableOpacity
+        style={[styles.flowNextBtn, !enhancedContext.interpretation && styles.flowNextBtnDisabled]}
+        onPress={goNextFlow}
+        activeOpacity={0.8}
+        disabled={!enhancedContext.interpretation}
+        testID="next-interpretation"
+      >
+        <Text style={styles.flowNextBtnText}>Next</Text>
+        <ChevronRight size={16} color={Colors.white} />
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.flowSkipBtn} onPress={goNextFlow} activeOpacity={0.7}>
+        <Text style={styles.flowSkipText}>Skip</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
-      <View style={styles.contextSection}>
-        <Text style={styles.contextLabel}>What's your intent?</Text>
-        <ContextChips
-          options={INTENT_OPTIONS}
-          selected={context.intent}
-          onSelect={(v) => updateContext('intent' as ContextKey, v)}
-        />
-      </View>
+  const renderFlowUrge = () => (
+    <View style={styles.flowSection}>
+      <Text style={styles.flowQuestion}>What's your strongest urge?</Text>
+      <Text style={styles.flowHint}>Naming the urge creates space between feeling and acting.</Text>
+      <FlowChips
+        options={URGE_OPTIONS}
+        selected={enhancedContext.urge}
+        onSelect={(v) => setEnhancedContext(prev => ({ ...prev, urge: v }))}
+      />
+      <TouchableOpacity
+        style={[styles.flowNextBtn, !enhancedContext.urge && styles.flowNextBtnDisabled]}
+        onPress={goNextFlow}
+        activeOpacity={0.8}
+        disabled={!enhancedContext.urge}
+        testID="next-urge"
+      >
+        <Text style={styles.flowNextBtnText}>Next</Text>
+        <ChevronRight size={16} color={Colors.white} />
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.flowSkipBtn} onPress={goNextFlow} activeOpacity={0.7}>
+        <Text style={styles.flowSkipText}>Skip</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
-      <View style={styles.contextSection}>
-        <Text style={styles.contextLabel}>What do you hope for?</Text>
-        <ContextChips
-          options={OUTCOME_OPTIONS}
-          selected={context.desiredOutcome}
-          onSelect={(v) => updateContext('desiredOutcome' as ContextKey, v)}
-        />
-      </View>
+  const renderFlowOutcome = () => (
+    <View style={styles.flowSection}>
+      <Text style={styles.flowQuestion}>What do you actually want?</Text>
+      <Text style={styles.flowHint}>The real goal behind the message — not just the emotion.</Text>
+      <FlowChips
+        options={DESIRED_OUTCOME_OPTIONS}
+        selected={enhancedContext.desiredOutcome}
+        onSelect={(v) => setEnhancedContext(prev => ({ ...prev, desiredOutcome: v }))}
+      />
+      <TouchableOpacity
+        style={[styles.flowNextBtn, !enhancedContext.desiredOutcome && styles.flowNextBtnDisabled]}
+        onPress={goNextFlow}
+        activeOpacity={0.8}
+        disabled={!enhancedContext.desiredOutcome}
+        testID="next-outcome"
+      >
+        <Text style={styles.flowNextBtnText}>See my analysis</Text>
+        <Sparkles size={16} color={Colors.white} />
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.flowSkipBtn} onPress={goNextFlow} activeOpacity={0.7}>
+        <Text style={styles.flowSkipText}>Skip to analysis</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
-      <View style={styles.contextActions}>
-        <TouchableOpacity
-          style={[styles.pauseFirstButton, showPauseOptions && styles.pauseFirstButtonActive]}
-          onPress={togglePauseOptions}
-          activeOpacity={0.7}
-        >
-          <Timer size={16} color={showPauseOptions ? Colors.white : Colors.accent} />
-          <Text style={[styles.pauseFirstText, showPauseOptions && styles.pauseFirstTextActive]}>
-            {showPauseOptions ? 'Hide pause options' : 'Pause first'}
-          </Text>
-          <Animated.View
-            style={{
-              transform: [{
-                rotate: pauseExpandAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ['0deg', '180deg'],
-                }),
-              }],
-            }}
-          >
-            <ChevronDown size={14} color={showPauseOptions ? Colors.white : Colors.accent} />
-          </Animated.View>
-        </TouchableOpacity>
+  const renderFlowAnalysis = () => {
+    const analysis = healthAnalysis;
+    const recColors: Record<string, string> = {
+      safe_to_send: Colors.success,
+      better_after_pause: Colors.accent,
+      better_rewritten: '#9B8EC4',
+      better_not_sent: Colors.danger,
+    };
+    const recEmojis: Record<string, string> = {
+      safe_to_send: '✅',
+      better_after_pause: '⏳',
+      better_rewritten: '✏️',
+      better_not_sent: '🛑',
+    };
 
-        {showPauseOptions && (
-          <View style={styles.pauseOptions}>
-            <Text style={styles.pauseOptionsHint}>
-              Taking a moment before rewriting can help you respond from a calmer place.
-            </Text>
-            <View style={styles.pauseDurationRow}>
-              {PAUSE_DURATIONS.map(pd => (
+    return (
+      <View style={styles.flowSection}>
+        {analysis ? (
+          <>
+            <View style={[styles.recCard, { borderLeftColor: recColors[analysis.recommendation] ?? Colors.primary }]}>
+              <Text style={styles.recEmoji}>{recEmojis[analysis.recommendation] ?? '📋'}</Text>
+              <View style={styles.recTextWrap}>
+                <Text style={[styles.recTitle, { color: recColors[analysis.recommendation] ?? Colors.primary }]}>
+                  {analysis.recommendationMessage}
+                </Text>
+                <Text style={styles.recDetail}>{analysis.recommendationDetail}</Text>
+              </View>
+            </View>
+
+            {analysis.topConcerns.length > 0 && (
+              <View style={styles.concernsSection}>
+                <Text style={styles.concernsSectionTitle}>What we noticed</Text>
+                {analysis.topConcerns.map((concern, i) => (
+                  <View key={i} style={styles.concernCard}>
+                    <View style={[styles.concernDot, {
+                      backgroundColor: concern.level === 'high' ? Colors.danger : Colors.accent,
+                    }]} />
+                    <View style={styles.concernText}>
+                      <Text style={styles.concernLabel}>{concern.label}</Text>
+                      <Text style={styles.concernDesc}>{concern.description}</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {analysis.strengths.length > 0 && (
+              <View style={styles.strengthsSection}>
+                <Text style={styles.strengthsTitle}>Strengths</Text>
+                <View style={styles.strengthsRow}>
+                  {analysis.strengths.map((s, i) => (
+                    <View key={i} style={styles.strengthBadge}>
+                      <Check size={10} color={Colors.success} />
+                      <Text style={styles.strengthText}>{s}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            <View style={styles.draftPreviewCard}>
+              <Text style={styles.draftPreviewLabel}>Your message</Text>
+              <Text style={styles.draftPreviewText} numberOfLines={3}>{enhancedContext.draft}</Text>
+            </View>
+
+            <View style={styles.analysisActions}>
+              <TouchableOpacity
+                style={styles.analysisPrimaryBtn}
+                onPress={navigateToSimulation}
+                activeOpacity={0.8}
+                testID="see-paths-btn"
+              >
+                <Compass size={16} color={Colors.white} />
+                <Text style={styles.analysisPrimaryBtnText}>See response paths</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.analysisSecondaryBtn}
+                onPress={navigateToAnalysis}
+                activeOpacity={0.7}
+                testID="full-analysis-btn"
+              >
+                <BarChart3 size={14} color={Colors.primary} />
+                <Text style={styles.analysisSecondaryBtnText}>Full health score</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.analysisSecondaryBtn}
+                onPress={proceedToLegacyRewrites}
+                activeOpacity={0.7}
+                testID="rewrite-btn"
+              >
+                <Sparkles size={14} color={Colors.accent} />
+                <Text style={[styles.analysisSecondaryBtnText, { color: Colors.accent }]}>Rewrite options</Text>
+              </TouchableOpacity>
+
+              <View style={styles.analysisBottomRow}>
                 <TouchableOpacity
-                  key={pd.seconds}
-                  style={styles.pauseDurationChip}
-                  onPress={() => {
-                    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                    startPause(pd.seconds);
-                  }}
+                  style={styles.analysisSmallBtn}
+                  onPress={handleSaveToVault}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.pauseDurationLabel}>{pd.label}</Text>
-                  <Text style={styles.pauseDurationDesc}>{pd.description}</Text>
+                  <Archive size={13} color={Colors.textSecondary} />
+                  <Text style={styles.analysisSmallBtnText}>Save to vault</Text>
                 </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        )}
 
-        <TouchableOpacity
-          style={styles.primaryButton}
-          onPress={() => {
-            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            proceedToRewrites();
-          }}
-          activeOpacity={0.8}
-          testID="generate-rewrites-btn"
-        >
-          <Sparkles size={18} color={Colors.white} />
-          <Text style={styles.primaryButtonText}>Show me alternatives</Text>
-        </TouchableOpacity>
-      </View>
-    </>
-  );
-
-  const renderPauseStep = () => {
-    const breatheScale = breatheAnim.interpolate({
-      inputRange: [0, 1],
-      outputRange: [1, 1.18],
-    });
-    const breatheOpacity = breatheAnim.interpolate({
-      inputRange: [0, 0.5, 1],
-      outputRange: [0.3, 0.7, 0.3],
-    });
-    const breatheLabel = breatheAnim.interpolate({
-      inputRange: [0, 0.5, 1],
-      outputRange: [1, 0.6, 1],
-    });
-
-    return (
-      <View style={styles.pauseContainer}>
-        <View style={styles.pauseCircleContainer}>
-          <Animated.View
-            style={[
-              styles.pauseCircleOuter,
-              { transform: [{ scale: breatheScale }], opacity: breatheOpacity },
-            ]}
-          />
-          <Animated.View
-            style={[
-              styles.pauseCircleMid,
-              {
-                transform: [{ scale: breatheAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [1, 1.1],
-                }) }],
-                opacity: breatheAnim.interpolate({
-                  inputRange: [0, 0.5, 1],
-                  outputRange: [0.15, 0.35, 0.15],
-                }),
-              },
-            ]}
-          />
-          <View style={styles.pauseCircleInner}>
-            {isPausing ? (
-              <>
-                <Text style={styles.pauseTimerText}>{formatPauseTime(pauseRemaining)}</Text>
-                <Animated.Text style={[styles.pauseBreatheText, { opacity: breatheLabel }]}>
-                  Breathe with me...
-                </Animated.Text>
-              </>
-            ) : (
-              <>
-                <Text style={styles.pauseCompleteText}>You did it</Text>
-                <Text style={styles.pauseBreatheText}>
-                  Ready when you are
-                </Text>
-              </>
-            )}
-          </View>
-        </View>
-
-        <Text style={styles.pauseMessage}>
-          {isPausing
-            ? "This moment of pause is a gift to yourself.\nLet the urgency soften."
-            : "You paused instead of reacting.\nThat's real strength."
-          }
-        </Text>
-
-        {isPausing ? (
-          <TouchableOpacity
-            style={styles.secondaryButton}
-            onPress={skipPause}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.secondaryButtonText}>I'm ready now</Text>
-          </TouchableOpacity>
-        ) : (
-          <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-            <TouchableOpacity
-              style={styles.primaryButton}
-              onPress={() => {
-                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                finishPause();
-              }}
-              activeOpacity={0.8}
-            >
-              <Sparkles size={18} color={Colors.white} />
-              <Text style={styles.primaryButtonText}>Show me alternatives</Text>
-            </TouchableOpacity>
-          </Animated.View>
-        )}
-      </View>
-    );
-  };
-
-  const renderRewritesStep = () => (
-    <>
-      <View style={styles.rewritesIntro}>
-        <Text style={styles.rewritesIntroTitle}>Here are your options</Text>
-        <Text style={styles.rewritesIntroSub}>
-          Each version honors your feelings in a different way.
-        </Text>
-      </View>
-
-      <View style={styles.originalPreview}>
-        <Text style={styles.originalPreviewLabel}>Your original</Text>
-        <Text style={styles.originalPreviewText} numberOfLines={2}>{inputText}</Text>
-      </View>
-
-      {rewrites.map((rw, index) => {
-        const meta = REWRITE_STYLE_META[rw.style];
-        const isCopied = copiedRewriteStyle === rw.style;
-        return (
-          <TouchableOpacity
-            key={rw.style}
-            style={[styles.rewriteCard, index === 0 && styles.rewriteCardFirst]}
-            onPress={() => {
-              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              selectRewrite(rw);
-            }}
-            activeOpacity={0.7}
-            testID={`rewrite-${rw.style}`}
-          >
-            <View style={styles.rewriteHeader}>
-              <View style={[styles.rewriteIconBadge, { backgroundColor: meta.color + '18' }]}>
-                <Text style={styles.rewriteEmoji}>{meta.emoji}</Text>
-              </View>
-              <View style={styles.rewriteHeaderText}>
-                <Text style={[styles.rewriteLabel, { color: meta.color }]}>{meta.label}</Text>
-                <Text style={styles.rewriteDesc}>{meta.description}</Text>
-              </View>
-              <TouchableOpacity
-                style={styles.copyButton}
-                onPress={(e) => {
-                  e.stopPropagation?.();
-                  handleCopyRewrite(rw.style, rw.text);
-                }}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                {isCopied ? (
-                  <Check size={14} color={Colors.success} />
-                ) : (
-                  <Copy size={14} color={Colors.textMuted} />
-                )}
-              </TouchableOpacity>
-            </View>
-
-            <Text style={styles.rewritePreview} numberOfLines={3}>
-              {rw.text.replace(/\[.*?\]\n\n/, '').replace(/\n---\n.*/, '')}
-            </Text>
-
-            <View style={styles.whyHelpsContainer}>
-              <Info size={11} color={Colors.primary} />
-              <Text style={styles.whyHelpsText}>{rw.whyThisHelps}</Text>
-            </View>
-          </TouchableOpacity>
-        );
-      })}
-    </>
-  );
-
-  const renderResultStep = () => {
-    if (!selectedRewrite) return null;
-    const meta = REWRITE_STYLE_META[selectedRewrite.style];
-
-    return (
-      <>
-        <View style={[styles.resultBanner, { backgroundColor: meta.color + '12' }]}>
-          <Text style={styles.resultBannerEmoji}>{meta.emoji}</Text>
-          <View>
-            <Text style={[styles.resultBannerLabel, { color: meta.color }]}>{meta.label} version</Text>
-            <Text style={styles.resultBannerSub}>Saved to your history</Text>
-          </View>
-        </View>
-
-        <View style={[styles.resultCard, { borderColor: meta.color + '30' }]}>
-          <Text style={styles.resultText}>{selectedRewrite.text}</Text>
-        </View>
-
-        <View style={styles.whyHelpsResult}>
-          <View style={styles.whyHelpsResultHeader}>
-            <Lightbulb size={14} color={Colors.primary} />
-            <Text style={styles.whyHelpsResultTitle}>Why this helps</Text>
-          </View>
-          <Text style={styles.whyHelpsResultText}>{selectedRewrite.whyThisHelps}</Text>
-        </View>
-
-        <View style={styles.originalCard}>
-          <Text style={styles.originalLabel}>Your original</Text>
-          <Text style={styles.originalText}>{inputText}</Text>
-        </View>
-
-        <View style={styles.outcomeSection}>
-          <Text style={styles.outcomeSectionTitle}>How did it go?</Text>
-          <Text style={styles.outcomeSectionHint}>
-            Tracking outcomes helps you see what works over time.
-          </Text>
-          <View style={styles.outcomeRow}>
-            {MESSAGE_OUTCOME_OPTIONS.map(opt => {
-              const isSelected = selectedOutcome === opt.value;
-              return (
                 <TouchableOpacity
-                  key={opt.value}
-                  style={[
-                    styles.outcomeChip,
-                    isSelected && { backgroundColor: opt.color + '18', borderColor: opt.color },
-                  ]}
+                  style={styles.analysisSmallBtn}
                   onPress={() => {
                     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    setSelectedOutcome(opt.value);
-                    recordOutcome(opt.value);
+                    router.push('/grounding-mode' as never);
                   }}
                   activeOpacity={0.7}
-                  testID={`outcome-${opt.value}`}
                 >
-                  <Text style={styles.outcomeEmoji}>{opt.emoji}</Text>
-                  <Text style={[
-                    styles.outcomeLabel,
-                    isSelected && { color: opt.color, fontWeight: '600' as const },
-                  ]}>
-                    {opt.label}
-                  </Text>
+                  <Pause size={13} color={Colors.textSecondary} />
+                  <Text style={styles.analysisSmallBtnText}>Ground first</Text>
                 </TouchableOpacity>
-              );
-            })}
-          </View>
-          {selectedOutcome && (
-            <View style={styles.outcomeConfirm}>
-              <Check size={14} color={Colors.success} />
-              <Text style={styles.outcomeConfirmText}>Recorded — this helps your insights grow</Text>
+              </View>
             </View>
-          )}
-        </View>
-
-        <TouchableOpacity
-          style={styles.primaryButton}
-          onPress={() => {
-            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            setSelectedOutcome(null);
-            reset();
-          }}
-          activeOpacity={0.8}
-          testID="new-message-btn"
-        >
-          <MessageSquare size={18} color={Colors.white} />
-          <Text style={styles.primaryButtonText}>New message</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.secondaryButton}
-          onPress={goBack}
-          activeOpacity={0.7}
-        >
-          <RotateCcw size={14} color={Colors.textSecondary} />
-          <Text style={styles.secondaryButtonText}>See other options</Text>
-        </TouchableOpacity>
-      </>
+          </>
+        ) : (
+          <View style={styles.noAnalysis}>
+            <Text style={styles.noAnalysisText}>Enter a message in step 2 to see your analysis.</Text>
+            <TouchableOpacity
+              style={styles.flowBackLink}
+              onPress={() => goToFlowStep('draft')}
+              activeOpacity={0.7}
+            >
+              <ArrowLeft size={14} color={Colors.primary} />
+              <Text style={styles.flowBackLinkText}>Go back to write your message</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
     );
   };
 
-  const stepTitles: Record<string, { title: string; subtitle: string }> = {
-    input: { title: 'Message Tool', subtitle: 'Pause before you send. Rewrite with care.' },
-    context: { title: 'Add context', subtitle: 'This helps craft something more thoughtful.' },
-    pause: { title: 'Taking a pause', subtitle: '' },
-    rewrites: { title: 'Alternatives', subtitle: 'Choose the version that feels right.' },
-    result: { title: 'Your rewrite', subtitle: '' },
+  const renderFlowContent = () => {
+    switch (flowStep) {
+      case 'situation': return renderFlowSituation();
+      case 'draft': return renderFlowDraft();
+      case 'emotion': return renderFlowEmotion();
+      case 'interpretation': return renderFlowInterpretation();
+      case 'urge': return renderFlowUrge();
+      case 'outcome': return renderFlowOutcome();
+      case 'analysis': return renderFlowAnalysis();
+      default: return null;
+    }
   };
 
-  const currentStep = stepTitles[step] ?? stepTitles.input;
+  const flowStepTitle = FLOW_LABELS[flowStep] ?? '';
+  const flowStepNumber = FLOW_STEPS.indexOf(flowStep) + 1;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -967,28 +791,36 @@ export default function MessagesScreen() {
         keyboardVerticalOffset={100}
       >
         <View style={styles.header}>
-          <View style={styles.headerRow}>
-            {step !== 'input' && (
-              <TouchableOpacity
-                style={styles.backButton}
-                onPress={() => {
-                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  goBack();
-                }}
-                activeOpacity={0.7}
-                testID="back-btn"
-              >
-                <ArrowLeft size={20} color={Colors.text} />
-              </TouchableOpacity>
-            )}
-            <View style={styles.headerTextContainer}>
-              <Text style={styles.title}>{currentStep.title}</Text>
-              {currentStep.subtitle.length > 0 && (
-                <Text style={styles.subtitle}>{currentStep.subtitle}</Text>
-              )}
+          {mainView === 'flow' ? (
+            <>
+              <View style={styles.headerRow}>
+                <TouchableOpacity
+                  style={styles.backButton}
+                  onPress={() => {
+                    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    goBackFlow();
+                  }}
+                  activeOpacity={0.7}
+                  testID="flow-back-btn"
+                >
+                  <ArrowLeft size={18} color={Colors.text} />
+                </TouchableOpacity>
+                <View style={styles.headerTextContainer}>
+                  <Text style={styles.flowHeaderTitle}>
+                    Step {flowStepNumber} — {flowStepTitle}
+                  </Text>
+                </View>
+              </View>
+              <FlowStepIndicator currentStep={flowStep} />
+            </>
+          ) : (
+            <View style={styles.headerRow}>
+              <View style={styles.headerTextContainer}>
+                <Text style={styles.title}>Messages</Text>
+                <Text style={styles.subtitle}>Your communication safety system</Text>
+              </View>
             </View>
-          </View>
-          {step !== 'input' && <StepIndicator currentStep={step} />}
+          )}
         </View>
 
         <ScrollView
@@ -996,17 +828,8 @@ export default function MessagesScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <Animated.View
-            style={{
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            }}
-          >
-            {step === 'input' && renderInputStep()}
-            {step === 'context' && renderContextStep()}
-            {step === 'pause' && renderPauseStep()}
-            {step === 'rewrites' && renderRewritesStep()}
-            {step === 'result' && renderResultStep()}
+          <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+            {mainView === 'home' ? renderHome() : renderFlowContent()}
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -1033,9 +856,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     backgroundColor: Colors.white,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1049,7 +872,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: '700' as const,
     color: Colors.text,
     letterSpacing: -0.5,
@@ -1058,192 +881,122 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textSecondary,
     marginTop: 2,
-    lineHeight: 18,
   },
-  stepIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 14,
-    paddingHorizontal: 4,
-  },
-  stepItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  stepDot: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: Colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepDotActive: {
-    backgroundColor: Colors.primary,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-  },
-  stepDotCompleted: {
-    backgroundColor: Colors.success,
-  },
-  stepLabel: {
-    fontSize: 10,
-    color: Colors.textMuted,
-    marginLeft: 4,
-    fontWeight: '500' as const,
-  },
-  stepLabelActive: {
-    color: Colors.primary,
+  flowHeaderTitle: {
+    fontSize: 16,
     fontWeight: '600' as const,
-  },
-  stepLabelCompleted: {
-    color: Colors.success,
-  },
-  stepLine: {
-    flex: 1,
-    height: 2,
-    backgroundColor: Colors.border,
-    marginHorizontal: 6,
-    borderRadius: 1,
-  },
-  stepLineCompleted: {
-    backgroundColor: Colors.success,
+    color: Colors.text,
   },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingTop: 16,
+    paddingTop: 12,
     paddingBottom: 40,
   },
-  inputSection: {
-    marginBottom: 20,
-  },
-  inputHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 4,
-  },
-  inputLabel: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-    color: Colors.text,
-  },
-  inputHint: {
-    fontSize: 13,
-    color: Colors.textMuted,
-    marginBottom: 12,
-    lineHeight: 18,
-  },
-  messageInput: {
-    backgroundColor: Colors.white,
-    borderRadius: 16,
-    padding: 18,
-    fontSize: 16,
-    color: Colors.text,
-    minHeight: 130,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    lineHeight: 24,
-  },
-  charCount: {
-    fontSize: 11,
-    color: Colors.textMuted,
-    textAlign: 'right',
-    marginTop: 6,
-  },
-  primaryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: Colors.primary,
+  heroSection: {
+    backgroundColor: Colors.brandNavy,
     borderRadius: 20,
-    paddingVertical: 16,
-    marginTop: 8,
-    shadowColor: Colors.primaryDark,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    padding: 22,
+    marginBottom: 24,
   },
-  primaryButtonText: {
-    color: Colors.white,
-    fontSize: 16,
-    fontWeight: '600' as const,
-  },
-  secondaryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 14,
-    marginTop: 4,
-  },
-  secondaryButtonText: {
-    color: Colors.textSecondary,
-    fontSize: 14,
-    fontWeight: '500' as const,
-  },
-  suggestionsSection: {
-    marginTop: 8,
-    marginBottom: 20,
-  },
-  suggestionsToggle: {
+  heroIconRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: Colors.warmGlow,
-    borderRadius: 14,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: Colors.accentLight,
+    marginBottom: 10,
   },
-  suggestionsIconBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    backgroundColor: Colors.accentLight,
+  heroIconBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  suggestionsToggleText: {
-    flex: 1,
+  heroTitle: {
+    fontSize: 20,
+    fontWeight: '700' as const,
+    color: Colors.white,
+  },
+  heroSubtitle: {
     fontSize: 14,
-    fontWeight: '600' as const,
-    color: Colors.accent,
+    color: 'rgba(255,255,255,0.7)',
+    lineHeight: 21,
   },
-  suggestionsList: {
-    marginTop: 8,
-    gap: 8,
-  },
-  suggestionCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-    padding: 14,
-    borderLeftWidth: 3,
-    borderLeftColor: Colors.accent,
-  },
-  suggestionLabel: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: Colors.text,
-    marginBottom: 4,
-  },
-  suggestionDesc: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    lineHeight: 18,
-  },
-  historySection: {
-    marginTop: 8,
-  },
-  historyTitle: {
+  sectionLabel: {
     fontSize: 17,
     fontWeight: '700' as const,
     color: Colors.text,
     marginBottom: 12,
+  },
+  quickEntrySection: {
+    marginBottom: 20,
+  },
+  quickEntryGrid: {
+    gap: 8,
+  },
+  quickEntryCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.white,
+    borderRadius: 14,
+    padding: 14,
+    gap: 12,
+    borderLeftWidth: 3,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 1,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  quickEntryEmoji: {
+    fontSize: 22,
+  },
+  quickEntryTextWrap: {
+    flex: 1,
+  },
+  quickEntryLabel: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.text,
+    marginBottom: 1,
+  },
+  quickEntrySub: {
+    fontSize: 12,
+    color: Colors.textMuted,
+  },
+  toolStrip: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 24,
+  },
+  toolStripCard: {
+    flex: 1,
+    backgroundColor: Colors.white,
+    borderRadius: 14,
+    padding: 14,
+    alignItems: 'center',
+    gap: 8,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 1,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  toolStripIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  toolStripLabel: {
+    fontSize: 11,
+    fontWeight: '600' as const,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+  },
+  historySection: {
+    marginTop: 4,
   },
   historyCard: {
     backgroundColor: Colors.white,
@@ -1255,11 +1008,6 @@ const styles = StyleSheet.create({
   },
   historyCardExpanded: {
     borderColor: Colors.primaryLight,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 6,
-    elevation: 2,
   },
   historyHeader: {
     flexDirection: 'row',
@@ -1277,7 +1025,6 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
   },
   historyBadge: {
-    backgroundColor: Colors.primaryLight,
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 3,
@@ -1285,7 +1032,6 @@ const styles = StyleSheet.create({
   historyBadgeText: {
     fontSize: 11,
     fontWeight: '600' as const,
-    color: Colors.primary,
   },
   historyOriginal: {
     fontSize: 13,
@@ -1313,446 +1059,6 @@ const styles = StyleSheet.create({
     color: Colors.text,
     lineHeight: 19,
   },
-  contextIntro: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: Colors.primaryLight,
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 16,
-  },
-  contextIntroContent: {
-    flex: 1,
-  },
-  contextIntroText: {
-    fontSize: 14,
-    color: Colors.primaryDark,
-    lineHeight: 20,
-  },
-  contextProgress: {
-    fontSize: 12,
-    color: Colors.primary,
-    fontWeight: '600' as const,
-    marginTop: 2,
-  },
-  contextPreview: {
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 20,
-  },
-  contextPreviewLabel: {
-    fontSize: 11,
-    fontWeight: '600' as const,
-    color: Colors.textMuted,
-    textTransform: 'uppercase' as const,
-    letterSpacing: 0.5,
-    marginBottom: 6,
-  },
-  contextPreviewText: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    lineHeight: 20,
-  },
-  contextSection: {
-    marginBottom: 20,
-  },
-  contextLabel: {
-    fontSize: 15,
-    fontWeight: '600' as const,
-    color: Colors.text,
-    marginBottom: 10,
-  },
-  chipRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: Colors.white,
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-  },
-  chipSelected: {
-    backgroundColor: Colors.primaryLight,
-    borderColor: Colors.primary,
-  },
-  chipEmoji: {
-    fontSize: 15,
-  },
-  chipLabel: {
-    fontSize: 13,
-    fontWeight: '500' as const,
-    color: Colors.text,
-  },
-  chipLabelSelected: {
-    color: Colors.primaryDark,
-    fontWeight: '600' as const,
-  },
-  contextActions: {
-    marginTop: 4,
-  },
-  pauseFirstButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    marginBottom: 4,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: Colors.accentLight,
-    backgroundColor: Colors.warmGlow,
-  },
-  pauseFirstButtonActive: {
-    backgroundColor: Colors.accent,
-    borderColor: Colors.accent,
-  },
-  pauseFirstText: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: Colors.accent,
-  },
-  pauseFirstTextActive: {
-    color: Colors.white,
-  },
-  pauseOptions: {
-    marginTop: 8,
-    marginBottom: 8,
-  },
-  pauseOptionsHint: {
-    fontSize: 12,
-    color: Colors.textSecondary,
-    lineHeight: 17,
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  pauseDurationRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  pauseDurationChip: {
-    flex: 1,
-    backgroundColor: Colors.warmGlow,
-    borderRadius: 14,
-    padding: 14,
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: Colors.accentLight,
-  },
-  pauseDurationLabel: {
-    fontSize: 16,
-    fontWeight: '700' as const,
-    color: Colors.accent,
-    marginBottom: 2,
-  },
-  pauseDurationDesc: {
-    fontSize: 11,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-  },
-  pauseContainer: {
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  pauseCircleContainer: {
-    width: 220,
-    height: 220,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 32,
-  },
-  pauseCircleOuter: {
-    position: 'absolute',
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: Colors.primaryLight,
-  },
-  pauseCircleMid: {
-    position: 'absolute',
-    width: 190,
-    height: 190,
-    borderRadius: 95,
-    backgroundColor: Colors.primary,
-  },
-  pauseCircleInner: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    backgroundColor: Colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-  pauseTimerText: {
-    fontSize: 40,
-    fontWeight: '200' as const,
-    color: Colors.primary,
-    letterSpacing: -1,
-  },
-  pauseBreatheText: {
-    fontSize: 13,
-    color: Colors.textMuted,
-    marginTop: 4,
-  },
-  pauseCompleteText: {
-    fontSize: 22,
-    fontWeight: '600' as const,
-    color: Colors.primary,
-  },
-  pauseMessage: {
-    fontSize: 15,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 23,
-    paddingHorizontal: 24,
-    marginBottom: 28,
-  },
-  rewritesIntro: {
-    marginBottom: 16,
-  },
-  rewritesIntroTitle: {
-    fontSize: 18,
-    fontWeight: '600' as const,
-    color: Colors.text,
-    marginBottom: 4,
-  },
-  rewritesIntroSub: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    lineHeight: 20,
-  },
-  originalPreview: {
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 16,
-  },
-  originalPreviewLabel: {
-    fontSize: 11,
-    fontWeight: '600' as const,
-    color: Colors.textMuted,
-    textTransform: 'uppercase' as const,
-    letterSpacing: 0.5,
-    marginBottom: 4,
-  },
-  originalPreviewText: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    lineHeight: 19,
-  },
-  rewriteCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 1,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  rewriteCardFirst: {
-    borderWidth: 1.5,
-    borderColor: Colors.primaryLight,
-  },
-  rewriteHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 12,
-  },
-  rewriteIconBadge: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  rewriteEmoji: {
-    fontSize: 18,
-  },
-  rewriteHeaderText: {
-    flex: 1,
-  },
-  rewriteLabel: {
-    fontSize: 15,
-    fontWeight: '700' as const,
-  },
-  rewriteDesc: {
-    fontSize: 12,
-    color: Colors.textSecondary,
-    marginTop: 1,
-  },
-  copyButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: Colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  rewritePreview: {
-    fontSize: 14,
-    color: Colors.text,
-    lineHeight: 21,
-    marginBottom: 10,
-  },
-  whyHelpsContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 6,
-    backgroundColor: Colors.primaryLight,
-    borderRadius: 10,
-    padding: 10,
-  },
-  whyHelpsText: {
-    flex: 1,
-    fontSize: 12,
-    color: Colors.primaryDark,
-    lineHeight: 17,
-  },
-  resultBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 16,
-  },
-  resultBannerEmoji: {
-    fontSize: 24,
-  },
-  resultBannerLabel: {
-    fontSize: 17,
-    fontWeight: '700' as const,
-  },
-  resultBannerSub: {
-    fontSize: 12,
-    color: Colors.textSecondary,
-    marginTop: 1,
-  },
-  resultCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    borderWidth: 1.5,
-  },
-  resultText: {
-    fontSize: 16,
-    color: Colors.text,
-    lineHeight: 24,
-  },
-  whyHelpsResult: {
-    backgroundColor: Colors.primaryLight,
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 16,
-  },
-  whyHelpsResultHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 8,
-  },
-  whyHelpsResultTitle: {
-    fontSize: 13,
-    fontWeight: '600' as const,
-    color: Colors.primaryDark,
-  },
-  whyHelpsResultText: {
-    fontSize: 14,
-    color: Colors.primaryDark,
-    lineHeight: 20,
-  },
-  originalCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-  },
-  originalLabel: {
-    fontSize: 12,
-    fontWeight: '600' as const,
-    color: Colors.textMuted,
-    marginBottom: 6,
-  },
-  originalText: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    lineHeight: 20,
-  },
-  outcomeSection: {
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
-    padding: 18,
-    marginBottom: 16,
-  },
-  outcomeSectionTitle: {
-    fontSize: 15,
-    fontWeight: '600' as const,
-    color: Colors.text,
-    marginBottom: 4,
-  },
-  outcomeSectionHint: {
-    fontSize: 12,
-    color: Colors.textMuted,
-    lineHeight: 17,
-    marginBottom: 14,
-  },
-  outcomeRow: {
-    flexDirection: 'row' as const,
-    flexWrap: 'wrap' as const,
-    gap: 8,
-  },
-  outcomeChip: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 6,
-    backgroundColor: Colors.white,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-  },
-  outcomeEmoji: {
-    fontSize: 14,
-  },
-  outcomeLabel: {
-    fontSize: 13,
-    fontWeight: '500' as const,
-    color: Colors.text,
-  },
-  outcomeConfirm: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 6,
-    marginTop: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: Colors.successLight,
-    borderRadius: 10,
-  },
-  outcomeConfirmText: {
-    fontSize: 12,
-    color: Colors.success,
-    fontWeight: '500' as const,
-  },
   historyOutcomeRow: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
@@ -1779,113 +1085,337 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600' as const,
   },
-  relInsightsBanner: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    backgroundColor: '#5B8FB9',
-    borderRadius: 18,
-    padding: 16,
+  flowStepBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+    paddingHorizontal: 8,
+  },
+  flowStepItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  flowStepDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: Colors.border,
+  },
+  flowStepDotActive: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: Colors.primary,
+  },
+  flowStepDotCompleted: {
+    backgroundColor: Colors.success,
+  },
+  flowStepLine: {
+    flex: 1,
+    height: 2,
+    backgroundColor: Colors.border,
+    marginHorizontal: 4,
+    borderRadius: 1,
+  },
+  flowStepLineCompleted: {
+    backgroundColor: Colors.success,
+  },
+  flowSection: {
+    paddingTop: 8,
+  },
+  flowQuestion: {
+    fontSize: 22,
+    fontWeight: '700' as const,
+    color: Colors.text,
+    marginBottom: 6,
+    letterSpacing: -0.3,
+  },
+  flowHint: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    lineHeight: 21,
     marginBottom: 20,
   },
-  relInsightsBannerLeft: {
-    flex: 1,
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
+  flowTextInput: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 18,
+    fontSize: 16,
+    color: Colors.text,
+    minHeight: 100,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    lineHeight: 24,
+    marginBottom: 8,
   },
-  relInsightsBannerIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    marginRight: 12,
+  charCount: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    textAlign: 'right',
+    marginBottom: 8,
   },
-  relInsightsBannerText: {
-    flex: 1,
+  flowChipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 20,
   },
-  relInsightsBannerTitle: {
-    fontSize: 15,
-    fontWeight: '700' as const,
-    color: '#FFFFFF',
-    marginBottom: 2,
+  flowChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.white,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
   },
-  relInsightsBannerDesc: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.8)',
-  },
-  guardBanner: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
+  flowChipSelected: {
     backgroundColor: Colors.primaryLight,
-    borderRadius: 16,
-    padding: 14,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: Colors.primary + '20',
+    borderColor: Colors.primary,
   },
-  guardBannerLeft: {
-    flex: 1,
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
+  flowChipEmoji: {
+    fontSize: 16,
   },
-  guardBannerIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 11,
-    backgroundColor: Colors.primary + '18',
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    marginRight: 10,
-  },
-  guardBannerText: {
-    flex: 1,
-  },
-  guardBannerTitle: {
+  flowChipLabel: {
     fontSize: 14,
-    fontWeight: '600' as const,
+    fontWeight: '500' as const,
+    color: Colors.text,
+  },
+  flowChipLabelSelected: {
     color: Colors.primaryDark,
-    marginBottom: 1,
+    fontWeight: '600' as const,
   },
-  guardBannerDesc: {
-    fontSize: 12,
-    color: Colors.textSecondary,
+  flowNextBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: Colors.primary,
+    borderRadius: 18,
+    paddingVertical: 16,
+    marginTop: 8,
+    shadowColor: Colors.primaryDark,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  simulatorBanner: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    backgroundColor: Colors.accentLight,
+  flowNextBtnDisabled: {
+    backgroundColor: Colors.border,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  flowNextBtnText: {
+    color: Colors.white,
+    fontSize: 16,
+    fontWeight: '600' as const,
+  },
+  flowSkipBtn: {
+    alignItems: 'center',
+    paddingVertical: 12,
+    marginTop: 4,
+  },
+  flowSkipText: {
+    color: Colors.textMuted,
+    fontSize: 14,
+    fontWeight: '500' as const,
+  },
+  recCard: {
+    flexDirection: 'row',
+    backgroundColor: Colors.white,
     borderRadius: 16,
-    padding: 14,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: Colors.accent + '30',
+    padding: 18,
+    marginBottom: 16,
+    borderLeftWidth: 4,
+    gap: 12,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 6,
+    elevation: 2,
   },
-  simulatorBannerLeft: {
-    flex: 1,
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
+  recEmoji: {
+    fontSize: 26,
+    marginTop: 2,
   },
-  simulatorBannerIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    backgroundColor: Colors.accent + '20',
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    marginRight: 10,
-  },
-  simulatorBannerText: {
+  recTextWrap: {
     flex: 1,
   },
-  simulatorBannerTitle: {
+  recTitle: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    marginBottom: 6,
+  },
+  recDetail: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    lineHeight: 21,
+  },
+  concernsSection: {
+    marginBottom: 16,
+  },
+  concernsSectionTitle: {
     fontSize: 14,
     fontWeight: '600' as const,
     color: Colors.text,
-    marginBottom: 1,
+    marginBottom: 10,
   },
-  simulatorBannerDesc: {
-    fontSize: 12,
+  concernCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 8,
+    gap: 10,
+  },
+  concernDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginTop: 5,
+  },
+  concernText: {
+    flex: 1,
+  },
+  concernLabel: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.text,
+    marginBottom: 3,
+  },
+  concernDesc: {
+    fontSize: 13,
     color: Colors.textSecondary,
+    lineHeight: 19,
+  },
+  strengthsSection: {
+    marginBottom: 16,
+  },
+  strengthsTitle: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.text,
+    marginBottom: 8,
+  },
+  strengthsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  strengthBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: Colors.successLight,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  strengthText: {
+    fontSize: 12,
+    color: Colors.success,
+    fontWeight: '500' as const,
+  },
+  draftPreviewCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 16,
+  },
+  draftPreviewLabel: {
+    fontSize: 11,
+    fontWeight: '600' as const,
+    color: Colors.textMuted,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.5,
+    marginBottom: 6,
+  },
+  draftPreviewText: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    lineHeight: 19,
+  },
+  analysisActions: {
+    gap: 8,
+  },
+  analysisPrimaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: Colors.brandNavy,
+    borderRadius: 18,
+    paddingVertical: 16,
+    shadowColor: Colors.brandNavy,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  analysisPrimaryBtnText: {
+    color: Colors.white,
+    fontSize: 15,
+    fontWeight: '600' as const,
+  },
+  analysisSecondaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: Colors.white,
+    borderRadius: 14,
+    paddingVertical: 14,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+  },
+  analysisSecondaryBtnText: {
+    color: Colors.primary,
+    fontSize: 14,
+    fontWeight: '600' as const,
+  },
+  analysisBottomRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 4,
+  },
+  analysisSmallBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    paddingVertical: 12,
+  },
+  analysisSmallBtnText: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    fontWeight: '500' as const,
+  },
+  noAnalysis: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  noAnalysisText: {
+    fontSize: 15,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 16,
+  },
+  flowBackLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  flowBackLinkText: {
+    fontSize: 14,
+    color: Colors.primary,
+    fontWeight: '500' as const,
   },
 });

@@ -5,10 +5,13 @@ import {
   SemanticMemory,
   SessionSummary,
   EmotionalState,
+  EnhancedCompanionMemoryStore,
+  MemoryReferenceLog,
 } from '@/types/companionMemory';
 import { storageService } from '@/services/storage/storageService';
 
 const MEMORY_STORE_KEY = 'bpd_companion_memory_store';
+const ENHANCED_STORE_KEY = 'bpd_companion_enhanced_memory';
 const MEMORY_VERSION = 1;
 const SHORT_TERM_EXPIRY_MS = 24 * 60 * 60 * 1000;
 const MAX_SHORT_TERM = 50;
@@ -52,6 +55,97 @@ function createEmptyStore(): CompanionMemoryStore {
     sessionSummaries: [],
     lastUpdated: 0,
     version: MEMORY_VERSION,
+  };
+}
+
+export function createEmptyEnhancedStore(): EnhancedCompanionMemoryStore {
+  return {
+    ...createEmptyStore(),
+    relationships: [],
+    copingPreferences: [],
+    strugglesAndWins: [],
+    referenceLog: [],
+  };
+}
+
+export async function loadEnhancedMemoryStore(): Promise<EnhancedCompanionMemoryStore> {
+  try {
+    const stored = await storageService.get<EnhancedCompanionMemoryStore>(ENHANCED_STORE_KEY);
+    if (stored) {
+      console.log('[CompanionMemory] Loaded enhanced store:', stored.relationships?.length ?? 0, 'relationships,', stored.copingPreferences?.length ?? 0, 'coping prefs,', stored.strugglesAndWins?.length ?? 0, 'struggles/wins');
+      return {
+        ...stored,
+        relationships: stored.relationships ?? [],
+        copingPreferences: stored.copingPreferences ?? [],
+        strugglesAndWins: stored.strugglesAndWins ?? [],
+        referenceLog: stored.referenceLog ?? [],
+      };
+    }
+    return createEmptyEnhancedStore();
+  } catch (error) {
+    console.log('[CompanionMemory] Error loading enhanced store:', error);
+    return createEmptyEnhancedStore();
+  }
+}
+
+export async function saveEnhancedMemoryStore(store: EnhancedCompanionMemoryStore): Promise<void> {
+  try {
+    store.lastUpdated = Date.now();
+    await storageService.set(ENHANCED_STORE_KEY, store);
+    console.log('[CompanionMemory] Saved enhanced store');
+  } catch (error) {
+    console.log('[CompanionMemory] Error saving enhanced store:', error);
+  }
+}
+
+export function logMemoryReference(
+  store: EnhancedCompanionMemoryStore,
+  memoryId: string,
+  memoryType: string,
+  conversationId: string,
+): EnhancedCompanionMemoryStore {
+  const log: MemoryReferenceLog = {
+    memoryId,
+    memoryType,
+    referencedAt: Date.now(),
+    conversationId,
+  };
+  const updatedLog = [log, ...store.referenceLog].slice(0, 200);
+  return { ...store, referenceLog: updatedLog };
+}
+
+export function getRecentReferenceCount(
+  store: EnhancedCompanionMemoryStore,
+  memoryId: string,
+  windowMs: number = 7 * 24 * 60 * 60 * 1000,
+): number {
+  const cutoff = Date.now() - windowMs;
+  return store.referenceLog.filter(
+    r => r.memoryId === memoryId && r.referencedAt > cutoff,
+  ).length;
+}
+
+export function wasRecentlyReferenced(
+  store: EnhancedCompanionMemoryStore,
+  memoryId: string,
+  cooldownMs: number = 24 * 60 * 60 * 1000,
+): boolean {
+  const cutoff = Date.now() - cooldownMs;
+  return store.referenceLog.some(
+    r => r.memoryId === memoryId && r.referencedAt > cutoff,
+  );
+}
+
+export function mergeBaseIntoEnhanced(
+  base: CompanionMemoryStore,
+  enhanced: EnhancedCompanionMemoryStore,
+): EnhancedCompanionMemoryStore {
+  return {
+    ...base,
+    relationships: enhanced.relationships,
+    copingPreferences: enhanced.copingPreferences,
+    strugglesAndWins: enhanced.strugglesAndWins,
+    referenceLog: enhanced.referenceLog,
   };
 }
 

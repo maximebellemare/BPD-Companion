@@ -128,12 +128,65 @@ export interface SkillExerciseResult {
   notes?: string;
 }
 
+export interface RelationshipMemory {
+  id: string;
+  name: string;
+  relationship: string;
+  dynamics: string[];
+  emotionalSignificance: 'high' | 'medium' | 'low';
+  associatedTriggers: string[];
+  associatedEmotions: string[];
+  lastMentioned: number;
+  mentionCount: number;
+  recentContext?: string;
+}
+
+export interface CopingPreference {
+  id: string;
+  strategy: string;
+  effectiveness: number;
+  timesUsed: number;
+  timesHelped: number;
+  bestForEmotions: string[];
+  bestForTriggers: string[];
+  lastUsed: number;
+  userPreference: 'preferred' | 'neutral' | 'disliked' | 'unknown';
+}
+
+export interface StruggleWinMemory {
+  id: string;
+  type: 'struggle' | 'win';
+  description: string;
+  emotion: string;
+  context: string;
+  timestamp: number;
+  relatedTrigger?: string;
+  relatedRelationship?: string;
+  copingUsed?: string[];
+  tags: string[];
+}
+
+export interface MemoryReferenceLog {
+  memoryId: string;
+  memoryType: string;
+  referencedAt: number;
+  conversationId: string;
+}
+
+export interface EnhancedCompanionMemoryStore extends CompanionMemoryStore {
+  relationships: RelationshipMemory[];
+  copingPreferences: CopingPreference[];
+  strugglesAndWins: StruggleWinMemory[];
+  referenceLog: MemoryReferenceLog[];
+}
+
 export interface MemoryRetrievalContext {
   currentTrigger?: string;
   currentEmotion?: string;
   currentState?: EmotionalState;
   conversationTags?: string[];
   recentMessageContent?: string;
+  conversationId?: string;
 }
 
 export interface RetrievedMemoryContext {
@@ -143,4 +196,8 @@ export interface RetrievedMemoryContext {
   suggestedCoping: string[];
   patternWarning?: string;
   contextNarrative: string;
+  relevantRelationships: RelationshipMemory[];
+  relevantCopingPreferences: CopingPreference[];
+  recentStrugglesAndWins: StruggleWinMemory[];
+  memoryReferenceNarrative: string;
 }

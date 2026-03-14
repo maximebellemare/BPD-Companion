@@ -438,23 +438,66 @@ function determineShouldUseMemory(assembled: AssembledContext, depth: string): b
 
 function buildMemoryReferenceHint(assembled: AssembledContext, lower: string): string {
   if (!assembled.retrievedMemories) return '';
-  const { relevantEpisodes, relevantTraits } = assembled.retrievedMemories;
+  const { relevantEpisodes, relevantTraits, relevantRelationships, relevantCopingPreferences, recentStrugglesAndWins } = assembled.retrievedMemories;
+
+  const hints: string[] = [];
+
+  if (relevantRelationships && relevantRelationships.length > 0) {
+    for (const rel of relevantRelationships) {
+      if (lower.includes(rel.name.toLowerCase()) || lower.includes(rel.relationship.toLowerCase())) {
+        let hint = `The user has mentioned "${rel.name}" (${rel.relationship}) ${rel.mentionCount} times before`;
+        if (rel.dynamics.length > 0) {
+          hint += `. Known dynamics: ${rel.dynamics.slice(0, 2).join(', ')}`;
+        }
+        if (rel.recentContext) {
+          hint += `. Recent context: "${rel.recentContext.substring(0, 80)}"`;
+        }
+        hint += '. Reference this naturally if it connects — e.g. "You\'ve mentioned this person before..." or "This seems connected to what you shared about..."';
+        hints.push(hint);
+        break;
+      }
+    }
+  }
 
   if (relevantEpisodes.length > 0) {
     const ep = relevantEpisodes[0];
     if (lower.includes(ep.trigger.toLowerCase()) || lower.includes(ep.emotion.toLowerCase())) {
-      return `This feels similar to a past moment involving "${ep.trigger}" — you can gently reference this if relevant, using phrases like "This sounds like it might connect to..." or "I notice a familiar pattern here..."`;
+      let hint = `This feels similar to a past moment involving "${ep.trigger}"`;
+      if (ep.lesson) {
+        hint += `. Last time, the user realized: "${ep.lesson}"`;
+      }
+      hint += '. Reference gently: "This sounds like it might connect to..." or "I notice a familiar pattern here..."';
+      hints.push(hint);
     }
   }
 
-  if (relevantTraits.length > 0) {
+  if (recentStrugglesAndWins && recentStrugglesAndWins.length > 0) {
+    const wins = recentStrugglesAndWins.filter(sw => sw.type === 'win');
+    const struggles = recentStrugglesAndWins.filter(sw => sw.type === 'struggle');
+
+    if (wins.length > 0) {
+      hints.push(`Recent win to reference if encouraging: "${wins[0].description.substring(0, 80)}" — use this to remind them of their capacity.`);
+    }
+    if (struggles.length > 0 && lower.includes(struggles[0].emotion.toLowerCase())) {
+      hints.push(`The user recently struggled with something similar: "${struggles[0].description.substring(0, 80)}" — acknowledge this gently without making them feel stuck.`);
+    }
+  }
+
+  if (relevantCopingPreferences && relevantCopingPreferences.length > 0) {
+    const preferred = relevantCopingPreferences.filter(cp => cp.userPreference === 'preferred');
+    if (preferred.length > 0) {
+      hints.push(`When suggesting coping, prioritize "${preferred[0].strategy}" — the user has found this helpful (${Math.round(preferred[0].effectiveness * 100)}% effective across ${preferred[0].timesUsed} uses).`);
+    }
+  }
+
+  if (hints.length === 0 && relevantTraits.length > 0) {
     const topTrait = relevantTraits[0];
     if (topTrait.confidence >= 0.5) {
-      return `The user has a known pattern: "${topTrait.trait}" — weave this naturally if relevant.`;
+      hints.push(`The user has a known pattern: "${topTrait.trait}" — weave this naturally if relevant.`);
     }
   }
 
-  return '';
+  return hints.slice(0, 3).join('\n');
 }
 
 function detectRepetitionRisk(history: Array<{ role: string; content: string }>): boolean {

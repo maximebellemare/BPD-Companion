@@ -5,7 +5,7 @@ import { AIConversation, AIMessage, SuggestedPrompt, SupportiveInterpretation } 
 import { AIMode } from '@/types/aiModes';
 import { MemoryProfile, InsightCard } from '@/types/memory';
 import { MemorySnapshot } from '@/types/userMemory';
-import { CompanionMemoryStore, UserPsychProfile, WeeklyCompanionInsight } from '@/types/companionMemory';
+import { CompanionMemoryStore, UserPsychProfile, WeeklyCompanionInsight, EnhancedCompanionMemoryStore } from '@/types/companionMemory';
 import { useApp } from '@/providers/AppProvider';
 import { generateConversationTitle } from '@/services/ai/mockAIService';
 import { generateCompanionResponse } from '@/services/companion/companionAIService';
@@ -23,7 +23,14 @@ import {
   detectEmotionalState,
   deleteMemoryById,
   editEpisodicMemoryLesson,
+  loadEnhancedMemoryStore,
+  saveEnhancedMemoryStore,
+  logMemoryReference,
+  mergeBaseIntoEnhanced,
 } from '@/services/companion/memoryService';
+import {
+  processConversationIntoEnhancedMemory,
+} from '@/services/companion/companionMemoryExtractor';
 import {
   loadPsychProfile,
   savePsychProfile,
@@ -100,6 +107,7 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
   const processedConversationsRef = useRef<Set<string>>(new Set());
   const [smartJournalEntries, setSmartJournalEntries] = useState<SmartJournalEntry[]>([]);
   const [messageOutcomes, setMessageOutcomes] = useState<EnhancedMessageOutcome[]>([]);
+  const [enhancedMemoryStore, setEnhancedMemoryStore] = useState<EnhancedCompanionMemoryStore | null>(null);
 
   const smartJournalQuery = useQuery({
     queryKey: ['companion-smart-journal'],
@@ -140,6 +148,18 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
     queryKey: ['companion-memory-store'],
     queryFn: loadMemoryStore,
   });
+
+  const enhancedMemoryQuery = useQuery({
+    queryKey: ['companion-enhanced-memory'],
+    queryFn: loadEnhancedMemoryStore,
+  });
+
+  useEffect(() => {
+    if (enhancedMemoryQuery.data) {
+      setEnhancedMemoryStore(enhancedMemoryQuery.data);
+      console.log('[AICompanion] Loaded enhanced memory:', enhancedMemoryQuery.data.relationships.length, 'relationships,', enhancedMemoryQuery.data.copingPreferences.length, 'coping prefs,', enhancedMemoryQuery.data.strugglesAndWins.length, 'struggles/wins');
+    }
+  }, [enhancedMemoryQuery.data]);
 
   useEffect(() => {
     if (companionMemoryQuery.data) {
@@ -335,11 +355,13 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
     const assembled = assembleCompanionContext({
       userMessage: content,
       memoryStore: companionMemoryStore,
+      enhancedMemoryStore,
       psychProfile,
       memoryProfile,
       patternInsights: companionPatternInsights,
       weeklyInsights,
       conversationHistory,
+      conversationId: activeConversationId,
     });
 
     const liveContext = buildLiveEmotionalContext({
@@ -366,8 +388,21 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
       void trackEvent('memory_recalled', {
         episodes: assembled.retrievedMemories.relevantEpisodes.length,
         traits: assembled.retrievedMemories.relevantTraits.length,
+        relationships: assembled.retrievedMemories.relevantRelationships?.length ?? 0,
+        struggles_wins: assembled.retrievedMemories.recentStrugglesAndWins?.length ?? 0,
         mode: detectedMode,
       });
+
+      if (enhancedMemoryStore) {
+        let updatedEnhanced = enhancedMemoryStore;
+        for (const ep of assembled.retrievedMemories.relevantEpisodes) {
+          updatedEnhanced = logMemoryReference(updatedEnhanced, ep.id, 'episodic', activeConversationId);
+        }
+        for (const rel of (assembled.retrievedMemories.relevantRelationships ?? [])) {
+          updatedEnhanced = logMemoryReference(updatedEnhanced, rel.id, 'relationship', activeConversationId);
+        }
+        setEnhancedMemoryStore(updatedEnhanced);
+      }
     }
 
     try {
@@ -444,6 +479,28 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
             }
           }
         }
+
+        if (enhancedMemoryStore) {
+          const baseEnhanced = mergeBaseIntoEnhanced(companionMemoryStore, enhancedMemoryStore);
+          const updatedEnhanced = processConversationIntoEnhancedMemory(baseEnhanced, allMessages);
+          setEnhancedMemoryStore(updatedEnhanced);
+          void saveEnhancedMemoryStore(updatedEnhanced);
+
+          const newRels = updatedEnhanced.relationships.length - (enhancedMemoryStore.relationships?.length ?? 0);
+          const newCoping = updatedEnhanced.copingPreferences.length - (enhancedMemoryStore.copingPreferences?.length ?? 0);
+          const newSW = updatedEnhanced.strugglesAndWins.length - (enhancedMemoryStore.strugglesAndWins?.length ?? 0);
+          if (newRels > 0 || newCoping > 0 || newSW > 0) {
+            void trackEvent('enhanced_memory_updated', {
+              new_relationships: newRels,
+              new_coping_prefs: newCoping,
+              new_struggles_wins: newSW,
+              total_relationships: updatedEnhanced.relationships.length,
+              total_coping_prefs: updatedEnhanced.copingPreferences.length,
+              total_struggles_wins: updatedEnhanced.strugglesAndWins.length,
+            });
+            console.log('[AICompanion] Enhanced memory updated:', newRels, 'new relationships,', newCoping, 'new coping,', newSW, 'new struggles/wins');
+          }
+        }
       }
 
       const signals = companionMemoryStore
@@ -471,7 +528,7 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
     } finally {
       setIsGenerating(false);
     }
-  }, [activeConversationId, isGenerating, conversations, saveConversationsMutation, memoryProfile, manualMode, memorySnapshot, companionMemoryStore, psychProfile, companionPatternInsights, weeklyInsights, journalEntries, messageDrafts, smartJournalEntries, messageOutcomes]);
+  }, [activeConversationId, isGenerating, conversations, saveConversationsMutation, memoryProfile, manualMode, memorySnapshot, companionMemoryStore, enhancedMemoryStore, psychProfile, companionPatternInsights, weeklyInsights, journalEntries, messageDrafts, smartJournalEntries, messageOutcomes]);
 
   const toggleSaveConversation = useCallback((conversationId: string) => {
     const updated = conversations.map(c =>

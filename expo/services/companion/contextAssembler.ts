@@ -4,6 +4,7 @@ import {
   WeeklyCompanionInsight,
   MemoryRetrievalContext,
   RetrievedMemoryContext,
+  EnhancedCompanionMemoryStore,
 } from '@/types/companionMemory';
 import { MemoryProfile } from '@/types/memory';
 import { retrieveRankedMemories } from './memoryRankingService';
@@ -29,20 +30,24 @@ export interface AssembledContext {
 export function assembleCompanionContext(params: {
   userMessage: string;
   memoryStore: CompanionMemoryStore | null;
+  enhancedMemoryStore?: EnhancedCompanionMemoryStore | null;
   psychProfile: UserPsychProfile | null;
   memoryProfile: MemoryProfile;
   patternInsights: CompanionPatternInsight[];
   weeklyInsights: WeeklyCompanionInsight[];
   conversationHistory?: Array<{ role: string; content: string }>;
+  conversationId?: string;
 }): AssembledContext {
   const {
     userMessage,
     memoryStore,
+    enhancedMemoryStore,
     psychProfile,
     memoryProfile,
     patternInsights,
     weeklyInsights,
     conversationHistory,
+    conversationId,
   } = params;
 
   console.log('[ContextAssembler] Assembling context for message:', userMessage.substring(0, 50));
@@ -58,8 +63,9 @@ export function assembleCompanionContext(params: {
       currentState: emotionalState,
       conversationTags: buildConversationTags(userMessage),
       recentMessageContent: userMessage,
+      conversationId,
     };
-    retrievedMemories = retrieveRankedMemories(memoryStore, retrievalContext, 400);
+    retrievedMemories = retrieveRankedMemories(memoryStore, retrievalContext, 400, enhancedMemoryStore ?? undefined);
     memoryNarrative = retrievedMemories.contextNarrative;
   }
 

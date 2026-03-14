@@ -120,6 +120,10 @@ export function retrieveRelevantMemories(
     suggestedCoping,
     patternWarning,
     contextNarrative,
+    relevantRelationships: [],
+    relevantCopingPreferences: [],
+    recentStrugglesAndWins: [],
+    memoryReferenceNarrative: '',
   };
 }
 

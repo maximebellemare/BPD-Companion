@@ -38,6 +38,7 @@ import { MessageSquare } from 'lucide-react-native';
 import { buildCrossLoopContext } from '@/services/crossLoop/crossLoopBridgeService';
 import { useQuery } from '@tanstack/react-query';
 import { getEnhancedOutcomes } from '@/services/messages/enhancedOutcomeService';
+import { trackEvent } from '@/services/analytics/analyticsService';
 
 function formatDate(ts: number): string {
   const d = new Date(ts);
@@ -219,6 +220,7 @@ export default function JournalScreen() {
 
   useEffect(() => {
     Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: true }).start();
+    void trackEvent('screen_view', { screen: 'journal' });
   }, [fadeAnim]);
 
   const hasAnyEntries = journalEntries.length > 0 || smartEntries.length > 0;

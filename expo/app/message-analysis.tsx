@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { trackMessageDraft } from '@/services/analytics/analyticsService';
 import { analyzeMessageHealth } from '@/services/messages/messageHealthService';
 import {
   EnhancedMessageContext,
@@ -75,6 +76,24 @@ export default function MessageAnalysisScreen() {
     if (!context.draft) return null;
     return analyzeMessageHealth(context.draft, context);
   }, [context]);
+
+  useEffect(() => {
+    if (analysis) {
+      void trackMessageDraft('analyzed', {
+        risk_level: analysis.recommendation,
+        overall_risk: analysis.overallRisk,
+        top_concern_count: analysis.topConcerns.length,
+        word_count: context.draft.split(/\s+/).length,
+      });
+      if (analysis.overallRisk >= 7) {
+        void trackMessageDraft('risk_detected', {
+          risk_level: analysis.recommendation,
+          overall_risk: analysis.overallRisk,
+        });
+      }
+      console.log('[Analytics] message_draft_analyzed', { risk: analysis.overallRisk });
+    }
+  }, [analysis, context.draft]);
 
   const recColors: Record<string, string> = {
     safe_to_send: Colors.success,

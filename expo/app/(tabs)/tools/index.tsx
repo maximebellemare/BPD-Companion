@@ -41,6 +41,7 @@ import { usePersonalPlaybook } from '@/hooks/usePersonalPlaybook';
 import { useEmotionalContext } from '@/providers/EmotionalContextProvider';
 import { getSmartRecommendation } from '@/services/playbook/playbookLearningService';
 import type { PersonalToolRecord } from '@/types/personalPlaybook';
+import { trackEvent, trackToolUsage } from '@/services/analytics/analyticsService';
 
 const ICON_MAP: Record<string, React.ComponentType<{ size: number; color: string }>> = {
   Wind,
@@ -66,12 +67,14 @@ export default function ToolsScreen() {
       duration: 400,
       useNativeDriver: true,
     }).start();
+    void trackEvent('screen_view', { screen: 'tools' });
   }, [fadeAnim]);
 
   const handleQuickAccess = useCallback((route: string) => {
     if (Platform.OS !== 'web') {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
+    void trackToolUsage('used', { tool_name: route, source: 'quick_access' });
     router.push(route as never);
   }, [router]);
 

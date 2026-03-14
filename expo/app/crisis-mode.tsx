@@ -60,6 +60,7 @@ export default function CrisisModeScreen() {
   useEffect(() => {
     trackFlowStart('crisis_mode');
     trackEvent('crisis_mode_triggered');
+    trackEvent('crisis_mode_activated', { source: 'direct' });
   }, [trackFlowStart, trackEvent]);
 
   const [currentPhase, setCurrentPhase] = useState<CrisisModePhase>('breathing');
@@ -204,8 +205,13 @@ export default function CrisisModeScreen() {
     if (Platform.OS !== 'web') {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
+    trackEvent('crisis_mode_completed', {
+      final_phase: currentPhase,
+      grounding_steps_completed: groundingCompleted.size,
+      delay_confirmed: delayConfirmed,
+    });
     router.back();
-  }, [router]);
+  }, [router, trackEvent, currentPhase, groundingCompleted.size, delayConfirmed]);
 
   const handleGroundingComplete = useCallback((id: string) => {
     if (Platform.OS !== 'web') {

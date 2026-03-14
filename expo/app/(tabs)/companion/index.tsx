@@ -93,29 +93,32 @@ export default function CompanionScreen() {
     if (Platform.OS !== 'web') {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
+    trackEvent('companion_chat_started', { entry_point: 'new_conversation' });
     startNewConversation();
     router.push('/companion/chat' as never);
-  }, [startNewConversation, router]);
+  }, [startNewConversation, router, trackEvent]);
 
   const handleContinue = useCallback(() => {
     if (Platform.OS !== 'web') {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
+    trackEvent('companion_chat_started', { entry_point: 'continue_conversation' });
     continueLastConversation();
     router.push('/companion/chat' as never);
-  }, [continueLastConversation, router]);
+  }, [continueLastConversation, router, trackEvent]);
 
   const handlePrompt = useCallback(async (prompt: string) => {
     if (Platform.OS !== 'web') {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
+    trackEvent('companion_chat_started', { entry_point: 'suggested_prompt' });
     const id = startNewConversation();
     setActiveConversationId(id);
     router.push('/companion/chat' as never);
     setTimeout(() => {
       void sendMessage(prompt);
     }, 300);
-  }, [startNewConversation, setActiveConversationId, router, sendMessage]);
+  }, [startNewConversation, setActiveConversationId, router, sendMessage, trackEvent]);
 
   const handleRecentConversation = useCallback((conversationId: string) => {
     setActiveConversationId(conversationId);

@@ -286,3 +286,119 @@ export async function trackSecureRewrite(
 ): Promise<void> {
   return analyticsEngine.trackEvent(`secure_rewrite_${action}`, properties);
 }
+
+export async function trackJournalEntry(
+  action: 'created' | 'analyzed' | 'prompt_used' | 'streak_achieved',
+  properties?: Record<string, string | number | boolean>,
+): Promise<void> {
+  return analyticsEngine.trackEvent(`journal_entry_${action}`, properties);
+}
+
+export async function trackMessageDraft(
+  action: 'analyzed' | 'risk_detected' | 'sent' | 'not_sent' | 'saved_to_vault' | 'regret_logged' | 'do_not_send_shown',
+  properties?: Record<string, string | number | boolean>,
+): Promise<void> {
+  return analyticsEngine.trackEvent(`message_${action === 'analyzed' ? 'draft_analyzed' : action === 'risk_detected' ? 'draft_risk_detected' : action}`, properties);
+}
+
+export async function trackSecureRewriteAction(
+  action: 'generated' | 'selected' | 'sent' | 'saved' | 'helpful' | 'teaching_viewed' | 'comparison_viewed',
+  properties?: Record<string, string | number | boolean>,
+): Promise<void> {
+  return analyticsEngine.trackEvent(`secure_rewrite_${action}`, properties);
+}
+
+export async function trackMessageSimulation(
+  action: 'started' | 'path_viewed' | 'path_selected' | 'outcome_logged',
+  properties?: Record<string, string | number | boolean>,
+): Promise<void> {
+  return analyticsEngine.trackEvent(`message_simulation_${action}`, properties);
+}
+
+export async function trackCompanionChat(
+  action: 'started' | 'completed' | 'message_sent' | 'insight_shown' | 'tool_suggested',
+  properties?: Record<string, string | number | boolean>,
+): Promise<void> {
+  return analyticsEngine.trackEvent(`companion_chat_${action === 'message_sent' ? 'message_sent' : action === 'insight_shown' ? 'insight_shown' : action === 'tool_suggested' ? 'tool_suggested' : action}`, properties);
+}
+
+export async function trackInsight(
+  action: 'generated' | 'viewed' | 'acted_on',
+  properties?: Record<string, string | number | boolean>,
+): Promise<void> {
+  return analyticsEngine.trackEvent(`insight_${action}`, properties);
+}
+
+export async function trackToolUsage(
+  action: 'used' | 'completed' | 'abandoned',
+  properties?: Record<string, string | number | boolean>,
+): Promise<void> {
+  return analyticsEngine.trackEvent(`tool_${action}`, properties);
+}
+
+export async function trackCrisisModeAction(
+  action: 'activated' | 'completed',
+  properties?: Record<string, string | number | boolean>,
+): Promise<void> {
+  return analyticsEngine.trackEvent(`crisis_mode_${action}`, properties);
+}
+
+export async function trackSubscription(
+  action: 'started' | 'cancelled' | 'restored',
+  properties?: Record<string, string | number | boolean>,
+): Promise<void> {
+  return analyticsEngine.trackEvent(`subscription_${action}`, properties);
+}
+
+export async function trackAppLifecycle(
+  action: 'opened' | 'backgrounded' | 'session_started' | 'session_ended',
+  properties?: Record<string, string | number | boolean>,
+): Promise<void> {
+  return analyticsEngine.trackEvent(action === 'opened' ? 'app_opened' : action === 'backgrounded' ? 'app_backgrounded' : `session_${action.replace('session_', '')}`, properties);
+}
+
+export async function trackError(
+  errorType: string,
+  screen: string,
+  message: string,
+): Promise<void> {
+  return analyticsEngine.trackEvent('error_occurred', {
+    error_type: errorType,
+    screen,
+    message: message.substring(0, 200),
+  });
+}
+
+export async function trackFeatureDiscovery(
+  feature: string,
+  source: string,
+): Promise<void> {
+  return analyticsEngine.trackEvent('feature_discovery', { feature, source });
+}
+
+export async function trackMedication(
+  action: 'logged' | 'missed',
+  properties?: Record<string, string | number | boolean>,
+): Promise<void> {
+  return analyticsEngine.trackEvent(`medication_${action}`, properties);
+}
+
+export async function trackAppointment(
+  action: 'created' | 'completed',
+  properties?: Record<string, string | number | boolean>,
+): Promise<void> {
+  return analyticsEngine.trackEvent(`appointment_${action}`, properties);
+}
+
+export async function trackMovement(
+  properties?: Record<string, string | number | boolean>,
+): Promise<void> {
+  return analyticsEngine.trackEvent('movement_logged', properties);
+}
+
+export async function trackOnboarding(
+  action: 'started' | 'completed' | 'step_completed',
+  properties?: Record<string, string | number | boolean>,
+): Promise<void> {
+  return analyticsEngine.trackEvent(`onboarding_${action}`, properties);
+}

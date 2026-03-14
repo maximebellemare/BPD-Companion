@@ -64,6 +64,7 @@ import OutcomeCaptureSheet from '@/components/OutcomeCaptureSheet';
 import { EnhancedMessageOutcome, WhatHelpedReminder, CommunicationInsight } from '@/types/messageOutcome';
 import { useEntitlements } from '@/hooks/useEntitlements';
 import { PremiumBadge } from '@/components/PremiumGate';
+import { trackEvent } from '@/services/analytics/analyticsService';
 
 type ContextKey = keyof MessageContext;
 
@@ -190,6 +191,10 @@ export default function MessagesScreen() {
 
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const slideAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    void trackEvent('screen_view', { screen: 'messages' });
+  }, []);
 
   const animateTransition = useCallback(() => {
     fadeAnim.setValue(0);

@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback, useRef } from 'react';
+import React, { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -30,6 +30,7 @@ import Colors from '@/constants/colors';
 import { simulateResponsePaths } from '@/services/messages/messageSimulationService';
 import { saveSimulationOutcome } from '@/services/messages/messageSimulationOutcomeService';
 import { saveToDraftVault } from '@/services/messages/messageOutcomeService';
+import { trackMessageSimulation } from '@/services/analytics/analyticsService';
 import {
   ResponsePath,
   ResponsePathSimulation,
@@ -201,6 +202,17 @@ export default function MessageSimulationScreen() {
     return simulateResponsePaths(context.draft, context);
   }, [context]);
 
+  useEffect(() => {
+    if (simulation) {
+      void trackMessageSimulation('started', {
+        path_count: simulation.paths.length,
+        risk_level: context.riskLevel ?? 'unknown',
+        has_recommended: simulation.paths.some(p => p.isRecommended),
+      });
+      console.log('[Analytics] message_simulation_started');
+    }
+  }, [simulation, context.riskLevel]);
+
   const handleCopy = useCallback((path: ResponsePathSimulation) => {
     if (path.path === 'do_not_send') return;
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -215,8 +227,12 @@ export default function MessageSimulationScreen() {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setSelectedPathType(path);
     setShowOutcome(true);
+    void trackMessageSimulation('path_selected', {
+      path_type: path,
+      risk_level: context.riskLevel ?? 'unknown',
+    });
     console.log('[MessageSimulation] Path selected:', path);
-  }, []);
+  }, [context.riskLevel]);
 
   const handleSaveOutcome = useCallback(async (outcome: SimulationOutcomeResult) => {
     setSelectedOutcome(outcome);
@@ -239,6 +255,11 @@ export default function MessageSimulationScreen() {
 
     setOutcomeSaved(true);
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    void trackMessageSimulation('outcome_logged', {
+      path_type: selectedPathType,
+      outcome,
+      risk_level: context.riskLevel ?? 'unknown',
+    });
     console.log('[MessageSimulation] Outcome saved:', outcome);
   }, [simulation, selectedPathType, context]);
 

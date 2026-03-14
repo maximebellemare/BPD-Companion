@@ -497,29 +497,29 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   scrollContent: {
-    paddingHorizontal: 22,
-    paddingBottom: 32,
-    paddingTop: 12,
+    paddingHorizontal: 20,
+    paddingBottom: 36,
+    paddingTop: 8,
   },
 
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 24,
-    paddingTop: 8,
+    marginBottom: 22,
+    paddingTop: 6,
   },
   greeting: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '700' as const,
-    color: Colors.text,
+    color: Colors.brandNavy,
     letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 15,
+    fontSize: 14,
     color: Colors.textSecondary,
-    marginTop: 4,
-    lineHeight: 21,
+    marginTop: 5,
+    lineHeight: 20,
   },
   safetyButton: {
     width: 44,
@@ -536,9 +536,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 20,
     padding: 18,
-    marginBottom: 16,
+    marginBottom: 14,
     gap: 14,
     overflow: 'hidden',
+    shadowColor: 'rgba(27,40,56,0.06)',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 2,
   },
   primaryGlow: {
     position: 'absolute',
@@ -567,10 +572,11 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   primaryTitle: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '700' as const,
-    color: Colors.text,
+    color: Colors.brandNavy,
     marginBottom: 3,
+    letterSpacing: -0.2,
   },
   primaryReason: {
     fontSize: 13,
@@ -588,7 +594,7 @@ const styles = StyleSheet.create({
   quickRow: {
     flexDirection: 'row',
     gap: 10,
-    marginBottom: 16,
+    marginBottom: 14,
   },
   quickCard: {
     flex: 1,
@@ -599,6 +605,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: Colors.borderLight,
+    shadowColor: 'rgba(27,40,56,0.04)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 6,
+    elevation: 1,
   },
   quickIcon: {
     width: 38,
@@ -622,6 +633,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: Colors.borderLight,
+    shadowColor: 'rgba(27,40,56,0.04)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 1,
   },
   emotionalHeader: {
     flexDirection: 'row',
@@ -650,9 +666,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   emotionalState: {
-    fontSize: 20,
+    fontSize: 19,
     fontWeight: '700' as const,
-    color: Colors.text,
+    color: Colors.brandNavy,
+    letterSpacing: -0.2,
   },
   intensityRow: {
     flexDirection: 'row',
@@ -698,6 +715,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: Colors.borderLight,
+    shadowColor: 'rgba(27,40,56,0.04)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 1,
   },
   insightHeader: {
     flexDirection: 'row',
@@ -757,6 +779,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: Colors.borderLight,
+    shadowColor: 'rgba(27,40,56,0.04)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 1,
   },
   progressHeader: {
     flexDirection: 'row',
@@ -794,7 +821,7 @@ const styles = StyleSheet.create({
   progressStatValue: {
     fontSize: 20,
     fontWeight: '700' as const,
-    color: Colors.text,
+    color: Colors.brandNavy,
   },
   progressStatLabel: {
     fontSize: 11,
@@ -857,7 +884,12 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: 'rgba(196,120,120,0.2)',
+    borderColor: 'rgba(196,120,120,0.15)',
+    shadowColor: 'rgba(196,120,120,0.12)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 2,
   },
   safetyBannerText: {
     flex: 1,
@@ -874,6 +906,6 @@ const styles = StyleSheet.create({
   },
 
   bottomSpacer: {
-    height: 8,
+    height: 12,
   },
 });

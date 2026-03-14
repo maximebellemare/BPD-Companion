@@ -690,11 +690,12 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingTop: 60,
-    paddingHorizontal: 22,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
   header: {
     marginBottom: 20,
-    paddingTop: 12,
+    paddingTop: 10,
   },
   headerTop: {
     flexDirection: 'row' as const,
@@ -731,7 +732,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '700' as const,
     color: Colors.brandNavy,
     letterSpacing: -0.3,
@@ -740,6 +741,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textSecondary,
     marginTop: 3,
+    lineHeight: 18,
   },
   statsRow: {
     flexDirection: 'row' as const,
@@ -754,6 +756,11 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
     borderWidth: 1,
     borderColor: Colors.borderLight,
+    shadowColor: 'rgba(27,40,56,0.04)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 6,
+    elevation: 1,
   },
   statIcon: {
     width: 28,
@@ -766,7 +773,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: Colors.text,
+    color: Colors.brandNavy,
     marginBottom: 1,
   },
   statLabel: {
@@ -781,6 +788,11 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 18,
     marginBottom: 20,
+    shadowColor: 'rgba(27,40,56,0.15)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 12,
+    elevation: 4,
   },
   upgradeBannerActive: {
     backgroundColor: '#FFF8F2',
@@ -848,6 +860,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
     marginBottom: 10,
     marginLeft: 2,
+    textTransform: 'uppercase' as const,
   },
   navGroup: {
     backgroundColor: Colors.card,
@@ -855,6 +868,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.borderLight,
     overflow: 'hidden' as const,
+    shadowColor: 'rgba(27,40,56,0.03)',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 1,
+    shadowRadius: 4,
+    elevation: 1,
   },
   navRow: {
     flexDirection: 'row' as const,
@@ -882,12 +900,13 @@ const styles = StyleSheet.create({
   navRowTitle: {
     fontSize: 15,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: Colors.brandNavy,
   },
   navRowDesc: {
     fontSize: 12,
     color: Colors.textMuted,
-    marginTop: 1,
+    marginTop: 2,
+    lineHeight: 16,
   },
   premiumBadge: {
     width: 18,
@@ -928,6 +947,11 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
     borderColor: Colors.borderLight,
+    shadowColor: 'rgba(27,40,56,0.03)',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 1,
+    shadowRadius: 4,
+    elevation: 1,
   },
   settingCardTop: {
     flexDirection: 'row' as const,
@@ -974,6 +998,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.borderLight,
     overflow: 'hidden' as const,
+    shadowColor: 'rgba(27,40,56,0.03)',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 1,
+    shadowRadius: 4,
+    elevation: 1,
   },
   toggleRow: {
     flexDirection: 'row' as const,
@@ -1045,6 +1074,11 @@ const styles = StyleSheet.create({
     borderColor: Colors.borderLight,
     padding: 16,
     marginBottom: 10,
+    shadowColor: 'rgba(27,40,56,0.03)',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 1,
+    shadowRadius: 4,
+    elevation: 1,
   },
   smartReminderHeader: {
     flexDirection: 'row' as const,

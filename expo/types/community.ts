@@ -27,6 +27,36 @@ export type ReplyLabel =
 
 export type SupportReactionType = 'understand' | 'experienced' | 'sending-support' | 'helped-me';
 
+export type SupportRequestType = 'validation' | 'shared-experience' | 'advice' | 'another-perspective';
+
+export type ResponseType = 'validation' | 'shared-experience' | 'advice' | 'another-perspective';
+
+export type HelpfulnessRating = 'helped' | 'gave-perspective' | 'not-helpful';
+
+export interface EmotionalContext {
+  primaryEmotion?: string;
+  distressLevel?: number;
+  supportRequestType?: SupportRequestType;
+}
+
+export interface ThreadClosure {
+  type: 'what-i-realized' | 'what-helped' | 'what-i-will-try';
+  body: string;
+  createdAt: number;
+}
+
+export interface ReplyHelpfulness {
+  replyId: string;
+  rating: HelpfulnessRating;
+  ratedAt: number;
+}
+
+export interface ToneSuggestion {
+  original: string;
+  suggested: string;
+  reason: string;
+}
+
 export interface PostAuthor {
   id: string;
   displayName: string;
@@ -65,6 +95,9 @@ export interface CommunityPost {
   supportType?: string;
   suggestedToolId?: string;
   suggestedToolName?: string;
+  emotionalContext?: EmotionalContext;
+  threadClosure?: ThreadClosure;
+  replyHelpfulness?: ReplyHelpfulness[];
 }
 
 export interface PostReply {
@@ -77,6 +110,8 @@ export interface PostReply {
   supportReactions: SupportReaction[];
   label?: ReplyLabel;
   isHelpful?: boolean;
+  responseType?: ResponseType;
+  helpfulnessRating?: HelpfulnessRating;
 }
 
 export interface NewPostInput {
@@ -89,6 +124,7 @@ export interface NewPostInput {
   situationTag?: SituationTag;
   emotions?: string[];
   supportType?: string;
+  emotionalContext?: EmotionalContext;
 }
 
 export interface NewReplyInput {
@@ -96,6 +132,7 @@ export interface NewReplyInput {
   body: string;
   isAnonymous: boolean;
   label?: ReplyLabel;
+  responseType?: ResponseType;
 }
 
 export type ReportReason =

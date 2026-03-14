@@ -87,6 +87,7 @@ export class LocalCommunityRepository implements ICommunityRepository {
       replyCount: 0,
       emotions: input.emotions,
       supportType: input.supportType,
+      emotionalContext: input.emotionalContext,
       reactions: [
         { type: 'heart', count: 0, userReacted: false },
         { type: 'hug', count: 0, userReacted: false },
@@ -114,6 +115,7 @@ export class LocalCommunityRepository implements ICommunityRepository {
       reactions: [{ type: 'heart', count: 0, userReacted: false }],
       supportReactions: [...DEFAULT_SUPPORT_REACTIONS],
       label: input.label,
+      responseType: input.responseType,
     };
 
     if (!this.replies[input.postId]) {

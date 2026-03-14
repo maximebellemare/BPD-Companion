@@ -39,11 +39,22 @@ import {
   REPORT_REASONS,
   REPLY_LABEL_INFO,
   SITUATION_TAGS,
+  RESPONSE_TYPES,
+  HELPFULNESS_OPTIONS,
+  CLOSURE_TYPES,
 } from '@/constants/community';
 import { usePostDetail } from '@/hooks/useCommunityFeed';
-import { PostReply, SupportReaction, ReportReason, ReplyLabel } from '@/types/community';
+import { PostReply, SupportReaction, ReportReason, ReplyLabel, ResponseType, HelpfulnessRating, ThreadClosure } from '@/types/community';
 import { getSuggestedTool } from '@/services/community/communityMatchingService';
 import { checkContentSafety } from '@/services/community/communitySafetyService';
+import {
+  checkTone,
+  getDistressLabel,
+  getSupportRequestLabel,
+  getResponseTypeLabel,
+  getClosureTypeLabel,
+  trackEmotionalContextEvent,
+} from '@/services/community/communityEmotionalContextService';
 
 function timeAgo(timestamp: number): string {
   const now = Date.now();
@@ -97,21 +108,34 @@ function ReplyCard({
   reply,
   onReaction,
   onReport,
+  helpfulnessRating,
+  onRateHelpfulness,
+  isOwnPost,
 }: {
   reply: PostReply;
   onReaction: (replyId: string, type: string) => void;
   onReport: (replyId: string, authorId: string) => void;
+  helpfulnessRating?: HelpfulnessRating;
+  onRateHelpfulness?: (replyId: string, rating: HelpfulnessRating) => void;
+  isOwnPost: boolean;
 }) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const labelInfo = reply.label ? REPLY_LABEL_INFO[reply.label] : null;
+  const responseTypeInfo = reply.responseType ? getResponseTypeLabel(reply.responseType) : null;
 
   useEffect(() => {
     Animated.timing(fadeAnim, { toValue: 1, duration: 300, useNativeDriver: true }).start();
   }, [fadeAnim]);
 
   return (
-    <Animated.View style={[styles.replyCard, { opacity: fadeAnim }]}>
-      {labelInfo && (
+    <Animated.View style={[styles.replyCard, { opacity: fadeAnim }, helpfulnessRating === 'helped' && styles.replyCardHighlighted]}>
+      {responseTypeInfo && (
+        <View style={[styles.responseTypeBadge, { backgroundColor: responseTypeInfo.color + '15' }]}>
+          <Text style={styles.responseTypeEmoji}>{responseTypeInfo.emoji}</Text>
+          <Text style={[styles.responseTypeText, { color: responseTypeInfo.color }]}>{responseTypeInfo.label}</Text>
+        </View>
+      )}
+      {!responseTypeInfo && labelInfo && (
         <View style={[styles.replyLabelBadge, { backgroundColor: labelInfo.color + '15' }]}>
           <Text style={styles.replyLabelEmoji}>{labelInfo.emoji}</Text>
           <Text style={[styles.replyLabelText, { color: labelInfo.color }]}>{labelInfo.label}</Text>
@@ -163,6 +187,37 @@ function ReplyCard({
           );
         })}
       </View>
+      {isOwnPost && reply.author.id !== 'current_user' && onRateHelpfulness && (
+        <View style={styles.helpfulnessRow}>
+          {helpfulnessRating ? (
+            <View style={styles.helpfulnessRated}>
+              <Text style={styles.helpfulnessRatedText}>
+                {HELPFULNESS_OPTIONS.find(o => o.id === helpfulnessRating)?.emoji}{' '}
+                {HELPFULNESS_OPTIONS.find(o => o.id === helpfulnessRating)?.label}
+              </Text>
+            </View>
+          ) : (
+            <>
+              <Text style={styles.helpfulnessLabel}>Was this helpful?</Text>
+              <View style={styles.helpfulnessOptions}>
+                {HELPFULNESS_OPTIONS.map((option) => (
+                  <TouchableOpacity
+                    key={option.id}
+                    style={styles.helpfulnessBtn}
+                    onPress={() => {
+                      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      onRateHelpfulness(reply.id, option.id);
+                    }}
+                  >
+                    <Text style={styles.helpfulnessBtnEmoji}>{option.emoji}</Text>
+                    <Text style={styles.helpfulnessBtnText}>{option.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </>
+          )}
+        </View>
+      )}
     </Animated.View>
   );
 }
@@ -186,6 +241,10 @@ export default function PostDetailScreen() {
     toggleReaction,
     reportContent,
     blockUser,
+    replyHelpfulness,
+    rateReplyHelpfulness,
+    threadClosure,
+    saveThreadClosure,
   } = usePostDetail(id ?? '');
 
   const [replyText, setReplyText] = useState<string>('');
@@ -201,8 +260,16 @@ export default function PostDetailScreen() {
   const [replyLabel, setReplyLabel] = useState<ReplyLabel | null>(null);
   const [showReplyLabels, setShowReplyLabels] = useState<boolean>(false);
   const [replySafetyWarning, setReplySafetyWarning] = useState<string | null>(null);
+  const [responseType, setResponseType] = useState<ResponseType | null>(null);
+  const [showResponseTypes, setShowResponseTypes] = useState<boolean>(false);
+  const [showPausePrompt, setShowPausePrompt] = useState<boolean>(false);
+  const [toneSuggestion, setToneSuggestion] = useState<string | null>(null);
+  const [showClosureModal, setShowClosureModal] = useState<boolean>(false);
+  const [closureType, setClosureType] = useState<ThreadClosure['type'] | null>(null);
+  const [closureText, setClosureText] = useState<string>('');
   const scrollRef = useRef<ScrollView>(null);
   const actionsAnim = useRef(new Animated.Value(0)).current;
+  const isOwnPost = post?.author.id === 'current_user';
 
   const category = post ? CATEGORIES.find((c) => c.id === post.category) : null;
   const situationTag = post?.situationTag ? SITUATION_TAGS.find((t) => t.id === post.situationTag) : null;
@@ -217,10 +284,39 @@ export default function PostDetailScreen() {
       } else {
         setReplySafetyWarning(null);
       }
+      const tone = checkTone(text);
+      if (tone) {
+        setToneSuggestion(tone.suggested);
+      } else {
+        setToneSuggestion(null);
+      }
     } else {
       setReplySafetyWarning(null);
+      setToneSuggestion(null);
     }
   }, []);
+
+  const doSendReply = useCallback(() => {
+    if (!replyText.trim() || !id) return;
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    addReply({
+      postId: id,
+      body: replyText.trim(),
+      isAnonymous,
+      label: replyLabel ?? undefined,
+      responseType: responseType ?? undefined,
+    });
+    void trackEmotionalContextEvent('community_reply_type_selected', { responseType });
+    setReplyText('');
+    setReplyLabel(null);
+    setResponseType(null);
+    setShowReplyLabels(false);
+    setShowResponseTypes(false);
+    setReplySafetyWarning(null);
+    setToneSuggestion(null);
+    setShowPausePrompt(false);
+    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 500);
+  }, [replyText, id, isAnonymous, replyLabel, responseType, addReply]);
 
   const handleSendReply = useCallback(() => {
     if (!replyText.trim() || !id) return;
@@ -232,41 +328,36 @@ export default function PostDetailScreen() {
         safety.suggestion ?? 'Please review your reply.',
         [
           { text: 'Edit reply', style: 'cancel' },
-          {
-            text: 'Send anyway',
-            onPress: () => {
-              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              addReply({
-                postId: id,
-                body: replyText.trim(),
-                isAnonymous,
-                label: replyLabel ?? undefined,
-              });
-              setReplyText('');
-              setReplyLabel(null);
-              setShowReplyLabels(false);
-              setReplySafetyWarning(null);
-              setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 500);
-            },
-          },
+          { text: 'Send anyway', onPress: doSendReply },
         ]
       );
       return;
     }
 
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    addReply({
-      postId: id,
-      body: replyText.trim(),
-      isAnonymous,
-      label: replyLabel ?? undefined,
+    if (!showPausePrompt) {
+      setShowPausePrompt(true);
+      return;
+    }
+
+    doSendReply();
+  }, [replyText, id, showPausePrompt, doSendReply]);
+
+  const handleRateHelpfulness = useCallback((replyId: string, rating: HelpfulnessRating) => {
+    rateReplyHelpfulness({ replyId, rating });
+  }, [rateReplyHelpfulness]);
+
+  const handleSaveClosure = useCallback(() => {
+    if (!closureType || !closureText.trim()) return;
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    saveThreadClosure({
+      type: closureType,
+      body: closureText.trim(),
+      createdAt: Date.now(),
     });
-    setReplyText('');
-    setReplyLabel(null);
-    setShowReplyLabels(false);
-    setReplySafetyWarning(null);
-    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 500);
-  }, [replyText, id, isAnonymous, replyLabel, addReply]);
+    setShowClosureModal(false);
+    setClosureType(null);
+    setClosureText('');
+  }, [closureType, closureText, saveThreadClosure]);
 
   const handleToggleReaction = useCallback(
     (type: string) => {
@@ -445,7 +536,40 @@ export default function PostDetailScreen() {
               <Text style={styles.postTime}>{timeAgo(post.createdAt)}</Text>
             </View>
 
-            {post.supportType && (
+            {post.emotionalContext && (
+              <View style={styles.emotionalContextBar}>
+                {post.emotionalContext.primaryEmotion && (
+                  <View style={styles.ecChip}>
+                    <Text style={styles.ecChipText}>
+                      {post.emotionalContext.primaryEmotion}
+                    </Text>
+                  </View>
+                )}
+                {post.emotionalContext.distressLevel != null && (
+                  <View style={[
+                    styles.ecChip,
+                    { backgroundColor: getDistressLabel(post.emotionalContext.distressLevel).color + '18' },
+                  ]}>
+                    <Text style={[
+                      styles.ecChipText,
+                      { color: getDistressLabel(post.emotionalContext.distressLevel).color },
+                    ]}>
+                      {getDistressLabel(post.emotionalContext.distressLevel).label} ({post.emotionalContext.distressLevel}/10)
+                    </Text>
+                  </View>
+                )}
+                {post.emotionalContext.supportRequestType && (
+                  <View style={[styles.ecChip, { backgroundColor: Colors.brandLilacSoft }]}>
+                    <Text style={[styles.ecChipText, { color: Colors.brandLilac }]}>
+                      {getSupportRequestLabel(post.emotionalContext.supportRequestType).emoji}{' '}
+                      {getSupportRequestLabel(post.emotionalContext.supportRequestType).label}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
+
+            {post.supportType && !post.emotionalContext?.supportRequestType && (
               <View style={styles.supportTypeBadge}>
                 <Text style={styles.supportTypeText}>
                   {post.supportType === 'just-listening' ? '👂 Just needs to be heard' :
@@ -513,12 +637,75 @@ export default function PostDetailScreen() {
                 reply={reply}
                 onReaction={handleToggleReplyReaction}
                 onReport={handleOpenReportForReply}
+                isOwnPost={isOwnPost ?? false}
+                helpfulnessRating={replyHelpfulness[reply.id]}
+                onRateHelpfulness={handleRateHelpfulness}
               />
             ))}
           </View>
 
+          {threadClosure && (
+            <View style={styles.closureCard}>
+              <View style={styles.closureHeader}>
+                <Text style={styles.closureEmoji}>{getClosureTypeLabel(threadClosure.type).emoji}</Text>
+                <Text style={styles.closureTitle}>{getClosureTypeLabel(threadClosure.type).label}</Text>
+              </View>
+              <Text style={styles.closureBody}>{threadClosure.body}</Text>
+            </View>
+          )}
+
+          {isOwnPost && !threadClosure && replies.length > 0 && (
+            <TouchableOpacity
+              style={styles.addClosureBtn}
+              onPress={() => setShowClosureModal(true)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.addClosureEmoji}>💬</Text>
+              <View>
+                <Text style={styles.addClosureTitle}>Share a follow-up</Text>
+                <Text style={styles.addClosureDesc}>Let others know what helped or what you realized</Text>
+              </View>
+            </TouchableOpacity>
+          )}
+
           <View style={styles.bottomSpacer} />
         </ScrollView>
+
+        {showPausePrompt && (
+          <View style={styles.pausePromptBar}>
+            <Text style={styles.pausePromptText}>Would you like to reread the post before responding?</Text>
+            <View style={styles.pausePromptActions}>
+              <TouchableOpacity
+                style={styles.pausePromptBtn}
+                onPress={() => {
+                  setShowPausePrompt(false);
+                  scrollRef.current?.scrollTo({ y: 0, animated: true });
+                }}
+              >
+                <Text style={styles.pausePromptBtnText}>Reread</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.pausePromptBtn, styles.pausePromptBtnSend]}
+                onPress={() => {
+                  setShowPausePrompt(false);
+                  doSendReply();
+                }}
+              >
+                <Text style={[styles.pausePromptBtnText, styles.pausePromptBtnSendText]}>Send now</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {toneSuggestion && (
+          <View style={styles.toneSuggestionBar}>
+            <Sparkles size={12} color={Colors.brandLilac} />
+            <Text style={styles.toneSuggestionText}>Consider: "{toneSuggestion}"</Text>
+            <TouchableOpacity onPress={() => setToneSuggestion(null)}>
+              <X size={12} color={Colors.textMuted} />
+            </TouchableOpacity>
+          </View>
+        )}
 
         {replySafetyWarning && (
           <View style={styles.replySafetyBanner}>
@@ -530,7 +717,32 @@ export default function PostDetailScreen() {
           </View>
         )}
 
-        {showReplyLabels && (
+        {showResponseTypes && (
+          <View style={styles.responseTypesBar}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.responseTypesRow}>
+              {RESPONSE_TYPES.map((rt) => {
+                const isSelected = responseType === rt.id;
+                return (
+                  <TouchableOpacity
+                    key={rt.id}
+                    style={[styles.responseTypePill, isSelected && { backgroundColor: rt.color + '20', borderColor: rt.color }]}
+                    onPress={() => {
+                      setResponseType(isSelected ? null : rt.id);
+                      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    }}
+                  >
+                    <Text style={styles.responseTypePillEmoji}>{rt.emoji}</Text>
+                    <Text style={[styles.responseTypePillText, isSelected && { color: rt.color, fontWeight: '600' as const }]}>
+                      {rt.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        )}
+
+        {showReplyLabels && !showResponseTypes && (
           <View style={styles.replyLabelsBar}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.replyLabelsRow}>
               {REPLY_LABELS.map((label) => {
@@ -565,10 +777,13 @@ export default function PostDetailScreen() {
               {isAnonymous ? <EyeOff size={16} color={Colors.primary} /> : <Eye size={16} color={Colors.textMuted} />}
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.labelToggle, showReplyLabels && styles.labelToggleActive]}
-              onPress={() => setShowReplyLabels((prev) => !prev)}
+              style={[styles.labelToggle, showResponseTypes && styles.labelToggleActive]}
+              onPress={() => {
+                setShowResponseTypes((prev) => !prev);
+                if (showReplyLabels) setShowReplyLabels(false);
+              }}
             >
-              <Tag size={16} color={showReplyLabels ? Colors.primary : Colors.textMuted} />
+              <Tag size={16} color={showResponseTypes ? Colors.primary : Colors.textMuted} />
             </TouchableOpacity>
             <TextInput
               style={styles.composerInput}
@@ -706,6 +921,57 @@ export default function PostDetailScreen() {
                   </TouchableOpacity>
                 </>
               )}
+            </SafeAreaView>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal transparent animationType="slide" visible={showClosureModal} onRequestClose={() => setShowClosureModal(false)}>
+        <View style={styles.reportOverlay}>
+          <View style={styles.reportSheet}>
+            <SafeAreaView edges={['bottom']}>
+              <View style={styles.reportHeader}>
+                <Text style={styles.reportTitle}>Share a follow-up</Text>
+                <TouchableOpacity style={styles.reportCloseBtn} onPress={() => setShowClosureModal(false)}>
+                  <X size={18} color={Colors.textSecondary} />
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.closureModalDesc}>Help future readers by sharing what you learned from this thread.</Text>
+              <View style={styles.closureTypesRow}>
+                {CLOSURE_TYPES.map((ct) => {
+                  const isSelected = closureType === ct.id;
+                  return (
+                    <TouchableOpacity
+                      key={ct.id}
+                      style={[styles.closureTypePill, isSelected && styles.closureTypePillActive]}
+                      onPress={() => {
+                        setClosureType(isSelected ? null : ct.id);
+                        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      }}
+                    >
+                      <Text style={styles.closureTypePillEmoji}>{ct.emoji}</Text>
+                      <Text style={[styles.closureTypePillText, isSelected && styles.closureTypePillTextActive]}>{ct.label}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+              <TextInput
+                style={styles.closureInput}
+                placeholder="Share your thoughts..."
+                placeholderTextColor={Colors.textMuted}
+                value={closureText}
+                onChangeText={setClosureText}
+                multiline
+                maxLength={500}
+                textAlignVertical="top"
+              />
+              <TouchableOpacity
+                style={[styles.reportSubmitBtn, (closureType && closureText.trim()) ? styles.reportSubmitBtnActive : undefined]}
+                onPress={handleSaveClosure}
+                disabled={!closureType || !closureText.trim()}
+              >
+                <Text style={[styles.reportSubmitText, (closureType && closureText.trim()) ? styles.reportSubmitTextActive : undefined]}>Share follow-up</Text>
+              </TouchableOpacity>
             </SafeAreaView>
           </View>
         </View>
@@ -851,4 +1117,50 @@ const styles = StyleSheet.create({
   reportSuccessText: { fontSize: 14, color: Colors.textSecondary, lineHeight: 21, textAlign: 'center', paddingHorizontal: 12, marginBottom: 20 },
   reportDoneBtn: { backgroundColor: Colors.primary, borderRadius: 14, paddingHorizontal: 40, paddingVertical: 14 },
   reportDoneBtnText: { fontSize: 15, fontWeight: '600' as const, color: Colors.white },
+  replyCardHighlighted: { borderColor: Colors.primary + '30', backgroundColor: Colors.primaryLight + '40' },
+  responseTypeBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, alignSelf: 'flex-start', marginBottom: 10 },
+  responseTypeEmoji: { fontSize: 11 },
+  responseTypeText: { fontSize: 11, fontWeight: '600' as const },
+  helpfulnessRow: { borderTopWidth: 1, borderTopColor: Colors.borderLight, paddingTop: 10, marginTop: 10 },
+  helpfulnessRated: { flexDirection: 'row', alignItems: 'center' },
+  helpfulnessRatedText: { fontSize: 12, color: Colors.primary, fontWeight: '500' as const },
+  helpfulnessLabel: { fontSize: 12, color: Colors.textMuted, marginBottom: 6 },
+  helpfulnessOptions: { flexDirection: 'row', gap: 8 },
+  helpfulnessBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Colors.surface, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14 },
+  helpfulnessBtnEmoji: { fontSize: 12 },
+  helpfulnessBtnText: { fontSize: 11, color: Colors.textSecondary, fontWeight: '500' as const },
+  emotionalContextBar: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 },
+  ecChip: { backgroundColor: Colors.primaryLight, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12 },
+  ecChipText: { fontSize: 11, color: Colors.primaryDark, fontWeight: '500' as const },
+  pausePromptBar: { backgroundColor: Colors.warmGlow, paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: 1, borderTopColor: Colors.borderLight },
+  pausePromptText: { fontSize: 13, color: Colors.accent, fontWeight: '500' as const, marginBottom: 8, lineHeight: 18 },
+  pausePromptActions: { flexDirection: 'row', gap: 10 },
+  pausePromptBtn: { backgroundColor: Colors.white, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 16, borderWidth: 1, borderColor: Colors.borderLight },
+  pausePromptBtnSend: { backgroundColor: Colors.primary, borderColor: Colors.primary },
+  pausePromptBtnText: { fontSize: 13, fontWeight: '600' as const, color: Colors.textSecondary },
+  pausePromptBtnSendText: { color: Colors.white },
+  toneSuggestionBar: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: Colors.brandLilacSoft, paddingHorizontal: 16, paddingVertical: 10 },
+  toneSuggestionText: { flex: 1, fontSize: 12, color: Colors.brandLilac, lineHeight: 16, fontStyle: 'italic' as const },
+  responseTypesBar: { backgroundColor: Colors.white, borderTopWidth: 1, borderTopColor: Colors.borderLight, paddingVertical: 8 },
+  responseTypesRow: { paddingHorizontal: 12, gap: 6 },
+  responseTypePill: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: Colors.surface, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: 'transparent' },
+  responseTypePillEmoji: { fontSize: 12 },
+  responseTypePillText: { fontSize: 12, color: Colors.textSecondary, fontWeight: '500' as const },
+  closureCard: { backgroundColor: Colors.warmGlow, borderRadius: 14, padding: 16, marginTop: 16, borderWidth: 1, borderColor: Colors.accent + '20' },
+  closureHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+  closureEmoji: { fontSize: 16 },
+  closureTitle: { fontSize: 14, fontWeight: '600' as const, color: Colors.accent },
+  closureBody: { fontSize: 14, color: Colors.text, lineHeight: 21 },
+  addClosureBtn: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Colors.white, borderRadius: 14, padding: 16, marginTop: 16, borderWidth: 1, borderColor: Colors.borderLight },
+  addClosureEmoji: { fontSize: 20 },
+  addClosureTitle: { fontSize: 14, fontWeight: '600' as const, color: Colors.text, marginBottom: 2 },
+  addClosureDesc: { fontSize: 12, color: Colors.textMuted },
+  closureModalDesc: { fontSize: 14, color: Colors.textSecondary, lineHeight: 20, marginBottom: 16 },
+  closureTypesRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
+  closureTypePill: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Colors.surface, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14, borderWidth: 1, borderColor: 'transparent' },
+  closureTypePillActive: { backgroundColor: Colors.primaryLight, borderColor: Colors.primary + '40' },
+  closureTypePillEmoji: { fontSize: 14 },
+  closureTypePillText: { fontSize: 13, color: Colors.textSecondary, fontWeight: '500' as const },
+  closureTypePillTextActive: { color: Colors.primaryDark, fontWeight: '600' as const },
+  closureInput: { backgroundColor: Colors.surface, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, fontSize: 14, color: Colors.text, minHeight: 100, marginBottom: 12, lineHeight: 20, ...Platform.select({ web: { outlineStyle: 'none' } as Record<string, string> }) },
 });

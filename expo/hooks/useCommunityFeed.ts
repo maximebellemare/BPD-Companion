@@ -13,7 +13,14 @@ import {
   joinCircle,
   leaveCircle,
 } from '@/services/community/communityService';
-import { PostCategory, NewPostInput, NewReplyInput, ReportInput } from '@/types/community';
+import { PostCategory, NewPostInput, NewReplyInput, ReportInput, HelpfulnessRating, ThreadClosure } from '@/types/community';
+import {
+  saveReplyHelpfulness,
+  getReplyHelpfulness,
+  saveThreadClosure,
+  getThreadClosure,
+  trackEmotionalContextEvent,
+} from '@/services/community/communityEmotionalContextService';
 
 export function useCommunityFeed() {
   const [selectedCategory, setSelectedCategory] = useState<PostCategory | null>(null);
@@ -85,6 +92,35 @@ export function usePostDetail(postId: string) {
     },
   });
 
+  const helpfulnessQuery = useQuery({
+    queryKey: ['community', 'helpfulness', postId],
+    queryFn: () => getReplyHelpfulness(postId),
+    enabled: !!postId,
+  });
+
+  const closureQuery = useQuery({
+    queryKey: ['community', 'closure', postId],
+    queryFn: () => getThreadClosure(postId),
+    enabled: !!postId,
+  });
+
+  const helpfulnessMutation = useMutation({
+    mutationFn: ({ replyId, rating }: { replyId: string; rating: HelpfulnessRating }) =>
+      saveReplyHelpfulness(postId, replyId, rating),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['community', 'helpfulness', postId] });
+      void trackEmotionalContextEvent('community_reply_helpful_marked');
+    },
+  });
+
+  const closureMutation = useMutation({
+    mutationFn: (closure: ThreadClosure) => saveThreadClosure(postId, closure),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['community', 'closure', postId] });
+      void trackEmotionalContextEvent('community_thread_closed');
+    },
+  });
+
   return {
     post: postQuery.data ?? null,
     replies: repliesQuery.data ?? [],
@@ -96,6 +132,10 @@ export function usePostDetail(postId: string) {
     isReporting: reportMutation.isPending,
     blockUser: blockMutation.mutateAsync,
     isBlocking: blockMutation.isPending,
+    replyHelpfulness: helpfulnessQuery.data ?? {},
+    rateReplyHelpfulness: helpfulnessMutation.mutate,
+    threadClosure: closureQuery.data ?? null,
+    saveThreadClosure: closureMutation.mutate,
   };
 }
 

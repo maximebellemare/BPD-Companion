@@ -31,6 +31,7 @@ import { CATEGORIES, SUPPORT_REACTION_LABELS, SITUATION_TAGS } from '@/constants
 import { useCommunityFeed, useSupportCircles } from '@/hooks/useCommunityFeed';
 import { CommunityPost, PostCategory, SupportCircle } from '@/types/community';
 import { getRecommendedPosts } from '@/services/community/communityMatchingService';
+import { getDistressLabel, getSupportRequestLabel } from '@/services/community/communityEmotionalContextService';
 
 function timeAgo(timestamp: number): string {
   const now = Date.now();
@@ -109,7 +110,32 @@ const PostCard = React.memo(function PostCard({ post, onPress }: { post: Communi
           <Text style={styles.postPreview} numberOfLines={2}>{post.body}</Text>
         )}
 
-        {post.supportType && (
+        {post.emotionalContext && (
+          <View style={styles.ecRow}>
+            {post.emotionalContext.primaryEmotion && (
+              <View style={styles.ecMiniChip}>
+                <Text style={styles.ecMiniChipText}>{post.emotionalContext.primaryEmotion}</Text>
+              </View>
+            )}
+            {post.emotionalContext.distressLevel != null && (
+              <View style={[styles.ecMiniChip, { backgroundColor: getDistressLabel(post.emotionalContext.distressLevel).color + '15' }]}>
+                <Text style={[styles.ecMiniChipText, { color: getDistressLabel(post.emotionalContext.distressLevel).color }]}>
+                  {getDistressLabel(post.emotionalContext.distressLevel).label}
+                </Text>
+              </View>
+            )}
+            {post.emotionalContext.supportRequestType && (
+              <View style={[styles.ecMiniChip, { backgroundColor: '#F0ECF7' }]}>
+                <Text style={[styles.ecMiniChipText, { color: '#9B8EC4' }]}>
+                  {getSupportRequestLabel(post.emotionalContext.supportRequestType).emoji}{' '}
+                  {getSupportRequestLabel(post.emotionalContext.supportRequestType).label}
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
+
+        {post.supportType && !post.emotionalContext?.supportRequestType && (
           <View style={styles.supportTypeBadge}>
             <Text style={styles.supportTypeText}>
               {post.supportType === 'just-listening' ? '👂 Just listening' :
@@ -975,5 +1001,22 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 30,
+  },
+  ecRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 5,
+    marginBottom: 8,
+  },
+  ecMiniChip: {
+    backgroundColor: Colors.primaryLight,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  ecMiniChipText: {
+    fontSize: 10,
+    color: Colors.primaryDark,
+    fontWeight: '500' as const,
   },
 });

@@ -32,6 +32,47 @@ export const SUPPORT_TYPES = [
   { id: 'skill-help', label: 'Help with a skill', emoji: '🧠' },
 ];
 
+export const SUPPORT_REQUEST_TYPES = [
+  { id: 'validation' as const, label: 'Validation', emoji: '💛', description: 'I want to feel heard and understood' },
+  { id: 'shared-experience' as const, label: 'Shared experience', emoji: '🤝', description: 'I want to know I\'m not alone' },
+  { id: 'advice' as const, label: 'Advice', emoji: '💡', description: 'I\'m open to suggestions' },
+  { id: 'another-perspective' as const, label: 'Another perspective', emoji: '🔄', description: 'Help me see it differently' },
+];
+
+export const RESPONSE_TYPES = [
+  { id: 'validation' as const, label: 'Validation', emoji: '💛', color: '#E8A87C' },
+  { id: 'shared-experience' as const, label: 'Shared experience', emoji: '🤝', color: '#6BA38E' },
+  { id: 'advice' as const, label: 'Advice', emoji: '💡', color: '#9B8EC4' },
+  { id: 'another-perspective' as const, label: 'Another perspective', emoji: '🔄', color: '#4A8B8D' },
+];
+
+export const HELPFULNESS_OPTIONS = [
+  { id: 'helped' as const, label: 'This helped', emoji: '✨' },
+  { id: 'gave-perspective' as const, label: 'Gave me perspective', emoji: '🔄' },
+  { id: 'not-helpful' as const, label: 'Not helpful', emoji: '🤷' },
+];
+
+export const CLOSURE_TYPES = [
+  { id: 'what-i-realized' as const, label: 'What I realized', emoji: '💡' },
+  { id: 'what-helped' as const, label: 'What helped', emoji: '🌱' },
+  { id: 'what-i-will-try' as const, label: 'What I will try next', emoji: '🎯' },
+];
+
+export const PRIMARY_EMOTIONS = [
+  { id: 'anger', label: 'Anger', emoji: '🔥' },
+  { id: 'shame', label: 'Shame', emoji: '😔' },
+  { id: 'hurt', label: 'Hurt', emoji: '💔' },
+  { id: 'fear', label: 'Fear', emoji: '😨' },
+  { id: 'sadness', label: 'Sadness', emoji: '😢' },
+  { id: 'loneliness', label: 'Loneliness', emoji: '🫂' },
+  { id: 'anxiety', label: 'Anxiety', emoji: '😰' },
+  { id: 'overwhelm', label: 'Overwhelm', emoji: '🌊' },
+  { id: 'rejection', label: 'Rejection', emoji: '🚪' },
+  { id: 'confusion', label: 'Confusion', emoji: '😵‍💫' },
+  { id: 'guilt', label: 'Guilt', emoji: '😞' },
+  { id: 'hope', label: 'Hope', emoji: '🌅' },
+];
+
 export const REACTION_LABELS: Record<string, { emoji: string; label: string }> = {
   heart: { emoji: '💛', label: 'Love' },
   hug: { emoji: '🤗', label: 'Hug' },

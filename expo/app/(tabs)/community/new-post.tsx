@@ -25,10 +25,11 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
-import { CATEGORIES, SITUATION_TAGS, SUPPORT_TYPES, EMOTION_OPTIONS } from '@/constants/community';
+import { CATEGORIES, SITUATION_TAGS, SUPPORT_TYPES, EMOTION_OPTIONS, SUPPORT_REQUEST_TYPES, PRIMARY_EMOTIONS } from '@/constants/community';
 import { useCreatePost } from '@/hooks/useCommunityFeed';
-import { PostCategory, SituationTag } from '@/types/community';
+import { PostCategory, SituationTag, SupportRequestType } from '@/types/community';
 import { checkContentSafety, getPostSuggestions } from '@/services/community/communitySafetyService';
+import { getDistressLabel, trackEmotionalContextEvent } from '@/services/community/communityEmotionalContextService';
 
 export default function NewPostScreen() {
   const router = useRouter();
@@ -45,6 +46,10 @@ export default function NewPostScreen() {
   const [supportType, setSupportType] = useState<string | null>(null);
   const [showEmotions, setShowEmotions] = useState<boolean>(false);
   const [safetyWarning, setSafetyWarning] = useState<string | null>(null);
+  const [primaryEmotion, setPrimaryEmotion] = useState<string | null>(null);
+  const [distressLevel, setDistressLevel] = useState<number | null>(null);
+  const [supportRequestType, setSupportRequestType] = useState<SupportRequestType | null>(null);
+  const [showEmotionalContext, setShowEmotionalContext] = useState<boolean>(false);
 
   const canSubmit = title.trim().length > 0 && body.trim().length > 0 && category !== null;
 
@@ -74,10 +79,18 @@ export default function NewPostScreen() {
     );
   }, []);
 
+  const hasEmotionalContext = primaryEmotion !== null || distressLevel !== null || supportRequestType !== null;
+
   const doSubmit = useCallback(async () => {
     if (!category) return;
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
+      const emotionalContext = hasEmotionalContext ? {
+        primaryEmotion: primaryEmotion ?? undefined,
+        distressLevel: distressLevel ?? undefined,
+        supportRequestType: supportRequestType ?? undefined,
+      } : undefined;
+
       await createPost({
         title: title.trim(),
         body: body.trim(),
@@ -88,14 +101,24 @@ export default function NewPostScreen() {
         situationTag: situationTag ?? undefined,
         emotions: selectedEmotions.length > 0 ? selectedEmotions : undefined,
         supportType: supportType ?? undefined,
+        emotionalContext,
       });
+
+      if (emotionalContext) {
+        void trackEmotionalContextEvent('community_post_emotion_tagged', {
+          primaryEmotion,
+          distressLevel,
+          supportRequestType,
+        });
+      }
+
       console.log('[NewPost] Post created successfully');
       router.back();
     } catch (error) {
       console.error('[NewPost] Failed to create post:', error);
       Alert.alert('Something went wrong', 'Please try again in a moment.');
     }
-  }, [category, title, body, isAnonymous, hasContentWarning, contentWarningText, situationTag, selectedEmotions, supportType, createPost, router]);
+  }, [category, title, body, isAnonymous, hasContentWarning, contentWarningText, situationTag, selectedEmotions, supportType, createPost, router, primaryEmotion, distressLevel, supportRequestType, hasEmotionalContext]);
 
   const handleSubmit = useCallback(async () => {
     if (!canSubmit || !category) return;
@@ -347,6 +370,111 @@ export default function NewPostScreen() {
                   </TouchableOpacity>
                 );
               })}
+            </View>
+          )}
+
+          <TouchableOpacity
+            style={styles.emotionalContextToggle}
+            onPress={() => {
+              setShowEmotionalContext(!showEmotionalContext);
+              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            }}
+          >
+            <View style={styles.emotionalContextToggleLeft}>
+              <Text style={styles.emotionalContextToggleEmoji}>🫧</Text>
+              <View>
+                <Text style={styles.emotionalContextToggleTitle}>
+                  {showEmotionalContext ? 'Hide emotional context' : 'Add emotional context'}
+                </Text>
+                <Text style={styles.emotionalContextToggleDesc}>Optional — helps others respond supportively</Text>
+              </View>
+            </View>
+            {hasEmotionalContext && !showEmotionalContext && (
+              <View style={styles.contextAddedBadge}>
+                <Check size={10} color={Colors.primary} />
+              </View>
+            )}
+          </TouchableOpacity>
+
+          {showEmotionalContext && (
+            <View style={styles.emotionalContextSection}>
+              <Text style={styles.contextSectionLabel}>How are you feeling right now?</Text>
+              <View style={styles.primaryEmotionGrid}>
+                {PRIMARY_EMOTIONS.map((emotion) => {
+                  const isSelected = primaryEmotion === emotion.id;
+                  return (
+                    <TouchableOpacity
+                      key={emotion.id}
+                      style={[styles.primaryEmotionChip, isSelected && styles.primaryEmotionChipActive]}
+                      onPress={() => {
+                        setPrimaryEmotion(isSelected ? null : emotion.id);
+                        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      }}
+                    >
+                      <Text style={styles.primaryEmotionEmoji}>{emotion.emoji}</Text>
+                      <Text style={[styles.primaryEmotionText, isSelected && styles.primaryEmotionTextActive]}>
+                        {emotion.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <Text style={styles.contextSectionLabel}>Distress level</Text>
+              <View style={styles.distressRow}>
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((level) => {
+                  const isSelected = distressLevel === level;
+                  const distressInfo = getDistressLabel(level);
+                  return (
+                    <TouchableOpacity
+                      key={level}
+                      style={[
+                        styles.distressDot,
+                        { backgroundColor: isSelected ? distressInfo.color : Colors.surface },
+                        isSelected && { borderColor: distressInfo.color },
+                      ]}
+                      onPress={() => {
+                        setDistressLevel(isSelected ? null : level);
+                        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      }}
+                    >
+                      <Text style={[styles.distressDotText, isSelected && { color: Colors.white }]}>
+                        {level}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+              {distressLevel !== null && (
+                <Text style={[styles.distressLabel, { color: getDistressLabel(distressLevel).color }]}>
+                  {getDistressLabel(distressLevel).label}
+                </Text>
+              )}
+
+              <Text style={styles.contextSectionLabel}>What kind of response would help?</Text>
+              <View style={styles.supportRequestGrid}>
+                {SUPPORT_REQUEST_TYPES.map((type) => {
+                  const isSelected = supportRequestType === type.id;
+                  return (
+                    <TouchableOpacity
+                      key={type.id}
+                      style={[styles.supportRequestOption, isSelected && styles.supportRequestOptionActive]}
+                      onPress={() => {
+                        setSupportRequestType(isSelected ? null : type.id);
+                        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      }}
+                    >
+                      <Text style={styles.supportRequestEmoji}>{type.emoji}</Text>
+                      <View style={styles.supportRequestTextWrap}>
+                        <Text style={[styles.supportRequestLabel, isSelected && styles.supportRequestLabelActive]}>
+                          {type.label}
+                        </Text>
+                        <Text style={styles.supportRequestDesc}>{type.description}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
           )}
 
@@ -697,5 +825,156 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 40,
+  },
+  emotionalContextToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 12,
+  },
+  emotionalContextToggleLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  emotionalContextToggleEmoji: {
+    fontSize: 22,
+  },
+  emotionalContextToggleTitle: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.text,
+    marginBottom: 2,
+  },
+  emotionalContextToggleDesc: {
+    fontSize: 12,
+    color: Colors.textMuted,
+  },
+  contextAddedBadge: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: Colors.primaryLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emotionalContextSection: {
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 16,
+  },
+  contextSectionLabel: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: Colors.textSecondary,
+    marginBottom: 10,
+    marginTop: 4,
+  },
+  primaryEmotionGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 18,
+  },
+  primaryEmotionChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  primaryEmotionChipActive: {
+    backgroundColor: Colors.primaryLight,
+    borderColor: Colors.primary + '40',
+  },
+  primaryEmotionEmoji: {
+    fontSize: 14,
+  },
+  primaryEmotionText: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    fontWeight: '500' as const,
+  },
+  primaryEmotionTextActive: {
+    color: Colors.primaryDark,
+    fontWeight: '600' as const,
+  },
+  distressRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 4,
+    marginBottom: 8,
+  },
+  distressDot: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: 'transparent',
+  },
+  distressDotText: {
+    fontSize: 11,
+    fontWeight: '600' as const,
+    color: Colors.textSecondary,
+  },
+  distressLabel: {
+    fontSize: 12,
+    fontWeight: '500' as const,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  supportRequestGrid: {
+    gap: 8,
+    marginBottom: 8,
+  },
+  supportRequestOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  supportRequestOptionActive: {
+    backgroundColor: Colors.primaryLight,
+    borderColor: Colors.primary + '40',
+  },
+  supportRequestEmoji: {
+    fontSize: 18,
+  },
+  supportRequestTextWrap: {
+    flex: 1,
+  },
+  supportRequestLabel: {
+    fontSize: 14,
+    fontWeight: '500' as const,
+    color: Colors.text,
+    marginBottom: 2,
+  },
+  supportRequestLabelActive: {
+    color: Colors.primaryDark,
+    fontWeight: '600' as const,
+  },
+  supportRequestDesc: {
+    fontSize: 12,
+    color: Colors.textMuted,
   },
 });

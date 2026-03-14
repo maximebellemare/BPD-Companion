@@ -15,6 +15,8 @@ import { compressConversationHistory } from './contextCompressionService';
 import { routeToModel, getResponseLengthInstruction } from '@/services/ai/modelRouterService';
 import { enforceTokenBudget, estimateTokens } from '@/services/ai/tokenBudgetService';
 import { trackEvent } from '@/services/analytics/analyticsService';
+import { assessInputSafety, checkOutputSafety, augmentResponseWithSafety, buildSafetyPromptInjection } from '@/services/ai/aiSafetyService';
+import { SafetyAssessment } from '@/types/aiSafety';
 
 const QUICK_ACTIONS_BY_MODE: Record<CompanionMode, string[]> = {
   calm: ['Ground me', 'Safety mode'],
@@ -57,6 +59,7 @@ export interface CompanionAIResponse {
   activeMode: AIMode;
   reasoning: ReasoningOutput;
   costMetrics?: CostMetrics;
+  safetyAssessment?: SafetyAssessment;
 }
 
 export interface CompanionAIRequestParams {
@@ -190,6 +193,16 @@ export async function generateCompanionResponse(
   console.log('[CompanionAI] Generating response for:', userMessage.substring(0, 60));
   console.log('[CompanionAI] Mode:', detectedMode, 'manual:', manualMode);
 
+  const safetyAssessment = assessInputSafety(userMessage);
+  if (safetyAssessment.level !== 'safe') {
+    console.log('[CompanionAI] Safety assessment:', safetyAssessment.level, 'signals:', safetyAssessment.signals.map(s => s.type).join(', '));
+    void trackEvent('safety_concern_detected', {
+      level: safetyAssessment.level,
+      signals: safetyAssessment.signals.map(s => s.type).join(','),
+      source: 'companion',
+    });
+  }
+
   const emotionalState = detectEmotionalState(userMessage);
 
   const reasoning = performReasoning({
@@ -220,7 +233,7 @@ export async function generateCompanionResponse(
 
   const responseLengthRule = getResponseLengthInstruction(routingDecision.tier, emotionalState as EmotionalState);
 
-  const systemPrompt = buildFullSystemPrompt(
+  let systemPrompt = buildFullSystemPrompt(
     detectedMode,
     assembledContext,
     reasoning,
@@ -228,6 +241,11 @@ export async function generateCompanionResponse(
     activeMode,
     responseLengthRule,
   );
+
+  const safetyInjection = buildSafetyPromptInjection(safetyAssessment);
+  if (safetyInjection) {
+    systemPrompt = `${safetyInjection}\n\n${systemPrompt}`;
+  }
 
   const compressed = compressConversationHistory(conversationHistory);
 
@@ -271,7 +289,21 @@ export async function generateCompanionResponse(
   });
 
   try {
-    const content = await generateText({ messages });
+    let content = await generateText({ messages });
+
+    const outputSafetyCheck = checkOutputSafety(content, safetyAssessment);
+    if (outputSafetyCheck.sanitizedContent) {
+      console.log('[CompanionAI] Output failed safety check, using safe fallback. Violations:', outputSafetyCheck.violations.map(v => v.type).join(', '));
+      content = outputSafetyCheck.sanitizedContent;
+      void trackEvent('ai_output_safety_blocked', {
+        violations: outputSafetyCheck.violations.map(v => v.type).join(','),
+        source: 'companion',
+      });
+    } else if (!outputSafetyCheck.isAcceptable) {
+      console.log('[CompanionAI] Output has non-critical safety concerns:', outputSafetyCheck.violations.map(v => v.type).join(', '));
+    }
+
+    content = augmentResponseWithSafety(content, safetyAssessment);
 
     const outputTokens = estimateTokens(content);
     console.log('[CompanionAI] AI response generated, length:', content.length, 'output tokens:', outputTokens);
@@ -296,6 +328,7 @@ export async function generateCompanionResponse(
       quickActions,
       activeMode,
       reasoning,
+      safetyAssessment: safetyAssessment.level !== 'safe' ? safetyAssessment : undefined,
       costMetrics: {
         modelTier: routingDecision.tier,
         estimatedInputTokens: budgetResult.finalTokens,
@@ -307,7 +340,11 @@ export async function generateCompanionResponse(
     };
   } catch (error) {
     console.log('[CompanionAI] AI generation failed, falling back to contextual response:', error);
-    return generateFallbackResponse(userMessage, detectedMode, reasoning, activeMode);
+    const fallback = generateFallbackResponse(userMessage, detectedMode, reasoning, activeMode);
+    if (safetyAssessment.level !== 'safe') {
+      fallback.safetyAssessment = safetyAssessment;
+    }
+    return fallback;
   }
 }
 

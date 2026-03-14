@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import createContextHook from '@nkzw/create-context-hook';
 import { AIConversation, AIMessage, SuggestedPrompt, SupportiveInterpretation } from '@/types/ai';
+import { SafetyAssessment } from '@/types/aiSafety';
 import { AIMode } from '@/types/aiModes';
 import { MemoryProfile, InsightCard } from '@/types/memory';
 import { MemorySnapshot } from '@/types/userMemory';
@@ -104,6 +105,7 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
   const [followUps, setFollowUps] = useState<FollowUpPrompt[]>([]);
   const [companionMode, setCompanionMode] = useState<CompanionMode | null>(null);
   const [sessionCount, setSessionCount] = useState<number>(0);
+  const [latestSafetyAssessment, setLatestSafetyAssessment] = useState<SafetyAssessment | null>(null);
   const processedConversationsRef = useRef<Set<string>>(new Set());
   const [smartJournalEntries, setSmartJournalEntries] = useState<SmartJournalEntry[]>([]);
   const [messageOutcomes, setMessageOutcomes] = useState<EnhancedMessageOutcome[]>([]);
@@ -419,6 +421,13 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
       setCurrentActiveMode(response.activeMode);
       setSessionCount(prev => prev + 1);
 
+      if (response.safetyAssessment) {
+        setLatestSafetyAssessment(response.safetyAssessment);
+        console.log('[AICompanion] Safety assessment surfaced:', response.safetyAssessment.level);
+      } else {
+        setLatestSafetyAssessment(null);
+      }
+
       if (response.costMetrics) {
         console.log('[AICompanion] Cost metrics:', response.costMetrics);
       }
@@ -638,6 +647,7 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
     followUps,
     companionMode,
     sessionCount,
+    latestSafetyAssessment,
     deleteMemory,
     editMemoryLesson,
     setActiveConversationId,
@@ -671,6 +681,7 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
     followUps,
     companionMode,
     sessionCount,
+    latestSafetyAssessment,
     deleteMemory,
     editMemoryLesson,
     setActiveConversationId,

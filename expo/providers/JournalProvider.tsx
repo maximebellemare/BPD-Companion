@@ -11,6 +11,7 @@ import {
 } from '@/types/journalEntry';
 import { DailyReflection, DailyReflectionStreak, JournalPrediction } from '@/types/journalDaily';
 import { Emotion, Trigger } from '@/types';
+import { SafetyAssessment } from '@/types/aiSafety';
 import { journalEntryRepository } from '@/services/journal/journalEntryRepository';
 import {
   analyzeJournalEntry,
@@ -33,6 +34,7 @@ export const [JournalProvider, useJournal] = createContextHook(() => {
   const queryClient = useQueryClient();
   const [smartEntries, setSmartEntries] = useState<SmartJournalEntry[]>([]);
   const [dailyReflections, setDailyReflections] = useState<DailyReflection[]>([]);
+  const [latestJournalSafetyAssessment, setLatestJournalSafetyAssessment] = useState<SafetyAssessment | null>(null);
 
   const entriesQuery = useQuery({
     queryKey: ['smart_journal'],
@@ -146,9 +148,15 @@ export const [JournalProvider, useJournal] = createContextHook(() => {
 
   const analyzeEntryMutation = useMutation({
     mutationFn: async (entry: SmartJournalEntry) => {
-      const insight = await analyzeJournalEntry(entry);
-      setAIInsight(entry.id, insight);
-      return insight;
+      const result = await analyzeJournalEntry(entry);
+      setAIInsight(entry.id, result.insight);
+      if (result.safetyAssessment) {
+        setLatestJournalSafetyAssessment(result.safetyAssessment);
+        console.log('[JournalProvider] Safety assessment from journal analysis:', result.safetyAssessment.level);
+      } else {
+        setLatestJournalSafetyAssessment(null);
+      }
+      return result.insight;
     },
   });
 
@@ -209,6 +217,7 @@ export const [JournalProvider, useJournal] = createContextHook(() => {
     toggleTherapyNote,
     analyzeEntry: analyzeEntryMutation.mutateAsync,
     isAnalyzing: analyzeEntryMutation.isPending,
+    latestJournalSafetyAssessment,
     dailyReflections,
     addDailyReflection,
     todayReflections,
@@ -227,6 +236,7 @@ export const [JournalProvider, useJournal] = createContextHook(() => {
     toggleTherapyNote,
     analyzeEntryMutation.mutateAsync,
     analyzeEntryMutation.isPending,
+    latestJournalSafetyAssessment,
     dailyReflections,
     addDailyReflection,
     todayReflections,

@@ -7,6 +7,9 @@ import {
 } from '@/types/journalEntry';
 import { generateObject } from '@rork-ai/toolkit-sdk';
 import { z } from 'zod';
+import { assessInputSafety } from '@/services/ai/aiSafetyService';
+import { SafetyAssessment, CRISIS_RESOURCES } from '@/types/aiSafety';
+import { trackEvent } from '@/services/analytics/analyticsService';
 
 function generateId(): string {
   return `sj_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -23,13 +26,35 @@ const insightSchema = z.object({
   summary: z.string(),
 });
 
+export interface JournalAnalysisResult {
+  insight: JournalAIInsight;
+  safetyAssessment?: SafetyAssessment;
+}
+
 export async function analyzeJournalEntry(
   entry: SmartJournalEntry
-): Promise<JournalAIInsight> {
+): Promise<JournalAnalysisResult> {
   console.log('[JournalAnalysis] Analyzing entry:', entry.id, entry.format);
+
+  const safetyAssessment = assessInputSafety(entry.content);
+  if (safetyAssessment.level !== 'safe') {
+    console.log('[JournalAnalysis] Safety concern in journal entry:', safetyAssessment.level, safetyAssessment.signals.map(s => s.type).join(', '));
+    void trackEvent('safety_concern_detected', {
+      level: safetyAssessment.level,
+      signals: safetyAssessment.signals.map(s => s.type).join(','),
+      source: 'journal',
+      distress_level: entry.distressLevel,
+    });
+  }
 
   const emotionLabels = entry.emotions.map(e => e.label).join(', ');
   const triggerLabels = entry.triggers.map(t => t.label).join(', ');
+
+  const safetyPromptAddition = safetyAssessment.level === 'crisis'
+    ? `\n\nIMPORTANT SAFETY NOTE: This entry contains crisis-level content. Your analysis MUST:\n- Acknowledge the pain directly and compassionately\n- NOT minimize or dismiss the distress\n- Include a coping suggestion that mentions reaching out to the ${CRISIS_RESOURCES.hotline988.name} (${CRISIS_RESOURCES.hotline988.action})\n- NOT use toxic positivity\n- Be warm, grounding, and present`
+    : safetyAssessment.level === 'high_risk'
+      ? `\n\nIMPORTANT: This entry shows significant distress. Your analysis should prioritize validation and suggest grounding or reaching out to a trusted person. Do not minimize the pain.`
+      : '';
 
   try {
     const result = await generateObject({
@@ -45,34 +70,60 @@ ${emotionLabels ? `Tagged emotions: ${emotionLabels}` : ''}
 ${triggerLabels ? `Tagged triggers: ${triggerLabels}` : ''}
 Distress level: ${entry.distressLevel}/10
 
-Provide a warm, insightful analysis. Be specific, not generic. Identify the primary emotion, any cognitive distortions (like black-and-white thinking, catastrophizing, mind reading), and suggest one practical coping approach. Keep the summary to 2-3 sentences that feel validating and useful.`,
+Provide a warm, insightful analysis. Be specific, not generic. Identify the primary emotion, any cognitive distortions (like black-and-white thinking, catastrophizing, mind reading), and suggest one practical coping approach. Keep the summary to 2-3 sentences that feel validating and useful.${safetyPromptAddition}`,
         },
       ],
       schema: insightSchema,
     });
 
     console.log('[JournalAnalysis] AI insight generated for entry:', entry.id);
-    return { ...result, timestamp: Date.now() };
+    const insight: JournalAIInsight = { ...result, timestamp: Date.now() };
+
+    if (safetyAssessment.level === 'crisis' && insight.copingSuggestion && !insight.copingSuggestion.includes('988')) {
+      insight.copingSuggestion = `${insight.copingSuggestion} If you're in crisis, the ${CRISIS_RESOURCES.hotline988.name} is available 24/7 — ${CRISIS_RESOURCES.hotline988.action}.`;
+    }
+
+    return {
+      insight,
+      safetyAssessment: safetyAssessment.level !== 'safe' ? safetyAssessment : undefined,
+    };
   } catch (error) {
     console.error('[JournalAnalysis] AI analysis failed:', error);
-    return buildLocalInsight(entry);
+    const insight = buildLocalInsight(entry, safetyAssessment);
+    return {
+      insight,
+      safetyAssessment: safetyAssessment.level !== 'safe' ? safetyAssessment : undefined,
+    };
   }
 }
 
-function buildLocalInsight(entry: SmartJournalEntry): JournalAIInsight {
+function buildLocalInsight(entry: SmartJournalEntry, safetyAssessment?: SafetyAssessment): JournalAIInsight {
   const primary = entry.emotions[0]?.label ?? 'Unidentified emotion';
   const secondary = entry.emotions[1]?.label;
   const trigger = entry.triggers[0]?.label;
 
-  let summary = `You expressed ${primary.toLowerCase()}`;
-  if (trigger) summary += ` connected to "${trigger}"`;
-  summary += '. Taking the time to write about this is a meaningful step toward understanding your emotional patterns.';
+  let summary: string;
+  let copingSuggestion: string;
 
-  let copingSuggestion = 'Try grounding yourself with slow breathing for a few minutes.';
-  if (entry.distressLevel >= 7) {
-    copingSuggestion = 'Your distress is high. Consider the 5-4-3-2-1 grounding technique or reaching out to a safe person.';
-  } else if (entry.distressLevel <= 3) {
-    copingSuggestion = 'Your distress is manageable. This is a good moment to notice what helped you stay grounded.';
+  if (safetyAssessment && safetyAssessment.level === 'crisis') {
+    summary = `What you're going through sounds incredibly painful. Writing about it takes courage, and your feelings are real and valid.`;
+    copingSuggestion = `Right now, the most important thing is your safety. If you're having thoughts of hurting yourself, please reach out to the ${CRISIS_RESOURCES.hotline988.name} — ${CRISIS_RESOURCES.hotline988.action}. You can also try placing your feet on the ground and taking three slow breaths.`;
+  } else if (safetyAssessment && safetyAssessment.level === 'high_risk') {
+    summary = `You expressed ${primary.toLowerCase()}`;
+    if (trigger) summary += ` connected to "${trigger}"`;
+    summary += '. This sounds really heavy. You showed strength by putting it into words.';
+    copingSuggestion = `Your distress is very high right now. Try the 5-4-3-2-1 grounding technique: name 5 things you can see, 4 you can touch, 3 you can hear, 2 you can smell, and 1 you can taste. If it feels like too much, reaching out to someone you trust — or the ${CRISIS_RESOURCES.hotline988.name} (${CRISIS_RESOURCES.hotline988.action}) — is a strong choice.`;
+  } else {
+    summary = `You expressed ${primary.toLowerCase()}`;
+    if (trigger) summary += ` connected to "${trigger}"`;
+    summary += '. Taking the time to write about this is a meaningful step toward understanding your emotional patterns.';
+
+    copingSuggestion = 'Try grounding yourself with slow breathing for a few minutes.';
+    if (entry.distressLevel >= 7) {
+      copingSuggestion = 'Your distress is high. Consider the 5-4-3-2-1 grounding technique or reaching out to a safe person.';
+    } else if (entry.distressLevel <= 3) {
+      copingSuggestion = 'Your distress is manageable. This is a good moment to notice what helped you stay grounded.';
+    }
   }
 
   return {

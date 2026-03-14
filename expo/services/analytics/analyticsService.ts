@@ -357,6 +357,13 @@ export async function trackAppLifecycle(
   return analyticsEngine.trackEvent(action === 'opened' ? 'app_opened' : action === 'backgrounded' ? 'app_backgrounded' : `session_${action.replace('session_', '')}`, properties);
 }
 
+export async function trackSafetyEvent(
+  action: 'concern_detected' | 'intervention_shown' | 'crisis_resource_tapped' | 'grounding_suggested' | 'output_blocked' | 'output_augmented',
+  properties?: Record<string, string | number | boolean>,
+): Promise<void> {
+  return analyticsEngine.trackEvent(`safety_${action}`, properties);
+}
+
 export async function trackError(
   errorType: string,
   screen: string,

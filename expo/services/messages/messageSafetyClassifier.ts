@@ -6,6 +6,8 @@ import {
   FlaggedContent,
   SafeRewriteType,
 } from '@/types/messageRisk';
+import { assessInputSafety } from '@/services/ai/aiSafetyService';
+import { SafetyAssessment } from '@/types/aiSafety';
 
 const PROFANITY_AT_PERSON = [
   /\bgo\s+fuck\s+(yourself|urself|off)\b/i,
@@ -116,8 +118,13 @@ function makeDimension(score: number, label: string): SafetyDimension {
   return { score: Math.min(score, 10), label, detected: score > 0 };
 }
 
-export function classifyMessageSafety(draft: string): MessageSafetyClassification {
+export function classifyMessageSafety(draft: string): MessageSafetyClassification & { userSafetyAssessment?: SafetyAssessment } {
   console.log('[SafetyClassifier] Classifying draft, length:', draft.length);
+
+  const userSafetyAssessment = assessInputSafety(draft);
+  if (userSafetyAssessment.level !== 'safe') {
+    console.log('[SafetyClassifier] User safety concern detected in draft:', userSafetyAssessment.level, userSafetyAssessment.signals.map(s => s.type).join(', '));
+  }
 
   const text = draft.trim();
   const wordCount = text.split(/\s+/).length;
@@ -265,6 +272,7 @@ export function classifyMessageSafety(draft: string): MessageSafetyClassificatio
     dimensions,
     flaggedContent,
     safeRewriteTypes,
+    userSafetyAssessment: userSafetyAssessment.level !== 'safe' ? userSafetyAssessment : undefined,
   };
 }
 

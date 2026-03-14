@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,200 +9,291 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Anchor, Heart, Eye, ArrowRightLeft, Clock, Brain, ChevronRight, Zap, HeartHandshake, Sprout } from 'lucide-react-native';
+import {
+  Wind,
+  MessageCircle,
+  HeartCrack,
+  ShieldOff,
+  Eye as EyeIcon,
+  Zap,
+  Brain,
+  Anchor,
+  ChevronRight,
+  Sparkles,
+  Shield,
+  Activity,
+  Search,
+  Bookmark,
+  Sprout,
+  HeartHandshake,
+  Clock,
+} from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
-import { COPING_EXERCISES } from '@/constants/data';
-import { CopingCategory } from '@/types';
+import { QUICK_ACCESS_TOOLS } from '@/data/quickAccessTools';
+import { getRecentlyUsedTools, getMostHelpfulTools } from '@/services/tools/toolOutcomeService';
 
-const CATEGORY_CONFIG: Record<CopingCategory, {
-  label: string;
-  icon: React.ReactNode;
-  color: string;
-  bg: string;
-  description: string;
-}> = {
-  'grounding': {
-    label: 'Grounding',
-    icon: <Anchor size={20} color={Colors.primary} />,
-    color: Colors.primary,
-    bg: Colors.primaryLight,
-    description: 'Anchor yourself in the present moment',
-  },
-  'self-soothing': {
-    label: 'Self-Soothing',
-    icon: <Heart size={20} color="#C77DBA" />,
-    color: '#C77DBA',
-    bg: '#F5E6F3',
-    description: 'Comfort and care for yourself',
-  },
-  'reality-check': {
-    label: 'Reality Check',
-    icon: <Eye size={20} color={Colors.accent} />,
-    color: Colors.accent,
-    bg: Colors.accentLight,
-    description: 'Separate facts from stories',
-  },
-  'opposite-action': {
-    label: 'Opposite Action',
-    icon: <ArrowRightLeft size={20} color="#5B8FB9" />,
-    color: '#5B8FB9',
-    bg: '#E3EFF7',
-    description: 'Act against unhelpful urges',
-  },
+const ICON_MAP: Record<string, React.ComponentType<{ size: number; color: string }>> = {
+  Wind,
+  MessageCircle,
+  HeartCrack,
+  ShieldOff,
+  Eye: EyeIcon,
+  Zap,
+  Brain,
+  Anchor,
 };
 
-const CATEGORIES: CopingCategory[] = ['grounding', 'self-soothing', 'reality-check', 'opposite-action'];
+interface RecentTool {
+  toolId: string;
+  toolType: string;
+  timestamp: number;
+}
+
+interface HelpfulTool {
+  toolId: string;
+  toolType: string;
+  helpRate: number;
+  uses: number;
+}
 
 export default function ToolsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const [recentTools, setRecentTools] = useState<RecentTool[]>([]);
+  const [_helpfulTools, setHelpfulTools] = useState<HelpfulTool[]>([]);
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
-      duration: 500,
+      duration: 400,
       useNativeDriver: true,
     }).start();
   }, [fadeAnim]);
+
+  useEffect(() => {
+    getRecentlyUsedTools(3).then(tools => {
+      setRecentTools(tools.map(t => ({ toolId: t.toolId, toolType: t.toolType, timestamp: t.timestamp })));
+    }).catch(e => console.log('[Tools] Error loading recent:', e));
+
+    getMostHelpfulTools(3).then(setHelpfulTools).catch(e => console.log('[Tools] Error loading helpful:', e));
+  }, []);
+
+  const handleQuickAccess = useCallback((route: string) => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.push(route as never);
+  }, [router]);
+
+  const handleNav = useCallback((route: string) => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push(route as never);
+  }, [router]);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
         <View style={styles.header}>
-          <Text style={styles.title}>Coping Tools</Text>
-          <Text style={styles.subtitle}>DBT-informed skills for when things feel hard</Text>
+          <Text style={styles.title}>Tools</Text>
+          <Text style={styles.subtitle}>What do you need right now?</Text>
         </View>
 
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
+          <View style={styles.quickAccessGrid}>
+            {QUICK_ACCESS_TOOLS.map(tool => {
+              const IconComp = ICON_MAP[tool.iconName];
+              return (
+                <TouchableOpacity
+                  key={tool.id}
+                  style={[styles.quickCard, { backgroundColor: tool.bgColor }]}
+                  onPress={() => handleQuickAccess(tool.route)}
+                  activeOpacity={0.7}
+                  testID={`quick-${tool.id}`}
+                >
+                  <View style={[styles.quickIconWrap, { backgroundColor: tool.color + '20' }]}>
+                    {IconComp && <IconComp size={18} color={tool.color} />}
+                  </View>
+                  <Text style={[styles.quickLabel, { color: tool.color }]} numberOfLines={1}>
+                    {tool.label}
+                  </Text>
+                  <Text style={styles.quickSublabel} numberOfLines={1}>
+                    {tool.sublabel}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
           <TouchableOpacity
-            style={styles.dbtCoachCard}
-            onPress={() => {
-              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              router.push('/tools/dbt-coach' as never);
-            }}
+            style={styles.matcherCard}
+            onPress={() => handleNav('/tools/tool-matcher')}
             activeOpacity={0.7}
-            testID="dbt-coach-card"
+            testID="tool-matcher-card"
           >
-            <View style={styles.dbtCoachLeft}>
-              <View style={styles.dbtCoachIcon}>
-                <Brain size={22} color={Colors.white} />
+            <View style={styles.matcherLeft}>
+              <View style={styles.matcherIcon}>
+                <Sparkles size={20} color={Colors.white} />
               </View>
-              <View style={styles.dbtCoachInfo}>
-                <Text style={styles.dbtCoachTitle}>DBT Coach</Text>
-                <Text style={styles.dbtCoachDesc}>Personalized skill guidance with step-by-step exercises</Text>
+              <View style={styles.matcherInfo}>
+                <Text style={styles.matcherTitle}>Find the Right Tool</Text>
+                <Text style={styles.matcherDesc}>Tell us how you feel and we'll match you with what helps</Text>
               </View>
             </View>
-            <ChevronRight size={20} color={Colors.white} />
+            <ChevronRight size={18} color="rgba(255,255,255,0.7)" />
+          </TouchableOpacity>
+
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Skill Libraries</Text>
+          </View>
+
+          <View style={styles.libraryGrid}>
+            <TouchableOpacity
+              style={styles.libraryCard}
+              onPress={() => handleNav('/tools/dbt-coach')}
+              activeOpacity={0.7}
+              testID="dbt-library-card"
+            >
+              <View style={[styles.libraryIcon, { backgroundColor: '#FDE8E3' }]}>
+                <Shield size={20} color="#E17055" />
+              </View>
+              <Text style={styles.libraryTitle}>DBT Skills</Text>
+              <Text style={styles.libraryDesc}>17 guided exercises</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.libraryCard}
+              onPress={() => handleNav('/tools/mentalization')}
+              activeOpacity={0.7}
+              testID="mbt-library-card"
+            >
+              <View style={[styles.libraryIcon, { backgroundColor: '#F0ECF7' }]}>
+                <Search size={20} color="#9B8EC4" />
+              </View>
+              <Text style={styles.libraryTitle}>Perspective</Text>
+              <Text style={styles.libraryDesc}>MBT-style tools</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.libraryCard}
+              onPress={() => handleNav('/tools/relationship-recovery')}
+              activeOpacity={0.7}
+              testID="rr-library-card"
+            >
+              <View style={[styles.libraryIcon, { backgroundColor: '#F5E0E0' }]}>
+                <HeartCrack size={20} color="#C47878" />
+              </View>
+              <Text style={styles.libraryTitle}>Recovery</Text>
+              <Text style={styles.libraryDesc}>Post-conflict support</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.libraryCard}
+              onPress={() => handleNav('/tools/body-regulation')}
+              activeOpacity={0.7}
+              testID="body-library-card"
+            >
+              <View style={[styles.libraryIcon, { backgroundColor: '#E8F4F4' }]}>
+                <Activity size={20} color="#4A8B8D" />
+              </View>
+              <Text style={styles.libraryTitle}>Body</Text>
+              <Text style={styles.libraryDesc}>Physical regulation</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>More Tools</Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.featureCard}
+            onPress={() => handleNav('/tools/playbook')}
+            activeOpacity={0.7}
+            testID="playbook-card"
+          >
+            <View style={styles.featureLeft}>
+              <View style={[styles.featureIcon, { backgroundColor: Colors.accentLight }]}>
+                <Bookmark size={18} color={Colors.accent} />
+              </View>
+              <View style={styles.featureInfo}>
+                <Text style={styles.featureTitle}>My Playbook</Text>
+                <Text style={styles.featureDesc}>Tools that work best for you</Text>
+              </View>
+            </View>
+            <ChevronRight size={18} color={Colors.textMuted} />
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.simulatorCard}
-            onPress={() => {
-              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              router.push('/companion/simulator' as never);
-            }}
+            style={styles.featureCard}
+            onPress={() => handleNav('/companion/simulator' as never)}
             activeOpacity={0.7}
             testID="simulator-card"
           >
-            <View style={styles.simulatorLeft}>
-              <View style={styles.simulatorIcon}>
-                <Zap size={20} color={Colors.accent} />
+            <View style={styles.featureLeft}>
+              <View style={[styles.featureIcon, { backgroundColor: '#E3EFF7' }]}>
+                <Zap size={18} color="#5B8FB9" />
               </View>
-              <View style={styles.simulatorInfo}>
-                <Text style={styles.simulatorTitle}>Response Simulator</Text>
-                <Text style={styles.simulatorDesc}>Explore how different reactions might play out</Text>
+              <View style={styles.featureInfo}>
+                <Text style={styles.featureTitle}>Response Simulator</Text>
+                <Text style={styles.featureDesc}>Explore how different reactions play out</Text>
               </View>
             </View>
-            <ChevronRight size={18} color={Colors.accent} />
+            <ChevronRight size={18} color={Colors.textMuted} />
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.growthCard}
-            onPress={() => {
-              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              router.push('/my-growth' as never);
-            }}
+            style={styles.featureCard}
+            onPress={() => handleNav('/my-growth' as never)}
             activeOpacity={0.7}
             testID="growth-card"
           >
-            <View style={styles.growthLeft}>
-              <View style={styles.growthIcon}>
-                <Sprout size={20} color="#6B9080" />
+            <View style={styles.featureLeft}>
+              <View style={[styles.featureIcon, { backgroundColor: '#E3EDE8' }]}>
+                <Sprout size={18} color="#6B9080" />
               </View>
-              <View style={styles.growthInfo}>
-                <Text style={styles.growthTitle}>My Growth</Text>
-                <Text style={styles.growthDesc}>Values, strengths, identity reflections & growth signals</Text>
+              <View style={styles.featureInfo}>
+                <Text style={styles.featureTitle}>My Growth</Text>
+                <Text style={styles.featureDesc}>Values, strengths & identity reflections</Text>
               </View>
             </View>
-            <ChevronRight size={18} color="#6B9080" />
+            <ChevronRight size={18} color={Colors.textMuted} />
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.relationshipCard}
-            onPress={() => {
-              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              router.push('/relationship-profiles' as never);
-            }}
+            style={styles.featureCard}
+            onPress={() => handleNav('/relationship-profiles' as never)}
             activeOpacity={0.7}
             testID="relationship-card"
           >
-            <View style={styles.relationshipLeft}>
-              <View style={styles.relationshipIcon}>
-                <HeartHandshake size={20} color="#E84393" />
+            <View style={styles.featureLeft}>
+              <View style={[styles.featureIcon, { backgroundColor: '#FFF5F9' }]}>
+                <HeartHandshake size={18} color="#E84393" />
               </View>
-              <View style={styles.relationshipInfo}>
-                <Text style={styles.relationshipTitle}>Relationship Support</Text>
-                <Text style={styles.relationshipDesc}>Profiles, copilot, spiral guard, and insights</Text>
+              <View style={styles.featureInfo}>
+                <Text style={styles.featureTitle}>Relationship Support</Text>
+                <Text style={styles.featureDesc}>Profiles, copilot & spiral guard</Text>
               </View>
             </View>
-            <ChevronRight size={18} color="#E84393" />
+            <ChevronRight size={18} color={Colors.textMuted} />
           </TouchableOpacity>
 
-          {CATEGORIES.map(category => {
-            const config = CATEGORY_CONFIG[category];
-            const exercises = COPING_EXERCISES.filter(e => e.category === category);
-
-            return (
-              <View key={category} style={styles.categorySection}>
-                <View style={styles.categoryHeader}>
-                  <View style={[styles.categoryIconWrap, { backgroundColor: config.bg }]}>
-                    {config.icon}
-                  </View>
-                  <View style={styles.categoryInfo}>
-                    <Text style={styles.categoryLabel}>{config.label}</Text>
-                    <Text style={styles.categoryDesc}>{config.description}</Text>
-                  </View>
-                </View>
-
-                <View style={styles.exerciseList}>
-                  {exercises.map(exercise => (
-                    <TouchableOpacity
-                      key={exercise.id}
-                      style={styles.exerciseCard}
-                      onPress={() => router.push(`/exercise?id=${exercise.id}`)}
-                      activeOpacity={0.7}
-                    >
-                      <View style={styles.exerciseContent}>
-                        <Text style={styles.exerciseTitle}>{exercise.title}</Text>
-                        <Text style={styles.exerciseDesc} numberOfLines={2}>
-                          {exercise.description}
-                        </Text>
-                      </View>
-                      <View style={styles.exerciseMeta}>
-                        <Clock size={12} color={Colors.textMuted} />
-                        <Text style={styles.exerciseDuration}>{exercise.duration}</Text>
-                      </View>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+          {recentTools.length > 0 && (
+            <>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Recently Used</Text>
               </View>
-            );
-          })}
+              {recentTools.map(tool => (
+                <View key={tool.toolId} style={styles.recentChip}>
+                  <Clock size={14} color={Colors.textMuted} />
+                  <Text style={styles.recentText}>{tool.toolId}</Text>
+                </View>
+              ))}
+            </>
+          )}
+
+          <View style={{ height: 24 }} />
         </ScrollView>
       </Animated.View>
     </View>
@@ -217,242 +308,187 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 22,
     paddingTop: 16,
-    paddingBottom: 8,
+    paddingBottom: 4,
   },
   title: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: '700' as const,
     color: Colors.brandNavy,
     letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 13,
+    fontSize: 15,
     color: Colors.brandTeal,
     marginTop: 4,
     fontWeight: '500' as const,
   },
   scrollContent: {
     paddingHorizontal: 22,
-    paddingTop: 16,
+    paddingTop: 20,
     paddingBottom: 32,
   },
-  categorySection: {
-    marginBottom: 28,
-  },
-  categoryHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 14,
-  },
-  categoryIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  categoryInfo: {
-    flex: 1,
-  },
-  categoryLabel: {
-    fontSize: 17,
-    fontWeight: '700' as const,
-    color: Colors.text,
-  },
-  categoryDesc: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    marginTop: 1,
-  },
-  exerciseList: {
+  quickAccessGrid: {
+    flexDirection: 'row' as const,
+    flexWrap: 'wrap' as const,
     gap: 10,
+    marginBottom: 20,
   },
-  exerciseCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 14,
-    padding: 16,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 1,
-    shadowRadius: 4,
-    elevation: 1,
+  quickCard: {
+    width: '48%' as unknown as number,
+    flexGrow: 1,
+    flexBasis: '47%' as unknown as number,
+    borderRadius: 16,
+    padding: 14,
+    minHeight: 96,
   },
-  exerciseContent: {
+  quickIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
     marginBottom: 8,
   },
-  exerciseTitle: {
-    fontSize: 15,
-    fontWeight: '600' as const,
-    color: Colors.text,
-    marginBottom: 4,
+  quickLabel: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    marginBottom: 2,
   },
-  exerciseDesc: {
-    fontSize: 13,
+  quickSublabel: {
+    fontSize: 11,
     color: Colors.textSecondary,
-    lineHeight: 19,
+    lineHeight: 15,
   },
-  exerciseMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  exerciseDuration: {
-    fontSize: 12,
-    color: Colors.textMuted,
-  },
-  dbtCoachCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  matcherCard: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
     backgroundColor: Colors.brandNavy,
-    borderRadius: 20,
+    borderRadius: 18,
     padding: 18,
     marginBottom: 28,
   },
-  dbtCoachLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  matcherLeft: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
     gap: 14,
     flex: 1,
   },
-  dbtCoachIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
+  matcherIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
   },
-  dbtCoachInfo: {
+  matcherInfo: {
     flex: 1,
   },
-  dbtCoachTitle: {
-    fontSize: 18,
+  matcherTitle: {
+    fontSize: 17,
     fontWeight: '700' as const,
     color: Colors.white,
     marginBottom: 3,
   },
-  dbtCoachDesc: {
+  matcherDesc: {
     fontSize: 13,
-    color: 'rgba(255,255,255,0.8)',
+    color: 'rgba(255,255,255,0.75)',
     lineHeight: 18,
   },
-  simulatorCard: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'space-between' as const,
-    backgroundColor: Colors.accentLight,
-    borderRadius: 18,
-    padding: 18,
-    marginBottom: 28,
-    borderWidth: 1,
-    borderColor: Colors.accent + '30',
+  sectionHeader: {
+    marginBottom: 14,
   },
-  simulatorLeft: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 14,
-    flex: 1,
-  },
-  simulatorIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    backgroundColor: Colors.accent + '20',
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-  },
-  simulatorInfo: {
-    flex: 1,
-  },
-  simulatorTitle: {
-    fontSize: 17,
+  sectionTitle: {
+    fontSize: 18,
     fontWeight: '700' as const,
     color: Colors.text,
-    marginBottom: 3,
+    letterSpacing: -0.3,
   },
-  simulatorDesc: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    lineHeight: 18,
+  libraryGrid: {
+    flexDirection: 'row' as const,
+    flexWrap: 'wrap' as const,
+    gap: 10,
+    marginBottom: 28,
   },
-  growthCard: {
+  libraryCard: {
+    width: '48%' as unknown as number,
+    flexGrow: 1,
+    flexBasis: '47%' as unknown as number,
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+  },
+  libraryIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    marginBottom: 10,
+  },
+  libraryTitle: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: Colors.text,
+    marginBottom: 2,
+  },
+  libraryDesc: {
+    fontSize: 12,
+    color: Colors.textMuted,
+  },
+  featureCard: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'space-between' as const,
-    backgroundColor: '#E3EDE8',
-    borderRadius: 18,
-    padding: 18,
-    marginBottom: 28,
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#C8DDD2',
+    borderColor: Colors.borderLight,
   },
-  growthLeft: {
+  featureLeft: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     gap: 14,
     flex: 1,
   },
-  growthIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    backgroundColor: '#D4E8DC',
+  featureIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
-  growthInfo: {
+  featureInfo: {
     flex: 1,
   },
-  growthTitle: {
-    fontSize: 17,
-    fontWeight: '700' as const,
-    color: '#507A66',
-    marginBottom: 3,
+  featureTitle: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: Colors.text,
+    marginBottom: 2,
   },
-  growthDesc: {
+  featureDesc: {
     fontSize: 13,
     color: Colors.textSecondary,
-    lineHeight: 18,
   },
-  relationshipCard: {
+  recentChip: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    justifyContent: 'space-between' as const,
-    backgroundColor: '#FFF5F9',
-    borderRadius: 18,
-    padding: 18,
-    marginBottom: 28,
+    gap: 8,
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#F8D7E8',
+    borderColor: Colors.borderLight,
   },
-  relationshipLeft: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 14,
-    flex: 1,
-  },
-  relationshipIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    backgroundColor: '#FFEDF5',
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-  },
-  relationshipInfo: {
-    flex: 1,
-  },
-  relationshipTitle: {
-    fontSize: 17,
-    fontWeight: '700' as const,
-    color: '#C23876',
-    marginBottom: 3,
-  },
-  relationshipDesc: {
-    fontSize: 13,
+  recentText: {
+    fontSize: 14,
     color: Colors.textSecondary,
-    lineHeight: 18,
   },
 });

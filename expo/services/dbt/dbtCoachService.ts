@@ -6,7 +6,7 @@ export async function getDBTProgress(): Promise<DBTProgress> {
   try {
     return await dbtRepository.getProgress();
   } catch (error) {
-    console.log('Error loading DBT progress:', error);
+    console.log('[DBTCoach] Error loading DBT progress:', error);
     return DEFAULT_DBT_PROGRESS;
   }
 }
@@ -15,7 +15,7 @@ export async function saveDBTProgress(progress: DBTProgress): Promise<void> {
   try {
     await dbtRepository.saveProgress(progress);
   } catch (error) {
-    console.log('Error saving DBT progress:', error);
+    console.log('[DBTCoach] Error saving DBT progress:', error);
   }
 }
 
@@ -45,8 +45,10 @@ export function searchSkills(query: string): DBTSkill[] {
   return DBT_SKILLS.filter(
     s =>
       s.title.toLowerCase().includes(lower) ||
+      s.subtitle.toLowerCase().includes(lower) ||
       s.description.toLowerCase().includes(lower) ||
-      s.tags.some(t => t.toLowerCase().includes(lower))
+      s.tags.some(t => t.toLowerCase().includes(lower)) ||
+      (s.situationalTags ?? []).some(t => t.toLowerCase().includes(lower))
   );
 }
 
@@ -64,6 +66,7 @@ export async function markSkillPracticed(skillId: string, progress: DBTProgress)
     totalPractices: progress.totalPractices + 1,
   };
   await saveDBTProgress(updated);
+  console.log('[DBTCoach] Marked skill practiced:', skillId, 'total:', updated.totalPractices);
   return updated;
 }
 
@@ -76,6 +79,7 @@ export async function toggleFavoriteSkill(skillId: string, progress: DBTProgress
       : [...progress.favoriteSkills, skillId],
   };
   await saveDBTProgress(updated);
+  console.log('[DBTCoach] Toggled favorite:', skillId, 'isFavorite:', !isFavorite);
   return updated;
 }
 
@@ -98,6 +102,24 @@ export function getRecommendedSkills(
       reason: 'STOP can help prevent impulsive reactions during intense moments.',
       priority: 9,
     });
+    recommendations.push({
+      skillId: 'dt-temperature-reset',
+      reason: 'Cold exposure is the fastest way to lower emotional intensity.',
+      priority: 9,
+    });
+  }
+
+  if (distressIntensity >= 5 && distressIntensity < 7) {
+    recommendations.push({
+      skillId: 'dt-improve',
+      reason: 'IMPROVE the moment can make this distress more bearable.',
+      priority: 7,
+    });
+    recommendations.push({
+      skillId: 'er-wave',
+      reason: 'Ride the wave — this emotion will crest and fall.',
+      priority: 6,
+    });
   }
 
   const hasAbandonmentTriggers = recentTriggers.some(t =>
@@ -113,6 +135,11 @@ export function getRecommendedSkills(
       skillId: 'ie-validation',
       reason: 'Validating your own feelings of abandonment can reduce their intensity.',
       priority: 7,
+    });
+    recommendations.push({
+      skillId: 'ie-ask-reassurance',
+      reason: 'Asking for reassurance directly is more effective than testing.',
+      priority: 6,
     });
   }
 
@@ -130,6 +157,11 @@ export function getRecommendedSkills(
       reason: 'GIVE skills help maintain the relationship while expressing needs.',
       priority: 7,
     });
+    recommendations.push({
+      skillId: 'ie-repair-after-conflict',
+      reason: 'Repair skills help rebuild connection after ruptures.',
+      priority: 6,
+    });
   }
 
   const hasAngerEmotions = recentEmotions.some(e =>
@@ -140,6 +172,27 @@ export function getRecommendedSkills(
       skillId: 'er-opposite-action',
       reason: 'Opposite action is especially effective for managing anger urges.',
       priority: 8,
+    });
+    recommendations.push({
+      skillId: 'mf-effectiveness',
+      reason: 'Focus on what works, not what feels right in the moment.',
+      priority: 6,
+    });
+  }
+
+  const hasShame = recentEmotions.some(e =>
+    e.toLowerCase().includes('shame') || e.toLowerCase().includes('guilt') || e.toLowerCase().includes('worthless')
+  );
+  if (hasShame) {
+    recommendations.push({
+      skillId: 'mf-non-judgmental',
+      reason: 'Non-judgmental stance helps separate actions from identity.',
+      priority: 8,
+    });
+    recommendations.push({
+      skillId: 'er-opposite-action',
+      reason: 'When shame says hide, opposite action says share or connect.',
+      priority: 7,
     });
   }
 
@@ -153,8 +206,8 @@ export function getRecommendedSkills(
       priority: 7,
     });
     recommendations.push({
-      skillId: 'er-abc-please',
-      reason: 'Building positive experiences can help counter persistent sadness.',
+      skillId: 'er-build-positives',
+      reason: 'Building positive experiences helps counter persistent low mood.',
       priority: 6,
     });
   }
@@ -169,8 +222,13 @@ export function getRecommendedSkills(
       priority: 9,
     });
     recommendations.push({
-      skillId: 'dt-pros-cons',
-      reason: 'Weighing pros and cons helps engage your rational mind before acting.',
+      skillId: 'dt-urge-surfing',
+      reason: 'Ride the urge like a wave — it will peak and fall within minutes.',
+      priority: 8,
+    });
+    recommendations.push({
+      skillId: 'dt-ten-minute-pause',
+      reason: 'Most urges weaken significantly within 10 minutes.',
       priority: 7,
     });
   }
@@ -185,8 +243,8 @@ export function getRecommendedSkills(
       priority: 7,
     });
     recommendations.push({
-      skillId: 'mf-one-mindfully',
-      reason: 'One-mindfully practice helps calm racing thoughts and anxiety.',
+      skillId: 'er-cope-ahead',
+      reason: 'Planning ahead reduces the surprise power of anxiety-triggering situations.',
       priority: 6,
     });
   }
@@ -198,9 +256,14 @@ export function getRecommendedSkills(
       priority: 5,
     });
     recommendations.push({
+      skillId: 'er-name-emotion',
+      reason: 'Naming emotions precisely is the foundation of emotional regulation.',
+      priority: 4,
+    });
+    recommendations.push({
       skillId: 'mf-wise-mind',
       reason: 'Wise mind practice helps you stay centered and balanced.',
-      priority: 4,
+      priority: 3,
     });
   }
 
@@ -214,11 +277,18 @@ export function getRecommendedSkills(
 
   return Array.from(uniqueMap.values())
     .sort((a, b) => b.priority - a.priority)
-    .slice(0, 3);
+    .slice(0, 4);
 }
 
 export function getModuleProgress(moduleId: DBTModule, progress: DBTProgress): { practiced: number; total: number } {
   const skills = getSkillsByModule(moduleId);
   const practiced = skills.filter(s => (progress.completedSkills[s.id] || 0) > 0).length;
   return { practiced, total: skills.length };
+}
+
+export function getSkillsBySituation(situationTags: string[]): DBTSkill[] {
+  if (situationTags.length === 0) return [];
+  return DBT_SKILLS.filter(s =>
+    (s.situationalTags ?? []).some(tag => situationTags.includes(tag))
+  );
 }

@@ -19,6 +19,7 @@ import {
   ChevronRight,
   Star,
   CheckCircle2,
+  Zap,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
@@ -61,7 +62,7 @@ export default function DBTModuleScreen() {
   }, [fadeAnim]);
 
   useEffect(() => {
-    getDBTProgress().then(setProgress).catch(e => console.log('Error loading progress:', e));
+    getDBTProgress().then(setProgress).catch(e => console.log('[DBTModule] Error loading progress:', e));
   }, []);
 
   const handleSkillPress = useCallback((skillId: string) => {
@@ -78,6 +79,7 @@ export default function DBTModuleScreen() {
   }
 
   const IconComponent = MODULE_ICONS[module.iconName];
+  const practicedCount = skills.filter(s => (progress.completedSkills[s.id] || 0) > 0).length;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -106,16 +108,22 @@ export default function DBTModuleScreen() {
               <Text style={styles.bannerStatText}>{skills.length} skills</Text>
               <View style={styles.bannerStatDot} />
               <Text style={styles.bannerStatText}>
-                {skills.filter(s => (progress.completedSkills[s.id] || 0) > 0).length} practiced
+                {practicedCount} practiced
               </Text>
             </View>
+          </View>
+
+          <View style={styles.filterRow}>
+            <Text style={styles.filterLabel}>{skills.length} skills available</Text>
           </View>
 
           <View style={styles.skillsList}>
             {skills.map((skill, index) => {
               const practiced = (progress.completedSkills[skill.id] || 0) > 0;
               const isFavorite = progress.favoriteSkills.includes(skill.id);
-              const diffStyle = DIFFICULTY_COLORS[skill.difficulty];
+              const diffStyle = DIFFICULTY_COLORS[skill.difficulty] ?? { bg: Colors.surface, text: Colors.textSecondary };
+              const hasQuick = skill.quickSteps && skill.quickSteps.length > 0;
+              const practiceCount = progress.completedSkills[skill.id] || 0;
 
               return (
                 <TouchableOpacity
@@ -136,7 +144,7 @@ export default function DBTModuleScreen() {
                       </View>
                       <View style={styles.skillInfo}>
                         <View style={styles.skillTitleRow}>
-                          <Text style={styles.skillTitle}>{skill.title}</Text>
+                          <Text style={styles.skillTitle} numberOfLines={1}>{skill.title}</Text>
                           {isFavorite && <Star size={14} color="#E8A838" fill="#E8A838" />}
                         </View>
                         <Text style={styles.skillSubtitle} numberOfLines={2}>{skill.subtitle}</Text>
@@ -152,9 +160,15 @@ export default function DBTModuleScreen() {
                       <Clock size={12} color={Colors.textMuted} />
                       <Text style={styles.durationText}>{skill.duration}</Text>
                     </View>
-                    {practiced && (
+                    {hasQuick && (
+                      <View style={styles.quickBadge}>
+                        <Zap size={10} color={Colors.accent} />
+                        <Text style={styles.quickText}>Quick mode</Text>
+                      </View>
+                    )}
+                    {practiceCount > 0 && (
                       <Text style={styles.practiceCount}>
-                        {progress.completedSkills[skill.id]}x practiced
+                        {practiceCount}x
                       </Text>
                     )}
                   </View>
@@ -174,8 +188,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 8,
@@ -185,8 +199,8 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 12,
     backgroundColor: Colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -195,15 +209,15 @@ const styles = StyleSheet.create({
   moduleBanner: {
     borderRadius: 20,
     padding: 24,
-    alignItems: 'center',
-    marginBottom: 24,
+    alignItems: 'center' as const,
+    marginBottom: 20,
   },
   bannerIcon: {
     width: 64,
     height: 64,
     borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
     marginBottom: 16,
   },
   bannerTitle: {
@@ -220,8 +234,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   bannerStats: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
     gap: 10,
   },
   bannerStatText: {
@@ -235,6 +249,17 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: Colors.textMuted,
   },
+  filterRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    marginBottom: 14,
+  },
+  filterLabel: {
+    fontSize: 13,
+    color: Colors.textMuted,
+    fontWeight: '500' as const,
+  },
   skillsList: {
     gap: 10,
   },
@@ -246,14 +271,14 @@ const styles = StyleSheet.create({
     borderColor: Colors.borderLight,
   },
   skillCardTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
     marginBottom: 12,
   },
   skillCardLeft: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: 'row' as const,
+    alignItems: 'flex-start' as const,
     gap: 12,
     flex: 1,
   },
@@ -262,8 +287,8 @@ const styles = StyleSheet.create({
     height: 28,
     borderRadius: 14,
     backgroundColor: Colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
     marginTop: 2,
   },
   skillNumberText: {
@@ -275,8 +300,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   skillTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
     gap: 6,
     marginBottom: 4,
   },
@@ -284,6 +309,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600' as const,
     color: Colors.text,
+    flex: 1,
   },
   skillSubtitle: {
     fontSize: 13,
@@ -291,9 +317,10 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   skillCardBottom: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
     gap: 10,
+    flexWrap: 'wrap' as const,
   },
   diffBadge: {
     paddingHorizontal: 10,
@@ -306,13 +333,27 @@ const styles = StyleSheet.create({
     textTransform: 'capitalize' as const,
   },
   durationBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
     gap: 4,
   },
   durationText: {
     fontSize: 12,
     color: Colors.textMuted,
+  },
+  quickBadge: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 3,
+    backgroundColor: Colors.accentLight,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  quickText: {
+    fontSize: 10,
+    fontWeight: '600' as const,
+    color: Colors.accent,
   },
   practiceCount: {
     fontSize: 12,

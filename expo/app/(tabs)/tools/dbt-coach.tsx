@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Animated,
+  TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -18,13 +19,24 @@ import {
   Star,
   Zap,
   TrendingUp,
+  TrendingDown,
   Clock,
   Search,
   X,
+  MessageCircle,
+  HeartCrack,
+  ShieldOff,
+  Eye as EyeIcon,
+  Wind,
+  Heart,
+  Flame,
+  ChevronRight,
+  Award,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { DBTModuleInfo, DBTProgress, DBTRecommendation, DEFAULT_DBT_PROGRESS } from '@/types/dbt';
+import { DBT_SITUATIONAL_ENTRIES } from '@/data/dbtSkills';
 import {
   getModules,
   getRecommendedSkills,
@@ -33,8 +45,8 @@ import {
   getDBTProgress,
   searchSkills,
 } from '@/services/dbt/dbtCoachService';
+import { getBestSkillsForUser, getWeeklyStats } from '@/services/dbt/dbtPracticeService';
 import { useApp } from '@/providers/AppProvider';
-import { TextInput } from 'react-native';
 
 const MODULE_ICONS: Record<string, React.ComponentType<{ size: number; color: string }>> = {
   Shield,
@@ -43,6 +55,30 @@ const MODULE_ICONS: Record<string, React.ComponentType<{ size: number; color: st
   Brain,
 };
 
+const SITUATION_ICONS: Record<string, React.ComponentType<{ size: number; color: string }>> = {
+  MessageCircle,
+  HeartCrack,
+  ShieldOff,
+  Eye: EyeIcon,
+  Zap,
+  Flame,
+  Wind,
+  Heart,
+};
+
+interface BestSkill {
+  skillId: string;
+  score: number;
+  reason: string;
+}
+
+interface WeeklyStatsData {
+  practicesThisWeek: number;
+  skillsTried: number;
+  avgDistressReduction: number;
+  mostUsedSkill: string | null;
+}
+
 export default function DBTCoachScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -50,6 +86,8 @@ export default function DBTCoachScreen() {
   const [progress, setProgress] = useState<DBTProgress>(DEFAULT_DBT_PROGRESS);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [bestSkills, setBestSkills] = useState<BestSkill[]>([]);
+  const [weeklyStats, setWeeklyStats] = useState<WeeklyStatsData | null>(null);
   const { triggerPatterns, journalEntries } = useApp();
 
   useEffect(() => {
@@ -61,7 +99,9 @@ export default function DBTCoachScreen() {
   }, [fadeAnim]);
 
   useEffect(() => {
-    getDBTProgress().then(setProgress).catch(e => console.log('Error loading DBT progress:', e));
+    getDBTProgress().then(setProgress).catch(e => console.log('[DBTCoach] Error loading progress:', e));
+    getBestSkillsForUser().then(setBestSkills).catch(e => console.log('[DBTCoach] Error loading best skills:', e));
+    getWeeklyStats().then(setWeeklyStats).catch(e => console.log('[DBTCoach] Error loading weekly stats:', e));
   }, []);
 
   const modules = useMemo(() => getModules(), []);
@@ -90,6 +130,14 @@ export default function DBTCoachScreen() {
     router.push(`/tools/dbt-skill?skillId=${skillId}` as never);
   }, [router]);
 
+  const handleSituationPress = useCallback((situationId: string) => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const entry = DBT_SITUATIONAL_ENTRIES.find(e => e.id === situationId);
+    if (entry && entry.skillIds.length > 0) {
+      router.push(`/tools/dbt-skill?skillId=${entry.skillIds[0]}` as never);
+    }
+  }, [router]);
+
   const renderModuleCard = useCallback((module: DBTModuleInfo) => {
     const IconComponent = MODULE_ICONS[module.iconName];
     const { practiced, total } = getModuleProgress(module.id, progress);
@@ -109,8 +157,9 @@ export default function DBTCoachScreen() {
           </View>
           <View style={styles.moduleInfo}>
             <Text style={styles.moduleTitle}>{module.title}</Text>
-            <Text style={styles.moduleDesc} numberOfLines={2}>{module.description}</Text>
+            <Text style={styles.moduleDesc} numberOfLines={1}>{module.description}</Text>
           </View>
+          <ChevronRight size={16} color={Colors.textMuted} />
         </View>
         <View style={styles.moduleFooter}>
           <View style={styles.progressBarBg}>
@@ -142,7 +191,7 @@ export default function DBTCoachScreen() {
           </TouchableOpacity>
           <View style={styles.headerText}>
             <Text style={styles.title}>DBT Coach</Text>
-            <Text style={styles.subtitle}>Personalized skill guidance</Text>
+            <Text style={styles.subtitle}>{progress.totalPractices > 0 ? `${progress.totalPractices} practices completed` : 'Guided skill training'}</Text>
           </View>
         </View>
 
@@ -178,7 +227,7 @@ export default function DBTCoachScreen() {
               </View>
             ) : (
               searchResults.map(skill => {
-                const module = modules.find(m => m.id === skill.moduleId);
+                const mod = modules.find(m => m.id === skill.moduleId);
                 return (
                   <TouchableOpacity
                     key={skill.id}
@@ -187,10 +236,10 @@ export default function DBTCoachScreen() {
                     activeOpacity={0.7}
                   >
                     <View style={styles.searchResultLeft}>
-                      <View style={[styles.searchResultDot, { backgroundColor: module?.color ?? Colors.primary }]} />
+                      <View style={[styles.searchResultDot, { backgroundColor: mod?.color ?? Colors.primary }]} />
                       <View style={styles.searchResultInfo}>
                         <Text style={styles.searchResultTitle}>{skill.title}</Text>
-                        <Text style={styles.searchResultModule}>{module?.title ?? ''}</Text>
+                        <Text style={styles.searchResultModule}>{mod?.title ?? ''}</Text>
                       </View>
                     </View>
                     <View style={styles.searchResultMeta}>
@@ -207,6 +256,62 @@ export default function DBTCoachScreen() {
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>What's happening?</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.situationScroll}>
+                {DBT_SITUATIONAL_ENTRIES.map(entry => {
+                  const IconComp = SITUATION_ICONS[entry.iconName];
+                  return (
+                    <TouchableOpacity
+                      key={entry.id}
+                      style={[styles.situationCard, { backgroundColor: entry.bgColor }]}
+                      onPress={() => handleSituationPress(entry.id)}
+                      activeOpacity={0.7}
+                      testID={`situation-${entry.id}`}
+                    >
+                      <View style={[styles.situationIconWrap, { backgroundColor: entry.color + '20' }]}>
+                        {IconComp && <IconComp size={16} color={entry.color} />}
+                      </View>
+                      <Text style={[styles.situationLabel, { color: entry.color }]} numberOfLines={1}>{entry.label}</Text>
+                      <Text style={styles.situationSublabel} numberOfLines={1}>{entry.sublabel}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </View>
+
+            {weeklyStats && weeklyStats.practicesThisWeek > 0 && (
+              <View style={styles.weeklyCard}>
+                <View style={styles.weeklyHeader}>
+                  <TrendingUp size={16} color={Colors.primary} />
+                  <Text style={styles.weeklyTitle}>This Week</Text>
+                </View>
+                <View style={styles.weeklyStatsRow}>
+                  <View style={styles.weeklyStat}>
+                    <Text style={styles.weeklyStatValue}>{weeklyStats.practicesThisWeek}</Text>
+                    <Text style={styles.weeklyStatLabel}>Practices</Text>
+                  </View>
+                  <View style={styles.weeklyStatDivider} />
+                  <View style={styles.weeklyStat}>
+                    <Text style={styles.weeklyStatValue}>{weeklyStats.skillsTried}</Text>
+                    <Text style={styles.weeklyStatLabel}>Skills</Text>
+                  </View>
+                  {weeklyStats.avgDistressReduction > 0 && (
+                    <>
+                      <View style={styles.weeklyStatDivider} />
+                      <View style={styles.weeklyStat}>
+                        <View style={styles.weeklyReductionRow}>
+                          <TrendingDown size={12} color={Colors.success} />
+                          <Text style={[styles.weeklyStatValue, { color: Colors.success }]}>{weeklyStats.avgDistressReduction}</Text>
+                        </View>
+                        <Text style={styles.weeklyStatLabel}>Avg Reduction</Text>
+                      </View>
+                    </>
+                  )}
+                </View>
+              </View>
+            )}
+
             {recommendations.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
@@ -216,7 +321,7 @@ export default function DBTCoachScreen() {
                 {recommendations.map(rec => {
                   const skill = getSkillById(rec.skillId);
                   if (!skill) return null;
-                  const module = modules.find(m => m.id === skill.moduleId);
+                  const mod = modules.find(m => m.id === skill.moduleId);
                   return (
                     <TouchableOpacity
                       key={rec.skillId}
@@ -226,11 +331,16 @@ export default function DBTCoachScreen() {
                       testID={`rec-${rec.skillId}`}
                     >
                       <View style={styles.recCardTop}>
-                        <View style={[styles.recDot, { backgroundColor: module?.color ?? Colors.primary }]} />
+                        <View style={[styles.recDot, { backgroundColor: mod?.color ?? Colors.primary }]} />
                         <View style={styles.recInfo}>
                           <Text style={styles.recTitle}>{skill.title}</Text>
-                          <Text style={styles.recSubtitle}>{skill.subtitle}</Text>
+                          <Text style={styles.recSubtitle} numberOfLines={1}>{skill.subtitle}</Text>
                         </View>
+                        {skill.quickSteps && skill.quickSteps.length > 0 && (
+                          <View style={styles.quickChip}>
+                            <Zap size={10} color={Colors.accent} />
+                          </View>
+                        )}
                       </View>
                       <Text style={styles.recReason}>{rec.reason}</Text>
                     </TouchableOpacity>
@@ -239,11 +349,75 @@ export default function DBTCoachScreen() {
               </View>
             )}
 
+            {bestSkills.length > 0 && (
+              <View style={styles.section}>
+                <View style={styles.sectionHeader}>
+                  <Award size={16} color="#E8A838" />
+                  <Text style={styles.sectionTitle}>Best Skills for You</Text>
+                </View>
+                {bestSkills.slice(0, 3).map(best => {
+                  const skill = getSkillById(best.skillId);
+                  if (!skill) return null;
+                  const mod = modules.find(m => m.id === skill.moduleId);
+                  return (
+                    <TouchableOpacity
+                      key={best.skillId}
+                      style={styles.bestCard}
+                      onPress={() => handleSkillPress(best.skillId)}
+                      activeOpacity={0.7}
+                    >
+                      <View style={[styles.bestDot, { backgroundColor: mod?.color ?? Colors.primary }]} />
+                      <View style={styles.bestInfo}>
+                        <Text style={styles.bestTitle}>{skill.title}</Text>
+                        <Text style={styles.bestReason}>{best.reason}</Text>
+                      </View>
+                      <ChevronRight size={16} color={Colors.textMuted} />
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
+
+            {progress.favoriteSkills.length > 0 && (
+              <View style={styles.section}>
+                <View style={styles.sectionHeader}>
+                  <Star size={16} color="#E8A838" />
+                  <Text style={styles.sectionTitle}>Favorites</Text>
+                </View>
+                {progress.favoriteSkills.map(skillId => {
+                  const skill = getSkillById(skillId);
+                  if (!skill) return null;
+                  const mod = modules.find(m => m.id === skill.moduleId);
+                  return (
+                    <TouchableOpacity
+                      key={skillId}
+                      style={styles.favCard}
+                      onPress={() => handleSkillPress(skillId)}
+                      activeOpacity={0.7}
+                    >
+                      <View style={[styles.favDot, { backgroundColor: mod?.color ?? Colors.primary }]} />
+                      <View style={styles.favInfo}>
+                        <Text style={styles.favTitle}>{skill.title}</Text>
+                        <Text style={styles.favMeta}>
+                          Practiced {progress.completedSkills[skillId] || 0} times
+                        </Text>
+                      </View>
+                      <ChevronRight size={16} color={Colors.textMuted} />
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
+
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <TrendingUp size={16} color={Colors.primary} />
-                <Text style={styles.sectionTitle}>Progress</Text>
+                <Brain size={16} color={Colors.text} />
+                <Text style={styles.sectionTitle}>Modules</Text>
               </View>
+              {modules.map(renderModuleCard)}
+            </View>
+
+            <View style={styles.statsSection}>
               <View style={styles.statsRow}>
                 <View style={styles.statCard}>
                   <Text style={styles.statValue}>{progress.totalPractices}</Text>
@@ -262,43 +436,7 @@ export default function DBTCoachScreen() {
               </View>
             </View>
 
-            {progress.favoriteSkills.length > 0 && (
-              <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <Star size={16} color="#E8A838" />
-                  <Text style={styles.sectionTitle}>Favorites</Text>
-                </View>
-                {progress.favoriteSkills.map(skillId => {
-                  const skill = getSkillById(skillId);
-                  if (!skill) return null;
-                  const module = modules.find(m => m.id === skill.moduleId);
-                  return (
-                    <TouchableOpacity
-                      key={skillId}
-                      style={styles.favCard}
-                      onPress={() => handleSkillPress(skillId)}
-                      activeOpacity={0.7}
-                    >
-                      <View style={[styles.favDot, { backgroundColor: module?.color ?? Colors.primary }]} />
-                      <View style={styles.favInfo}>
-                        <Text style={styles.favTitle}>{skill.title}</Text>
-                        <Text style={styles.favMeta}>
-                          Practiced {progress.completedSkills[skillId] || 0} times
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            )}
-
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Brain size={16} color={Colors.text} />
-                <Text style={styles.sectionTitle}>Modules</Text>
-              </View>
-              {modules.map(renderModuleCard)}
-            </View>
+            <View style={{ height: 24 }} />
           </ScrollView>
         )}
       </Animated.View>
@@ -312,8 +450,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 4,
@@ -324,8 +462,8 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 12,
     backgroundColor: Colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
   },
   headerText: {
     flex: 1,
@@ -347,8 +485,8 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
   },
   searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
     backgroundColor: Colors.white,
     borderRadius: 12,
     paddingHorizontal: 14,
@@ -369,11 +507,11 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   section: {
-    marginBottom: 28,
+    marginBottom: 24,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
     gap: 8,
     marginBottom: 14,
   },
@@ -381,6 +519,81 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '700' as const,
     color: Colors.text,
+  },
+  situationScroll: {
+    gap: 10,
+    paddingRight: 20,
+  },
+  situationCard: {
+    width: 120,
+    borderRadius: 14,
+    padding: 12,
+    minHeight: 96,
+  },
+  situationIconWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 9,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    marginBottom: 8,
+  },
+  situationLabel: {
+    fontSize: 13,
+    fontWeight: '700' as const,
+    marginBottom: 2,
+  },
+  situationSublabel: {
+    fontSize: 10,
+    color: Colors.textSecondary,
+    lineHeight: 14,
+  },
+  weeklyCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+  },
+  weeklyHeader: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 8,
+    marginBottom: 14,
+  },
+  weeklyTitle: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: Colors.text,
+  },
+  weeklyStatsRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+  },
+  weeklyStat: {
+    flex: 1,
+    alignItems: 'center' as const,
+  },
+  weeklyStatValue: {
+    fontSize: 22,
+    fontWeight: '700' as const,
+    color: Colors.primary,
+    marginBottom: 2,
+  },
+  weeklyStatLabel: {
+    fontSize: 11,
+    color: Colors.textMuted,
+  },
+  weeklyStatDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: Colors.borderLight,
+  },
+  weeklyReductionRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 4,
   },
   recCard: {
     backgroundColor: Colors.white,
@@ -391,8 +604,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.borderLight,
   },
   recCardTop: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: 'row' as const,
+    alignItems: 'flex-start' as const,
     gap: 12,
     marginBottom: 10,
   },
@@ -423,33 +636,43 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     paddingLeft: 22,
   },
-  statsRow: {
-    flexDirection: 'row',
-    gap: 10,
+  quickChip: {
+    backgroundColor: Colors.accentLight,
+    borderRadius: 6,
+    padding: 4,
   },
-  statCard: {
-    flex: 1,
+  bestCard: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
     backgroundColor: Colors.white,
     borderRadius: 14,
-    padding: 16,
-    alignItems: 'center',
+    padding: 14,
+    marginBottom: 8,
+    gap: 12,
     borderWidth: 1,
     borderColor: Colors.borderLight,
   },
-  statValue: {
-    fontSize: 24,
-    fontWeight: '700' as const,
-    color: Colors.primary,
-    marginBottom: 4,
+  bestDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
-  statLabel: {
-    fontSize: 11,
-    color: Colors.textSecondary,
-    textAlign: 'center' as const,
+  bestInfo: {
+    flex: 1,
+  },
+  bestTitle: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: Colors.text,
+  },
+  bestReason: {
+    fontSize: 12,
+    color: Colors.success,
+    marginTop: 2,
   },
   favCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
     backgroundColor: Colors.white,
     borderRadius: 14,
     padding: 14,
@@ -485,8 +708,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.borderLight,
   },
   moduleCardInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
     gap: 14,
     marginBottom: 14,
   },
@@ -494,8 +717,8 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
   },
   moduleInfo: {
     flex: 1,
@@ -528,18 +751,45 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: Colors.textMuted,
   },
+  statsSection: {
+    marginBottom: 8,
+  },
+  statsRow: {
+    flexDirection: 'row' as const,
+    gap: 10,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: Colors.white,
+    borderRadius: 14,
+    padding: 16,
+    alignItems: 'center' as const,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: '700' as const,
+    color: Colors.primary,
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    textAlign: 'center' as const,
+  },
   emptySearch: {
     paddingTop: 40,
-    alignItems: 'center',
+    alignItems: 'center' as const,
   },
   emptySearchText: {
     fontSize: 15,
     color: Colors.textSecondary,
   },
   searchResultCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
     backgroundColor: Colors.white,
     borderRadius: 14,
     padding: 14,
@@ -548,8 +798,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.borderLight,
   },
   searchResultLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
     gap: 12,
     flex: 1,
   },
@@ -572,8 +822,8 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   searchResultMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
     gap: 4,
     marginLeft: 8,
   },

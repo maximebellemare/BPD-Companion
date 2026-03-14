@@ -160,7 +160,7 @@ export default function ToolsScreen() {
                 <Shield size={20} color="#E17055" />
               </View>
               <Text style={styles.libraryTitle}>DBT Skills</Text>
-              <Text style={styles.libraryDesc}>17 guided exercises</Text>
+              <Text style={styles.libraryDesc}>32 guided skills</Text>
             </TouchableOpacity>
 
             <TouchableOpacity

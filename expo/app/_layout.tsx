@@ -557,6 +557,13 @@ function RootLayoutNav() {
         }}
       />
       <Stack.Screen
+        name="communication-playbook"
+        options={{
+          presentation: "modal",
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
         name="secure-rewrite"
         options={{
           presentation: "modal",

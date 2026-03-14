@@ -54,7 +54,14 @@ import { saveToDraftVault } from '@/services/messages/messageOutcomeService';
 import { classifyMessageSafety } from '@/services/messages/messageSafetyClassifier';
 import { generateSafeRewrites, buildDoNotSendRecommendation } from '@/services/messages/messageRiskScoringService';
 import { MessageSafetyClassification, SafeRewrite, DoNotSendRecommendation } from '@/types/messageRisk';
-import { ShieldAlert, ShieldOff, BookOpen, Heart, Timer, AlertOctagon, Leaf } from 'lucide-react-native';
+import { ShieldAlert, ShieldOff, BookOpen, Heart, Timer, AlertOctagon, Leaf, Lightbulb } from 'lucide-react-native';
+import { useQuery } from '@tanstack/react-query';
+import { getEnhancedOutcomes } from '@/services/messages/enhancedOutcomeService';
+import { createOutcomeRecord, saveEnhancedOutcome } from '@/services/messages/enhancedOutcomeService';
+import { generateWhatHelpedReminder } from '@/services/messages/communicationProfileService';
+import { getTopInsightsForHome } from '@/services/messages/enhancedLearningService';
+import OutcomeCaptureSheet from '@/components/OutcomeCaptureSheet';
+import { EnhancedMessageOutcome, WhatHelpedReminder, CommunicationInsight } from '@/types/messageOutcome';
 
 type ContextKey = keyof MessageContext;
 
@@ -219,6 +226,28 @@ export default function MessagesScreen() {
 
   const [showSafeRewrites, setShowSafeRewrites] = useState<boolean>(false);
   const [selectedSafeRewrite, setSelectedSafeRewrite] = useState<SafeRewrite | null>(null);
+  const [showOutcomeCapture, setShowOutcomeCapture] = useState<boolean>(false);
+  const [currentOutcomeRecord, setCurrentOutcomeRecord] = useState<EnhancedMessageOutcome | null>(null);
+
+  const enhancedOutcomesQuery = useQuery({
+    queryKey: ['enhanced-message-outcomes'],
+    queryFn: getEnhancedOutcomes,
+  });
+
+  const enhancedOutcomes = useMemo(() => enhancedOutcomesQuery.data ?? [], [enhancedOutcomesQuery.data]);
+
+  const whatHelpedReminder = useMemo<WhatHelpedReminder | null>(() => {
+    if (mainView !== 'flow' || !enhancedContext.emotionalState) return null;
+    return generateWhatHelpedReminder(
+      enhancedOutcomes,
+      enhancedContext.emotionalState,
+      enhancedContext.urge,
+    );
+  }, [enhancedOutcomes, enhancedContext.emotionalState, enhancedContext.urge, mainView]);
+
+  const homeInsights = useMemo<CommunicationInsight[]>(() => {
+    return getTopInsightsForHome(enhancedOutcomes, 2);
+  }, [enhancedOutcomes]);
 
   const startFlow = useCallback((situation?: QuickEntrySituation) => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -293,8 +322,25 @@ export default function MessagesScreen() {
     } as never);
   }, [enhancedContext, router]);
 
+  const saveAndTriggerOutcome = useCallback(async () => {
+    const record = createOutcomeRecord({
+      originalDraft: enhancedContext.draft,
+      emotionalState: enhancedContext.emotionalState,
+      interpretation: enhancedContext.interpretation,
+      urge: enhancedContext.urge,
+      desiredOutcome: enhancedContext.desiredOutcome,
+      riskLevel: safetyClassification?.riskLevel ?? null,
+      sourceFlow: 'message_flow',
+    });
+    await saveEnhancedOutcome(record);
+    setCurrentOutcomeRecord(record);
+    setShowOutcomeCapture(true);
+    console.log('[Messages] Outcome record created:', record.id);
+  }, [enhancedContext, safetyClassification]);
+
   const navigateToSecureRewrite = useCallback(() => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    void saveAndTriggerOutcome();
     router.push({
       pathname: '/secure-rewrite',
       params: {
@@ -308,10 +354,11 @@ export default function MessagesScreen() {
         relationshipContext: '',
       },
     } as never);
-  }, [enhancedContext, router]);
+  }, [enhancedContext, router, saveAndTriggerOutcome]);
 
   const navigateToSimulation = useCallback(() => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    void saveAndTriggerOutcome();
     router.push({
       pathname: '/message-simulation',
       params: {
@@ -324,7 +371,7 @@ export default function MessagesScreen() {
         riskLevel: safetyClassification?.riskLevel ?? '',
       },
     } as never);
-  }, [enhancedContext, router, safetyClassification]);
+  }, [enhancedContext, router, safetyClassification, saveAndTriggerOutcome]);
 
   const proceedToLegacyRewrites = useCallback(() => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -428,6 +475,18 @@ export default function MessagesScreen() {
 
         <TouchableOpacity
           style={styles.toolStripCard}
+          onPress={() => router.push('/communication-playbook' as never)}
+          activeOpacity={0.7}
+          testID="playbook-btn"
+        >
+          <View style={[styles.toolStripIcon, { backgroundColor: Colors.brandSage + '18' }]}>
+            <BookOpen size={16} color={Colors.brandSage} />
+          </View>
+          <Text style={styles.toolStripLabel}>Playbook</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.toolStripCard}
           onPress={() => router.push('/message-guard' as never)}
           activeOpacity={0.7}
           testID="guard-btn"
@@ -438,6 +497,29 @@ export default function MessagesScreen() {
           <Text style={styles.toolStripLabel}>Guard</Text>
         </TouchableOpacity>
       </View>
+
+      {homeInsights.length > 0 && homeInsights[0].id !== 'getting_started' && (
+        <View style={styles.homeInsightsSection}>
+          <View style={styles.homeInsightsHeader}>
+            <Lightbulb size={14} color={Colors.accent} />
+            <Text style={styles.homeInsightsTitle}>From your patterns</Text>
+          </View>
+          {homeInsights.map((insight) => (
+            <TouchableOpacity
+              key={insight.id}
+              style={styles.homeInsightCard}
+              onPress={() => {
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push('/communication-patterns' as never);
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.homeInsightEmoji}>{insight.emoji}</Text>
+              <Text style={styles.homeInsightText} numberOfLines={2}>{insight.text}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
 
       {messageDrafts.length > 0 && (
         <View style={styles.historySection}>
@@ -574,6 +656,12 @@ export default function MessagesScreen() {
     <View style={styles.flowSection}>
       <Text style={styles.flowQuestion}>How are you feeling?</Text>
       <Text style={styles.flowHint}>Your emotional state shapes how messages come across.</Text>
+      {whatHelpedReminder && (
+        <View style={styles.whatHelpedBanner}>
+          <Text style={styles.whatHelpedEmoji}>{whatHelpedReminder.emoji}</Text>
+          <Text style={styles.whatHelpedText}>{whatHelpedReminder.text}</Text>
+        </View>
+      )}
       <FlowChips
         options={EMOTIONAL_STATE_OPTIONS}
         selected={enhancedContext.emotionalState}
@@ -1094,6 +1182,23 @@ export default function MessagesScreen() {
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {showOutcomeCapture && currentOutcomeRecord && (
+        <View style={styles.outcomeCaptureOverlay}>
+          <OutcomeCaptureSheet
+            outcomeRecord={currentOutcomeRecord}
+            onComplete={() => {
+              setShowOutcomeCapture(false);
+              setCurrentOutcomeRecord(null);
+              void enhancedOutcomesQuery.refetch();
+            }}
+            onDismiss={() => {
+              setShowOutcomeCapture(false);
+              setCurrentOutcomeRecord(null);
+            }}
+          />
+        </View>
+      )}
     </View>
   );
 }
@@ -1860,5 +1965,70 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textSecondary,
     lineHeight: 19,
+  },
+  homeInsightsSection: {
+    marginBottom: 20,
+  },
+  homeInsightsHeader: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 6,
+    marginBottom: 10,
+  },
+  homeInsightsTitle: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.textSecondary,
+  },
+  homeInsightCard: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 10,
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 6,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+  },
+  homeInsightEmoji: {
+    fontSize: 16,
+  },
+  homeInsightText: {
+    flex: 1,
+    fontSize: 13,
+    color: Colors.textSecondary,
+    lineHeight: 19,
+  },
+  whatHelpedBanner: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 10,
+    backgroundColor: Colors.primaryLight,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: Colors.primary + '30',
+  },
+  whatHelpedEmoji: {
+    fontSize: 20,
+  },
+  whatHelpedText: {
+    flex: 1,
+    fontSize: 13,
+    color: Colors.primaryDark,
+    lineHeight: 19,
+    fontWeight: '500' as const,
+  },
+  outcomeCaptureOverlay: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(27,40,56,0.4)',
+    justifyContent: 'center' as const,
+    zIndex: 100,
   },
 });

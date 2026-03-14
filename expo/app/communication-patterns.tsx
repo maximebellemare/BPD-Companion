@@ -16,16 +16,31 @@ import {
   TrendingDown,
   Minus,
   Lightbulb,
+  Sparkles,
+  BookOpen,
+  ChevronRight,
+  Zap,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useApp } from '@/providers/AppProvider';
 import { getOutcomes } from '@/services/messages/messageOutcomeService';
+import { getEnhancedOutcomes } from '@/services/messages/enhancedOutcomeService';
 import {
   analyzeCommunicationPatterns,
   generateCommunicationInsights,
 } from '@/services/messages/messageLearningService';
-import { CommunicationPattern, CommunicationInsight } from '@/types/messageOutcome';
+import { generateEnhancedInsights } from '@/services/messages/enhancedLearningService';
+import {
+  buildCommunicationTendencies,
+  detectGrowthSignals,
+} from '@/services/messages/communicationProfileService';
+import {
+  CommunicationPattern,
+  CommunicationInsight,
+  CommunicationTendency,
+  GrowthSignal,
+} from '@/types/messageOutcome';
 
 const TREND_CONFIG = {
   improving: { icon: TrendingUp, color: Colors.success, label: 'Improving' },
@@ -33,11 +48,18 @@ const TREND_CONFIG = {
   worsening: { icon: TrendingDown, color: Colors.danger, label: 'Needs attention' },
 };
 
+const TENDENCY_TREND_CONFIG = {
+  increasing: { icon: TrendingUp, color: Colors.primary },
+  decreasing: { icon: TrendingDown, color: Colors.accent },
+  stable: { icon: Minus, color: Colors.textMuted },
+};
+
 const INSIGHT_CATEGORY_COLORS: Record<string, string> = {
   pattern: '#9B8EC4',
   strength: Colors.success,
   suggestion: Colors.accent,
   learning: Colors.primary,
+  growth: Colors.brandSage,
 };
 
 export default function CommunicationPatternsScreen() {
@@ -50,24 +72,60 @@ export default function CommunicationPatternsScreen() {
     queryFn: getOutcomes,
   });
 
+  const enhancedQuery = useQuery({
+    queryKey: ['enhanced-message-outcomes'],
+    queryFn: getEnhancedOutcomes,
+  });
+
   const outcomes = outcomesQuery.data;
+  const enhancedOutcomes = useMemo(() => enhancedQuery.data ?? [], [enhancedQuery.data]);
 
   const patterns = useMemo<CommunicationPattern[]>(() => {
     return analyzeCommunicationPatterns(outcomes ?? [], messageDrafts);
   }, [outcomes, messageDrafts]);
 
-  const insights = useMemo<CommunicationInsight[]>(() => {
+  const legacyInsights = useMemo<CommunicationInsight[]>(() => {
     return generateCommunicationInsights(outcomes ?? [], messageDrafts);
   }, [outcomes, messageDrafts]);
 
+  const enhancedInsights = useMemo<CommunicationInsight[]>(() => {
+    return generateEnhancedInsights(enhancedOutcomes);
+  }, [enhancedOutcomes]);
+
+  const allInsights = useMemo(() => {
+    const ids = new Set<string>();
+    const combined: CommunicationInsight[] = [];
+    [...enhancedInsights, ...legacyInsights].forEach(i => {
+      if (!ids.has(i.id)) {
+        ids.add(i.id);
+        combined.push(i);
+      }
+    });
+    return combined.slice(0, 8);
+  }, [enhancedInsights, legacyInsights]);
+
+  const tendencies = useMemo<CommunicationTendency[]>(() => {
+    return buildCommunicationTendencies(enhancedOutcomes);
+  }, [enhancedOutcomes]);
+
+  const growthSignals = useMemo<GrowthSignal[]>(() => {
+    return detectGrowthSignals(enhancedOutcomes);
+  }, [enhancedOutcomes]);
+
   const stats = useMemo(() => {
-    const total = messageDrafts.length;
-    const sent = messageDrafts.filter(d => d.sent).length;
-    const paused = messageDrafts.filter(d => d.paused).length;
-    const helped = messageDrafts.filter(d => d.outcome === 'helped').length;
-    const regretted = messageDrafts.filter(d => d.outcome === 'made_worse').length;
+    const total = messageDrafts.length + enhancedOutcomes.length;
+    const sent = messageDrafts.filter(d => d.sent).length +
+      enhancedOutcomes.filter(o => o.sentStatus === 'sent_now' || o.sentStatus === 'sent_later').length;
+    const paused = messageDrafts.filter(d => d.paused).length +
+      enhancedOutcomes.filter(o => o.pauseUsed).length;
+    const helped = messageDrafts.filter(d => d.outcome === 'helped').length +
+      enhancedOutcomes.filter(o => o.conflictResult === 'helped').length;
+    const regretted = messageDrafts.filter(d => d.outcome === 'made_worse').length +
+      enhancedOutcomes.filter(o => o.regretReported === true).length;
     return { total, sent, paused, helped, regretted };
-  }, [messageDrafts]);
+  }, [messageDrafts, enhancedOutcomes]);
+
+  const hasEnoughData = stats.total >= 3;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -92,7 +150,7 @@ export default function CommunicationPatternsScreen() {
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{stats.total}</Text>
-            <Text style={styles.statLabel}>Messages processed</Text>
+            <Text style={styles.statLabel}>Sessions</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={[styles.statValue, { color: Colors.success }]}>{stats.helped}</Text>
@@ -102,15 +160,40 @@ export default function CommunicationPatternsScreen() {
             <Text style={[styles.statValue, { color: Colors.accent }]}>{stats.paused}</Text>
             <Text style={styles.statLabel}>Paused</Text>
           </View>
+          <View style={styles.statCard}>
+            <Text style={[styles.statValue, { color: Colors.danger }]}>{stats.regretted}</Text>
+            <Text style={styles.statLabel}>Regretted</Text>
+          </View>
         </View>
 
-        {insights.length > 0 && (
+        {growthSignals.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Sparkles size={16} color={Colors.brandSage} />
+              <Text style={styles.sectionTitle}>Growth signals</Text>
+            </View>
+            {growthSignals.map((signal) => (
+              <View key={signal.id} style={styles.growthCard}>
+                <Text style={styles.growthEmoji}>{signal.emoji}</Text>
+                <View style={styles.growthTextWrap}>
+                  <Text style={styles.growthLabel}>{signal.label}</Text>
+                  <Text style={styles.growthDesc}>{signal.description}</Text>
+                </View>
+                <View style={styles.growthBadge}>
+                  <Text style={styles.growthBadgeText}>{signal.occurrences}x</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {allInsights.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Lightbulb size={16} color={Colors.accent} />
-              <Text style={styles.sectionTitle}>Personal Insights</Text>
+              <Text style={styles.sectionTitle}>Personal insights</Text>
             </View>
-            {insights.map((insight) => (
+            {allInsights.map((insight) => (
               <View
                 key={insight.id}
                 style={[styles.insightCard, {
@@ -124,11 +207,49 @@ export default function CommunicationPatternsScreen() {
           </View>
         )}
 
+        {tendencies.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Zap size={16} color={Colors.brandLilac} />
+              <Text style={styles.sectionTitle}>Communication tendencies</Text>
+            </View>
+            {tendencies.map((tendency) => {
+              const trendCfg = TENDENCY_TREND_CONFIG[tendency.trend];
+              const TrendIcon = trendCfg.icon;
+              return (
+                <View key={tendency.id} style={styles.tendencyCard}>
+                  <View style={styles.tendencyHeader}>
+                    <Text style={styles.tendencyLabel}>{tendency.label}</Text>
+                    <View style={styles.tendencyTrend}>
+                      <TrendIcon size={12} color={trendCfg.color} />
+                      <Text style={[styles.tendencyTrendText, { color: trendCfg.color }]}>
+                        {tendency.trend}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.tendencyBarBg}>
+                    <View
+                      style={[
+                        styles.tendencyBarFill,
+                        {
+                          width: `${Math.min(tendency.score, 100)}%`,
+                          backgroundColor: tendency.score > 50 ? Colors.accent : Colors.primary,
+                        },
+                      ]}
+                    />
+                  </View>
+                  <Text style={styles.tendencyDesc}>{tendency.description}</Text>
+                </View>
+              );
+            })}
+          </View>
+        )}
+
         {patterns.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <BarChart3 size={16} color={Colors.primary} />
-              <Text style={styles.sectionTitle}>Communication Patterns</Text>
+              <Text style={styles.sectionTitle}>Detected patterns</Text>
             </View>
             {patterns.map((pattern) => {
               const trendConfig = TREND_CONFIG[pattern.trend];
@@ -152,7 +273,26 @@ export default function CommunicationPatternsScreen() {
           </View>
         )}
 
-        {patterns.length === 0 && insights.length <= 1 && (
+        <TouchableOpacity
+          style={styles.playbookLink}
+          onPress={() => {
+            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            router.push('/communication-playbook' as never);
+          }}
+          activeOpacity={0.7}
+          testID="playbook-link"
+        >
+          <View style={styles.playbookIconWrap}>
+            <BookOpen size={18} color={Colors.brandSage} />
+          </View>
+          <View style={styles.playbookTextWrap}>
+            <Text style={styles.playbookTitle}>Your Communication Playbook</Text>
+            <Text style={styles.playbookSub}>Personalized strategies based on what works for you</Text>
+          </View>
+          <ChevronRight size={16} color={Colors.textMuted} />
+        </TouchableOpacity>
+
+        {!hasEnoughData && patterns.length === 0 && allInsights.length <= 1 && (
           <View style={styles.emptyState}>
             <View style={styles.emptyIconWrap}>
               <BarChart3 size={28} color={Colors.textMuted} />
@@ -165,7 +305,7 @@ export default function CommunicationPatternsScreen() {
         )}
 
         <View style={styles.privacyCard}>
-          <Text style={styles.privacyTitle}>🔒 Your data stays private</Text>
+          <Text style={styles.privacyTitle}>{'\ud83d\udd12'} Your data stays private</Text>
           <Text style={styles.privacyText}>
             All patterns are analyzed locally on your device. Nothing is shared or uploaded.
           </Text>
@@ -226,7 +366,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.white,
     borderRadius: 14,
-    padding: 16,
+    padding: 14,
     alignItems: 'center',
     shadowColor: Colors.shadow,
     shadowOffset: { width: 0, height: 1 },
@@ -235,13 +375,13 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   statValue: {
-    fontSize: 26,
+    fontSize: 22,
     fontWeight: '700' as const,
     color: Colors.text,
-    marginBottom: 4,
+    marginBottom: 3,
   },
   statLabel: {
-    fontSize: 11,
+    fontSize: 10,
     color: Colors.textMuted,
     textAlign: 'center',
     fontWeight: '500' as const,
@@ -259,6 +399,43 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '700' as const,
     color: Colors.text,
+  },
+  growthCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.successLight,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 8,
+    gap: 12,
+  },
+  growthEmoji: {
+    fontSize: 22,
+  },
+  growthTextWrap: {
+    flex: 1,
+  },
+  growthLabel: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.text,
+    marginBottom: 2,
+  },
+  growthDesc: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    lineHeight: 19,
+  },
+  growthBadge: {
+    backgroundColor: Colors.success + '20',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  growthBadgeText: {
+    fontSize: 12,
+    fontWeight: '700' as const,
+    color: Colors.success,
   },
   insightCard: {
     flexDirection: 'row',
@@ -279,6 +456,48 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.text,
     lineHeight: 21,
+  },
+  tendencyCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 8,
+  },
+  tendencyHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  tendencyLabel: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.text,
+  },
+  tendencyTrend: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  tendencyTrendText: {
+    fontSize: 11,
+    fontWeight: '600' as const,
+  },
+  tendencyBarBg: {
+    height: 6,
+    backgroundColor: Colors.surface,
+    borderRadius: 3,
+    marginBottom: 10,
+    overflow: 'hidden',
+  },
+  tendencyBarFill: {
+    height: 6,
+    borderRadius: 3,
+  },
+  tendencyDesc: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    lineHeight: 19,
   },
   patternCard: {
     backgroundColor: Colors.white,
@@ -319,6 +538,38 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.textMuted,
     marginTop: 6,
+  },
+  playbookLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 16,
+    gap: 12,
+    marginBottom: 20,
+    borderWidth: 1.5,
+    borderColor: Colors.brandSage + '30',
+  },
+  playbookIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: Colors.brandSage + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  playbookTextWrap: {
+    flex: 1,
+  },
+  playbookTitle: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: Colors.text,
+    marginBottom: 2,
+  },
+  playbookSub: {
+    fontSize: 12,
+    color: Colors.textSecondary,
   },
   emptyState: {
     alignItems: 'center',

@@ -54,7 +54,7 @@ import { saveToDraftVault } from '@/services/messages/messageOutcomeService';
 import { classifyMessageSafety } from '@/services/messages/messageSafetyClassifier';
 import { generateSafeRewrites, buildDoNotSendRecommendation } from '@/services/messages/messageRiskScoringService';
 import { MessageSafetyClassification, SafeRewrite, DoNotSendRecommendation } from '@/types/messageRisk';
-import { ShieldAlert, ShieldOff, BookOpen, Heart, Timer, AlertOctagon } from 'lucide-react-native';
+import { ShieldAlert, ShieldOff, BookOpen, Heart, Timer, AlertOctagon, Leaf } from 'lucide-react-native';
 
 type ContextKey = keyof MessageContext;
 
@@ -289,6 +289,23 @@ export default function MessagesScreen() {
         interpretation: enhancedContext.interpretation ?? '',
         urge: enhancedContext.urge ?? '',
         desiredOutcome: enhancedContext.desiredOutcome ?? '',
+      },
+    } as never);
+  }, [enhancedContext, router]);
+
+  const navigateToSecureRewrite = useCallback(() => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.push({
+      pathname: '/secure-rewrite',
+      params: {
+        draft: enhancedContext.draft,
+        situation: enhancedContext.situation,
+        emotionalState: enhancedContext.emotionalState ?? '',
+        interpretation: enhancedContext.interpretation ?? '',
+        urge: enhancedContext.urge ?? '',
+        desiredOutcome: enhancedContext.desiredOutcome ?? '',
+        distressLevel: '5',
+        relationshipContext: '',
       },
     } as never);
   }, [enhancedContext, router]);
@@ -846,20 +863,30 @@ export default function MessagesScreen() {
             </View>
 
             <View style={styles.analysisActions}>
+              <TouchableOpacity
+                style={[styles.analysisPrimaryBtn, { backgroundColor: Colors.brandSage }]}
+                onPress={navigateToSecureRewrite}
+                activeOpacity={0.8}
+                testID="secure-rewrite-btn"
+              >
+                <Leaf size={16} color={Colors.white} />
+                <Text style={styles.analysisPrimaryBtnText}>Secure Rewrite</Text>
+              </TouchableOpacity>
+
               {isHighRisk ? (
                 <>
                   {!showSafeRewrites && (
                     <TouchableOpacity
-                      style={[styles.analysisPrimaryBtn, { backgroundColor: Colors.brandSage }]}
+                      style={styles.analysisSecondaryBtn}
                       onPress={() => {
                         void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                         setShowSafeRewrites(true);
                       }}
-                      activeOpacity={0.8}
+                      activeOpacity={0.7}
                       testID="show-safe-rewrites-btn"
                     >
-                      <Shield size={16} color={Colors.white} />
-                      <Text style={styles.analysisPrimaryBtnText}>See safer alternatives</Text>
+                      <Shield size={14} color={Colors.brandSage} />
+                      <Text style={[styles.analysisSecondaryBtnText, { color: Colors.brandSage }]}>See safer alternatives</Text>
                     </TouchableOpacity>
                   )}
 
@@ -911,13 +938,13 @@ export default function MessagesScreen() {
               ) : (
                 <>
                   <TouchableOpacity
-                    style={styles.analysisPrimaryBtn}
+                    style={styles.analysisSecondaryBtn}
                     onPress={navigateToSimulation}
-                    activeOpacity={0.8}
+                    activeOpacity={0.7}
                     testID="see-paths-btn"
                   >
-                    <Compass size={16} color={Colors.white} />
-                    <Text style={styles.analysisPrimaryBtnText}>See response paths</Text>
+                    <Compass size={14} color={Colors.primary} />
+                    <Text style={styles.analysisSecondaryBtnText}>See response paths</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -937,7 +964,7 @@ export default function MessagesScreen() {
                     testID="rewrite-btn"
                   >
                     <Sparkles size={14} color={Colors.accent} />
-                    <Text style={[styles.analysisSecondaryBtnText, { color: Colors.accent }]}>Rewrite options</Text>
+                    <Text style={[styles.analysisSecondaryBtnText, { color: Colors.accent }]}>Other rewrite styles</Text>
                   </TouchableOpacity>
 
                   {safetyClassification?.riskLevel === 'medium' && (

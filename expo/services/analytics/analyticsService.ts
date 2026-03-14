@@ -279,3 +279,10 @@ export async function trackPremiumReminderSuppressed(
     safety_state: safetyState,
   });
 }
+
+export async function trackSecureRewrite(
+  action: string,
+  properties?: Record<string, string | number | boolean>,
+): Promise<void> {
+  return analyticsEngine.trackEvent(`secure_rewrite_${action}`, properties);
+}

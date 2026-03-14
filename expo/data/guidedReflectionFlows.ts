@@ -241,6 +241,100 @@ export const GUIDED_REFLECTION_FLOWS: GuidedReflectionFlow[] = [
     ],
   },
   {
+    id: 'gf_therapy_prep',
+    title: 'Therapy Prep',
+    description: 'Organize your thoughts before your next session',
+    emoji: '📋',
+    category: 'therapy',
+    estimatedMinutes: 5,
+    isPremium: true,
+    steps: [
+      {
+        id: 'tp1',
+        prompt: 'What has been hardest lately?',
+        placeholder: 'The hardest thing has been...',
+      },
+      {
+        id: 'tp2',
+        prompt: 'What pattern do you want to understand better?',
+        placeholder: 'I keep noticing...',
+      },
+      {
+        id: 'tp3',
+        prompt: 'What specific moments or events do you want to discuss?',
+        placeholder: 'I want to talk about...',
+      },
+      {
+        id: 'tp4',
+        prompt: 'What are you unsure about right now?',
+        placeholder: 'I\'m uncertain about...',
+      },
+      {
+        id: 'tp5',
+        prompt: 'What do you want to get from this session?',
+        placeholder: 'I hope to...',
+        optional: true,
+      },
+    ],
+  },
+  {
+    id: 'gf_reframe_uncertainty',
+    title: 'Reframe Uncertainty',
+    description: 'Challenge the need for certainty in relationships',
+    emoji: '🌫️',
+    category: 'relationship',
+    estimatedMinutes: 4,
+    isPremium: true,
+    steps: [
+      {
+        id: 'ru1',
+        prompt: 'What are you uncertain about right now?',
+        placeholder: 'I don\'t know if...',
+      },
+      {
+        id: 'ru2',
+        prompt: 'What does your mind tell you this uncertainty means?',
+        placeholder: 'My mind says it means...',
+      },
+      {
+        id: 'ru3',
+        prompt: 'What would you tell a friend who felt this same uncertainty?',
+        placeholder: 'I\'d remind them that...',
+      },
+      {
+        id: 'ru4',
+        prompt: 'What can you do right now that does not require certainty?',
+        placeholder: 'I can still...',
+      },
+    ],
+  },
+  {
+    id: 'gf_gratitude_stability',
+    title: 'Gratitude & Stability',
+    description: 'Notice moments of calm and what you appreciate',
+    emoji: '🌿',
+    category: 'growth',
+    estimatedMinutes: 3,
+    isPremium: false,
+    steps: [
+      {
+        id: 'gs1',
+        prompt: 'Name three small things you are grateful for today.',
+        placeholder: 'I appreciate...',
+      },
+      {
+        id: 'gs2',
+        prompt: 'Was there a moment today where you felt safe or calm?',
+        placeholder: 'I felt calm when...',
+      },
+      {
+        id: 'gs3',
+        prompt: 'What is one thing about yourself you can acknowledge today?',
+        placeholder: 'I want to recognize that I...',
+      },
+    ],
+  },
+  {
     id: 'gf_values_aligned',
     title: 'Values-Aligned Response',
     description: 'Choose a response that matches who you want to be',

@@ -9,9 +9,11 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  TrendingUp,
+  Sun,
+  Moon,
   ChevronDown,
   ChevronUp,
+  ChevronRight,
   Clock,
   Plus,
   PenLine,
@@ -19,6 +21,9 @@ import {
   Star,
   Sparkles,
   BookOpen,
+  Flame,
+  Brain,
+  AlertTriangle,
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -27,6 +32,7 @@ import { useApp } from '@/providers/AppProvider';
 import { useJournal } from '@/providers/JournalProvider';
 import { JournalEntry } from '@/types';
 import { SmartJournalEntry, FORMAT_CONFIG, JournalEntryFormat } from '@/types/journalEntry';
+import { AIJournalMode } from '@/types/journalDaily';
 import { GUIDED_REFLECTION_FLOWS } from '@/data/guidedReflectionFlows';
 
 function formatDate(ts: number): string {
@@ -49,52 +55,15 @@ function formatTime(ts: number): string {
   });
 }
 
-function PatternSection({ title, data }: { title: string; data: Record<string, number> }) {
-  const sorted = useMemo(
-    () => Object.entries(data).sort((a, b) => b[1] - a[1]).slice(0, 5),
-    [data]
-  );
-  const max = sorted.length > 0 ? sorted[0][1] : 1;
-
-  if (sorted.length === 0) return null;
-
-  return (
-    <View style={styles.patternSection}>
-      <Text style={styles.patternTitle}>{title}</Text>
-      {sorted.map(([label, count]) => (
-        <View key={label} style={styles.patternRow}>
-          <Text style={styles.patternLabel} numberOfLines={1}>{label}</Text>
-          <View style={styles.patternBarBg}>
-            <View
-              style={[
-                styles.patternBarFill,
-                { width: `${(count / max) * 100}%` },
-              ]}
-            />
-          </View>
-          <Text style={styles.patternCount}>{count}</Text>
-        </View>
-      ))}
-    </View>
-  );
-}
-
 function CheckInEntryCard({ entry }: { entry: JournalEntry }) {
   const [expanded, setExpanded] = useState<boolean>(false);
-
-  const toggle = () => {
-    setExpanded(!expanded);
-  };
-
   const intensityColor =
-    entry.checkIn.intensityLevel <= 3
-      ? Colors.success
-      : entry.checkIn.intensityLevel <= 6
-      ? Colors.accent
-      : Colors.danger;
+    entry.checkIn.intensityLevel <= 3 ? Colors.success
+    : entry.checkIn.intensityLevel <= 6 ? Colors.accent
+    : Colors.danger;
 
   return (
-    <TouchableOpacity style={styles.entryCard} onPress={toggle} activeOpacity={0.8}>
+    <TouchableOpacity style={styles.entryCard} onPress={() => setExpanded(!expanded)} activeOpacity={0.8}>
       <View style={styles.entryHeader}>
         <View style={styles.entryLeft}>
           <View style={[styles.intensityBadge, { backgroundColor: intensityColor }]}>
@@ -109,14 +78,9 @@ function CheckInEntryCard({ entry }: { entry: JournalEntry }) {
           <View style={styles.checkInBadge}>
             <Text style={styles.checkInBadgeText}>Check-in</Text>
           </View>
-          {expanded ? (
-            <ChevronUp size={18} color={Colors.textMuted} />
-          ) : (
-            <ChevronDown size={18} color={Colors.textMuted} />
-          )}
+          {expanded ? <ChevronUp size={18} color={Colors.textMuted} /> : <ChevronDown size={18} color={Colors.textMuted} />}
         </View>
       </View>
-
       <View style={styles.entryEmotions}>
         {entry.checkIn.emotions.slice(0, 4).map(e => (
           <View key={e.id} style={styles.emotionTag}>
@@ -128,31 +92,18 @@ function CheckInEntryCard({ entry }: { entry: JournalEntry }) {
           <Text style={styles.moreText}>+{entry.checkIn.emotions.length - 4}</Text>
         )}
       </View>
-
       {expanded && (
         <View style={styles.entryDetails}>
           {entry.checkIn.triggers.length > 0 && (
             <View style={styles.detailSection}>
               <Text style={styles.detailLabel}>Triggers</Text>
-              <Text style={styles.detailText}>
-                {entry.checkIn.triggers.map(t => t.label).join(', ')}
-              </Text>
+              <Text style={styles.detailText}>{entry.checkIn.triggers.map(t => t.label).join(', ')}</Text>
             </View>
           )}
           {entry.checkIn.urges.length > 0 && (
             <View style={styles.detailSection}>
               <Text style={styles.detailLabel}>Urges</Text>
-              <Text style={styles.detailText}>
-                {entry.checkIn.urges.map(u => u.label).join(', ')}
-              </Text>
-            </View>
-          )}
-          {entry.checkIn.bodySensations.length > 0 && (
-            <View style={styles.detailSection}>
-              <Text style={styles.detailLabel}>Body sensations</Text>
-              <Text style={styles.detailText}>
-                {entry.checkIn.bodySensations.map(b => b.label).join(', ')}
-              </Text>
+              <Text style={styles.detailText}>{entry.checkIn.urges.map(u => u.label).join(', ')}</Text>
             </View>
           )}
           {entry.checkIn.notes ? (
@@ -178,20 +129,14 @@ const SmartEntryCard = React.memo(function SmartEntryCard({
   const distressColor = entry.distressLevel <= 3 ? Colors.success : entry.distressLevel <= 6 ? Colors.accent : Colors.danger;
 
   return (
-    <TouchableOpacity
-      style={styles.smartEntryCard}
-      onPress={() => onPress(entry.id)}
-      activeOpacity={0.8}
-    >
+    <TouchableOpacity style={styles.smartEntryCard} onPress={() => onPress(entry.id)} activeOpacity={0.8}>
       <View style={styles.smartEntryHeader}>
         <View style={styles.smartEntryLeft}>
           <View style={[styles.formatBadge, { backgroundColor: distressColor + '18' }]}>
             <Text style={styles.formatEmoji}>{config.emoji}</Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.smartEntryTitle} numberOfLines={1}>
-              {entry.title || config.label}
-            </Text>
+            <Text style={styles.smartEntryTitle} numberOfLines={1}>{entry.title || config.label}</Text>
             <Text style={styles.smartEntryTime}>{formatDate(entry.timestamp)}</Text>
           </View>
         </View>
@@ -199,17 +144,11 @@ const SmartEntryCard = React.memo(function SmartEntryCard({
           {entry.isImportant && <Star size={14} color={Colors.brandAmber} fill={Colors.brandAmber} />}
           {entry.aiInsight && <Sparkles size={14} color={Colors.brandLilac} />}
           <View style={[styles.distressPill, { backgroundColor: distressColor + '18' }]}>
-            <Text style={[styles.distressPillText, { color: distressColor }]}>
-              {entry.distressLevel}
-            </Text>
+            <Text style={[styles.distressPillText, { color: distressColor }]}>{entry.distressLevel}</Text>
           </View>
         </View>
       </View>
-
-      <Text style={styles.smartEntryPreview} numberOfLines={2}>
-        {entry.content}
-      </Text>
-
+      <Text style={styles.smartEntryPreview} numberOfLines={2}>{entry.content}</Text>
       {entry.emotions.length > 0 && (
         <View style={styles.entryEmotions}>
           {entry.emotions.slice(0, 3).map(e => (
@@ -218,9 +157,6 @@ const SmartEntryCard = React.memo(function SmartEntryCard({
               <Text style={styles.emotionLabel}>{e.label}</Text>
             </View>
           ))}
-          {entry.emotions.length > 3 && (
-            <Text style={styles.moreText}>+{entry.emotions.length - 3}</Text>
-          )}
         </View>
       )}
     </TouchableOpacity>
@@ -237,29 +173,39 @@ const WRITE_FORMATS: { format: JournalEntryFormat; emoji: string; label: string 
   { format: 'breakthrough_insight', emoji: '💡', label: 'Breakthrough' },
 ];
 
+const AI_MODES: { mode: AIJournalMode; emoji: string; label: string }[] = [
+  { mode: 'free_reflection', emoji: '🪞', label: 'Free Reflection' },
+  { mode: 'emotional_event', emoji: '🌊', label: 'Process Event' },
+  { mode: 'relationship_conflict', emoji: '💬', label: 'Relationship' },
+  { mode: 'shame_recovery', emoji: '🫂', label: 'Shame Recovery' },
+  { mode: 'therapy_prep', emoji: '📋', label: 'Therapy Prep' },
+  { mode: 'breakthrough', emoji: '💡', label: 'Insight' },
+];
+
 export default function JournalScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { journalEntries, triggerPatterns } = useApp();
-  const { smartEntries, stats } = useJournal();
-  const [showPatterns, setShowPatterns] = useState<boolean>(false);
+  const { journalEntries } = useApp();
+  const {
+    smartEntries,
+    stats,
+    todayReflections,
+    reflectionStreak,
+    predictions,
+    weeklyReport,
+  } = useJournal();
   const [showWriteOptions, setShowWriteOptions] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'all' | 'journal' | 'checkins'>('all');
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 500,
-      useNativeDriver: true,
-    }).start();
+    Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: true }).start();
   }, [fadeAnim]);
 
-  const hasPatterns =
-    Object.keys(triggerPatterns.triggerCounts).length > 0 ||
-    Object.keys(triggerPatterns.emotionCounts).length > 0;
-
   const hasAnyEntries = journalEntries.length > 0 || smartEntries.length > 0;
+  const currentHour = new Date().getHours();
+  const isMorningTime = currentHour >= 5 && currentHour < 12;
+  const isEveningTime = currentHour >= 17 || currentHour < 5;
 
   const handleSmartEntryPress = useCallback((id: string) => {
     router.push(`/journal-entry-detail?id=${id}` as never);
@@ -276,17 +222,20 @@ export default function JournalScreen() {
     router.push(`/journal-guided?flowId=${flowId}` as never);
   }, [router]);
 
+  const handleAIMode = useCallback((mode: AIJournalMode) => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.push(`/journal-ai-therapist?mode=${mode}` as never);
+  }, [router]);
+
   const allEntries = useMemo(() => {
     type MergedEntry = { type: 'checkin'; data: JournalEntry; timestamp: number } | { type: 'smart'; data: SmartJournalEntry; timestamp: number };
     const merged: MergedEntry[] = [];
-
     if (activeTab === 'all' || activeTab === 'checkins') {
       journalEntries.forEach(e => merged.push({ type: 'checkin', data: e, timestamp: e.timestamp }));
     }
     if (activeTab === 'all' || activeTab === 'journal') {
       smartEntries.forEach(e => merged.push({ type: 'smart', data: e, timestamp: e.timestamp }));
     }
-
     return merged.sort((a, b) => b.timestamp - a.timestamp);
   }, [journalEntries, smartEntries, activeTab]);
 
@@ -296,54 +245,186 @@ export default function JournalScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
         <View style={styles.header}>
-          <Text style={styles.title}>Journal</Text>
+          <View>
+            <Text style={styles.title}>Journal</Text>
+            <Text style={styles.subtitle}>Your private reflection space</Text>
+          </View>
           <View style={styles.headerActions}>
-            <TouchableOpacity
-              style={styles.iconBtn}
-              onPress={() => router.push('/journal/timeline')}
-            >
+            <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/journal/timeline')}>
               <Clock size={18} color={Colors.brandTeal} />
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.iconBtn}
-              onPress={() => router.push('/journal-insights' as never)}
-            >
+            <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/journal-insights' as never)}>
               <BarChart3 size={18} color={Colors.brandTeal} />
             </TouchableOpacity>
-            {hasPatterns && (
-              <TouchableOpacity
-                style={[styles.patternToggle, showPatterns && styles.patternToggleActive]}
-                onPress={() => setShowPatterns(!showPatterns)}
-              >
-                <TrendingUp size={14} color={showPatterns ? Colors.white : Colors.brandTeal} />
-              </TouchableOpacity>
-            )}
           </View>
         </View>
 
-        {stats.totalEntries > 0 && (
-          <View style={styles.statsBar}>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{stats.streakDays}</Text>
-              <Text style={styles.statLabel}>streak</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{stats.thisWeekEntries}</Text>
-              <Text style={styles.statLabel}>this week</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{stats.totalEntries + journalEntries.length}</Text>
-              <Text style={styles.statLabel}>total</Text>
-            </View>
-          </View>
-        )}
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          {(isMorningTime && !todayReflections.morning) || (isEveningTime && !todayReflections.evening) ? (
+            <TouchableOpacity
+              style={[
+                styles.dailyCard,
+                { backgroundColor: isMorningTime && !todayReflections.morning ? '#FFF8EE' : '#EEEDF7' },
+              ]}
+              onPress={() => {
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                const type = isMorningTime && !todayReflections.morning ? 'morning' : 'evening';
+                router.push(`/journal-daily?type=${type}` as never);
+              }}
+              activeOpacity={0.8}
+            >
+              <View style={styles.dailyCardInner}>
+                <View style={[
+                  styles.dailyIconCircle,
+                  { backgroundColor: isMorningTime && !todayReflections.morning ? '#FFEFC8' : '#D8D5ED' },
+                ]}>
+                  {isMorningTime && !todayReflections.morning ? (
+                    <Sun size={22} color="#D49A20" />
+                  ) : (
+                    <Moon size={22} color="#6B64A0" />
+                  )}
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.dailyCardTitle}>
+                    {isMorningTime && !todayReflections.morning ? 'Morning Check-In' : 'Evening Reflection'}
+                  </Text>
+                  <Text style={styles.dailyCardDesc}>
+                    {isMorningTime && !todayReflections.morning
+                      ? 'Set your emotional intention for today'
+                      : 'Reflect on what stood out emotionally'}
+                  </Text>
+                </View>
+                <ChevronRight size={20} color={Colors.textMuted} />
+              </View>
+              {reflectionStreak.currentStreak > 0 && (
+                <View style={styles.streakRow}>
+                  <Flame size={13} color="#E8A838" />
+                  <Text style={styles.streakText}>
+                    {reflectionStreak.currentStreak} day streak
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          ) : (
+            todayReflections.morning && todayReflections.evening && (
+              <View style={styles.dailyCompletedCard}>
+                <View style={styles.dailyCompletedInner}>
+                  <View style={styles.dailyCompletedIcon}>
+                    <Flame size={16} color="#E8A838" />
+                  </View>
+                  <Text style={styles.dailyCompletedText}>
+                    Today's reflections complete
+                    {reflectionStreak.currentStreak > 1 ? ` · ${reflectionStreak.currentStreak} day streak` : ''}
+                  </Text>
+                </View>
+              </View>
+            )
+          )}
 
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
+          {stats.totalEntries > 0 && (
+            <View style={styles.statsBar}>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{reflectionStreak.currentStreak || stats.streakDays}</Text>
+                <Text style={styles.statLabel}>streak</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{stats.thisWeekEntries}</Text>
+                <Text style={styles.statLabel}>this week</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{stats.totalEntries + journalEntries.length}</Text>
+                <Text style={styles.statLabel}>total</Text>
+              </View>
+            </View>
+          )}
+
+          <TouchableOpacity
+            style={styles.aiTherapistCard}
+            onPress={() => handleAIMode('free_reflection')}
+            activeOpacity={0.85}
+          >
+            <View style={styles.aiTherapistHeader}>
+              <View style={styles.aiTherapistIconCircle}>
+                <Brain size={20} color={Colors.brandLilac} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <View style={styles.aiTherapistTitleRow}>
+                  <Text style={styles.aiTherapistTitle}>AI Journal Guide</Text>
+                  <View style={styles.premiumBadge}>
+                    <Sparkles size={10} color={Colors.brandLilac} />
+                    <Text style={styles.premiumBadgeText}>Premium</Text>
+                  </View>
+                </View>
+                <Text style={styles.aiTherapistDesc}>
+                  Write with AI-guided reflection — like therapy for your thoughts
+                </Text>
+              </View>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.aiModesScroll}>
+              <View style={styles.aiModesRow}>
+                {AI_MODES.map(item => (
+                  <TouchableOpacity
+                    key={item.mode}
+                    style={styles.aiModeChip}
+                    onPress={() => handleAIMode(item.mode)}
+                  >
+                    <Text style={styles.aiModeEmoji}>{item.emoji}</Text>
+                    <Text style={styles.aiModeLabel}>{item.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+          </TouchableOpacity>
+
+          {predictions.length > 0 && (
+            <View style={styles.predictionsSection}>
+              <View style={styles.sectionTitleRow}>
+                <AlertTriangle size={15} color={Colors.accent} />
+                <Text style={styles.sectionTitle}>Pattern Insight</Text>
+              </View>
+              {predictions.slice(0, 2).map(prediction => (
+                <TouchableOpacity
+                  key={prediction.id}
+                  style={styles.predictionCard}
+                  onPress={() => {
+                    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    const route = prediction.suggestedAction.route;
+                    const params = prediction.suggestedAction.params;
+                    const query = params ? '?' + Object.entries(params).map(([k, v]) => `${k}=${v}`).join('&') : '';
+                    router.push(`${route}${query}` as never);
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.predictionTitle}>{prediction.title}</Text>
+                  <Text style={styles.predictionDesc}>{prediction.description}</Text>
+                  <View style={styles.predictionAction}>
+                    <Text style={styles.predictionActionText}>{prediction.suggestedAction.label}</Text>
+                    <ChevronRight size={14} color={Colors.brandTeal} />
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
+          {weeklyReport && (
+            <TouchableOpacity
+              style={styles.weeklyCard}
+              onPress={() => router.push('/journal-weekly-report' as never)}
+              activeOpacity={0.85}
+            >
+              <View style={styles.weeklyHeader}>
+                <BookOpen size={16} color={Colors.brandTeal} />
+                <Text style={styles.weeklyTitle}>Weekly Reflection</Text>
+              </View>
+              <Text style={styles.weeklyPreview} numberOfLines={2}>
+                {weeklyReport.reflectionLetter}
+              </Text>
+              <Text style={styles.weeklyLink}>Read full report →</Text>
+            </TouchableOpacity>
+          )}
+
           {showWriteOptions && (
             <View style={styles.writeOptionsCard}>
               <Text style={styles.writeOptionsTitle}>What would you like to write?</Text>
@@ -359,7 +440,6 @@ export default function JournalScreen() {
                   </TouchableOpacity>
                 ))}
               </View>
-
               <Text style={styles.guidedTitle}>Guided Reflections</Text>
               {freeFlows.slice(0, 4).map(flow => (
                 <TouchableOpacity
@@ -378,37 +458,30 @@ export default function JournalScreen() {
             </View>
           )}
 
-          {showPatterns && hasPatterns && (
-            <View style={styles.patternsCard}>
-              <Text style={styles.patternsTitle}>Your patterns</Text>
-              <Text style={styles.patternsSubtitle}>
-                Based on {journalEntries.length} check-in{journalEntries.length !== 1 ? 's' : ''}
-              </Text>
-              <PatternSection title="Top triggers" data={triggerPatterns.triggerCounts} />
-              <PatternSection title="Most felt emotions" data={triggerPatterns.emotionCounts} />
-              <PatternSection title="Common urges" data={triggerPatterns.urgeCounts} />
-            </View>
-          )}
-
           {hasAnyEntries && (
-            <View style={styles.tabRow}>
-              {(['all', 'journal', 'checkins'] as const).map(tab => (
-                <TouchableOpacity
-                  key={tab}
-                  style={[styles.tab, activeTab === tab && styles.tabActive]}
-                  onPress={() => setActiveTab(tab)}
-                >
-                  <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
-                    {tab === 'all' ? 'All' : tab === 'journal' ? 'Journal' : 'Check-ins'}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+            <View style={styles.entriesSection}>
+              <Text style={styles.entriesSectionTitle}>Recent Entries</Text>
+              <View style={styles.tabRow}>
+                {(['all', 'journal', 'checkins'] as const).map(tab => (
+                  <TouchableOpacity
+                    key={tab}
+                    style={[styles.tab, activeTab === tab && styles.tabActive]}
+                    onPress={() => setActiveTab(tab)}
+                  >
+                    <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
+                      {tab === 'all' ? 'All' : tab === 'journal' ? 'Journal' : 'Check-ins'}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
           )}
 
-          {!hasAnyEntries ? (
+          {!hasAnyEntries && !showWriteOptions ? (
             <View style={styles.emptyState}>
-              <BookOpen size={48} color={Colors.border} />
+              <View style={styles.emptyIconCircle}>
+                <PenLine size={28} color={Colors.brandTeal} />
+              </View>
               <Text style={styles.emptyTitle}>Your journal is ready</Text>
               <Text style={styles.emptyDesc}>
                 This is your private space to reflect.{'\n'}Write freely, follow guided prompts, or just check in.
@@ -422,7 +495,7 @@ export default function JournalScreen() {
               </TouchableOpacity>
             </View>
           ) : (
-            allEntries.map(item => {
+            allEntries.slice(0, 20).map(item => {
               if (item.type === 'checkin') {
                 return <CheckInEntryCard key={`ci_${item.data.id}`} entry={item.data as JournalEntry} />;
               }
@@ -464,7 +537,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     paddingHorizontal: 22,
     paddingTop: 16,
     paddingBottom: 8,
@@ -473,6 +546,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    marginTop: 4,
   },
   iconBtn: {
     width: 36,
@@ -488,24 +562,87 @@ const styles = StyleSheet.create({
     color: Colors.brandNavy,
     letterSpacing: -0.5,
   },
-  patternToggle: {
-    width: 36,
-    height: 36,
+  subtitle: {
+    fontSize: 13,
+    color: Colors.textMuted,
+    marginTop: 2,
+  },
+  scrollContent: {
+    paddingHorizontal: 22,
+    paddingBottom: 100,
+    paddingTop: 4,
+  },
+  dailyCard: {
     borderRadius: 18,
-    backgroundColor: Colors.brandTealSoft,
+    padding: 16,
+    marginBottom: 14,
+  },
+  dailyCardInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+  dailyIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  patternToggleActive: {
-    backgroundColor: Colors.brandTeal,
+  dailyCardTitle: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: Colors.text,
+  },
+  dailyCardDesc: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  streakRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.05)',
+  },
+  streakText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: '#C08020',
+  },
+  dailyCompletedCard: {
+    backgroundColor: Colors.successLight,
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 14,
+  },
+  dailyCompletedInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  dailyCompletedIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#FFF5E6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dailyCompletedText: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: Colors.success,
   },
   statsBar: {
     flexDirection: 'row',
-    marginHorizontal: 22,
     backgroundColor: Colors.white,
     borderRadius: 14,
     padding: 12,
-    marginBottom: 8,
+    marginBottom: 14,
     shadowColor: Colors.shadow,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 1,
@@ -531,10 +668,165 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.borderLight,
     marginVertical: 2,
   },
-  scrollContent: {
-    paddingHorizontal: 22,
-    paddingBottom: 100,
-    paddingTop: 8,
+  aiTherapistCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: Colors.brandLilac + '20',
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  aiTherapistHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    marginBottom: 12,
+  },
+  aiTherapistIconCircle: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: Colors.brandLilacSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  aiTherapistTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  aiTherapistTitle: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: Colors.text,
+  },
+  premiumBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: Colors.brandLilacSoft,
+    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  premiumBadgeText: {
+    fontSize: 9,
+    fontWeight: '700' as const,
+    color: Colors.brandLilac,
+    textTransform: 'uppercase' as const,
+  },
+  aiTherapistDesc: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginTop: 3,
+    lineHeight: 18,
+  },
+  aiModesScroll: {
+    marginLeft: -4,
+  },
+  aiModesRow: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingLeft: 4,
+    paddingRight: 12,
+  },
+  aiModeChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: Colors.brandLilacSoft,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+  },
+  aiModeEmoji: {
+    fontSize: 13,
+  },
+  aiModeLabel: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: Colors.brandLilac,
+  },
+  predictionsSection: {
+    marginBottom: 14,
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 10,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: Colors.textSecondary,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.5,
+  },
+  predictionCard: {
+    backgroundColor: Colors.warmGlow,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.accent,
+  },
+  predictionTitle: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: Colors.text,
+    marginBottom: 4,
+  },
+  predictionDesc: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    lineHeight: 19,
+    marginBottom: 8,
+  },
+  predictionAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  predictionActionText: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: Colors.brandTeal,
+  },
+  weeklyCard: {
+    backgroundColor: Colors.brandTealSoft,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: Colors.brandTeal + '20',
+  },
+  weeklyHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 8,
+  },
+  weeklyTitle: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: Colors.brandTeal,
+  },
+  weeklyPreview: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    lineHeight: 19,
+    marginBottom: 8,
+  },
+  weeklyLink: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: Colors.brandTeal,
   },
   writeOptionsCard: {
     backgroundColor: Colors.white,
@@ -612,6 +904,17 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     fontWeight: '500' as const,
   },
+  entriesSection: {
+    marginBottom: 10,
+  },
+  entriesSectionTitle: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: Colors.textSecondary,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.5,
+    marginBottom: 10,
+  },
   tabRow: {
     flexDirection: 'row',
     gap: 8,
@@ -633,69 +936,6 @@ const styles = StyleSheet.create({
   },
   tabTextActive: {
     color: Colors.white,
-  },
-  patternsCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  patternsTitle: {
-    fontSize: 18,
-    fontWeight: '700' as const,
-    color: Colors.text,
-  },
-  patternsSubtitle: {
-    fontSize: 13,
-    color: Colors.textMuted,
-    marginTop: 2,
-    marginBottom: 16,
-  },
-  patternSection: {
-    marginTop: 12,
-  },
-  patternTitle: {
-    fontSize: 13,
-    fontWeight: '600' as const,
-    color: Colors.textSecondary,
-    textTransform: 'uppercase' as const,
-    letterSpacing: 0.5,
-    marginBottom: 8,
-  },
-  patternRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-    gap: 8,
-  },
-  patternLabel: {
-    fontSize: 13,
-    color: Colors.text,
-    width: 120,
-  },
-  patternBarBg: {
-    flex: 1,
-    height: 8,
-    backgroundColor: Colors.surface,
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  patternBarFill: {
-    height: '100%',
-    backgroundColor: Colors.primary,
-    borderRadius: 4,
-  },
-  patternCount: {
-    fontSize: 13,
-    fontWeight: '600' as const,
-    color: Colors.textSecondary,
-    width: 24,
-    textAlign: 'right' as const,
   },
   entryCard: {
     backgroundColor: Colors.white,
@@ -871,14 +1111,22 @@ const styles = StyleSheet.create({
   },
   emptyState: {
     alignItems: 'center',
-    paddingTop: 60,
-    paddingHorizontal: 40,
+    paddingTop: 40,
+    paddingHorizontal: 32,
+  },
+  emptyIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: Colors.brandTealSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
   },
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600' as const,
     color: Colors.text,
-    marginTop: 16,
   },
   emptyDesc: {
     fontSize: 15,

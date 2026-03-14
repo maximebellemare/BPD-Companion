@@ -9,6 +9,7 @@ import {
   JournalWeeklyReport,
   JournalStats,
 } from '@/types/journalEntry';
+import { DailyReflection, DailyReflectionStreak, JournalPrediction } from '@/types/journalDaily';
 import { Emotion, Trigger } from '@/types';
 import { journalEntryRepository } from '@/services/journal/journalEntryRepository';
 import {
@@ -17,18 +18,30 @@ import {
   generateWeeklyJournalReport,
   computeJournalStats,
 } from '@/services/journal/journalAnalysisService';
+import { dailyReflectionRepository, computeReflectionStreak } from '@/services/journal/dailyReflectionRepository';
+import { generateJournalPredictions } from '@/services/journal/journalPredictionService';
 
 function generateId(): string {
   return `sj_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 }
 
+function getTodayStr(): string {
+  return new Date().toISOString().split('T')[0];
+}
+
 export const [JournalProvider, useJournal] = createContextHook(() => {
   const queryClient = useQueryClient();
   const [smartEntries, setSmartEntries] = useState<SmartJournalEntry[]>([]);
+  const [dailyReflections, setDailyReflections] = useState<DailyReflection[]>([]);
 
   const entriesQuery = useQuery({
     queryKey: ['smart_journal'],
     queryFn: () => journalEntryRepository.getAll(),
+  });
+
+  const reflectionsQuery = useQuery({
+    queryKey: ['daily_reflections'],
+    queryFn: () => dailyReflectionRepository.getAll(),
   });
 
   useEffect(() => {
@@ -37,10 +50,23 @@ export const [JournalProvider, useJournal] = createContextHook(() => {
     }
   }, [entriesQuery.data]);
 
+  useEffect(() => {
+    if (reflectionsQuery.data) {
+      setDailyReflections(reflectionsQuery.data);
+    }
+  }, [reflectionsQuery.data]);
+
   const saveMutation = useMutation({
     mutationFn: (entries: SmartJournalEntry[]) => journalEntryRepository.save(entries),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['smart_journal'] });
+    },
+  });
+
+  const saveReflectionsMutation = useMutation({
+    mutationFn: (items: DailyReflection[]) => dailyReflectionRepository.save(items),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['daily_reflections'] });
     },
   });
 
@@ -126,6 +152,39 @@ export const [JournalProvider, useJournal] = createContextHook(() => {
     },
   });
 
+  const addDailyReflection = useCallback((reflection: Omit<DailyReflection, 'id' | 'timestamp' | 'date'>) => {
+    const now = Date.now();
+    const newReflection: DailyReflection = {
+      ...reflection,
+      id: `dr_${now}_${Math.random().toString(36).substring(2, 7)}`,
+      timestamp: now,
+      date: getTodayStr(),
+    };
+    const updated = [newReflection, ...dailyReflections];
+    setDailyReflections(updated);
+    saveReflectionsMutation.mutate(updated);
+    console.log('[JournalProvider] Added daily reflection:', newReflection.type);
+    return newReflection;
+  }, [dailyReflections, saveReflectionsMutation]);
+
+  const todayReflections = useMemo(() => {
+    const today = getTodayStr();
+    return {
+      morning: dailyReflections.find(r => r.date === today && r.type === 'morning'),
+      evening: dailyReflections.find(r => r.date === today && r.type === 'evening'),
+    };
+  }, [dailyReflections]);
+
+  const reflectionStreak = useMemo<DailyReflectionStreak>(
+    () => computeReflectionStreak(dailyReflections),
+    [dailyReflections]
+  );
+
+  const predictions = useMemo<JournalPrediction[]>(
+    () => generateJournalPredictions(smartEntries),
+    [smartEntries]
+  );
+
   const stats = useMemo<JournalStats>(
     () => computeJournalStats(smartEntries),
     [smartEntries]
@@ -150,6 +209,11 @@ export const [JournalProvider, useJournal] = createContextHook(() => {
     toggleTherapyNote,
     analyzeEntry: analyzeEntryMutation.mutateAsync,
     isAnalyzing: analyzeEntryMutation.isPending,
+    dailyReflections,
+    addDailyReflection,
+    todayReflections,
+    reflectionStreak,
+    predictions,
     stats,
     patterns,
     weeklyReport,
@@ -163,6 +227,11 @@ export const [JournalProvider, useJournal] = createContextHook(() => {
     toggleTherapyNote,
     analyzeEntryMutation.mutateAsync,
     analyzeEntryMutation.isPending,
+    dailyReflections,
+    addDailyReflection,
+    todayReflections,
+    reflectionStreak,
+    predictions,
     stats,
     patterns,
     weeklyReport,

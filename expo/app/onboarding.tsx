@@ -34,7 +34,6 @@ import {
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { BRAND } from '@/constants/branding';
-import BrandLogo from '@/components/branding/BrandLogo';
 import OnboardingIllustration from '@/components/branding/illustrations/OnboardingIllustration';
 import type { OnboardingTheme } from '@/components/branding/illustrations/OnboardingIllustration';
 import { useOnboarding } from '@/providers/OnboardingProvider';
@@ -290,7 +289,6 @@ export default function OnboardingScreen() {
         <View style={styles.welcomeOrbitInner} />
         <View style={styles.welcomeGlow} />
         <View style={styles.welcomeHeroContent}>
-          <BrandLogo size={72} variant="light" animated />
           <Text style={styles.welcomeTitle}>{BRAND.name}</Text>
           <Text style={styles.welcomeTagline}>{BRAND.shortTagline}</Text>
         </View>

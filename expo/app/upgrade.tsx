@@ -463,7 +463,7 @@ export default function UpgradeScreen() {
             <Shield size={13} color={Colors.textMuted} />
             <Text style={styles.trustText}>Cancel anytime · No commitment</Text>
           </View>
-          <TouchableOpacity onPress={handleRestore}>
+          <TouchableOpacity onPress={handleRestore} style={styles.restoreBtn} testID="restore-btn" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Text style={styles.restoreText}>Restore purchase</Text>
           </TouchableOpacity>
         </View>
@@ -818,10 +818,16 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textMuted,
   },
+  restoreBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
+    backgroundColor: Colors.brandTealSoft,
+  },
   restoreText: {
     fontSize: 13,
     color: Colors.brandTeal,
-    fontWeight: '500' as const,
+    fontWeight: '600' as const,
   },
   disclaimerSection: {
     paddingHorizontal: 4,

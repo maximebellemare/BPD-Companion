@@ -470,8 +470,17 @@ export default function UpgradeScreen() {
 
         <View style={styles.disclaimerSection}>
           <Text style={styles.disclaimerText}>
-            This is a companion app, not a replacement for therapy or medical advice. Crisis support and basic care are always free. Subscription auto-renews unless cancelled at least 24 hours before the end of the current period.
+            Payment will be charged to your Apple ID account at confirmation of purchase. Subscription automatically renews unless canceled at least 24 hours before the end of the current period. Your account will be charged for renewal within 24 hours prior to the end of the current period. You can manage and cancel your subscription in your App Store account settings. This is a companion app, not a replacement for therapy or medical advice.
           </Text>
+          <View style={styles.legalLinksRow}>
+            <TouchableOpacity onPress={() => router.push('/terms-of-service')} testID="terms-link">
+              <Text style={styles.legalLinkText}>Terms of Service</Text>
+            </TouchableOpacity>
+            <Text style={styles.legalLinkDot}>·</Text>
+            <TouchableOpacity onPress={() => router.push('/privacy-policy')} testID="privacy-link">
+              <Text style={styles.legalLinkText}>Privacy Policy</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={{ height: 40 }} />
@@ -822,6 +831,22 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     textAlign: 'center' as const,
     lineHeight: 16,
+  },
+  legalLinksRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: 8,
+    marginTop: 10,
+  },
+  legalLinkText: {
+    fontSize: 12,
+    color: Colors.brandTeal,
+    fontWeight: '600' as const,
+  },
+  legalLinkDot: {
+    fontSize: 12,
+    color: Colors.textMuted,
   },
   activeContainer: {
     flex: 1,

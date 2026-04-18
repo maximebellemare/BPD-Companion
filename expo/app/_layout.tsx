@@ -43,7 +43,6 @@ function RootLayoutNav() {
           fontWeight: '600' as const,
           color: Colors.brandNavy,
           fontSize: 17,
-          letterSpacing: -0.2,
         },
         headerStyle: {
           backgroundColor: Colors.background,

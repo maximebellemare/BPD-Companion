@@ -1,6 +1,12 @@
 import { generateText } from '@rork-ai/toolkit-sdk';
 import { AIJournalMode, AI_JOURNAL_MODE_CONFIG, AIJournalMessage, AIJournalSessionSummary } from '@/types/journalDaily';
 import { SmartJournalEntry } from '@/types/journalEntry';
+import {
+  assessInputSafety,
+  checkOutputSafety,
+  augmentResponseWithSafety,
+  buildSafetyPromptInjection,
+} from '@/services/ai/aiSafetyService';
 
 export async function generateAIJournalResponse(
   mode: AIJournalMode,
@@ -46,8 +52,19 @@ ANTI-PATTERNS (never do these):
 - Do NOT use overly therapeutic language like "holding space" or "sitting with this"
 - Do NOT offer premature positivity or silver linings when someone is in pain`;
 
+  const lastUserMessage = [...messages].reverse().find(m => m.role === 'user')?.content ?? '';
+  const safetyAssessment = assessInputSafety(lastUserMessage);
+  if (safetyAssessment.level !== 'safe') {
+    console.log('[AIJournalCoach] Safety concern detected:', safetyAssessment.level, safetyAssessment.signals.map(s => s.type).join(','));
+  }
+
+  const safetyInjection = buildSafetyPromptInjection(safetyAssessment);
+  const fullSystemMessage = safetyInjection
+    ? `${safetyInjection}\n\n${systemMessage}`
+    : systemMessage;
+
   const chatMessages: { role: 'user' | 'assistant'; content: string }[] = [
-    { role: 'user', content: systemMessage },
+    { role: 'user', content: fullSystemMessage },
     { role: 'assistant', content: 'Understood. I will follow these guidelines.' },
   ];
 
@@ -57,11 +74,24 @@ ANTI-PATTERNS (never do these):
   });
 
   try {
-    const response = await generateText({ messages: chatMessages });
+    let response = await generateText({ messages: chatMessages });
+
+    const outputCheck = checkOutputSafety(response, safetyAssessment);
+    if (outputCheck.sanitizedContent) {
+      console.log('[AIJournalCoach] Output failed safety check, using sanitized fallback. Violations:', outputCheck.violations.map(v => v.type).join(','));
+      response = outputCheck.sanitizedContent;
+    } else if (!outputCheck.isAcceptable) {
+      console.log('[AIJournalCoach] Non-critical safety concerns:', outputCheck.violations.map(v => v.type).join(','));
+    }
+
+    response = augmentResponseWithSafety(response, safetyAssessment);
     console.log('[AIJournalCoach] Response generated successfully');
     return response;
   } catch (error) {
     console.error('[AIJournalCoach] Generation failed:', error);
+    if (safetyAssessment.level === 'crisis' && safetyAssessment.crisisResourceText) {
+      return `I hear how much pain is in what you just wrote, and I do not want to rush past it. Let's take one slow breath together before anything else.\n\n${safetyAssessment.crisisResourceText}`;
+    }
     return 'Something important brought you here. Whether it\'s a specific moment or a feeling that won\'t quiet down — what\'s the part that keeps pulling at you?';
   }
 }

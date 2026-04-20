@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useEffect, useCallback, useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import createContextHook from '@nkzw/create-context-hook';
+import type { PurchasesPackage } from 'react-native-purchases';
 import {
   SubscriptionState,
   SubscriptionTier,
@@ -8,11 +9,6 @@ import {
   PremiumFeature,
 } from '@/types/subscription';
 import {
-  loadSubscriptionState,
-  subscribeToPlan,
-  startFreeTrial,
-  cancelSubscription,
-  restorePurchase,
   getDailyAIUsage,
   incrementDailyAIUsage,
   hasReachedAILimit,
@@ -30,15 +26,37 @@ import {
   getLockedFeatures,
   FeatureEntitlement,
 } from '@/services/subscription/entitlementService';
+import {
+  configurePurchases,
+  fetchCustomerInfo,
+  fetchOfferings,
+  purchasePackage as rcPurchasePackage,
+  restorePurchases as rcRestorePurchases,
+  hasActiveEntitlement,
+  getActiveExpiration,
+  getActivePeriodType,
+  isTrialActive as rcIsTrialActive,
+} from '@/services/subscription/purchasesService';
 
 export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   const queryClient = useQueryClient();
   const [dailyAIUsage, setDailyAIUsage] = useState<number>(0);
   const [dailyRewriteUsage, setDailyRewriteUsage] = useState<number>(0);
 
-  const subscriptionQuery = useQuery({
-    queryKey: ['subscription'],
-    queryFn: loadSubscriptionState,
+  useEffect(() => {
+    void configurePurchases();
+  }, []);
+
+  const customerInfoQuery = useQuery({
+    queryKey: ['rc-customer-info'],
+    queryFn: fetchCustomerInfo,
+    staleTime: 60_000,
+  });
+
+  const offeringsQuery = useQuery({
+    queryKey: ['rc-offerings'],
+    queryFn: fetchOfferings,
+    staleTime: 5 * 60_000,
   });
 
   const aiUsageQuery = useQuery({
@@ -63,43 +81,55 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     }
   }, [rewriteUsageQuery.data]);
 
-  const state: SubscriptionState = useMemo(() => subscriptionQuery.data ?? {
-    tier: 'free',
-    plan: null,
-    expiresAt: null,
-    startedAt: null,
-    trialEndsAt: null,
-    isTrialActive: false,
-  }, [subscriptionQuery.data]);
+  const state: SubscriptionState = useMemo(() => {
+    const info = customerInfoQuery.data ?? null;
+    const isActive = hasActiveEntitlement(info);
+    if (!isActive) {
+      return {
+        tier: 'free',
+        plan: null,
+        expiresAt: null,
+        startedAt: null,
+        trialEndsAt: null,
+        isTrialActive: false,
+      };
+    }
+    const expiresAt = getActiveExpiration(info);
+    const period = getActivePeriodType(info);
+    const trial = rcIsTrialActive(info);
+    const plan: SubscriptionPlan | null = period
+      ? {
+          id: period,
+          name: period === 'yearly' ? 'Yearly' : 'Monthly',
+          period,
+          price: period === 'yearly' ? 59.99 : 9.99,
+          priceLabel: period === 'yearly' ? '$59.99/yr' : '$9.99/mo',
+        }
+      : null;
+    return {
+      tier: 'premium',
+      plan,
+      expiresAt,
+      startedAt: null,
+      trialEndsAt: trial ? expiresAt : null,
+      isTrialActive: trial,
+    };
+  }, [customerInfoQuery.data]);
 
   const tier: SubscriptionTier = state.tier;
   const isPremium = tier === 'premium';
 
-  const subscribeMutation = useMutation({
-    mutationFn: (plan: SubscriptionPlan) => subscribeToPlan(plan),
+  const purchaseMutation = useMutation({
+    mutationFn: (pkg: PurchasesPackage) => rcPurchasePackage(pkg),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['subscription'] });
-    },
-  });
-
-  const trialMutation = useMutation({
-    mutationFn: () => startFreeTrial(),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['subscription'] });
-    },
-  });
-
-  const cancelMutation = useMutation({
-    mutationFn: () => cancelSubscription(),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['subscription'] });
+      void queryClient.invalidateQueries({ queryKey: ['rc-customer-info'] });
     },
   });
 
   const restoreMutation = useMutation({
-    mutationFn: () => restorePurchase(),
+    mutationFn: () => rcRestorePurchases(),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['subscription'] });
+      void queryClient.invalidateQueries({ queryKey: ['rc-customer-info'] });
     },
   });
 
@@ -156,10 +186,29 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     return formatExpirationDate(state.expiresAt);
   }, [state.expiresAt]);
 
+  const purchase = useCallback((pkg: PurchasesPackage) => {
+    purchaseMutation.mutate(pkg);
+  }, [purchaseMutation]);
+
+  const subscribe = useCallback((_plan: SubscriptionPlan) => {
+    const current = offeringsQuery.data;
+    if (!current) {
+      console.log('[Subscription] No offering available');
+      return;
+    }
+    const pkg = _plan.period === 'yearly' ? current.annual : current.monthly;
+    if (!pkg) {
+      console.log('[Subscription] No package for period:', _plan.period);
+      return;
+    }
+    purchaseMutation.mutate(pkg);
+  }, [offeringsQuery.data, purchaseMutation]);
+
   return useMemo(() => ({
     tier,
     isPremium,
     state,
+    offering: offeringsQuery.data ?? null,
     dailyAIUsage,
     aiLimitReached,
     remainingAIMessages,
@@ -168,11 +217,19 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     remainingRewrites,
     daysRemaining,
     expirationLabel,
-    isLoading: subscriptionQuery.isLoading,
-    isSubscribing: subscribeMutation.isPending,
-    subscribe: subscribeMutation.mutate,
-    startTrial: trialMutation.mutate,
-    cancel: cancelMutation.mutate,
+    isLoading: customerInfoQuery.isLoading,
+    isSubscribing: purchaseMutation.isPending,
+    isRestoring: restoreMutation.isPending,
+    purchase,
+    subscribe,
+    startTrial: () => {
+      const current = offeringsQuery.data;
+      const pkg = current?.annual ?? current?.monthly ?? null;
+      if (pkg) purchaseMutation.mutate(pkg);
+    },
+    cancel: () => {
+      console.log('[Subscription] Cancel must be done in the App Store / Play Store');
+    },
     restore: restoreMutation.mutate,
     canAccessFeature,
     shouldPromptUpgrade,
@@ -183,6 +240,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     tier,
     isPremium,
     state,
+    offeringsQuery.data,
     dailyAIUsage,
     aiLimitReached,
     remainingAIMessages,
@@ -191,12 +249,13 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     remainingRewrites,
     daysRemaining,
     expirationLabel,
-    subscriptionQuery.isLoading,
-    subscribeMutation.isPending,
-    subscribeMutation.mutate,
-    trialMutation.mutate,
-    cancelMutation.mutate,
+    customerInfoQuery.isLoading,
+    purchaseMutation.isPending,
+    purchaseMutation,
+    restoreMutation.isPending,
     restoreMutation.mutate,
+    purchase,
+    subscribe,
     canAccessFeature,
     shouldPromptUpgrade,
     lockedFeatures,

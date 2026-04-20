@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -35,7 +35,7 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useSubscription } from '@/providers/SubscriptionProvider';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
-import { SUBSCRIPTION_PLANS, PREMIUM_FEATURES } from '@/types/subscription';
+import { PREMIUM_FEATURES } from '@/types/subscription';
 import { usePersonalization } from '@/hooks/usePersonalization';
 
 const ICON_MAP: Record<string, React.ComponentType<{ size: number; color: string }>> = {
@@ -79,10 +79,40 @@ export default function UpgradeScreen() {
   const router = useRouter();
   const { anchor } = useLocalSearchParams<{ anchor?: string }>();
   const insets = useSafeAreaInsets();
-  const { isPremium, subscribe, startTrial, restore, isSubscribing, state } = useSubscription();
+  const { isPremium, subscribe, restore, isSubscribing, state, offering } = useSubscription();
   const personalization = usePersonalization();
   const { trackEvent } = useAnalytics();
   const [selectedPlanId, setSelectedPlanId] = useState<string>('yearly');
+
+  const monthlyPackage = offering?.monthly ?? null;
+  const annualPackage = offering?.annual ?? null;
+
+  const plans = useMemo(() => {
+    const list: { id: string; name: string; period: 'monthly' | 'yearly'; priceLabel: string; savings?: string; popular?: boolean }[] = [];
+    if (monthlyPackage) {
+      list.push({
+        id: 'monthly',
+        name: 'Monthly',
+        period: 'monthly',
+        priceLabel: monthlyPackage.product.priceString + '/mo',
+      });
+    } else {
+      list.push({ id: 'monthly', name: 'Monthly', period: 'monthly', priceLabel: '$9.99/mo' });
+    }
+    if (annualPackage) {
+      list.push({
+        id: 'yearly',
+        name: 'Yearly',
+        period: 'yearly',
+        priceLabel: annualPackage.product.priceString + '/yr',
+        savings: 'Save 50%',
+        popular: true,
+      });
+    } else {
+      list.push({ id: 'yearly', name: 'Yearly', period: 'yearly', priceLabel: '$59.99/yr', savings: 'Save 50%', popular: true });
+    }
+    return list;
+  }, [monthlyPackage, annualPackage]);
   const _scrollRef = React.useRef<ScrollView>(null);
   const featureSectionY = React.useRef<number>(0);
 
@@ -165,35 +195,29 @@ export default function UpgradeScreen() {
     if (Platform.OS !== 'web') {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-    const plan = SUBSCRIPTION_PLANS.find(p => p.id === selectedPlanId);
-    if (plan) {
-      trackEvent('upgrade_clicked', { plan_id: selectedPlanId });
-      subscribe(plan);
-      Alert.alert(
-        'Welcome to Premium',
-        'You now have access to all features. This is a demo subscription.',
-        [{ text: 'Continue', onPress: () => router.back() }]
-      );
+    const selected = plans.find(p => p.id === selectedPlanId);
+    if (!selected) return;
+    const pkg = selected.period === 'yearly' ? annualPackage : monthlyPackage;
+    if (!pkg) {
+      Alert.alert('Unavailable', 'This plan is not available right now. Please try again later.');
+      return;
     }
-  }, [selectedPlanId, subscribe, router, trackEvent]);
-
-  const handleStartTrial = useCallback(() => {
-    handleHaptic();
-    startTrial();
-    Alert.alert(
-      'Trial Started',
-      'Enjoy 7 days of full Premium access.',
-      [{ text: 'Explore', onPress: () => router.back() }]
-    );
-  }, [handleHaptic, startTrial, router]);
+    trackEvent('upgrade_clicked', { plan_id: selectedPlanId });
+    subscribe({
+      id: selected.id,
+      name: selected.name,
+      period: selected.period,
+      price: selected.period === 'yearly' ? 59.99 : 9.99,
+      priceLabel: selected.priceLabel,
+    });
+  }, [selectedPlanId, subscribe, trackEvent, plans, annualPackage, monthlyPackage]);
 
   const handleRestore = useCallback(() => {
     handleHaptic();
     restore();
-    Alert.alert('Restore', 'No previous purchase found. This is a demo.');
   }, [handleHaptic, restore]);
 
-  const selectedPlan = SUBSCRIPTION_PLANS.find(p => p.id === selectedPlanId);
+  const selectedPlan = plans.find(p => p.id === selectedPlanId);
 
   const shimmerOpacity = shimmerAnim.interpolate({
     inputRange: [0, 1],
@@ -392,7 +416,7 @@ export default function UpgradeScreen() {
         <Animated.View style={[styles.plansSection, { opacity: fadeAnim }]}>
           <Text style={styles.plansTitle}>Choose your plan</Text>
           <View style={styles.plansRow}>
-            {SUBSCRIPTION_PLANS.map((plan) => {
+            {plans.map((plan) => {
               const isSelected = plan.id === selectedPlanId;
               return (
                 <TouchableOpacity
@@ -447,15 +471,7 @@ export default function UpgradeScreen() {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.trialButton}
-            onPress={handleStartTrial}
-            activeOpacity={0.7}
-            testID="trial-btn"
-          >
-            <Zap size={15} color={Colors.primary} />
-            <Text style={styles.trialButtonText}>Start 7-day free trial</Text>
-          </TouchableOpacity>
+
         </Animated.View>
 
         <View style={styles.trustSection}>

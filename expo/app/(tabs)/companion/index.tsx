@@ -173,6 +173,9 @@ export default function CompanionScreen() {
               <Text style={styles.headerSubtitle}>
                 A calm space to reflect, slow down, and get support.
               </Text>
+              <View style={styles.disclaimerPill}>
+                <Text style={styles.disclaimerPillText}>Supportive tool · Not medical advice</Text>
+              </View>
             </View>
           </View>
         </Animated.View>
@@ -1031,6 +1034,21 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 36,
+  },
+  disclaimerPill: {
+    marginTop: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: 'rgba(240, 237, 233, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(240, 237, 233, 0.18)',
+  },
+  disclaimerPillText: {
+    fontSize: 11,
+    fontWeight: '500' as const,
+    color: 'rgba(240, 237, 233, 0.75)',
+    letterSpacing: 0.3,
   },
   followUpCard: {
     backgroundColor: Colors.warmGlow,

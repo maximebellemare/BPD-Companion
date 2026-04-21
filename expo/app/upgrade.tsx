@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -35,7 +35,7 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useSubscription } from '@/providers/SubscriptionProvider';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
-import { SUBSCRIPTION_PLANS, PREMIUM_FEATURES } from '@/types/subscription';
+import { PREMIUM_FEATURES } from '@/types/subscription';
 import { usePersonalization } from '@/hooks/usePersonalization';
 
 const ICON_MAP: Record<string, React.ComponentType<{ size: number; color: string }>> = {
@@ -79,10 +79,40 @@ export default function UpgradeScreen() {
   const router = useRouter();
   const { anchor } = useLocalSearchParams<{ anchor?: string }>();
   const insets = useSafeAreaInsets();
-  const { isPremium, subscribe, startTrial, restore, isSubscribing, state } = useSubscription();
+  const { isPremium, subscribe, restore, isSubscribing, state, offering } = useSubscription();
   const personalization = usePersonalization();
   const { trackEvent } = useAnalytics();
   const [selectedPlanId, setSelectedPlanId] = useState<string>('yearly');
+
+  const monthlyPackage = offering?.monthly ?? null;
+  const annualPackage = offering?.annual ?? null;
+
+  const plans = useMemo(() => {
+    const list: { id: string; name: string; period: 'monthly' | 'yearly'; priceLabel: string; savings?: string; popular?: boolean }[] = [];
+    if (monthlyPackage) {
+      list.push({
+        id: 'monthly',
+        name: 'Monthly',
+        period: 'monthly',
+        priceLabel: monthlyPackage.product.priceString + '/mo',
+      });
+    } else {
+      list.push({ id: 'monthly', name: 'Monthly', period: 'monthly', priceLabel: '$9.99/mo' });
+    }
+    if (annualPackage) {
+      list.push({
+        id: 'yearly',
+        name: 'Yearly',
+        period: 'yearly',
+        priceLabel: annualPackage.product.priceString + '/yr',
+        savings: 'Save 50%',
+        popular: true,
+      });
+    } else {
+      list.push({ id: 'yearly', name: 'Yearly', period: 'yearly', priceLabel: '$59.99/yr', savings: 'Save 50%', popular: true });
+    }
+    return list;
+  }, [monthlyPackage, annualPackage]);
   const _scrollRef = React.useRef<ScrollView>(null);
   const featureSectionY = React.useRef<number>(0);
 
@@ -165,35 +195,46 @@ export default function UpgradeScreen() {
     if (Platform.OS !== 'web') {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-    const plan = SUBSCRIPTION_PLANS.find(p => p.id === selectedPlanId);
-    if (plan) {
-      trackEvent('upgrade_clicked', { plan_id: selectedPlanId });
-      subscribe(plan);
-      Alert.alert(
-        'Welcome to Premium',
-        'You now have access to all features. This is a demo subscription.',
-        [{ text: 'Continue', onPress: () => router.back() }]
-      );
+    const selected = plans.find(p => p.id === selectedPlanId);
+    if (!selected) return;
+    const pkg = selected.period === 'yearly' ? annualPackage : monthlyPackage;
+    if (!pkg) {
+      Alert.alert('Unavailable', 'This plan is not available right now. Please try again later.');
+      return;
     }
-  }, [selectedPlanId, subscribe, router, trackEvent]);
-
-  const handleStartTrial = useCallback(() => {
-    handleHaptic();
-    startTrial();
-    Alert.alert(
-      'Trial Started',
-      'Enjoy 7 days of full Premium access.',
-      [{ text: 'Explore', onPress: () => router.back() }]
-    );
-  }, [handleHaptic, startTrial, router]);
+    trackEvent('upgrade_clicked', { plan_id: selectedPlanId });
+    subscribe({
+      id: selected.id,
+      name: selected.name,
+      period: selected.period,
+      price: selected.period === 'yearly' ? 59.99 : 9.99,
+      priceLabel: selected.priceLabel,
+    });
+  }, [selectedPlanId, subscribe, trackEvent, plans, annualPackage, monthlyPackage]);
 
   const handleRestore = useCallback(() => {
     handleHaptic();
     restore();
-    Alert.alert('Restore', 'No previous purchase found. This is a demo.');
   }, [handleHaptic, restore]);
 
-  const selectedPlan = SUBSCRIPTION_PLANS.find(p => p.id === selectedPlanId);
+  const selectedPlan = plans.find(p => p.id === selectedPlanId);
+
+  const anchorMessage = useMemo(() => {
+    const map: Record<string, string> = {
+      weekly_reflection: 'Unlock deeper weekly reflection insights',
+      therapist_report: 'Keep a complete history of your therapy reports',
+      unlimited_ai: 'Continue with unlimited AI companion support',
+      relationship_analysis: 'Unlock advanced relationship pattern analysis',
+      emotional_profile: 'Discover deeper emotional pattern intelligence',
+      secure_rewrite: 'Unlock calm, self-respecting secure rewrites',
+      message_simulation: 'See likely outcomes before you send',
+      message_health_scoring: 'Get detailed message health analysis',
+      communication_insights: 'Discover your communication patterns',
+      unlimited_rewrites: 'Continue with unlimited message rewrites',
+    };
+    if (!anchor) return '';
+    return map[anchor] ?? 'Unlock deeper support tools';
+  }, [anchor]);
 
   const shimmerOpacity = shimmerAnim.interpolate({
     inputRange: [0, 1],
@@ -303,13 +344,9 @@ export default function UpgradeScreen() {
         )}
 
         <Animated.View style={[styles.testimonialCard, { opacity: fadeAnim }]}>
-          <Animated.View style={{ opacity: testimonialFade }}>
-            <Text style={styles.testimonialText}>
-              "{TESTIMONIALS[testimonialIndex].text}"
-            </Text>
-            <Text style={styles.testimonialLabel}>
-              {TESTIMONIALS[testimonialIndex].label}
-            </Text>
+          <Animated.View style={{ opacity: testimonialFade }} key={testimonialIndex}>
+            <Text style={styles.testimonialText}>{`"${TESTIMONIALS[testimonialIndex].text}"`}</Text>
+            <Text style={styles.testimonialLabel}>{TESTIMONIALS[testimonialIndex].label}</Text>
           </Animated.View>
         </Animated.View>
 
@@ -337,24 +374,12 @@ export default function UpgradeScreen() {
           style={[styles.featuresSection, { opacity: fadeAnim }]}
           onLayout={(e) => { featureSectionY.current = e.nativeEvent.layout.y; }}
         >
-          {anchor && (
+          {anchor ? (
             <View style={styles.anchorHighlight}>
               <Sparkles size={14} color="#D4956A" />
-              <Text style={styles.anchorHighlightText}>
-                {anchor === 'weekly_reflection' && 'Unlock deeper weekly reflection insights'}
-                {anchor === 'therapist_report' && 'Keep a complete history of your therapy reports'}
-                {anchor === 'unlimited_ai' && 'Continue with unlimited AI companion support'}
-                {anchor === 'relationship_analysis' && 'Unlock advanced relationship pattern analysis'}
-                {anchor === 'emotional_profile' && 'Discover deeper emotional pattern intelligence'}
-                {anchor === 'secure_rewrite' && 'Unlock calm, self-respecting secure rewrites'}
-                {anchor === 'message_simulation' && 'See likely outcomes before you send'}
-                {anchor === 'message_health_scoring' && 'Get detailed message health analysis'}
-                {anchor === 'communication_insights' && 'Discover your communication patterns'}
-                {anchor === 'unlimited_rewrites' && 'Continue with unlimited message rewrites'}
-                {!['weekly_reflection', 'therapist_report', 'unlimited_ai', 'relationship_analysis', 'emotional_profile', 'secure_rewrite', 'message_simulation', 'message_health_scoring', 'communication_insights', 'unlimited_rewrites'].includes(anchor) && 'Unlock deeper support tools'}
-              </Text>
+              <Text style={styles.anchorHighlightText}>{anchorMessage}</Text>
             </View>
-          )}
+          ) : null}
           <Text style={styles.comparisonTitle}>What Premium unlocks</Text>
           {PREMIUM_FEATURES.map((feature, index) => {
             const IconComponent = ICON_MAP[feature.icon] ?? Sparkles;
@@ -392,7 +417,7 @@ export default function UpgradeScreen() {
         <Animated.View style={[styles.plansSection, { opacity: fadeAnim }]}>
           <Text style={styles.plansTitle}>Choose your plan</Text>
           <View style={styles.plansRow}>
-            {SUBSCRIPTION_PLANS.map((plan) => {
+            {plans.map((plan) => {
               const isSelected = plan.id === selectedPlanId;
               return (
                 <TouchableOpacity
@@ -447,15 +472,7 @@ export default function UpgradeScreen() {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.trialButton}
-            onPress={handleStartTrial}
-            activeOpacity={0.7}
-            testID="trial-btn"
-          >
-            <Zap size={15} color={Colors.primary} />
-            <Text style={styles.trialButtonText}>Start 7-day free trial</Text>
-          </TouchableOpacity>
+
         </Animated.View>
 
         <View style={styles.trustSection}>
@@ -463,15 +480,24 @@ export default function UpgradeScreen() {
             <Shield size={13} color={Colors.textMuted} />
             <Text style={styles.trustText}>Cancel anytime · No commitment</Text>
           </View>
-          <TouchableOpacity onPress={handleRestore}>
+          <TouchableOpacity onPress={handleRestore} style={styles.restoreBtn} testID="restore-btn" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Text style={styles.restoreText}>Restore purchase</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.disclaimerSection}>
           <Text style={styles.disclaimerText}>
-            This is a companion app, not a replacement for therapy or medical advice. Crisis support and basic care are always free. Subscription auto-renews unless cancelled at least 24 hours before the end of the current period.
+            Payment will be charged to your Apple ID account at confirmation of purchase. Subscription automatically renews unless canceled at least 24 hours before the end of the current period. Your account will be charged for renewal within 24 hours prior to the end of the current period. You can manage and cancel your subscription in your App Store account settings. This is a companion app, not a replacement for therapy or medical advice.
           </Text>
+          <View style={styles.legalLinksRow}>
+            <TouchableOpacity onPress={() => router.push('/terms-of-service')} testID="terms-link">
+              <Text style={styles.legalLinkText}>Terms of Service</Text>
+            </TouchableOpacity>
+            <Text style={styles.legalLinkDot}>·</Text>
+            <TouchableOpacity onPress={() => router.push('/privacy-policy')} testID="privacy-link">
+              <Text style={styles.legalLinkText}>Privacy Policy</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={{ height: 40 }} />
@@ -809,10 +835,16 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textMuted,
   },
+  restoreBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
+    backgroundColor: Colors.brandTealSoft,
+  },
   restoreText: {
     fontSize: 13,
     color: Colors.brandTeal,
-    fontWeight: '500' as const,
+    fontWeight: '600' as const,
   },
   disclaimerSection: {
     paddingHorizontal: 4,
@@ -822,6 +854,22 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     textAlign: 'center' as const,
     lineHeight: 16,
+  },
+  legalLinksRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: 8,
+    marginTop: 10,
+  },
+  legalLinkText: {
+    fontSize: 12,
+    color: Colors.brandTeal,
+    fontWeight: '600' as const,
+  },
+  legalLinkDot: {
+    fontSize: 12,
+    color: Colors.textMuted,
   },
   activeContainer: {
     flex: 1,

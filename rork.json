@@ -1,7 +1,7 @@
 {
   "apps": [
     {
-      "name": "Steady",
+      "name": "BPD Companion",
       "path": "expo",
       "framework": "react-native"
     }

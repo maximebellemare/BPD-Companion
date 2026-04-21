@@ -8,6 +8,7 @@ import {
   Animated,
   Platform,
   Switch,
+  Alert,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import {
@@ -40,6 +41,9 @@ import {
   MessageCircle,
   Trash2,
   AlertTriangle,
+  LogOut,
+  CloudOff,
+  LogIn,
 } from 'lucide-react-native';
 import BrandLogo from '@/components/branding/BrandLogo';
 import { BRAND } from '@/constants/branding';
@@ -51,6 +55,7 @@ import { useCoaching } from '@/hooks/useCoaching';
 import { usePersonalization } from '@/hooks/usePersonalization';
 import { useSmartReminders } from '@/hooks/useSmartReminders';
 import { useRewards } from '@/providers/RewardsProvider';
+import { useAuth } from '@/providers/AuthProvider';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -60,6 +65,31 @@ export default function ProfileScreen() {
   const personalization = usePersonalization();
   const { getState: getSmartState } = useSmartReminders();
   const { totalUnlocked, hasUnseen } = useRewards();
+  const { user, isGuest, isAuthenticated, signOut } = useAuth();
+
+  const handleSignOut = useCallback(() => {
+    const doSignOut = async () => {
+      try {
+        await signOut();
+      } catch (e) {
+        console.log('[Profile] signOut error', e);
+      }
+    };
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined' && window.confirm('Sign out of your account?')) {
+        void doSignOut();
+      }
+      return;
+    }
+    Alert.alert('Sign out?', 'You can sign back in anytime to sync your data.', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Sign out', style: 'destructive', onPress: () => void doSignOut() },
+    ]);
+  }, [signOut]);
+
+  const handleCreateAccount = useCallback(() => {
+    router.push('/auth/welcome' as never);
+  }, [router]);
   const [smartInfo, setSmartInfo] = useState({ todayFired: 0, activeCount: 0 });
 
   useEffect(() => {
@@ -722,6 +752,61 @@ export default function ProfileScreen() {
           </View>
         </Animated.View>
 
+        {isGuest ? (
+          <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
+            <View style={styles.guestBanner}>
+              <View style={styles.guestBannerIcon}>
+                <CloudOff size={18} color={Colors.danger} />
+              </View>
+              <View style={styles.guestBannerText}>
+                <Text style={styles.guestBannerTitle}>You&apos;re using guest mode</Text>
+                <Text style={styles.guestBannerDesc}>
+                  Your data lives only on this device. Create an account to sync and back up safely.
+                </Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              style={styles.createAccountBtn}
+              onPress={() => { handleHaptic(); handleCreateAccount(); }}
+              activeOpacity={0.9}
+              testID="create-account-btn"
+            >
+              <LogIn size={16} color={Colors.white} />
+              <Text style={styles.createAccountBtnText}>Create account & save my data</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        ) : null}
+
+        {isAuthenticated ? (
+          <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
+            <View style={styles.navGroup}>
+              <View style={styles.accountRow}>
+                <View style={[styles.navIcon, { backgroundColor: Colors.brandTealSoft }]}>
+                  <User size={16} color={Colors.brandTeal} />
+                </View>
+                <View style={styles.navRowText}>
+                  <Text style={styles.navRowTitle}>Signed in</Text>
+                  <Text style={styles.navRowDesc} numberOfLines={1}>{user?.email ?? ''}</Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                style={styles.signOutRow}
+                onPress={() => { handleHaptic(); handleSignOut(); }}
+                activeOpacity={0.7}
+                testID="sign-out-btn"
+              >
+                <View style={[styles.navIcon, { backgroundColor: Colors.dangerLight }]}>
+                  <LogOut size={16} color={Colors.danger} />
+                </View>
+                <View style={styles.navRowText}>
+                  <Text style={[styles.navRowTitle, { color: Colors.danger }]}>Sign out</Text>
+                  <Text style={styles.navRowDesc}>Log out of your account</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        ) : null}
+
         <View style={styles.footer}>
           <BrandLogo size={36} />
           <Text style={styles.footerText}>{BRAND.name}</Text>
@@ -934,6 +1019,63 @@ const styles = StyleSheet.create({
     padding: 14,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
+  },
+  accountRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    padding: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+  },
+  signOutRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    padding: 14,
+  },
+  guestBanner: {
+    flexDirection: 'row' as const,
+    alignItems: 'flex-start' as const,
+    gap: 12,
+    padding: 14,
+    backgroundColor: Colors.dangerLight,
+    borderRadius: 14,
+    marginBottom: 10,
+  },
+  guestBannerIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: Colors.white,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  guestBannerText: {
+    flex: 1,
+  },
+  guestBannerTitle: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: Colors.dangerDark,
+  },
+  guestBannerDesc: {
+    fontSize: 12,
+    color: Colors.dangerDark,
+    marginTop: 3,
+    lineHeight: 17,
+  },
+  createAccountBtn: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: 8,
+    backgroundColor: Colors.brandNavy,
+    borderRadius: 14,
+    paddingVertical: 14,
+  },
+  createAccountBtnText: {
+    color: Colors.white,
+    fontSize: 14,
+    fontWeight: '600' as const,
   },
   navIcon: {
     width: 36,

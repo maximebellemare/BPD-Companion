@@ -7,6 +7,7 @@ import {
   ScrollView,
   Animated,
   Platform,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -34,7 +35,6 @@ import {
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { BRAND } from '@/constants/branding';
-import BrandLogo from '@/components/branding/BrandLogo';
 import OnboardingIllustration from '@/components/branding/illustrations/OnboardingIllustration';
 import type { OnboardingTheme } from '@/components/branding/illustrations/OnboardingIllustration';
 import { useOnboarding } from '@/providers/OnboardingProvider';
@@ -290,7 +290,11 @@ export default function OnboardingScreen() {
         <View style={styles.welcomeOrbitInner} />
         <View style={styles.welcomeGlow} />
         <View style={styles.welcomeHeroContent}>
-          <BrandLogo size={72} variant="light" animated />
+          <Image
+            source={require('@/assets/images/icon.png')}
+            style={styles.welcomeLogo}
+            resizeMode="contain"
+          />
           <Text style={styles.welcomeTitle}>{BRAND.name}</Text>
           <Text style={styles.welcomeTagline}>{BRAND.shortTagline}</Text>
         </View>
@@ -736,13 +740,18 @@ const styles = StyleSheet.create({
     borderRadius: 60,
     backgroundColor: 'rgba(74, 139, 141, 0.06)',
   },
+  welcomeLogo: {
+    width: 88,
+    height: 88,
+    borderRadius: 22,
+  },
   welcomeTitle: {
     fontSize: 30,
     fontWeight: '800' as const,
     color: '#F0EDE9',
     textAlign: 'center' as const,
     letterSpacing: -0.8,
-    marginTop: 16,
+    marginTop: 18,
   },
   welcomeTagline: {
     fontSize: 14,

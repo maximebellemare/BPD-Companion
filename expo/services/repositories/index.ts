@@ -5,7 +5,7 @@ import { LocalConversationRepository } from './conversationRepository';
 import { LocalProfileRepository } from './profileRepository';
 import { LocalLearnRepository } from './learnRepository';
 import { LocalCommunityRepository } from './communityRepository';
-import { LocalAuthRepository } from './authRepository';
+import { SupabaseAuthRepository } from './authRepository';
 import { LocalCheckInRepository } from './checkInRepository';
 import { LocalMemoryRepository } from './memoryRepository';
 import { LocalAnalyticsRepository } from './analyticsRepository';
@@ -43,7 +43,7 @@ export const conversationRepository: IConversationRepository = new LocalConversa
 export const profileRepository: IProfileRepository = new LocalProfileRepository(storageService);
 export const learnRepository: ILearnRepository = new LocalLearnRepository(storageService);
 export const communityRepository: ICommunityRepository = new LocalCommunityRepository();
-export const authRepository: IAuthRepository = new LocalAuthRepository(storageService);
+export const authRepository: IAuthRepository = new SupabaseAuthRepository();
 export const checkInRepository: ICheckInRepository = new LocalCheckInRepository(storageService);
 export const memoryRepository: IMemoryRepository = new LocalMemoryRepository(storageService);
 export const analyticsRepository: IAnalyticsRepository = new LocalAnalyticsRepository();

@@ -1,9 +1,10 @@
 import { Platform } from 'react-native';
+import { Purchases, LOG_LEVEL } from '@revenuecat/purchases-capacitor';
 import type {
   CustomerInfo,
   PurchasesOffering,
   PurchasesPackage,
-} from 'react-native-purchases';
+} from '@revenuecat/purchases-capacitor';
 
 export const PREMIUM_ENTITLEMENT_ID = 'BPD Companion Pro';
 export const DEFAULT_OFFERING_ID = 'default';
@@ -22,11 +23,6 @@ function getRCToken(): string | undefined {
   });
 }
 
-async function loadPurchases() {
-  const mod = await import('react-native-purchases');
-  return mod.default;
-}
-
 export async function configurePurchases(appUserId?: string): Promise<void> {
   if (configured) return;
   if (configurePromise) return configurePromise;
@@ -38,14 +34,10 @@ export async function configurePurchases(appUserId?: string): Promise<void> {
         console.log('[Purchases] No API key found for platform:', Platform.OS);
         return;
       }
-      const Purchases = await loadPurchases();
-      if (typeof Purchases.setLogLevel === 'function') {
-        try {
-          const { LOG_LEVEL } = await import('react-native-purchases');
-          Purchases.setLogLevel(LOG_LEVEL.WARN);
-        } catch (e) {
-          console.log('[Purchases] setLogLevel not available', e);
-        }
+      try {
+        await Purchases.setLogLevel({ level: LOG_LEVEL.WARN });
+      } catch (e) {
+        console.log('[Purchases] setLogLevel not available', e);
       }
       await Purchases.configure({ apiKey, appUserID: appUserId ?? null });
       configured = true;
@@ -68,7 +60,6 @@ export async function ensureConfigured(): Promise<void> {
 export async function fetchOfferings(): Promise<PurchasesOffering | null> {
   await ensureConfigured();
   try {
-    const Purchases = await loadPurchases();
     const offerings = await Purchases.getOfferings();
     const current = offerings.current ?? offerings.all[DEFAULT_OFFERING_ID] ?? null;
     console.log('[Purchases] fetched offerings, current:', current?.identifier);
@@ -82,9 +73,8 @@ export async function fetchOfferings(): Promise<PurchasesOffering | null> {
 export async function fetchCustomerInfo(): Promise<CustomerInfo | null> {
   await ensureConfigured();
   try {
-    const Purchases = await loadPurchases();
-    const info = await Purchases.getCustomerInfo();
-    return info;
+    const { customerInfo } = await Purchases.getCustomerInfo();
+    return customerInfo;
   } catch (error) {
     console.log('[Purchases] getCustomerInfo error:', error);
     return null;
@@ -93,8 +83,7 @@ export async function fetchCustomerInfo(): Promise<CustomerInfo | null> {
 
 export async function purchasePackage(pkg: PurchasesPackage): Promise<CustomerInfo | null> {
   await ensureConfigured();
-  const Purchases = await loadPurchases();
-  const result = await Purchases.purchasePackage(pkg);
+  const result = await Purchases.purchasePackage({ aPackage: pkg });
   console.log('[Purchases] purchase success:', pkg.identifier);
   return result.customerInfo;
 }
@@ -102,10 +91,9 @@ export async function purchasePackage(pkg: PurchasesPackage): Promise<CustomerIn
 export async function restorePurchases(): Promise<CustomerInfo | null> {
   await ensureConfigured();
   try {
-    const Purchases = await loadPurchases();
-    const info = await Purchases.restorePurchases();
+    const { customerInfo } = await Purchases.restorePurchases();
     console.log('[Purchases] restore success');
-    return info;
+    return customerInfo;
   } catch (error) {
     console.log('[Purchases] restorePurchases error:', error);
     throw error;

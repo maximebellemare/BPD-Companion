@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import createContextHook from '@nkzw/create-context-hook';
-import type { PurchasesPackage } from 'react-native-purchases';
+import type { PurchasesPackage } from '@revenuecat/purchases-capacitor';
 import {
   SubscriptionState,
   SubscriptionTier,

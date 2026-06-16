@@ -165,7 +165,7 @@ function buildResponseSimulations(signals: GuardSignalSummary[]): ResponseSimula
       exampleMessage: urgentExample,
       emotionalImpact: 'May temporarily relieve anxiety but often increases dependency on their response for your sense of safety.',
       relationshipImpact: 'Can put pressure on the other person and may create a push-pull dynamic that increases tension.',
-      color: '#E17055',
+      color: '#3B82F6',
       isRecommended: false,
     },
     {
@@ -176,7 +176,7 @@ function buildResponseSimulations(signals: GuardSignalSummary[]): ResponseSimula
       exampleMessage: avoidantExample,
       emotionalImpact: 'May feel self-protective in the moment but leaves your real feelings unexpressed and can deepen loneliness.',
       relationshipImpact: 'Can signal that you don\'t care even when you do, making the other person feel shut out or confused.',
-      color: '#636E72',
+      color: '#2E2A72',
       isRecommended: false,
     },
     {
@@ -187,7 +187,7 @@ function buildResponseSimulations(signals: GuardSignalSummary[]): ResponseSimula
       exampleMessage: secureExample,
       emotionalImpact: 'May feel vulnerable at first but tends to reduce anxiety over time and build genuine self-trust.',
       relationshipImpact: 'Creates space for honest dialogue and helps both people feel respected and seen.',
-      color: '#6B9080',
+      color: '#14B8A6',
       isRecommended: true,
     },
   ];

@@ -58,14 +58,14 @@ function formatTimestamp(ts: number): string {
 
 function getEmotionColor(emotion: string): string {
   const lower = emotion.toLowerCase();
-  if (lower.includes('anger') || lower.includes('rage')) return '#E17055';
-  if (lower.includes('sad') || lower.includes('grief')) return '#6C8EBF';
-  if (lower.includes('anxious') || lower.includes('anxiety') || lower.includes('fear')) return '#D4956A';
-  if (lower.includes('shame') || lower.includes('guilt')) return '#9B8EC4';
-  if (lower.includes('joy') || lower.includes('happy')) return '#00B894';
-  if (lower.includes('calm') || lower.includes('peace')) return '#6B9080';
-  if (lower.includes('overwhelm') || lower.includes('panic')) return '#E74C3C';
-  if (lower.includes('empty') || lower.includes('numb')) return '#A8B0B5';
+  if (lower.includes('anger') || lower.includes('rage')) return '#3B82F6';
+  if (lower.includes('sad') || lower.includes('grief')) return '#3B82F6';
+  if (lower.includes('anxious') || lower.includes('anxiety') || lower.includes('fear')) return '#67E8F9';
+  if (lower.includes('shame') || lower.includes('guilt')) return '#3B82F6';
+  if (lower.includes('joy') || lower.includes('happy')) return '#14B8A6';
+  if (lower.includes('calm') || lower.includes('peace')) return '#14B8A6';
+  if (lower.includes('overwhelm') || lower.includes('panic')) return '#3B82F6';
+  if (lower.includes('empty') || lower.includes('numb')) return '#3B82F6';
   return Colors.primary;
 }
 

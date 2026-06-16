@@ -89,7 +89,7 @@ export default React.memo(function DailyInsightCard({ variant = 'learn' }: Daily
         >
           <View style={styles.homeHeader}>
             <View style={styles.homeIconWrap}>
-              <Lightbulb size={16} color="#D4956A" />
+              <Lightbulb size={16} color="#67E8F9" />
             </View>
             <Text style={styles.homeLabel}>Today's Insight</Text>
             <TouchableOpacity
@@ -127,7 +127,7 @@ export default React.memo(function DailyInsightCard({ variant = 'learn' }: Daily
         <View style={styles.header}>
           <View style={styles.labelRow}>
             <View style={styles.iconWrap}>
-              <Lightbulb size={18} color="#D4956A" />
+              <Lightbulb size={18} color="#67E8F9" />
             </View>
             <View style={styles.labelTextWrap}>
               <Text style={styles.label}>Today's Emotional Insight</Text>
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 12,
-    backgroundColor: '#FFF3E8',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
@@ -337,7 +337,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 8,
-    backgroundColor: '#FFF3E8',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },

@@ -42,7 +42,7 @@ const PERIOD_OPTIONS = [
 
 function EmotionalPatternCard({ pattern }: { pattern: EmotionalPatternInsight }) {
   const TrendIcon = pattern.trend === 'increasing' ? TrendingUp : pattern.trend === 'decreasing' ? TrendingDown : Minus;
-  const trendColor = pattern.trend === 'increasing' ? '#E17055' : pattern.trend === 'decreasing' ? Colors.success : Colors.textMuted;
+  const trendColor = pattern.trend === 'increasing' ? '#3B82F6' : pattern.trend === 'decreasing' ? Colors.success : Colors.textMuted;
 
   return (
     <View style={styles.patternCard} testID={`pattern-${pattern.id}`}>
@@ -81,10 +81,10 @@ function RelationshipInsightCard({ insight }: { insight: RelationshipPatternInsi
 }
 
 function HighlightCard({ highlight }: { highlight: ProgressHighlight }) {
-  const bgColor = highlight.type === 'growth' ? '#E0F5EF'
-    : highlight.type === 'skill' ? '#E3EDE8'
-    : highlight.type === 'consistency' ? '#F5E6D8'
-    : '#E6F0FF';
+  const bgColor = highlight.type === 'growth' ? '#FFFFFF'
+    : highlight.type === 'skill' ? '#0B1238'
+    : highlight.type === 'consistency' ? '#0B1238'
+    : '#FFFFFF';
 
   return (
     <View style={[styles.highlightCard, { backgroundColor: bgColor }]} testID={`highlight-${highlight.id}`}>
@@ -276,7 +276,7 @@ export default function ReflectionReportScreen() {
           {report.relationshipPatterns.length > 0 && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Heart size={16} color="#E84393" />
+                <Heart size={16} color="#3B82F6" />
                 <Text style={styles.sectionTitle}>Relationship Patterns</Text>
               </View>
               {report.relationshipPatterns.map((insight) => (
@@ -438,7 +438,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#F5E6D8',
+    borderColor: '#0B1238',
   },
   emptyBannerText: {
     fontSize: 14,
@@ -526,7 +526,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#E84393',
+    backgroundColor: '#3B82F6',
     marginTop: 6,
     marginRight: 12,
   },

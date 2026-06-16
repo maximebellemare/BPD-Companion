@@ -6,7 +6,7 @@ export const LEARN_CATEGORIES: LessonCategory[] = [
     title: 'Understanding BPD',
     description: 'Learn what BPD really is — beyond the stigma',
     icon: 'brain',
-    color: '#6B9080',
+    color: '#14B8A6',
     lessonCount: 10,
   },
   {
@@ -14,7 +14,7 @@ export const LEARN_CATEGORIES: LessonCategory[] = [
     title: 'Emotional Regulation',
     description: 'Why feelings hit so hard and how to ride the wave',
     icon: 'heart',
-    color: '#D4956A',
+    color: '#67E8F9',
     lessonCount: 10,
   },
   {
@@ -22,7 +22,7 @@ export const LEARN_CATEGORIES: LessonCategory[] = [
     title: 'Relationships',
     description: 'Building connection without losing yourself',
     icon: 'users',
-    color: '#7B8CDE',
+    color: '#3B82F6',
     lessonCount: 10,
   },
   {
@@ -30,7 +30,7 @@ export const LEARN_CATEGORIES: LessonCategory[] = [
     title: 'Triggers & Abandonment',
     description: 'Understanding the pull and finding safety within',
     icon: 'anchor',
-    color: '#E17055',
+    color: '#3B82F6',
     lessonCount: 6,
   },
   {
@@ -38,7 +38,7 @@ export const LEARN_CATEGORIES: LessonCategory[] = [
     title: 'Self Identity & Self Worth',
     description: 'Finding steady ground when you feel shapeless',
     icon: 'fingerprint',
-    color: '#A29BFE',
+    color: '#3B82F6',
     lessonCount: 6,
   },
   {
@@ -46,7 +46,7 @@ export const LEARN_CATEGORIES: LessonCategory[] = [
     title: 'Communication Skills',
     description: 'Expressing yourself clearly without escalation',
     icon: 'message-circle',
-    color: '#00B894',
+    color: '#14B8A6',
     lessonCount: 5,
   },
   {
@@ -54,7 +54,7 @@ export const LEARN_CATEGORIES: LessonCategory[] = [
     title: 'Crisis & Emotional Storms',
     description: 'Surviving the worst moments without making them worse',
     icon: 'cloud-lightning',
-    color: '#F0A500',
+    color: '#67E8F9',
     lessonCount: 3,
   },
   {
@@ -62,7 +62,7 @@ export const LEARN_CATEGORIES: LessonCategory[] = [
     title: 'Daily Stability & Habits',
     description: 'Small routines that build a steadier life',
     icon: 'sunrise',
-    color: '#E8A87C',
+    color: '#67E8F9',
     lessonCount: 3,
   },
   {
@@ -70,7 +70,7 @@ export const LEARN_CATEGORIES: LessonCategory[] = [
     title: 'Therapy & Healing',
     description: 'The path forward — treatment, recovery, and hope',
     icon: 'sprout',
-    color: '#55A38B',
+    color: '#14B8A6',
     lessonCount: 7,
   },
 ];

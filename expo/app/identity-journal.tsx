@@ -20,11 +20,11 @@ import { IDENTITY_JOURNAL_PROMPTS } from '@/services/identity/valuesService';
 import type { IdentityJournalPrompt } from '@/types/identity';
 
 const CATEGORY_LABELS: Record<string, { label: string; color: string; bg: string }> = {
-  'calm-self': { label: 'Calm Self', color: '#6B9080', bg: '#E3EDE8' },
-  'conflict-self': { label: 'In Conflict', color: '#D4956A', bg: '#FFF8F0' },
-  'relationship-self': { label: 'Relationships', color: '#E84393', bg: '#FFF0F6' },
-  'core-self': { label: 'Core Self', color: '#8B5CF6', bg: '#F0E6FF' },
-  boundaries: { label: 'Boundaries', color: '#3B82F6', bg: '#E8F0FE' },
+  'calm-self': { label: 'Calm Self', color: '#14B8A6', bg: '#0B1238' },
+  'conflict-self': { label: 'In Conflict', color: '#67E8F9', bg: '#FFFFFF' },
+  'relationship-self': { label: 'Relationships', color: '#3B82F6', bg: '#FFFFFF' },
+  'core-self': { label: 'Core Self', color: '#3B82F6', bg: '#FFFFFF' },
+  boundaries: { label: 'Boundaries', color: '#3B82F6', bg: '#FFFFFF' },
 };
 
 const JOURNAL_TAGS = ['identity', 'values', 'boundaries', 'calm', 'growth', 'conflict', 'relationship', 'self-trust'];
@@ -232,8 +232,8 @@ export default function IdentityJournalScreen() {
                       >
                         <Heart
                           size={18}
-                          color={entry.isFavorite ? '#E84393' : Colors.textMuted}
-                          fill={entry.isFavorite ? '#E84393' : 'none'}
+                          color={entry.isFavorite ? '#3B82F6' : Colors.textMuted}
+                          fill={entry.isFavorite ? '#3B82F6' : 'none'}
                         />
                       </TouchableOpacity>
                       <TouchableOpacity
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 12,
     borderWidth: 1,
-    borderColor: '#C8DDD2',
+    borderColor: '#0B1238',
     marginBottom: 20,
   },
   introEmoji: {
@@ -471,7 +471,7 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#C8DDD2',
+    borderColor: '#0B1238',
   },
   journalPromptText: {
     flex: 1,

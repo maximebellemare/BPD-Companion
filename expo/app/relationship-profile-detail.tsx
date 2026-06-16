@@ -208,7 +208,7 @@ export default function RelationshipProfileDetailScreen() {
                 {distressAvg > 0 && (
                   <View style={styles.heroStat}>
                     <Text style={styles.heroStatLabel}>Avg distress</Text>
-                    <Text style={[styles.heroStatValue, { color: distressAvg >= 6 ? '#D4764E' : meta.color }]}>
+                    <Text style={[styles.heroStatValue, { color: distressAvg >= 6 ? '#3B82F6' : meta.color }]}>
                       {distressAvg.toFixed(1)}/10
                     </Text>
                   </View>
@@ -664,7 +664,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: '#E84393',
+    backgroundColor: '#3B82F6',
     alignItems: 'center',
     justifyContent: 'center',
   },

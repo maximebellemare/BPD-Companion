@@ -73,7 +73,7 @@ function DistressChart({ data, maxValue }: { data: { label: string; value: numbe
           });
           const isHigh = point.value >= 7;
           const isMed = point.value >= 4 && point.value < 7;
-          const barColor = isHigh ? '#E8836C' : isMed ? '#E8B86C' : '#6B9080';
+          const barColor = isHigh ? '#67E8F9' : isMed ? '#67E8F9' : '#14B8A6';
 
           return (
             <View key={`${point.label}-${i}`} style={chartStyles.barGroup}>
@@ -316,11 +316,11 @@ const milestoneStyles = StyleSheet.create({
 
 function InsightCard({ insight }: { insight: EncouragingInsight }) {
   const TYPE_COLORS: Record<string, { bg: string; border: string }> = {
-    regulation: { bg: '#EFF6FF', border: '#DBEAFE' },
-    consistency: { bg: '#FFF7ED', border: '#FED7AA' },
-    growth: { bg: '#ECFDF5', border: '#A7F3D0' },
-    coping: { bg: '#F0FDF4', border: '#BBF7D0' },
-    awareness: { bg: '#FDF4FF', border: '#E9D5FF' },
+    regulation: { bg: '#FFFFFF', border: '#0B1238' },
+    consistency: { bg: '#FFFFFF', border: '#0B1238' },
+    growth: { bg: '#FFFFFF', border: '#0B1238' },
+    coping: { bg: '#FFFFFF', border: '#0B1238' },
+    awareness: { bg: '#FFFFFF', border: '#0B1238' },
   };
 
   const colors = TYPE_COLORS[insight.type] ?? TYPE_COLORS.growth;
@@ -358,10 +358,10 @@ const insightStyles = StyleSheet.create({
 
 function TriggerChip({ item }: { item: TriggerFrequencyItem }) {
   const CATEGORY_COLORS: Record<string, string> = {
-    relationship: '#E84393',
-    self: '#8B5CF6',
+    relationship: '#3B82F6',
+    self: '#3B82F6',
     situation: '#3B82F6',
-    memory: '#D4956A',
+    memory: '#67E8F9',
     other: Colors.textSecondary,
   };
   const color = CATEGORY_COLORS[item.category] ?? Colors.textSecondary;
@@ -544,15 +544,15 @@ export default function ProgressScreen() {
           <Text style={styles.sectionTitle}>Overview</Text>
           <View style={styles.metricsRow}>
             <View style={styles.metricCard}>
-              <View style={[styles.metricIconWrap, { backgroundColor: '#FFF0E6' }]}>
-                <Target size={15} color="#E17055" />
+              <View style={[styles.metricIconWrap, { backgroundColor: '#FFFFFF' }]}>
+                <Target size={15} color="#3B82F6" />
               </View>
               <Text style={styles.metricValue}>{metrics.totalCheckIns}</Text>
               <Text style={styles.metricLabel}>Check-Ins</Text>
             </View>
             <View style={styles.metricCard}>
-              <View style={[styles.metricIconWrap, { backgroundColor: '#FFF7ED' }]}>
-                <Flame size={15} color="#D4956A" />
+              <View style={[styles.metricIconWrap, { backgroundColor: '#FFFFFF' }]}>
+                <Flame size={15} color="#67E8F9" />
               </View>
               <Text style={styles.metricValue}>{metrics.journalStreak}</Text>
               <Text style={styles.metricLabel}>Day Streak</Text>
@@ -614,29 +614,29 @@ export default function ProgressScreen() {
           <Text style={styles.sectionSubtitle}>How you've been managing emotional moments</Text>
           <View style={styles.regulationGrid}>
             <View style={styles.regulationCard}>
-              <View style={[styles.regIconWrap, { backgroundColor: '#EFF6FF' }]}>
+              <View style={[styles.regIconWrap, { backgroundColor: '#FFFFFF' }]}>
                 <Pause size={16} color="#3B82F6" />
               </View>
               <Text style={styles.regValue}>{regulation.pausesBeforeSending}</Text>
               <Text style={styles.regLabel}>Message Pauses</Text>
             </View>
             <View style={styles.regulationCard}>
-              <View style={[styles.regIconWrap, { backgroundColor: '#ECFDF5' }]}>
-                <Activity size={16} color="#10B981" />
+              <View style={[styles.regIconWrap, { backgroundColor: '#FFFFFF' }]}>
+                <Activity size={16} color="#14B8A6" />
               </View>
               <Text style={styles.regValue}>{regulation.groundingUsed}</Text>
               <Text style={styles.regLabel}>Grounding Used</Text>
             </View>
             <View style={styles.regulationCard}>
-              <View style={[styles.regIconWrap, { backgroundColor: '#FDF4FF' }]}>
-                <PenLine size={16} color="#A855F7" />
+              <View style={[styles.regIconWrap, { backgroundColor: '#FFFFFF' }]}>
+                <PenLine size={16} color="#3B82F6" />
               </View>
               <Text style={styles.regValue}>{regulation.rewritesUsed}</Text>
               <Text style={styles.regLabel}>Rewrites</Text>
             </View>
             <View style={styles.regulationCard}>
-              <View style={[styles.regIconWrap, { backgroundColor: '#FFF7ED' }]}>
-                <MessageSquare size={16} color="#D4956A" />
+              <View style={[styles.regIconWrap, { backgroundColor: '#FFFFFF' }]}>
+                <MessageSquare size={16} color="#67E8F9" />
               </View>
               <Text style={styles.regValue}>{regulation.constructiveOutcomes}</Text>
               <Text style={styles.regLabel}>Helped</Text>
@@ -648,7 +648,7 @@ export default function ProgressScreen() {
           <View style={styles.consistencyCard}>
             <View style={styles.consistencyRow}>
               <View style={styles.consistencyItem}>
-                <Flame size={18} color="#E17055" />
+                <Flame size={18} color="#3B82F6" />
                 <View style={styles.consistencyText}>
                   <Text style={styles.consistencyValue}>{consistency.journalStreak} days</Text>
                   <Text style={styles.consistencyLabel}>Journal streak</Text>
@@ -717,8 +717,8 @@ export default function ProgressScreen() {
           {metrics.relationshipConflictReduction !== 0 && (
             <View style={styles.card}>
               <View style={styles.cardHeader}>
-                <View style={[styles.metricIconWrap, { backgroundColor: '#FFE6F0' }]}>
-                  <Shield size={16} color="#E84393" />
+                <View style={[styles.metricIconWrap, { backgroundColor: '#FFFFFF' }]}>
+                  <Shield size={16} color="#3B82F6" />
                 </View>
                 <View style={{ flex: 1, marginLeft: 12 }}>
                   <Text style={styles.cardTitle}>Relationship Conflicts</Text>
@@ -776,7 +776,7 @@ const styles = StyleSheet.create({
   heroCard: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    backgroundColor: '#2D5A47',
+    backgroundColor: '#14B8A6',
     borderRadius: 20,
     padding: 18,
     marginBottom: 24,

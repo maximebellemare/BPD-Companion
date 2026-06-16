@@ -20,11 +20,11 @@ import { SELF_TRUST_PROMPTS } from '@/services/identity/valuesService';
 import type { SelfTrustPrompt } from '@/types/identity';
 
 const CATEGORY_COLORS: Record<string, { color: string; bg: string }> = {
-  grounding: { color: '#6B9080', bg: '#E3EDE8' },
-  clarity: { color: '#3B82F6', bg: '#E8F0FE' },
-  'self-respect': { color: '#D4956A', bg: '#FFF8F0' },
-  'future-self': { color: '#8B5CF6', bg: '#F0E6FF' },
-  needs: { color: '#E84393', bg: '#FFF0F6' },
+  grounding: { color: '#14B8A6', bg: '#0B1238' },
+  clarity: { color: '#3B82F6', bg: '#FFFFFF' },
+  'self-respect': { color: '#67E8F9', bg: '#FFFFFF' },
+  'future-self': { color: '#3B82F6', bg: '#FFFFFF' },
+  needs: { color: '#3B82F6', bg: '#FFFFFF' },
 };
 
 export default function SelfTrustPromptsScreen() {
@@ -195,8 +195,8 @@ export default function SelfTrustPromptsScreen() {
                       >
                         <Heart
                           size={16}
-                          color={r.isFavorite ? '#E84393' : Colors.textMuted}
-                          fill={r.isFavorite ? '#E84393' : 'none'}
+                          color={r.isFavorite ? '#3B82F6' : Colors.textMuted}
+                          fill={r.isFavorite ? '#3B82F6' : 'none'}
                         />
                       </TouchableOpacity>
                     </View>
@@ -220,7 +220,7 @@ export default function SelfTrustPromptsScreen() {
                   <Text style={styles.sectionTitle}>Favorite Responses</Text>
                   {favoriteResponses.slice(0, 3).map((r) => (
                     <View key={r.id} style={styles.favoriteCard}>
-                      <Heart size={14} color="#E84393" fill="#E84393" />
+                      <Heart size={14} color="#3B82F6" fill="#3B82F6" />
                       <View style={styles.favoriteContent}>
                         <Text style={styles.favoritePrompt}>{r.promptText}</Text>
                         <Text style={styles.favoriteResponse} numberOfLines={2}>{r.response}</Text>
@@ -310,12 +310,12 @@ const styles = StyleSheet.create({
   introCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#F0E6FF',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
     gap: 12,
     borderWidth: 1,
-    borderColor: '#E0D0F0',
+    borderColor: '#0B1238',
     marginBottom: 20,
   },
   introEmoji: {
@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
   introText: {
     flex: 1,
     fontSize: 14,
-    color: '#6B5B8A',
+    color: '#2E2A72',
     lineHeight: 21,
   },
   sectionTitle: {
@@ -491,13 +491,13 @@ const styles = StyleSheet.create({
   favoriteCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#FFF0F6',
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 14,
     marginBottom: 8,
     gap: 10,
     borderWidth: 1,
-    borderColor: '#FFE0EC',
+    borderColor: '#0B1238',
   },
   favoriteContent: {
     flex: 1,
@@ -505,7 +505,7 @@ const styles = StyleSheet.create({
   favoritePrompt: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: '#C44D8E',
+    color: '#3B82F6',
     marginBottom: 4,
   },
   favoriteResponse: {

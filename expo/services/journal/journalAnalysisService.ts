@@ -82,11 +82,12 @@ ANALYSIS RULES:
 - AVOID: generic summaries, clinical language, toxic positivity, "tell me more", listing multiple strategies.${safetyPromptAddition}`,
         },
       ],
-      schema: insightSchema,
+      schema: insightSchema as never,
     });
 
     console.log('[JournalAnalysis] AI insight generated for entry:', entry.id);
-    const insight: JournalAIInsight = { ...result, timestamp: Date.now() };
+    const parsed = insightSchema.parse(result);
+    const insight: JournalAIInsight = { ...parsed, timestamp: Date.now() };
 
     if (safetyAssessment.level === 'crisis' && insight.copingSuggestion && !insight.copingSuggestion.includes('988')) {
       insight.copingSuggestion = `${insight.copingSuggestion} If you're in crisis, the ${CRISIS_RESOURCES.hotline988.name} is available 24/7 — ${CRISIS_RESOURCES.hotline988.action}.`;

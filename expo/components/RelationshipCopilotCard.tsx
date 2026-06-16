@@ -81,7 +81,7 @@ export default React.memo(function RelationshipCopilotCard({
       >
         <View style={styles.topRow}>
           <View style={styles.iconCircle}>
-            <HeartHandshake size={20} color="#E84393" />
+            <HeartHandshake size={20} color="#3B82F6" />
           </View>
           <View style={styles.textContent}>
             <View style={styles.titleRow}>
@@ -97,7 +97,7 @@ export default React.memo(function RelationshipCopilotCard({
                 : 'Slow down before reacting to a relationship moment'}
             </Text>
           </View>
-          <ChevronRight size={16} color="#E84393" style={{ opacity: 0.6 }} />
+          <ChevronRight size={16} color="#3B82F6" style={{ opacity: 0.6 }} />
         </View>
 
         <View style={styles.contextRow}>
@@ -114,11 +114,11 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   card: {
-    backgroundColor: '#FFF5F9',
+    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 18,
     borderWidth: 1,
-    borderColor: '#F8D7E8',
+    borderColor: '#0B1238',
   },
   topRow: {
     flexDirection: 'row',
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 15,
-    backgroundColor: '#FFEDF5',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -145,14 +145,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 14,
     fontWeight: '700' as const,
-    color: '#C23876',
+    color: '#3B82F6',
     letterSpacing: -0.1,
   },
   premiumBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: '#E84393',
+    backgroundColor: '#3B82F6',
     borderRadius: 6,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -174,14 +174,14 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#F8D7E8',
+    borderTopColor: '#0B1238',
     gap: 8,
   },
   contextDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#E84393',
+    backgroundColor: '#3B82F6',
     opacity: 0.5,
   },
   contextText: {

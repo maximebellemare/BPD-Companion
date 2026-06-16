@@ -40,9 +40,9 @@ const ICON_MAP: Record<string, React.ComponentType<{ size: number; color: string
 };
 
 const LEVEL_COLORS: Record<MilestoneLevel, { bg: string; border: string; text: string; accent: string }> = {
-  bronze: { bg: '#FFF8F0', border: '#F0D9C0', text: '#A0704C', accent: '#D4956A' },
-  silver: { bg: '#F5F7FA', border: '#D4D9E0', text: '#5A6570', accent: '#7B8794' },
-  gold: { bg: '#FFFBF0', border: '#F0DCA0', text: '#8A7030', accent: '#C4A030' },
+  bronze: { bg: '#FFFFFF', border: '#0B1238', text: '#3B82F6', accent: '#67E8F9' },
+  silver: { bg: '#FFFFFF', border: '#0B1238', text: '#2E2A72', accent: '#2E2A72' },
+  gold: { bg: '#FFFFFF', border: '#0B1238', text: '#3B82F6', accent: '#67E8F9' },
 };
 
 function MilestoneHomeCard() {

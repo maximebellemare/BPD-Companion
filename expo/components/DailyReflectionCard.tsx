@@ -58,7 +58,7 @@ export default function DailyReflectionCard({
       >
         <View style={styles.topRow}>
           <View style={[styles.iconWrap, hasCheckedIn ? styles.iconCompleted : styles.iconPending]}>
-            <Sun size={20} color={hasCheckedIn ? '#6B9080' : '#D4956A'} />
+            <Sun size={20} color={hasCheckedIn ? '#14B8A6' : '#67E8F9'} />
           </View>
           <View style={styles.titleWrap}>
             <Text style={styles.title}>
@@ -97,7 +97,7 @@ export default function DailyReflectionCard({
         <View style={styles.bottomRow}>
           {streak.currentStreak > 0 && (
             <View style={styles.streakBadge}>
-              <Flame size={14} color="#E17055" />
+              <Flame size={14} color="#3B82F6" />
               <Text style={styles.streakText}>{streak.currentStreak} day streak</Text>
             </View>
           )}
@@ -152,9 +152,9 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   cardPending: {
-    backgroundColor: '#FFF8F0',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1.5,
-    borderColor: '#F5E6D8',
+    borderColor: '#0B1238',
   },
   cardCompleted: {
     backgroundColor: Colors.white,
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   iconPending: {
-    backgroundColor: '#F5E6D8',
+    backgroundColor: '#0B1238',
   },
   iconCompleted: {
     backgroundColor: Colors.primaryLight,
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
   streakBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FDE8E3',
+    backgroundColor: '#FFFFFF',
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 5,
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   streakText: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: '#E17055',
+    color: '#3B82F6',
   },
   weekBadge: {
     flexDirection: 'row',

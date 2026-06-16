@@ -258,7 +258,7 @@ export default function DailyRitualScreen() {
               styles.stressDot,
               {
                 backgroundColor: i < stressLevel
-                  ? (i < 3 ? '#4CAF50' : i < 6 ? '#FFC107' : i < 8 ? '#FF9800' : '#F44336')
+                  ? (i < 3 ? '#14B8A6' : i < 6 ? '#67E8F9' : i < 8 ? '#67E8F9' : '#3B82F6')
                   : Colors.border,
                 transform: [{ scale: i + 1 === stressLevel ? 1.4 : 1 }],
               },
@@ -353,7 +353,7 @@ export default function DailyRitualScreen() {
           <Text style={styles.completeSubtitle}>You showed up for yourself today</Text>
           {(ritualQuery.data?.streak.currentStreak ?? 0) > 0 && (
             <View style={styles.completeStreakBadge}>
-              <Flame size={18} color="#E17055" />
+              <Flame size={18} color="#3B82F6" />
               <Text style={styles.completeStreakText}>
                 {(ritualQuery.data?.streak.currentStreak ?? 0) + 1} day streak
               </Text>
@@ -421,7 +421,7 @@ export default function DailyRitualScreen() {
 
           {(ritualQuery.data?.streak.currentStreak ?? 0) > 0 && (
             <View style={styles.streakCard}>
-              <Flame size={20} color="#E17055" />
+              <Flame size={20} color="#3B82F6" />
               <Text style={styles.streakCardText}>
                 {ritualQuery.data?.streak.currentStreak} day streak
               </Text>
@@ -841,7 +841,7 @@ const styles = StyleSheet.create({
   completeStreakBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FDE8E3',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 10,
@@ -851,7 +851,7 @@ const styles = StyleSheet.create({
   completeStreakText: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#E17055',
+    color: '#3B82F6',
   },
   completeIntention: {
     backgroundColor: Colors.primaryLight,
@@ -933,7 +933,7 @@ const styles = StyleSheet.create({
   streakCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FDE8E3',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     paddingHorizontal: 20,
     paddingVertical: 14,
@@ -943,6 +943,6 @@ const styles = StyleSheet.create({
   streakCardText: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#E17055',
+    color: '#3B82F6',
   },
 });

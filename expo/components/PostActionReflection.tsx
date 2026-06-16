@@ -31,7 +31,7 @@ type OutcomeChoice = 'helped' | 'made_worse' | 'neutral' | 'not_sent';
 const OUTCOME_OPTIONS: { id: OutcomeChoice; label: string; emoji: string; color: string }[] = [
   { id: 'helped', label: 'It helped', emoji: '✓', color: Colors.success },
   { id: 'neutral', label: 'Neutral', emoji: '—', color: Colors.textMuted },
-  { id: 'made_worse', label: 'Made things harder', emoji: '✗', color: '#E17055' },
+  { id: 'made_worse', label: 'Made things harder', emoji: '✗', color: '#3B82F6' },
   { id: 'not_sent', label: "Didn't send it", emoji: '⏸', color: Colors.accent },
 ];
 
@@ -110,7 +110,7 @@ export default function PostActionReflection({
   const getOutcomeIcon = (id: OutcomeChoice) => {
     switch (id) {
       case 'helped': return <CheckCircle size={16} color={Colors.success} />;
-      case 'made_worse': return <XCircle size={16} color="#E17055" />;
+      case 'made_worse': return <XCircle size={16} color="#3B82F6" />;
       case 'not_sent': return <Minus size={16} color={Colors.accent} />;
       default: return <Minus size={16} color={Colors.textMuted} />;
     }

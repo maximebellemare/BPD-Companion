@@ -641,7 +641,7 @@ export default function SkillCoachingScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: phase === 'exercise' ? '#FAFAF7' : Colors.background }]}>
+    <View style={[styles.container, { backgroundColor: phase === 'exercise' ? '#FFFFFF' : Colors.background }]}>
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity
           testID="close-button"

@@ -39,8 +39,8 @@ type FeedbackType = 'bug' | 'feature' | 'general' | 'appreciation';
 const FEEDBACK_TYPES: { id: FeedbackType; label: string; icon: React.ReactNode; color: string }[] = [
   { id: 'bug', label: 'Bug Report', icon: <Bug size={18} color={Colors.danger} />, color: Colors.dangerLight },
   { id: 'feature', label: 'Feature Idea', icon: <Lightbulb size={18} color={Colors.accent} />, color: Colors.accentLight },
-  { id: 'general', label: 'General Feedback', icon: <MessageCircle size={18} color="#3B82F6" />, color: '#E6F0FF' },
-  { id: 'appreciation', label: 'Appreciation', icon: <Heart size={18} color="#E84393" />, color: '#FFE6F0' },
+  { id: 'general', label: 'General Feedback', icon: <MessageCircle size={18} color="#3B82F6" />, color: '#FFFFFF' },
+  { id: 'appreciation', label: 'Appreciation', icon: <Heart size={18} color="#3B82F6" />, color: '#FFFFFF' },
 ];
 
 const FAQ_ITEMS = [
@@ -94,7 +94,7 @@ export default function SupportFeedbackScreen() {
       }
 
       setSubmitted(true);
-      console.log('[Feedback] Submitted:', feedbackEntry);
+      console.log('[Feedback] Submitted');
     } catch (error) {
       console.error('[Feedback] Error submitting:', error);
       Alert.alert('Error', 'Could not save your feedback. Please try again.');
@@ -172,7 +172,7 @@ export default function SupportFeedbackScreen() {
             <Text style={styles.sectionLabel}>QUICK LINKS</Text>
             <View style={styles.linksGroup}>
               <TouchableOpacity style={styles.linkRow} onPress={handleEmail} testID="email-support-btn">
-                <View style={[styles.linkIcon, { backgroundColor: '#E6F0FF' }]}>
+                <View style={[styles.linkIcon, { backgroundColor: '#FFFFFF' }]}>
                   <Mail size={16} color="#3B82F6" />
                 </View>
                 <View style={styles.linkInfo}>

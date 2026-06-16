@@ -68,11 +68,11 @@ export type MessageGuardStep =
   | 'pause';
 
 export const TONE_META: Record<MessageTone, { label: string; emoji: string; color: string; description: string }> = {
-  anxious: { label: 'Anxious', emoji: '😰', color: '#E8A87C', description: 'Driven by fear of losing connection' },
-  avoidant: { label: 'Avoidant', emoji: '🧊', color: '#7FB3D3', description: 'Pulling away to protect yourself' },
-  angry: { label: 'Angry', emoji: '🔥', color: '#E17055', description: 'Pain expressed as frustration' },
-  over_explaining: { label: 'Over-explaining', emoji: '📝', color: '#9B8EC4', description: 'Trying to control how they see you' },
-  secure: { label: 'Secure', emoji: '🌿', color: '#6B9080', description: 'Grounded, clear, and self-respecting' },
+  anxious: { label: 'Anxious', emoji: '😰', color: '#67E8F9', description: 'Driven by fear of losing connection' },
+  avoidant: { label: 'Avoidant', emoji: '🧊', color: '#3B82F6', description: 'Pulling away to protect yourself' },
+  angry: { label: 'Angry', emoji: '🔥', color: '#3B82F6', description: 'Pain expressed as frustration' },
+  over_explaining: { label: 'Over-explaining', emoji: '📝', color: '#3B82F6', description: 'Trying to control how they see you' },
+  secure: { label: 'Secure', emoji: '🌿', color: '#14B8A6', description: 'Grounded, clear, and self-respecting' },
 };
 
 export const EMOTIONAL_SIGNAL_META: Record<EmotionalSignal, { label: string; emoji: string }> = {

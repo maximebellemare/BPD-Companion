@@ -59,9 +59,9 @@ export function checkTone(text: string): ToneSuggestion | null {
 }
 
 export function getDistressLabel(level: number): { label: string; color: string } {
-  if (level <= 3) return { label: 'Low distress', color: '#6BA38E' };
-  if (level <= 6) return { label: 'Moderate distress', color: '#C4956A' };
-  return { label: 'High distress', color: '#C47878' };
+  if (level <= 3) return { label: 'Low distress', color: '#14B8A6' };
+  if (level <= 6) return { label: 'Moderate distress', color: '#67E8F9' };
+  return { label: 'High distress', color: '#3B82F6' };
 }
 
 export function getSupportRequestLabel(type: string): { emoji: string; label: string } {
@@ -76,10 +76,10 @@ export function getSupportRequestLabel(type: string): { emoji: string; label: st
 
 export function getResponseTypeLabel(type: ResponseType): { emoji: string; label: string; color: string } {
   const map: Record<ResponseType, { emoji: string; label: string; color: string }> = {
-    validation: { emoji: '💛', label: 'Validation', color: '#E8A87C' },
-    'shared-experience': { emoji: '🤝', label: 'Shared experience', color: '#6BA38E' },
-    advice: { emoji: '💡', label: 'Advice', color: '#9B8EC4' },
-    'another-perspective': { emoji: '🔄', label: 'Another perspective', color: '#4A8B8D' },
+    validation: { emoji: '💛', label: 'Validation', color: '#67E8F9' },
+    'shared-experience': { emoji: '🤝', label: 'Shared experience', color: '#14B8A6' },
+    advice: { emoji: '💡', label: 'Advice', color: '#3B82F6' },
+    'another-perspective': { emoji: '🔄', label: 'Another perspective', color: '#14B8A6' },
   };
   return map[type];
 }

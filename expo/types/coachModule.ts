@@ -30,13 +30,13 @@ export type CoachModuleCategory =
   | 'grounding';
 
 export const COACH_CATEGORY_META: Record<CoachModuleCategory, { label: string; color: string; icon: string }> = {
-  emotional_regulation: { label: 'Emotional Regulation', color: '#D4956A', icon: 'heart' },
-  relationships: { label: 'Relationships', color: '#7B8CDE', icon: 'users' },
-  triggers_abandonment: { label: 'Triggers & Abandonment', color: '#E17055', icon: 'anchor' },
-  self_identity: { label: 'Self & Identity', color: '#A29BFE', icon: 'fingerprint' },
-  communication: { label: 'Communication', color: '#00B894', icon: 'message-circle' },
-  crisis_coping: { label: 'Crisis & Coping', color: '#F0A500', icon: 'cloud-lightning' },
-  grounding: { label: 'Grounding', color: '#6B9080', icon: 'anchor' },
+  emotional_regulation: { label: 'Emotional Regulation', color: '#67E8F9', icon: 'heart' },
+  relationships: { label: 'Relationships', color: '#3B82F6', icon: 'users' },
+  triggers_abandonment: { label: 'Triggers & Abandonment', color: '#3B82F6', icon: 'anchor' },
+  self_identity: { label: 'Self & Identity', color: '#3B82F6', icon: 'fingerprint' },
+  communication: { label: 'Communication', color: '#14B8A6', icon: 'message-circle' },
+  crisis_coping: { label: 'Crisis & Coping', color: '#67E8F9', icon: 'cloud-lightning' },
+  grounding: { label: 'Grounding', color: '#14B8A6', icon: 'anchor' },
 };
 
 export interface CoachModuleProgress {

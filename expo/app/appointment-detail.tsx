@@ -346,8 +346,8 @@ export default function AppointmentDetailScreen() {
                   onPress={() => router.push('/weekly-reflection' as any)}
                   activeOpacity={0.7}
                 >
-                  <View style={[styles.linkIcon, { backgroundColor: '#F3E8FF' }]}>
-                    <BookOpen size={16} color="#8B5CF6" />
+                  <View style={[styles.linkIcon, { backgroundColor: '#FFFFFF' }]}>
+                    <BookOpen size={16} color="#3B82F6" />
                   </View>
                   <View style={styles.linkContent}>
                     <Text style={styles.linkTitle}>Weekly Reflection</Text>
@@ -370,7 +370,7 @@ export default function AppointmentDetailScreen() {
                       {prompt.key === 'hardestLately' && <Lightbulb size={14} color={Colors.accent} />}
                       {prompt.key === 'relationshipPatterns' && <MessageCircle size={14} color="#3B82F6" />}
                       {prompt.key === 'questionsToAsk' && <FileText size={14} color={Colors.primary} />}
-                      {prompt.key === 'medicationNotes' && <Pill size={14} color="#6366F1" />}
+                      {prompt.key === 'medicationNotes' && <Pill size={14} color="#3B82F6" />}
                       {prompt.key === 'progressOrSetbacks' && <TrendingUp size={14} color={Colors.success} />}
                       <Text style={styles.promptLabel}>{prompt.label}</Text>
                     </View>
@@ -439,7 +439,7 @@ export default function AppointmentDetailScreen() {
 
                 <View style={styles.promptGroup}>
                   <View style={styles.promptHeader}>
-                    <BookOpen size={14} color="#8B5CF6" />
+                    <BookOpen size={14} color="#3B82F6" />
                     <Text style={styles.promptLabel}>Things to Practice</Text>
                   </View>
                   <TextInput
@@ -471,7 +471,7 @@ export default function AppointmentDetailScreen() {
 
                 <View style={styles.promptGroup}>
                   <View style={styles.promptHeader}>
-                    <Pill size={14} color="#6366F1" />
+                    <Pill size={14} color="#3B82F6" />
                     <Text style={styles.promptLabel}>Medication Changes</Text>
                   </View>
                   <TextInput

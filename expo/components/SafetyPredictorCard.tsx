@@ -37,17 +37,17 @@ const STATE_CONFIG: Record<SafetyState, {
   },
   elevated: {
     label: 'Elevated',
-    bgColor: '#FFF8E1',
-    borderColor: '#FFB74D',
-    accentColor: '#F57C00',
-    iconColor: '#F57C00',
-    tagBg: '#FFF3E0',
-    tagText: '#E65100',
+    bgColor: '#FFFFFF',
+    borderColor: '#67E8F9',
+    accentColor: '#3B82F6',
+    iconColor: '#3B82F6',
+    tagBg: '#FFFFFF',
+    tagText: '#3B82F6',
   },
   high_distress: {
     label: 'High Distress',
-    bgColor: '#FFF3E0',
-    borderColor: '#FF7043',
+    bgColor: '#FFFFFF',
+    borderColor: '#3B82F6',
     accentColor: Colors.danger,
     iconColor: Colors.danger,
     tagBg: Colors.dangerLight,
@@ -55,11 +55,11 @@ const STATE_CONFIG: Record<SafetyState, {
   },
   critical: {
     label: 'Critical',
-    bgColor: '#FFEBEE',
+    bgColor: '#FFFFFF',
     borderColor: Colors.dangerDark,
     accentColor: Colors.dangerDark,
     iconColor: Colors.dangerDark,
-    tagBg: '#FFCDD2',
+    tagBg: '#0B1238',
     tagText: Colors.dangerDark,
   },
 };
@@ -94,7 +94,7 @@ function InterventionButton({ intervention }: { intervention: SafetyIntervention
     : intervention.urgency === 'high_distress'
       ? Colors.danger
       : intervention.urgency === 'elevated'
-        ? '#F57C00'
+        ? '#3B82F6'
         : Colors.primary;
 
   return (

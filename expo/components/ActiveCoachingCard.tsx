@@ -20,18 +20,18 @@ interface Props {
 }
 
 const TONE_COLORS: Record<string, string> = {
-  encouraging: '#00B894',
-  grounding: '#6B9080',
-  reflective: '#D4956A',
-  celebratory: '#F59E0B',
+  encouraging: '#14B8A6',
+  grounding: '#14B8A6',
+  reflective: '#67E8F9',
+  celebratory: '#67E8F9',
 };
 
 const TYPE_ICONS: Record<string, React.ReactNode> = {
-  pattern_insight: <Brain size={18} color="#D4956A" />,
-  timing_nudge: <Shield size={18} color="#6B9080" />,
-  coping_suggestion: <Heart size={18} color="#E84393" />,
-  growth_recognition: <TrendingUp size={18} color="#00B894" />,
-  relationship_coaching: <Sparkles size={18} color="#8B5CF6" />,
+  pattern_insight: <Brain size={18} color="#67E8F9" />,
+  timing_nudge: <Shield size={18} color="#14B8A6" />,
+  coping_suggestion: <Heart size={18} color="#3B82F6" />,
+  growth_recognition: <TrendingUp size={18} color="#14B8A6" />,
+  relationship_coaching: <Sparkles size={18} color="#3B82F6" />,
   regulation_tip: <Shield size={18} color="#3B82F6" />,
 };
 
@@ -243,12 +243,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
-    backgroundColor: '#00B89415',
+    backgroundColor: '#14B8A615',
   },
   confidenceText: {
     fontSize: 10,
     fontWeight: '600' as const,
-    color: '#00B894',
+    color: '#14B8A6',
     textTransform: 'uppercase' as const,
     letterSpacing: 0.4,
   },

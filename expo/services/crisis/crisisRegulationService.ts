@@ -36,11 +36,11 @@ export const ENTRY_MESSAGES: string[] = [
 ];
 
 export const GROUNDING_STEPS = [
-  { id: 'gs1', count: 5, sense: 'see', instruction: 'Name 5 things you can see right now', color: '#6B9080' },
-  { id: 'gs2', count: 4, sense: 'feel', instruction: 'Name 4 things you can physically feel', color: '#7BA7A0' },
-  { id: 'gs3', count: 3, sense: 'hear', instruction: 'Name 3 things you can hear', color: '#D4956A' },
-  { id: 'gs4', count: 2, sense: 'orient', instruction: 'Orient to the room — look left, then right, slowly', color: '#8B7E74' },
-  { id: 'gs5', count: 1, sense: 'anchor', instruction: 'Feel your feet on the floor. Press down gently.', color: '#6B7B8D' },
+  { id: 'gs1', count: 5, sense: 'see', instruction: 'Name 5 things you can see right now', color: '#14B8A6' },
+  { id: 'gs2', count: 4, sense: 'feel', instruction: 'Name 4 things you can physically feel', color: '#14B8A6' },
+  { id: 'gs3', count: 3, sense: 'hear', instruction: 'Name 3 things you can hear', color: '#67E8F9' },
+  { id: 'gs4', count: 2, sense: 'orient', instruction: 'Orient to the room — look left, then right, slowly', color: '#2E2A72' },
+  { id: 'gs5', count: 1, sense: 'anchor', instruction: 'Feel your feet on the floor. Press down gently.', color: '#2E2A72' },
 ];
 
 export const URGE_COMPASSION_MESSAGES: string[] = [
@@ -52,12 +52,12 @@ export const URGE_COMPASSION_MESSAGES: string[] = [
 ];
 
 export const CALM_NEXT_ACTIONS = [
-  { id: 'cna1', label: 'Write in journal', desc: 'Put thoughts into words safely', route: '/(tabs)/journal', icon: 'BookOpen', color: '#D4956A', bg: '#F5E6D8' },
-  { id: 'cna2', label: 'Talk to AI Companion', desc: 'Process with calm support', route: '/(tabs)/companion', icon: 'Bot', color: '#5B8FB9', bg: '#E3EFF7' },
-  { id: 'cna3', label: 'Simulate responses', desc: 'Try different communication options', route: '/(tabs)/messages', icon: 'MessageCircle', color: '#7BA7A0', bg: '#E3EDE8' },
-  { id: 'cna4', label: 'Use secure rewrite', desc: 'Craft a calmer message', route: '/(tabs)/messages', icon: 'Edit3', color: '#6B9080', bg: '#E3EDE8' },
-  { id: 'cna5', label: 'Do another grounding round', desc: 'Keep building calm', route: null, icon: 'Eye', color: '#8B7E74', bg: '#EDE8E3' },
-  { id: 'cna6', label: 'Return in 10 minutes', desc: 'Give yourself space', route: null, icon: 'Clock', color: '#6B7B8D', bg: '#E3E8ED' },
+  { id: 'cna1', label: 'Write in journal', desc: 'Put thoughts into words safely', route: '/(tabs)/journal', icon: 'BookOpen', color: '#67E8F9', bg: '#0B1238' },
+  { id: 'cna2', label: 'Talk to AI Companion', desc: 'Process with calm support', route: '/(tabs)/companion', icon: 'Bot', color: '#3B82F6', bg: '#FFFFFF' },
+  { id: 'cna3', label: 'Simulate responses', desc: 'Try different communication options', route: '/(tabs)/messages', icon: 'MessageCircle', color: '#14B8A6', bg: '#0B1238' },
+  { id: 'cna4', label: 'Use secure rewrite', desc: 'Craft a calmer message', route: '/(tabs)/messages', icon: 'Edit3', color: '#14B8A6', bg: '#0B1238' },
+  { id: 'cna5', label: 'Do another grounding round', desc: 'Keep building calm', route: null, icon: 'Eye', color: '#2E2A72', bg: '#0B1238' },
+  { id: 'cna6', label: 'Return in 10 minutes', desc: 'Give yourself space', route: null, icon: 'Clock', color: '#2E2A72', bg: '#0B1238' },
 ];
 
 export const DELAY_OPTIONS = [

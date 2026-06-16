@@ -56,15 +56,15 @@ const INSIGHT_ICONS: Record<string, React.ElementType> = {
 };
 
 const TREND_CONFIG = {
-  up: { icon: TrendingUp, color: '#E17055', label: 'Rising' },
-  down: { icon: TrendingDown, color: '#00B894', label: 'Declining' },
-  stable: { icon: Minus, color: '#8E9AAF', label: 'Stable' },
+  up: { icon: TrendingUp, color: '#3B82F6', label: 'Rising' },
+  down: { icon: TrendingDown, color: '#14B8A6', label: 'Declining' },
+  stable: { icon: Minus, color: '#2E2A72', label: 'Stable' },
 } as const;
 
 const GROWTH_TYPE_CONFIG = {
-  improvement: { color: '#00B894', bg: '#E0F5EF', icon: TrendingDown },
-  milestone: { color: '#D4956A', bg: '#F5E6D8', icon: Award },
-  awareness: { color: '#6B9080', bg: '#E3EDE8', icon: Eye },
+  improvement: { color: '#14B8A6', bg: '#FFFFFF', icon: TrendingDown },
+  milestone: { color: '#67E8F9', bg: '#0B1238', icon: Award },
+  awareness: { color: '#14B8A6', bg: '#0B1238', icon: Eye },
 } as const;
 
 export default function EmotionalTimeMachineScreen() {
@@ -396,7 +396,7 @@ const EmotionsSection = React.memo(function EmotionsSection({
             <View style={styles.listInfo}>
               <Text style={styles.listLabel}>{em.label}</Text>
               <View style={styles.listBarTrack}>
-                <View style={[styles.listBarFill, { width: `${Math.min(em.percentage, 100)}%`, backgroundColor: '#E17055' }]} />
+                <View style={[styles.listBarFill, { width: `${Math.min(em.percentage, 100)}%`, backgroundColor: '#3B82F6' }]} />
               </View>
             </View>
             <View style={styles.listMeta}>
@@ -418,7 +418,7 @@ const TriggersSection = React.memo(function TriggersSection({
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Zap size={18} color="#E67E22" />
+        <Zap size={18} color="#3B82F6" />
         <Text style={styles.sectionTitle}>Common Triggers</Text>
       </View>
       {triggers.map((tr) => {
@@ -427,12 +427,12 @@ const TriggersSection = React.memo(function TriggersSection({
         return (
           <View key={tr.label} style={styles.listRow}>
             <View style={styles.triggerDot}>
-              <Zap size={12} color="#E67E22" />
+              <Zap size={12} color="#3B82F6" />
             </View>
             <View style={styles.listInfo}>
               <Text style={styles.listLabel}>{tr.label}</Text>
               <View style={styles.listBarTrack}>
-                <View style={[styles.listBarFill, { width: `${Math.min(tr.percentage, 100)}%`, backgroundColor: '#E67E22' }]} />
+                <View style={[styles.listBarFill, { width: `${Math.min(tr.percentage, 100)}%`, backgroundColor: '#3B82F6' }]} />
               </View>
             </View>
             <View style={styles.listMeta}>
@@ -508,7 +508,7 @@ const RelationshipSection = React.memo(function RelationshipSection({
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Users size={18} color="#8E6FBF" />
+        <Users size={18} color="#2E2A72" />
         <Text style={styles.sectionTitle}>Relationship Stress</Text>
       </View>
       <View style={styles.relCard}>
@@ -549,21 +549,21 @@ const AIInsightsSection = React.memo(function AIInsightsSection({
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Lightbulb size={18} color="#D4956A" />
+        <Lightbulb size={18} color="#67E8F9" />
         <Text style={styles.sectionTitle}>AI Insights</Text>
       </View>
       {insights.map((insight) => {
         const IconComp = INSIGHT_ICONS[insight.icon] ?? Lightbulb;
         const bgColor = insight.type === 'growth'
-          ? '#E0F5EF'
+          ? '#FFFFFF'
           : insight.type === 'suggestion'
-            ? '#FEF5E7'
-            : '#F0ECE7';
+            ? '#FFFFFF'
+            : '#FFFFFF';
         const iconColor = insight.type === 'growth'
-          ? '#00B894'
+          ? '#14B8A6'
           : insight.type === 'suggestion'
-            ? '#E67E22'
-            : '#6B9080';
+            ? '#3B82F6'
+            : '#14B8A6';
 
         return (
           <View key={insight.id} style={[styles.insightCard, { backgroundColor: bgColor }]}>
@@ -634,7 +634,7 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   headerBg: {
-    backgroundColor: '#2D4A3E',
+    backgroundColor: '#2E2A72',
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
     paddingBottom: 16,
@@ -697,7 +697,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.6)',
   },
   periodBtnTextActive: {
-    color: '#2D4A3E',
+    color: '#2E2A72',
   },
   scrollView: {
     flex: 1,
@@ -878,7 +878,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 10,
-    backgroundColor: '#FEF5E7',
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
   },

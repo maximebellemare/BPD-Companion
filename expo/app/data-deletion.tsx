@@ -28,11 +28,11 @@ type DeletionCategory = {
 const DELETION_CATEGORIES: DeletionCategory[] = [
   {
     id: 'journal',
-    icon: <BookOpen size={18} color="#8B5CF6" />,
+    icon: <BookOpen size={18} color="#3B82F6" />,
     title: 'Journal Entries',
     description: 'All journal entries, guided journals, and reflections',
     keys: ['journal_entries', 'journal_insights', 'journal_weekly_reports'],
-    color: '#F0E6FF',
+    color: '#FFFFFF',
   },
   {
     id: 'messages',
@@ -40,7 +40,7 @@ const DELETION_CATEGORIES: DeletionCategory[] = [
     title: 'Message Drafts & History',
     description: 'All message drafts, rewrites, outcomes, and communication patterns',
     keys: ['message_drafts', 'message_outcomes', 'communication_patterns', 'draft_vault'],
-    color: '#E6F0FF',
+    color: '#FFFFFF',
   },
   {
     id: 'companion',
@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
   },
   categoryCardSelected: {
     borderColor: Colors.danger,
-    backgroundColor: '#FFF8F8',
+    backgroundColor: '#FFFFFF',
   },
   categoryCardDeleted: {
     borderColor: Colors.success,

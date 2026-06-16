@@ -266,8 +266,8 @@ export default function ToolsScreen() {
               activeOpacity={0.7}
               testID="dbt-library-card"
             >
-              <View style={[styles.libraryIcon, { backgroundColor: '#FDE8E3' }]}>
-                <Shield size={20} color="#E17055" />
+              <View style={[styles.libraryIcon, { backgroundColor: '#FFFFFF' }]}>
+                <Shield size={20} color="#3B82F6" />
               </View>
               <Text style={styles.libraryTitle}>DBT Skills</Text>
               <Text style={styles.libraryDesc}>32 guided skills</Text>
@@ -279,8 +279,8 @@ export default function ToolsScreen() {
               activeOpacity={0.7}
               testID="mbt-library-card"
             >
-              <View style={[styles.libraryIcon, { backgroundColor: '#F0ECF7' }]}>
-                <Search size={20} color="#9B8EC4" />
+              <View style={[styles.libraryIcon, { backgroundColor: 'rgba(59, 130, 246, 0.18)' }]}>
+                <Search size={20} color="#3B82F6" />
               </View>
               <Text style={styles.libraryTitle}>Perspective</Text>
               <Text style={styles.libraryDesc}>MBT-style tools</Text>
@@ -292,8 +292,8 @@ export default function ToolsScreen() {
               activeOpacity={0.7}
               testID="rr-library-card"
             >
-              <View style={[styles.libraryIcon, { backgroundColor: '#F5E0E0' }]}>
-                <HeartCrack size={20} color="#C47878" />
+              <View style={[styles.libraryIcon, { backgroundColor: 'rgba(59, 130, 246, 0.18)' }]}>
+                <HeartCrack size={20} color="#3B82F6" />
               </View>
               <Text style={styles.libraryTitle}>Recovery</Text>
               <Text style={styles.libraryDesc}>Post-conflict support</Text>
@@ -305,8 +305,8 @@ export default function ToolsScreen() {
               activeOpacity={0.7}
               testID="body-library-card"
             >
-              <View style={[styles.libraryIcon, { backgroundColor: '#E8F4F4' }]}>
-                <Activity size={20} color="#4A8B8D" />
+              <View style={[styles.libraryIcon, { backgroundColor: 'rgba(20, 184, 166, 0.18)' }]}>
+                <Activity size={20} color="#14B8A6" />
               </View>
               <Text style={styles.libraryTitle}>Body</Text>
               <Text style={styles.libraryDesc}>Physical regulation</Text>
@@ -346,8 +346,8 @@ export default function ToolsScreen() {
             testID="simulator-card"
           >
             <View style={styles.featureLeft}>
-              <View style={[styles.featureIcon, { backgroundColor: '#E3EFF7' }]}>
-                <Zap size={18} color="#5B8FB9" />
+              <View style={[styles.featureIcon, { backgroundColor: '#FFFFFF' }]}>
+                <Zap size={18} color="#3B82F6" />
               </View>
               <View style={styles.featureInfo}>
                 <Text style={styles.featureTitle}>Response Simulator</Text>
@@ -364,8 +364,8 @@ export default function ToolsScreen() {
             testID="growth-card"
           >
             <View style={styles.featureLeft}>
-              <View style={[styles.featureIcon, { backgroundColor: '#E3EDE8' }]}>
-                <Sprout size={18} color="#6B9080" />
+              <View style={[styles.featureIcon, { backgroundColor: '#0B1238' }]}>
+                <Sprout size={18} color="#14B8A6" />
               </View>
               <View style={styles.featureInfo}>
                 <Text style={styles.featureTitle}>My Growth</Text>
@@ -382,8 +382,8 @@ export default function ToolsScreen() {
             testID="relationship-card"
           >
             <View style={styles.featureLeft}>
-              <View style={[styles.featureIcon, { backgroundColor: '#FFF5F9' }]}>
-                <HeartHandshake size={18} color="#E84393" />
+              <View style={[styles.featureIcon, { backgroundColor: '#FFFFFF' }]}>
+                <HeartHandshake size={18} color="#3B82F6" />
               </View>
               <View style={styles.featureInfo}>
                 <Text style={styles.featureTitle}>Relationship Support</Text>
@@ -476,7 +476,7 @@ const styles = StyleSheet.create({
   smartRecCard: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    backgroundColor: '#4A7A68',
+    backgroundColor: '#14B8A6',
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
@@ -741,7 +741,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'space-between' as const,
-    backgroundColor: Colors.brandNavy,
+    backgroundColor: Colors.primary,
     borderRadius: 18,
     padding: 18,
     marginBottom: 28,

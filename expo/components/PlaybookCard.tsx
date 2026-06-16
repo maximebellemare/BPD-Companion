@@ -64,7 +64,7 @@ export default React.memo(function PlaybookCard({ playbook }: PlaybookCardProps)
     >
       <View style={styles.header}>
         <Animated.View style={[styles.iconWrap, { opacity: accentOpacity }]}>
-          <BookOpen size={18} color="#E8915A" />
+          <BookOpen size={18} color="#67E8F9" />
         </Animated.View>
         <View style={styles.headerText}>
           <Text style={styles.title}>My Emotional Playbook</Text>
@@ -88,7 +88,7 @@ export default React.memo(function PlaybookCard({ playbook }: PlaybookCardProps)
           </View>
           {topTool.avgDistressReduction > 0 && (
             <View style={styles.reductionBadge}>
-              <Zap size={10} color="#E8915A" />
+              <Zap size={10} color="#67E8F9" />
               <Text style={styles.reductionText}>-{topTool.avgDistressReduction}</Text>
             </View>
           )}
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: '#FEF3EC',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
   reductionBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF3EC',
+    backgroundColor: '#FFFFFF',
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
   reductionText: {
     fontSize: 12,
     fontWeight: '700' as const,
-    color: '#E8915A',
+    color: '#67E8F9',
   },
   encouragement: {
     fontSize: 12,

@@ -27,25 +27,25 @@ const STEP_CONFIG: Record<Step, { title: string; question: string; placeholder: 
     title: 'What are you feeling?',
     question: 'Name the emotion that is most present right now.',
     placeholder: 'Hurt, angry, abandoned, anxious...',
-    icon: <Heart size={20} color="#E84393" />,
+    icon: <Heart size={20} color="#3B82F6" />,
   },
   fear: {
     title: 'What are you afraid this means?',
     question: 'What story is your mind telling you about this situation?',
     placeholder: 'They don\'t care, I\'m too much, this is ending...',
-    icon: <Shield size={20} color="#D4956A" />,
+    icon: <Shield size={20} color="#67E8F9" />,
   },
   need: {
     title: 'What do you actually need?',
     question: 'Separate from panic, what would truly help right now?',
     placeholder: 'Reassurance, space, honesty, to feel safe...',
-    icon: <Compass size={20} color="#6B9080" />,
+    icon: <Compass size={20} color="#14B8A6" />,
   },
   values: {
     title: 'What response aligns with your values?',
     question: 'Thinking about what matters most to you, how would you want to respond?',
     placeholder: 'I want to respond with dignity and honesty...',
-    icon: <Check size={20} color="#8B5CF6" />,
+    icon: <Check size={20} color="#3B82F6" />,
   },
   protects: {
     title: 'What protects both connection and self-respect?',
@@ -293,13 +293,13 @@ export default function ConflictAlignmentScreen() {
                 <Text style={styles.summaryCardLabel}>What you actually need</Text>
                 <Text style={styles.summaryCardValue}>{need}</Text>
               </View>
-              <View style={[styles.summaryCard, { backgroundColor: Colors.primaryLight, borderColor: '#C8DDD2' }]}>
+              <View style={[styles.summaryCard, { backgroundColor: Colors.primaryLight, borderColor: '#0B1238' }]}>
                 <Text style={[styles.summaryCardLabel, { color: Colors.primaryDark }]}>Values-aligned response</Text>
                 <Text style={[styles.summaryCardValue, { color: Colors.primaryDark }]}>{valuesResponse}</Text>
               </View>
-              <View style={[styles.summaryCard, { backgroundColor: '#E8F0FE', borderColor: '#C8D8F0' }]}>
-                <Text style={[styles.summaryCardLabel, { color: '#2563EB' }]}>Protects connection + self-respect</Text>
-                <Text style={[styles.summaryCardValue, { color: '#1E40AF' }]}>{protectsBoth}</Text>
+              <View style={[styles.summaryCard, { backgroundColor: '#FFFFFF', borderColor: '#0B1238' }]}>
+                <Text style={[styles.summaryCardLabel, { color: '#3B82F6' }]}>Protects connection + self-respect</Text>
+                <Text style={[styles.summaryCardValue, { color: '#2E2A72' }]}>{protectsBoth}</Text>
               </View>
 
               <View style={styles.summaryActions}>

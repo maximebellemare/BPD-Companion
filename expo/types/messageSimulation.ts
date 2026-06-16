@@ -82,51 +82,51 @@ export const SIMULATION_OUTCOME_OPTIONS: {
   emoji: string;
   color: string;
 }[] = [
-  { value: 'sent_helped', label: 'Sent — it helped', emoji: '💚', color: '#6B9080' },
-  { value: 'sent_neutral', label: 'Sent — neutral', emoji: '😐', color: '#8E9BAA' },
-  { value: 'sent_regretted', label: 'Sent — regretted it', emoji: '💔', color: '#E17055' },
-  { value: 'not_sent_relieved', label: "Didn't send — relieved", emoji: '😌', color: '#7FA68E' },
-  { value: 'not_sent_unsure', label: "Didn't send — still unsure", emoji: '🤔', color: '#C4956A' },
-  { value: 'paused_first', label: 'Paused first', emoji: '⏳', color: '#9B8EC4' },
-  { value: 'journaled_instead', label: 'Journaled instead', emoji: '📝', color: '#5B8FB9' },
-  { value: 'used_grounding', label: 'Used grounding', emoji: '🧘', color: '#4A8B8D' },
+  { value: 'sent_helped', label: 'Sent — it helped', emoji: '💚', color: '#14B8A6' },
+  { value: 'sent_neutral', label: 'Sent — neutral', emoji: '😐', color: '#2E2A72' },
+  { value: 'sent_regretted', label: 'Sent — regretted it', emoji: '💔', color: '#3B82F6' },
+  { value: 'not_sent_relieved', label: "Didn't send — relieved", emoji: '😌', color: '#14B8A6' },
+  { value: 'not_sent_unsure', label: "Didn't send — still unsure", emoji: '🤔', color: '#67E8F9' },
+  { value: 'paused_first', label: 'Paused first', emoji: '⏳', color: '#3B82F6' },
+  { value: 'journaled_instead', label: 'Journaled instead', emoji: '📝', color: '#3B82F6' },
+  { value: 'used_grounding', label: 'Used grounding', emoji: '🧘', color: '#14B8A6' },
 ];
 
 export const RESPONSE_PATH_META: Record<ResponsePath, { label: string; emoji: string; color: string; description: string }> = {
   urgent: {
     label: 'Urgent',
     emoji: '⚡',
-    color: '#E17055',
+    color: '#3B82F6',
     description: 'The emotionally driven, pressuring response',
   },
   avoidant: {
     label: 'Avoidant',
     emoji: '🧊',
-    color: '#7FB3D3',
+    color: '#3B82F6',
     description: 'The shutdown, cold distance response',
   },
   soft: {
     label: 'Soft',
     emoji: '🪶',
-    color: '#E8A87C',
+    color: '#67E8F9',
     description: 'The gentle, emotionally open response',
   },
   boundary: {
     label: 'Boundary',
     emoji: '🛡️',
-    color: '#5B8FB9',
+    color: '#3B82F6',
     description: 'The clear, dignity-protecting response',
   },
   secure: {
     label: 'Secure',
     emoji: '🌿',
-    color: '#6B9080',
+    color: '#14B8A6',
     description: 'The calm, self-respecting response',
   },
   do_not_send: {
     label: 'Do Not Send',
     emoji: '🛑',
-    color: '#C47878',
+    color: '#3B82F6',
     description: 'The strategic pause — regulate first',
   },
 };

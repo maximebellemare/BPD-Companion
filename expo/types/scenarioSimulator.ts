@@ -57,25 +57,25 @@ export const RESPONSE_STYLE_META: Record<ResponseStyle, { label: string; emoji: 
   urgent: {
     label: 'Urgent',
     emoji: '⚡',
-    color: '#E17055',
+    color: '#3B82F6',
     description: 'Driven by anxiety and need for immediate resolution',
   },
   avoidant: {
     label: 'Avoidant',
     emoji: '🧊',
-    color: '#7FB3D3',
+    color: '#3B82F6',
     description: 'Shutting down or pulling away to self-protect',
   },
   defensive: {
     label: 'Defensive',
     emoji: '🛡️',
-    color: '#E8A87C',
+    color: '#67E8F9',
     description: 'Protecting yourself through blame or justification',
   },
   secure: {
     label: 'Secure',
     emoji: '🌿',
-    color: '#6B9080',
+    color: '#14B8A6',
     description: 'Grounded, clear, and respectful of both sides',
   },
 };

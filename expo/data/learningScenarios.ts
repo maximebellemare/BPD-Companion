@@ -5,7 +5,7 @@ export const LEARNING_SCENARIOS: LearningScenario[] = [
     id: 'scenario-delayed-text',
     title: 'The Delayed Text',
     category: 'relationship',
-    color: '#7B8CDE',
+    color: '#3B82F6',
     situation: 'You sent your partner a text 3 hours ago about plans tonight. They usually respond within minutes. You can see they were active on social media 20 minutes ago. They still haven\'t replied.',
     interpretations: [
       {
@@ -37,7 +37,7 @@ export const LEARNING_SCENARIOS: LearningScenario[] = [
     id: 'scenario-friend-cancels',
     title: 'The Cancelled Plan',
     category: 'relationship',
-    color: '#E17055',
+    color: '#3B82F6',
     situation: 'Your close friend cancels dinner plans at the last minute, saying they\'re tired. This is the second time this month they\'ve cancelled. You were really looking forward to seeing them.',
     interpretations: [
       {
@@ -69,7 +69,7 @@ export const LEARNING_SCENARIOS: LearningScenario[] = [
     id: 'scenario-criticism-work',
     title: 'The Critical Feedback',
     category: 'emotional',
-    color: '#A29BFE',
+    color: '#3B82F6',
     situation: 'Your supervisor gives you constructive feedback on a project. They say some parts are good but others need significant rework. Their tone is neutral and professional.',
     interpretations: [
       {
@@ -101,7 +101,7 @@ export const LEARNING_SCENARIOS: LearningScenario[] = [
     id: 'scenario-partner-distant',
     title: 'The Distant Evening',
     category: 'relationship',
-    color: '#D4956A',
+    color: '#67E8F9',
     situation: 'You and your partner are spending the evening together. They seem quieter than usual, looking at their phone more, and not initiating conversation. When you ask if everything is okay, they say "yeah, just tired."',
     interpretations: [
       {
@@ -133,7 +133,7 @@ export const LEARNING_SCENARIOS: LearningScenario[] = [
     id: 'scenario-argument-aftermath',
     title: 'After the Argument',
     category: 'communication',
-    color: '#00B894',
+    color: '#14B8A6',
     situation: 'You had an argument with your partner last night. You said some things you regret. You woke up feeling terrible. They left for work without saying much. You\'re not sure where things stand.',
     interpretations: [
       {

@@ -124,8 +124,8 @@ export default React.memo(function OutcomePromptBanner({ draftId }: OutcomePromp
             activeOpacity={0.7}
             testID="outcome-worse"
           >
-            <XCircle size={18} color="#E17055" />
-            <Text style={[styles.optionText, { color: '#E17055' }]}>Harder</Text>
+            <XCircle size={18} color="#3B82F6" />
+            <Text style={[styles.optionText, { color: '#3B82F6' }]}>Harder</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -148,11 +148,11 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   card: {
-    backgroundColor: '#FFF9F0',
+    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#F5E6D8',
+    borderColor: '#0B1238',
   },
   title: {
     fontSize: 17,
@@ -188,8 +188,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
   },
   optionWorse: {
-    backgroundColor: '#FFF5F0',
-    borderColor: '#E1705530',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#3B82F630',
   },
   optionNotSent: {
     backgroundColor: Colors.card,

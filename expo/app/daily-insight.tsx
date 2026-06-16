@@ -103,7 +103,7 @@ export default function DailyInsightScreen() {
       insight_id: insight.id,
       tool_id: insight.suggestedToolId,
     });
-    router.push(`/dbt-skill?id=${insight.suggestedToolId}` as any);
+    router.push(`/tools/dbt-skill?skillId=${insight.suggestedToolId}` as any);
   }, [insight, router, trackEvent]);
 
   const handleJournal = useCallback(() => {
@@ -171,7 +171,7 @@ export default function DailyInsightScreen() {
         <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
           <View style={styles.iconSection}>
             <View style={styles.largeIconWrap}>
-              <Lightbulb size={32} color="#D4956A" />
+              <Lightbulb size={32} color="#67E8F9" />
             </View>
           </View>
 
@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 20,
-    backgroundColor: '#FFF3E8',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     shadowColor: 'rgba(196, 149, 106, 0.2)',

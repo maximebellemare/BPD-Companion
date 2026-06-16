@@ -33,15 +33,15 @@ import { SpiralSignal, SpiralSignalType } from '@/types/spiral';
 import { SpiralTrend } from '@/services/emotions/spiralHistoryService';
 
 const SIGNAL_CONFIG: Record<SpiralSignalType, { label: string; color: string; icon: React.ComponentType<{ size: number; color: string }> }> = {
-  rapid_distress_escalation: { label: 'Distress escalation', color: '#C47878', icon: TrendingUp },
-  repeated_rejection_language: { label: 'Rejection themes', color: '#C4956A', icon: Heart },
-  relationship_conflict_loop: { label: 'Conflict cycle', color: '#9B8EC4', icon: Activity },
-  late_night_spike: { label: 'Late-night intensity', color: '#8EAEC4', icon: Clock },
-  emotional_volatility: { label: 'Emotional shifts', color: '#C47878', icon: Zap },
-  shame_cascade: { label: 'Shame pattern', color: '#C4956A', icon: Shield },
-  urge_intensification: { label: 'Strong urges', color: '#C47878', icon: AlertTriangle },
-  coping_abandonment: { label: 'Coping dropped off', color: '#8EAEC4', icon: TrendingDown },
-  isolation_pattern: { label: 'Withdrawal', color: '#9B8EC4', icon: Heart },
+  rapid_distress_escalation: { label: 'Distress escalation', color: '#3B82F6', icon: TrendingUp },
+  repeated_rejection_language: { label: 'Rejection themes', color: '#67E8F9', icon: Heart },
+  relationship_conflict_loop: { label: 'Conflict cycle', color: '#3B82F6', icon: Activity },
+  late_night_spike: { label: 'Late-night intensity', color: '#2E2A72', icon: Clock },
+  emotional_volatility: { label: 'Emotional shifts', color: '#3B82F6', icon: Zap },
+  shame_cascade: { label: 'Shame pattern', color: '#67E8F9', icon: Shield },
+  urge_intensification: { label: 'Strong urges', color: '#3B82F6', icon: AlertTriangle },
+  coping_abandonment: { label: 'Coping dropped off', color: '#2E2A72', icon: TrendingDown },
+  isolation_pattern: { label: 'Withdrawal', color: '#3B82F6', icon: Heart },
 };
 
 export default function SpiralInsightsScreen() {

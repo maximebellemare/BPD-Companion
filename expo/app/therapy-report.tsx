@@ -137,14 +137,14 @@ export default function TherapyReportScreen() {
   }, [report]);
 
   const getTrendIcon = useCallback((trend: 'increasing' | 'decreasing' | 'stable') => {
-    if (trend === 'increasing') return <TrendingUp size={13} color="#E17055" />;
+    if (trend === 'increasing') return <TrendingUp size={13} color="#3B82F6" />;
     if (trend === 'decreasing') return <TrendingDown size={13} color={Colors.success} />;
     return <Minus size={13} color={Colors.textMuted} />;
   }, []);
 
   const getDirectionColor = (direction: 'improving' | 'worsening' | 'stable') => {
     if (direction === 'improving') return Colors.success;
-    if (direction === 'worsening') return '#E17055';
+    if (direction === 'worsening') return '#3B82F6';
     return Colors.textMuted;
   };
 
@@ -273,8 +273,8 @@ export default function TherapyReportScreen() {
 
         <Animated.View style={[styles.sectionCard, { opacity: slideOpacities[1], transform: [{ translateY: slideAnims[1] }] }]}>
           <View style={styles.sectionHeader}>
-            <View style={[styles.sectionIconWrap, { backgroundColor: '#FFF0E6' }]}>
-              <Heart size={18} color="#E17055" />
+            <View style={[styles.sectionIconWrap, { backgroundColor: '#FFFFFF' }]}>
+              <Heart size={18} color="#3B82F6" />
             </View>
             <Text style={styles.sectionTitle}>Emotional Patterns</Text>
           </View>
@@ -340,8 +340,8 @@ export default function TherapyReportScreen() {
 
         <Animated.View style={[styles.sectionCard, { opacity: slideOpacities[3], transform: [{ translateY: slideAnims[3] }] }]}>
           <View style={styles.sectionHeader}>
-            <View style={[styles.sectionIconWrap, { backgroundColor: '#EEF2FF' }]}>
-              <Calendar size={18} color="#6366F1" />
+            <View style={[styles.sectionIconWrap, { backgroundColor: '#FFFFFF' }]}>
+              <Calendar size={18} color="#3B82F6" />
             </View>
             <Text style={styles.sectionTitle}>Distress Trend</Text>
           </View>
@@ -357,7 +357,7 @@ export default function TherapyReportScreen() {
             </View>
             <View style={styles.distressStat}>
               <Text style={styles.distressStatLabel}>Peak</Text>
-              <Text style={[styles.distressStatValue, { color: '#E17055' }]}>{report.distressTrend.peak}/10</Text>
+              <Text style={[styles.distressStatValue, { color: '#3B82F6' }]}>{report.distressTrend.peak}/10</Text>
             </View>
             <View style={styles.distressStat}>
               <Text style={styles.distressStatLabel}>Lowest</Text>
@@ -375,7 +375,7 @@ export default function TherapyReportScreen() {
                         styles.miniChartBar,
                         {
                           height: `${Math.max(pt.value * 10, 4)}%`,
-                          backgroundColor: pt.value >= 7 ? '#E17055' : pt.value >= 4 ? Colors.accent : Colors.primary,
+                          backgroundColor: pt.value >= 7 ? '#3B82F6' : pt.value >= 4 ? Colors.accent : Colors.primary,
                         },
                       ]}
                     />
@@ -415,7 +415,7 @@ export default function TherapyReportScreen() {
 
         <Animated.View style={[styles.sectionCard, { opacity: slideOpacities[5], transform: [{ translateY: slideAnims[5] }] }]}>
           <View style={styles.sectionHeader}>
-            <View style={[styles.sectionIconWrap, { backgroundColor: '#E8F4FD' }]}>
+            <View style={[styles.sectionIconWrap, { backgroundColor: '#FFFFFF' }]}>
               <MessageCircle size={18} color="#3B82F6" />
             </View>
             <Text style={styles.sectionTitle}>Relationship Patterns</Text>
@@ -479,8 +479,8 @@ export default function TherapyReportScreen() {
         {(report.regulation.totalPauses > 0 || report.regulation.totalRewrites > 0) && (
           <Animated.View style={[styles.sectionCard, { opacity: slideOpacities[7], transform: [{ translateY: slideAnims[7] }] }]}>
             <View style={styles.sectionHeader}>
-              <View style={[styles.sectionIconWrap, { backgroundColor: '#F0F5FF' }]}>
-                <PauseCircle size={18} color="#3B6FC4" />
+              <View style={[styles.sectionIconWrap, { backgroundColor: '#FFFFFF' }]}>
+                <PauseCircle size={18} color="#3B82F6" />
               </View>
               <Text style={styles.sectionTitle}>Regulation Behavior</Text>
             </View>
@@ -504,7 +504,7 @@ export default function TherapyReportScreen() {
               )}
               {report.regulation.madeWorseCount > 0 && (
                 <View style={styles.regulationStat}>
-                  <Text style={[styles.regulationStatValue, { color: '#E17055' }]}>{report.regulation.madeWorseCount}</Text>
+                  <Text style={[styles.regulationStatValue, { color: '#3B82F6' }]}>{report.regulation.madeWorseCount}</Text>
                   <Text style={styles.regulationStatLabel}>Harder</Text>
                 </View>
               )}
@@ -514,8 +514,8 @@ export default function TherapyReportScreen() {
 
         <Animated.View style={[styles.sectionCard, styles.progressCard, { opacity: slideOpacities[7], transform: [{ translateY: slideAnims[7] }] }]}>
           <View style={styles.sectionHeader}>
-            <View style={[styles.sectionIconWrap, { backgroundColor: '#FFF8E1' }]}>
-              <Award size={18} color="#F59E0B" />
+            <View style={[styles.sectionIconWrap, { backgroundColor: '#FFFFFF' }]}>
+              <Award size={18} color="#67E8F9" />
             </View>
             <Text style={styles.sectionTitle}>Progress Highlights</Text>
           </View>
@@ -555,8 +555,8 @@ export default function TherapyReportScreen() {
         {report.discussionPrompts.length > 0 && (
           <Animated.View style={[styles.sectionCard, styles.discussionCard, { opacity: slideOpacities[8], transform: [{ translateY: slideAnims[8] }] }]}>
             <View style={styles.sectionHeader}>
-              <View style={[styles.sectionIconWrap, { backgroundColor: '#F3E8FF' }]}>
-                <MessageCircle size={18} color="#8B5CF6" />
+              <View style={[styles.sectionIconWrap, { backgroundColor: '#FFFFFF' }]}>
+                <MessageCircle size={18} color="#3B82F6" />
               </View>
               <Text style={styles.sectionTitle}>Possible Therapy Topics</Text>
             </View>
@@ -569,7 +569,7 @@ export default function TherapyReportScreen() {
               {report.discussionPrompts.map((prompt: TherapyDiscussionPrompt, i: number) => (
                 <View key={i} style={styles.discussionItem}>
                   <View style={[styles.discussionCategoryDot, {
-                    backgroundColor: prompt.category === 'emotional' ? '#E17055' :
+                    backgroundColor: prompt.category === 'emotional' ? '#3B82F6' :
                       prompt.category === 'relational' ? '#3B82F6' :
                       prompt.category === 'behavioral' ? Colors.accent :
                       Colors.success,
@@ -584,7 +584,7 @@ export default function TherapyReportScreen() {
 
             <View style={styles.discussionCategoryLegend}>
               <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: '#E17055' }]} />
+                <View style={[styles.legendDot, { backgroundColor: '#3B82F6' }]} />
                 <Text style={styles.legendText}>Emotional</Text>
               </View>
               <View style={styles.legendItem}>
@@ -812,7 +812,7 @@ const styles = StyleSheet.create({
   },
   progressCard: {
     borderWidth: 1,
-    borderColor: '#FFF3D6',
+    borderColor: '#FFFFFF',
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -1023,12 +1023,12 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   relTag: {
-    backgroundColor: '#E8F4FD',
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#D0E8F7',
+    borderColor: '#0B1238',
   },
   relTagText: {
     fontSize: 13,
@@ -1100,7 +1100,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#67E8F9',
     marginTop: 7,
   },
   highlightText: {
@@ -1225,7 +1225,7 @@ const styles = StyleSheet.create({
   },
   discussionCard: {
     borderWidth: 1,
-    borderColor: '#F3E8FF',
+    borderColor: '#FFFFFF',
   },
   discussionIntro: {
     fontSize: 14,

@@ -101,7 +101,7 @@ export default function AnchorStatementsScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Animated.View style={{ opacity: fadeAnim }}>
           <View style={styles.introCard}>
-            <Anchor size={20} color="#2D8B7A" />
+            <Anchor size={20} color="#14B8A6" />
             <Text style={styles.introText}>
               Anchor statements are short truths you can return to when emotions try to pull you away from who you are.
             </Text>
@@ -161,8 +161,8 @@ export default function AnchorStatementsScreen() {
                     >
                       <Heart
                         size={16}
-                        color={anchor.isFavorite ? '#E84393' : Colors.textMuted}
-                        fill={anchor.isFavorite ? '#E84393' : 'none'}
+                        color={anchor.isFavorite ? '#3B82F6' : Colors.textMuted}
+                        fill={anchor.isFavorite ? '#3B82F6' : 'none'}
                       />
                     </TouchableOpacity>
                   </View>
@@ -192,8 +192,8 @@ export default function AnchorStatementsScreen() {
                     >
                       <Heart
                         size={16}
-                        color={anchor.isFavorite ? '#E84393' : Colors.textMuted}
-                        fill={anchor.isFavorite ? '#E84393' : 'none'}
+                        color={anchor.isFavorite ? '#3B82F6' : Colors.textMuted}
+                        fill={anchor.isFavorite ? '#3B82F6' : 'none'}
                       />
                     </TouchableOpacity>
                     <TouchableOpacity
@@ -287,18 +287,18 @@ const styles = StyleSheet.create({
   introCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#E0F5EF',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
     gap: 12,
     borderWidth: 1,
-    borderColor: '#C0E5D8',
+    borderColor: '#0B1238',
     marginBottom: 20,
   },
   introText: {
     flex: 1,
     fontSize: 14,
-    color: '#2D6B5A',
+    color: '#14B8A6',
     lineHeight: 21,
   },
   addCard: {

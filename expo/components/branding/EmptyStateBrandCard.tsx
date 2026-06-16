@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
     borderRadius: BrandSpacing.buttonRadius,
     paddingVertical: 14,
     paddingHorizontal: 32,
-    shadowColor: Colors.brandNavy,
+    shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 10,

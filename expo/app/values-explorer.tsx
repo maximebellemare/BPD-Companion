@@ -20,11 +20,11 @@ import { CORE_VALUES } from '@/services/identity/valuesService';
 import type { PersonalValue, ValueCategory } from '@/types/identity';
 
 const CATEGORY_META: Record<ValueCategory, { label: string; color: string; bg: string }> = {
-  connection: { label: 'Connection', color: '#E84393', bg: '#FFF0F6' },
-  integrity: { label: 'Integrity', color: '#6B9080', bg: '#E3EDE8' },
-  self: { label: 'Self', color: '#D4956A', bg: '#FFF8F0' },
-  growth: { label: 'Growth', color: '#00B894', bg: '#E0F5EF' },
-  peace: { label: 'Peace', color: '#3B82F6', bg: '#E8F0FE' },
+  connection: { label: 'Connection', color: '#3B82F6', bg: '#FFFFFF' },
+  integrity: { label: 'Integrity', color: '#14B8A6', bg: '#0B1238' },
+  self: { label: 'Self', color: '#67E8F9', bg: '#FFFFFF' },
+  growth: { label: 'Growth', color: '#14B8A6', bg: '#FFFFFF' },
+  peace: { label: 'Peace', color: '#3B82F6', bg: '#FFFFFF' },
 };
 
 export default function ValuesExplorerScreen() {

@@ -38,9 +38,9 @@ const MODULE_ICONS: Record<string, React.ComponentType<{ size: number; color: st
 };
 
 const DIFFICULTY_COLORS: Record<string, { bg: string; text: string }> = {
-  beginner: { bg: '#E0F5EF', text: '#00B894' },
-  intermediate: { bg: '#FFF8F0', text: '#D4956A' },
-  advanced: { bg: '#FDE8E3', text: '#E17055' },
+  beginner: { bg: '#FFFFFF', text: '#14B8A6' },
+  intermediate: { bg: '#FFFFFF', text: '#67E8F9' },
+  advanced: { bg: '#FFFFFF', text: '#3B82F6' },
 };
 
 export default function DBTModuleScreen() {
@@ -145,7 +145,7 @@ export default function DBTModuleScreen() {
                       <View style={styles.skillInfo}>
                         <View style={styles.skillTitleRow}>
                           <Text style={styles.skillTitle} numberOfLines={1}>{skill.title}</Text>
-                          {isFavorite && <Star size={14} color="#E8A838" fill="#E8A838" />}
+                          {isFavorite && <Star size={14} color="#67E8F9" fill="#67E8F9" />}
                         </View>
                         <Text style={styles.skillSubtitle} numberOfLines={2}>{skill.subtitle}</Text>
                       </View>

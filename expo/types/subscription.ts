@@ -10,6 +10,9 @@ export interface SubscriptionPlan {
   priceLabel: string;
   savings?: string;
   popular?: boolean;
+  productIdentifier?: string;
+  packageIdentifier?: string;
+  isFallbackPrice?: boolean;
 }
 
 export interface SubscriptionState {

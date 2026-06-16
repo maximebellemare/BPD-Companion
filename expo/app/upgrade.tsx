@@ -37,6 +37,7 @@ import { useSubscription } from '@/providers/SubscriptionProvider';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
 import { PREMIUM_FEATURES } from '@/types/subscription';
 import { usePersonalization } from '@/hooks/usePersonalization';
+import BrandLogo from '@/components/branding/BrandLogo';
 
 const ICON_MAP: Record<string, React.ComponentType<{ size: number; color: string }>> = {
   sparkles: Sparkles,
@@ -79,42 +80,33 @@ export default function UpgradeScreen() {
   const router = useRouter();
   const { anchor } = useLocalSearchParams<{ anchor?: string }>();
   const insets = useSafeAreaInsets();
-  const { isPremium, subscribe, restore, isSubscribing, state, offering } = useSubscription();
+  const {
+    isEntitlementActive,
+    subscribe,
+    restore,
+    isLoading,
+    isSubscribing,
+    isRestoring,
+    state,
+    plans,
+    offeringStatus,
+    offeringsError,
+    purchaseError,
+    restoreError,
+  } = useSubscription();
   const personalization = usePersonalization();
   const { trackEvent } = useAnalytics();
   const [selectedPlanId, setSelectedPlanId] = useState<string>('yearly');
+  const [restoreNotice, setRestoreNotice] = useState<string | null>(null);
 
-  const monthlyPackage = offering?.monthly ?? null;
-  const annualPackage = offering?.annual ?? null;
-
-  const plans = useMemo(() => {
-    const list: { id: string; name: string; period: 'monthly' | 'yearly'; priceLabel: string; savings?: string; popular?: boolean }[] = [];
-    if (monthlyPackage) {
-      list.push({
-        id: 'monthly',
-        name: 'Monthly',
-        period: 'monthly',
-        priceLabel: monthlyPackage.product.priceString + '/mo',
-      });
-    } else {
-      list.push({ id: 'monthly', name: 'Monthly', period: 'monthly', priceLabel: '$9.99/mo' });
-    }
-    if (annualPackage) {
-      list.push({
-        id: 'yearly',
-        name: 'Yearly',
-        period: 'yearly',
-        priceLabel: annualPackage.product.priceString + '/yr',
-        savings: 'Save 50%',
-        popular: true,
-      });
-    } else {
-      list.push({ id: 'yearly', name: 'Yearly', period: 'yearly', priceLabel: '$59.99/yr', savings: 'Save 50%', popular: true });
-    }
-    return list;
-  }, [monthlyPackage, annualPackage]);
   const _scrollRef = React.useRef<ScrollView>(null);
   const featureSectionY = React.useRef<number>(0);
+
+  useEffect(() => {
+    if (plans.length > 0 && !plans.some(plan => plan.id === selectedPlanId)) {
+      setSelectedPlanId(plans[0].id);
+    }
+  }, [plans, selectedPlanId]);
 
   useEffect(() => {
     trackEvent('upgrade_screen_viewed');
@@ -197,27 +189,39 @@ export default function UpgradeScreen() {
     }
     const selected = plans.find(p => p.id === selectedPlanId);
     if (!selected) return;
-    const pkg = selected.period === 'yearly' ? annualPackage : monthlyPackage;
-    if (!pkg) {
+    if (selected.isFallbackPrice || offeringStatus !== 'ready') {
       Alert.alert('Unavailable', 'This plan is not available right now. Please try again later.');
       return;
     }
     trackEvent('upgrade_clicked', { plan_id: selectedPlanId });
-    subscribe({
-      id: selected.id,
-      name: selected.name,
-      period: selected.period,
-      price: selected.period === 'yearly' ? 59.99 : 9.99,
-      priceLabel: selected.priceLabel,
-    });
-  }, [selectedPlanId, subscribe, trackEvent, plans, annualPackage, monthlyPackage]);
+    subscribe(selected);
+  }, [selectedPlanId, subscribe, trackEvent, plans, offeringStatus]);
 
   const handleRestore = useCallback(() => {
     handleHaptic();
-    restore();
+    setRestoreNotice(null);
+    restore()
+      .then((active) => {
+        setRestoreNotice(
+          active
+            ? 'Purchase restored. Premium access is active.'
+            : 'No active subscription was found for this store account.',
+        );
+      })
+      .catch(() => {
+        setRestoreNotice(null);
+      });
   }, [handleHaptic, restore]);
 
   const selectedPlan = plans.find(p => p.id === selectedPlanId);
+  const canSubscribe = offeringStatus === 'ready' && !!selectedPlan && !selectedPlan.isFallbackPrice;
+  const statusMessage = useMemo(() => {
+    if (offeringStatus === 'loading') return 'Loading secure App Store and Google Play plans...';
+    if (offeringStatus === 'preview') return 'Preview pricing is shown because RevenueCat offerings are unavailable in this build. Configure RevenueCat before release.';
+    if (offeringStatus === 'empty') return 'No subscription offering is configured yet. Check the RevenueCat offering and package setup.';
+    if (offeringStatus === 'error') return offeringsError ?? 'Subscription plans could not be loaded.';
+    return null;
+  }, [offeringStatus, offeringsError]);
 
   const anchorMessage = useMemo(() => {
     const map: Record<string, string> = {
@@ -241,7 +245,7 @@ export default function UpgradeScreen() {
     outputRange: [0.7, 1],
   });
 
-  if (isPremium) {
+  if (isEntitlementActive) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <Stack.Screen options={{ headerShown: false }} />
@@ -252,7 +256,7 @@ export default function UpgradeScreen() {
         </View>
         <View style={styles.activeContainer}>
           <View style={styles.activeBadge}>
-            <Crown size={32} color="#D4956A" />
+            <Crown size={32} color="#67E8F9" />
           </View>
           <Text style={styles.activeTitle}>Premium Active</Text>
           <Text style={styles.activeSubtitle}>
@@ -322,11 +326,11 @@ export default function UpgradeScreen() {
       >
         <Animated.View style={[styles.heroSection, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
           <Animated.View style={[styles.heroIconWrap, { opacity: shimmerOpacity }]}>
-            <Crown size={32} color="#D4956A" />
+            <BrandLogo size={56} />
           </Animated.View>
-          <Text style={styles.heroTitle}>Deeper Support{'\n'}When You Need It</Text>
+          <Text style={styles.heroTitle}>7 Days Free,{'\n'}Then Premium Support</Text>
           <Text style={styles.heroSubtitle}>
-            Unlock personalized insights, unlimited AI guidance, and advanced tools that grow with you.
+            Continue with calm, private tools for emotional regulation, communication, and pattern awareness after your free trial.
           </Text>
         </Animated.View>
 
@@ -376,7 +380,7 @@ export default function UpgradeScreen() {
         >
           {anchor ? (
             <View style={styles.anchorHighlight}>
-              <Sparkles size={14} color="#D4956A" />
+              <Sparkles size={14} color="#67E8F9" />
               <Text style={styles.anchorHighlightText}>{anchorMessage}</Text>
             </View>
           ) : null}
@@ -407,7 +411,7 @@ export default function UpgradeScreen() {
                   <Text style={styles.featureDesc}>{feature.description}</Text>
                 </View>
                 <View style={styles.featureCheck}>
-                  <Crown size={11} color="#D4956A" />
+                  <Crown size={11} color="#67E8F9" />
                 </View>
               </Animated.View>
             );
@@ -416,74 +420,100 @@ export default function UpgradeScreen() {
 
         <Animated.View style={[styles.plansSection, { opacity: fadeAnim }]}>
           <Text style={styles.plansTitle}>Choose your plan</Text>
-          <View style={styles.plansRow}>
-            {plans.map((plan) => {
-              const isSelected = plan.id === selectedPlanId;
-              return (
-                <TouchableOpacity
-                  key={plan.id}
-                  style={[
-                    styles.planCard,
-                    isSelected && styles.planCardSelected,
-                  ]}
-                  onPress={() => {
-                    handleHaptic();
-                    setSelectedPlanId(plan.id);
-                  }}
-                  activeOpacity={0.7}
-                  testID={`plan-${plan.id}`}
-                >
-                  {plan.popular && (
-                    <View style={styles.popularBadge}>
-                      <Text style={styles.popularBadgeText}>Best Value</Text>
-                    </View>
-                  )}
-                  <Text style={[styles.planName, isSelected && styles.planNameSelected]}>
-                    {plan.name}
-                  </Text>
-                  <Text style={[styles.planPrice, isSelected && styles.planPriceSelected]}>
-                    {plan.priceLabel}
-                  </Text>
-                  {plan.savings && (
-                    <Text style={[styles.planSavings, isSelected && styles.planSavingsSelected]}>
-                      {plan.savings}
+          {statusMessage ? (
+            <View style={styles.offeringStatusCard}>
+              <Shield size={16} color={Colors.brandTeal} />
+              <Text style={styles.offeringStatusText}>{statusMessage}</Text>
+            </View>
+          ) : null}
+          {plans.length > 0 ? (
+            <View style={styles.plansRow}>
+              {plans.map((plan) => {
+                const isSelected = plan.id === selectedPlanId;
+                return (
+                  <TouchableOpacity
+                    key={plan.id}
+                    style={[
+                      styles.planCard,
+                      isSelected && styles.planCardSelected,
+                    ]}
+                    onPress={() => {
+                      handleHaptic();
+                      setSelectedPlanId(plan.id);
+                    }}
+                    activeOpacity={0.7}
+                    testID={`plan-${plan.id}`}
+                  >
+                    {plan.popular && (
+                      <View style={styles.popularBadge}>
+                        <Text style={styles.popularBadgeText}>Best Value</Text>
+                      </View>
+                    )}
+                    <Text style={[styles.planName, isSelected && styles.planNameSelected]}>
+                      {plan.name}
                     </Text>
-                  )}
-                  <View style={[styles.planRadio, isSelected && styles.planRadioSelected]}>
-                    {isSelected && <View style={styles.planRadioInner} />}
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+                    <Text style={[styles.planPrice, isSelected && styles.planPriceSelected]}>
+                      {plan.priceLabel}
+                    </Text>
+                    {plan.savings && (
+                      <Text style={[styles.planSavings, isSelected && styles.planSavingsSelected]}>
+                        {plan.savings}
+                      </Text>
+                    )}
+                    {plan.isFallbackPrice && (
+                      <Text style={[styles.planFallback, isSelected && styles.planSavingsSelected]}>
+                        Preview price
+                      </Text>
+                    )}
+                    <View style={[styles.planRadio, isSelected && styles.planRadioSelected]}>
+                      {isSelected && <View style={styles.planRadioInner} />}
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          ) : (
+            <View style={styles.emptyPlansCard}>
+              <Text style={styles.emptyPlansTitle}>Plans unavailable</Text>
+              <Text style={styles.emptyPlansText}>
+                Subscription plans could not be loaded. You can still restore an existing purchase.
+              </Text>
+            </View>
+          )}
         </Animated.View>
 
         <Animated.View style={[styles.ctaSection, { opacity: fadeAnim }]}>
           <TouchableOpacity
-            style={[styles.ctaButton, isSubscribing && styles.ctaButtonDisabled]}
+            style={[styles.ctaButton, (!canSubscribe || isSubscribing || isLoading) && styles.ctaButtonDisabled]}
             onPress={handleSubscribe}
             activeOpacity={0.8}
-            disabled={isSubscribing}
+            disabled={!canSubscribe || isSubscribing || isLoading}
             testID="subscribe-btn"
           >
             <Crown size={18} color={Colors.white} />
             <Text style={styles.ctaButtonText}>
-              {isSubscribing ? 'Processing...' : `Subscribe ${selectedPlan?.priceLabel ?? ''}`}
+              {isSubscribing
+                ? 'Processing...'
+                : canSubscribe
+                  ? `Start 7-day free trial ${selectedPlan?.priceLabel ?? ''}`
+                  : 'Subscriptions unavailable'}
             </Text>
           </TouchableOpacity>
 
-
+          {purchaseError ? <Text style={styles.inlineErrorText}>{purchaseError}</Text> : null}
         </Animated.View>
 
         <View style={styles.trustSection}>
           <View style={styles.trustRow}>
             <Shield size={13} color={Colors.textMuted} />
-            <Text style={styles.trustText}>Cancel anytime · No commitment</Text>
+            <Text style={styles.trustText}>7-day free trial · Cancel anytime</Text>
           </View>
           <TouchableOpacity onPress={handleRestore} style={styles.restoreBtn} testID="restore-btn" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-            <Text style={styles.restoreText}>Restore purchase</Text>
+            <Text style={styles.restoreText}>{isRestoring ? 'Restoring...' : 'Restore purchase'}</Text>
           </TouchableOpacity>
         </View>
+        {restoreError ? <Text style={styles.inlineErrorText}>{restoreError}</Text> : null}
+        {restoreNotice ? <Text style={styles.inlineNoticeText}>{restoreNotice}</Text> : null}
 
         <View style={styles.disclaimerSection}>
           <Text style={styles.disclaimerText}>
@@ -538,17 +568,17 @@ const styles = StyleSheet.create({
     width: 68,
     height: 68,
     borderRadius: 22,
-    backgroundColor: '#FFF5EB',
+    backgroundColor: Colors.primaryLight,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     marginBottom: 18,
     borderWidth: 2,
-    borderColor: '#F5E0CC',
+    borderColor: Colors.border,
   },
   heroTitle: {
     fontSize: 28,
     fontWeight: '800' as const,
-    color: Colors.brandNavy,
+    color: Colors.text,
     textAlign: 'center' as const,
     letterSpacing: -0.5,
     lineHeight: 36,
@@ -573,7 +603,7 @@ const styles = StyleSheet.create({
   personalizationText: {
     flex: 1,
     fontSize: 13,
-    color: Colors.brandNavy,
+    color: Colors.text,
     lineHeight: 19,
   },
   testimonialCard: {
@@ -630,18 +660,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     gap: 10,
-    backgroundColor: '#FFF5EB',
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 14,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#F5E0CC',
+    borderColor: '#0B1238',
   },
   anchorHighlightText: {
     flex: 1,
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#8B6A47',
+    color: '#3B82F6',
     lineHeight: 20,
   },
   featuresSection: {
@@ -684,7 +714,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 8,
-    backgroundColor: '#FFF0E3',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     marginLeft: 8,
@@ -699,9 +729,44 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     letterSpacing: -0.2,
   },
+  offeringStatusCard: {
+    flexDirection: 'row' as const,
+    alignItems: 'flex-start' as const,
+    gap: 10,
+    backgroundColor: Colors.card,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+  },
+  offeringStatusText: {
+    flex: 1,
+    fontSize: 13,
+    color: Colors.textSecondary,
+    lineHeight: 19,
+  },
   plansRow: {
     flexDirection: 'row' as const,
     gap: 12,
+  },
+  emptyPlansCard: {
+    backgroundColor: Colors.card,
+    borderRadius: 16,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+  },
+  emptyPlansTitle: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: Colors.text,
+    marginBottom: 6,
+  },
+  emptyPlansText: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    lineHeight: 19,
   },
   planCard: {
     flex: 1,
@@ -720,7 +785,7 @@ const styles = StyleSheet.create({
   popularBadge: {
     position: 'absolute' as const,
     top: -10,
-    backgroundColor: '#D4956A',
+    backgroundColor: '#67E8F9',
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 10,
@@ -758,6 +823,12 @@ const styles = StyleSheet.create({
   planSavingsSelected: {
     color: Colors.brandTeal,
   },
+  planFallback: {
+    fontSize: 11,
+    fontWeight: '600' as const,
+    color: Colors.textMuted,
+    marginBottom: 8,
+  },
   planRadio: {
     width: 22,
     height: 22,
@@ -784,11 +855,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    backgroundColor: Colors.brandNavy,
+    backgroundColor: Colors.primary,
     borderRadius: 18,
     paddingVertical: 18,
     gap: 10,
-    shadowColor: Colors.brandNavy,
+    shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.2,
     shadowRadius: 12,
@@ -801,6 +872,22 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '700' as const,
     color: Colors.white,
+  },
+  inlineErrorText: {
+    fontSize: 12,
+    color: Colors.dangerDark,
+    textAlign: 'center' as const,
+    lineHeight: 17,
+    marginTop: 10,
+    paddingHorizontal: 12,
+  },
+  inlineNoticeText: {
+    fontSize: 12,
+    color: Colors.logoCyan,
+    textAlign: 'center' as const,
+    lineHeight: 17,
+    marginTop: 10,
+    paddingHorizontal: 12,
   },
   trialButton: {
     flexDirection: 'row' as const,
@@ -881,12 +968,12 @@ const styles = StyleSheet.create({
     width: 76,
     height: 76,
     borderRadius: 24,
-    backgroundColor: '#FFF5EB',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     marginBottom: 20,
     borderWidth: 2,
-    borderColor: '#F5E0CC',
+    borderColor: '#0B1238',
   },
   activeTitle: {
     fontSize: 26,

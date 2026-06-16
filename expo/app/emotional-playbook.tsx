@@ -37,29 +37,29 @@ type TabKey = 'coping' | 'relationship' | 'calming' | 'identity';
 
 const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
   { key: 'coping', label: 'Coping', icon: <Shield size={16} color={Colors.primary} /> },
-  { key: 'relationship', label: 'Relationships', icon: <Heart size={16} color="#EC4899" /> },
-  { key: 'calming', label: 'Calming', icon: <Wind size={16} color="#6366F1" /> },
-  { key: 'identity', label: 'Identity', icon: <Sparkles size={16} color="#F59E0B" /> },
+  { key: 'relationship', label: 'Relationships', icon: <Heart size={16} color="#3B82F6" /> },
+  { key: 'calming', label: 'Calming', icon: <Wind size={16} color="#3B82F6" /> },
+  { key: 'identity', label: 'Identity', icon: <Sparkles size={16} color="#67E8F9" /> },
 ];
 
 const ICON_MAP: Record<string, React.ReactNode> = {
   Shield: <Shield size={18} color={Colors.primary} />,
-  Heart: <Heart size={18} color="#EC4899" />,
-  Wind: <Wind size={18} color="#6366F1" />,
-  Sparkles: <Sparkles size={18} color="#F59E0B" />,
-  Eye: <Eye size={18} color="#8B5CF6" />,
-  TrendingUp: <TrendingUp size={18} color="#10B981" />,
-  Pause: <Pause size={18} color="#6366F1" />,
+  Heart: <Heart size={18} color="#3B82F6" />,
+  Wind: <Wind size={18} color="#3B82F6" />,
+  Sparkles: <Sparkles size={18} color="#67E8F9" />,
+  Eye: <Eye size={18} color="#3B82F6" />,
+  TrendingUp: <TrendingUp size={18} color="#14B8A6" />,
+  Pause: <Pause size={18} color="#3B82F6" />,
   PenLine: <PenLine size={18} color="#3B82F6" />,
   ShieldCheck: <ShieldCheck size={18} color={Colors.primary} />,
-  MessageCircle: <MessageCircle size={18} color="#8B5CF6" />,
+  MessageCircle: <MessageCircle size={18} color="#3B82F6" />,
 };
 
 const CATEGORY_COLORS: Record<TabKey, { bg: string; accent: string; light: string }> = {
-  coping: { bg: Colors.primaryLight, accent: Colors.primary, light: '#E3EDE8' },
-  relationship: { bg: '#FDF2F8', accent: '#EC4899', light: '#FCE7F3' },
-  calming: { bg: '#EEF2FF', accent: '#6366F1', light: '#E0E7FF' },
-  identity: { bg: '#FFFBEB', accent: '#F59E0B', light: '#FEF3C7' },
+  coping: { bg: Colors.primaryLight, accent: Colors.primary, light: '#0B1238' },
+  relationship: { bg: '#FFFFFF', accent: '#3B82F6', light: '#FFFFFF' },
+  calming: { bg: '#FFFFFF', accent: '#3B82F6', light: '#0B1238' },
+  identity: { bg: '#FFFFFF', accent: '#67E8F9', light: '#FFFFFF' },
 };
 
 function StrategyCard({ strategy }: { strategy: PlaybookStrategy }) {
@@ -111,9 +111,9 @@ function StrategyCard({ strategy }: { strategy: PlaybookStrategy }) {
           <Text style={styles.strategyTitle}>{strategy.title}</Text>
           <View style={styles.strategyMeta}>
             {strategy.avgDistressReduction > 0 && (
-              <View style={[styles.metaBadge, { backgroundColor: '#ECFDF5' }]}>
-                <Zap size={10} color="#10B981" />
-                <Text style={[styles.metaText, { color: '#10B981' }]}>
+              <View style={[styles.metaBadge, { backgroundColor: '#FFFFFF' }]}>
+                <Zap size={10} color="#14B8A6" />
+                <Text style={[styles.metaText, { color: '#14B8A6' }]}>
                   -{strategy.avgDistressReduction}
                 </Text>
               </View>
@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   heroSection: {
-    backgroundColor: '#4A7A68',
+    backgroundColor: '#14B8A6',
     paddingBottom: 24,
     overflow: 'hidden',
   },
@@ -436,7 +436,7 @@ const styles = StyleSheet.create({
   },
   effectivenessBarFill: {
     height: 6,
-    backgroundColor: '#FFD166',
+    backgroundColor: '#0B1238',
     borderRadius: 3,
   },
   effectivenessText: {

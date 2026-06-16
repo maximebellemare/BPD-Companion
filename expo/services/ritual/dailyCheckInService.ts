@@ -1,11 +1,11 @@
 import { DailyRitualEntry, DailyMood, EmotionTag, WeeklyReflectionSummary } from '@/types/ritual';
 
 export const DAILY_MOODS: DailyMood[] = [
-  { id: 'great', emoji: '😊', label: 'Great', color: '#4CAF50' },
-  { id: 'good', emoji: '🙂', label: 'Good', color: '#8BC34A' },
-  { id: 'okay', emoji: '😐', label: 'Okay', color: '#FFC107' },
-  { id: 'low', emoji: '😔', label: 'Low', color: '#FF9800' },
-  { id: 'struggling', emoji: '😢', label: 'Struggling', color: '#F44336' },
+  { id: 'great', emoji: '😊', label: 'Great', color: '#14B8A6' },
+  { id: 'good', emoji: '🙂', label: 'Good', color: '#14B8A6' },
+  { id: 'okay', emoji: '😐', label: 'Okay', color: '#67E8F9' },
+  { id: 'low', emoji: '😔', label: 'Low', color: '#67E8F9' },
+  { id: 'struggling', emoji: '😢', label: 'Struggling', color: '#3B82F6' },
 ];
 
 export const RITUAL_EMOTION_TAGS: EmotionTag[] = [

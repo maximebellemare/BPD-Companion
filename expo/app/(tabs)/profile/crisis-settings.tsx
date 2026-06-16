@@ -87,7 +87,7 @@ export default function CrisisSettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Crisis Line</Text>
           <View style={styles.inputCard}>
-            <View style={[styles.inputIcon, { backgroundColor: '#E6F0FF' }]}>
+            <View style={[styles.inputIcon, { backgroundColor: '#FFFFFF' }]}>
               <AlertCircle size={18} color="#3B82F6" />
             </View>
             <View style={styles.inputContent}>

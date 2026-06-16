@@ -24,7 +24,7 @@ export default React.memo(function EmotionalTimelineCard({ replayState }: Props)
     >
       <View style={styles.header}>
         <View style={styles.iconWrap}>
-          <Activity size={18} color="#6B9080" />
+          <Activity size={18} color="#14B8A6" />
         </View>
         <View style={styles.headerText}>
           <Text style={styles.title}>Emotional Timeline</Text>
@@ -44,13 +44,13 @@ export default React.memo(function EmotionalTimelineCard({ replayState }: Props)
               <Text style={styles.statPillValue}>{replayState.recentEpisodeCount}</Text>
               <Text style={styles.statPillLabel}>this week</Text>
             </View>
-            <View style={[styles.statPill, { backgroundColor: '#FDE8E3' }]}>
-              <Text style={[styles.statPillValue, { color: '#E17055' }]}>{replayState.highIntensityCount}</Text>
-              <Text style={[styles.statPillLabel, { color: '#E17055' }]}>high intensity</Text>
+            <View style={[styles.statPill, { backgroundColor: '#FFFFFF' }]}>
+              <Text style={[styles.statPillValue, { color: '#3B82F6' }]}>{replayState.highIntensityCount}</Text>
+              <Text style={[styles.statPillLabel, { color: '#3B82F6' }]}>high intensity</Text>
             </View>
-            <View style={[styles.statPill, { backgroundColor: '#E0F5EF' }]}>
-              <Text style={[styles.statPillValue, { color: '#00B894' }]}>{replayState.managedCount}</Text>
-              <Text style={[styles.statPillLabel, { color: '#00B894' }]}>managed</Text>
+            <View style={[styles.statPill, { backgroundColor: '#FFFFFF' }]}>
+              <Text style={[styles.statPillValue, { color: '#14B8A6' }]}>{replayState.managedCount}</Text>
+              <Text style={[styles.statPillLabel, { color: '#14B8A6' }]}>managed</Text>
             </View>
           </View>
 
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 14,
-    backgroundColor: '#E3EDE8',
+    backgroundColor: '#0B1238',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,

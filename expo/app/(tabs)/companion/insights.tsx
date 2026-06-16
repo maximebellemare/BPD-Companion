@@ -44,20 +44,20 @@ import { CopingRecommendation } from '@/types/recommendation';
 
 const ICON_MAP: Record<string, React.ReactNode> = {
   trigger: <Zap size={18} color={Colors.accent} />,
-  emotion: <Heart size={18} color="#E17055" />,
-  urge: <AlertTriangle size={18} color="#FDCB6E" />,
+  emotion: <Heart size={18} color="#3B82F6" />,
+  urge: <AlertTriangle size={18} color="#0B1238" />,
   coping: <Shield size={18} color={Colors.primary} />,
-  pattern: <Layers size={18} color="#6C5CE7" />,
+  pattern: <Layers size={18} color="#3B82F6" />,
   message: <MessageSquareText size={18} color={Colors.primary} />,
   progress: <Activity size={18} color={Colors.success} />,
 };
 
 const BG_MAP: Record<string, string> = {
   trigger: Colors.accentLight,
-  emotion: '#FDE8E3',
-  urge: '#FFF8E1',
+  emotion: '#FFFFFF',
+  urge: '#FFFFFF',
   coping: Colors.primaryLight,
-  pattern: '#EDE7F6',
+  pattern: '#0B1238',
   message: Colors.primaryLight,
   progress: Colors.successLight,
 };
@@ -147,7 +147,7 @@ const REC_ICON_MAP: Record<string, React.ComponentType<{ size: number; color: st
 };
 
 const REC_PRIORITY_COLORS: Record<string, { bg: string; accent: string }> = {
-  high: { bg: '#FFF5F0', accent: Colors.danger },
+  high: { bg: '#FFFFFF', accent: Colors.danger },
   medium: { bg: Colors.warmGlow, accent: Colors.accent },
   low: { bg: Colors.primaryLight, accent: Colors.primary },
 };
@@ -344,8 +344,8 @@ export default function InsightsScreen() {
             {memoryProfile.topEmotions.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <View style={[styles.sectionIcon, { backgroundColor: '#FDE8E3' }]}>
-                    <Heart size={16} color="#E17055" />
+                  <View style={[styles.sectionIcon, { backgroundColor: '#FFFFFF' }]}>
+                    <Heart size={16} color="#3B82F6" />
                   </View>
                   <Text style={styles.sectionTitle}>Recurring Emotions</Text>
                 </View>
@@ -358,7 +358,7 @@ export default function InsightsScreen() {
                     item={item}
                     maxCount={maxEmotionCount}
                     index={i}
-                    color="#E17055"
+                    color="#3B82F6"
                   />
                 ))}
               </View>
@@ -367,8 +367,8 @@ export default function InsightsScreen() {
             {memoryProfile.topUrges.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <View style={[styles.sectionIcon, { backgroundColor: '#FFF8E1' }]}>
-                    <AlertTriangle size={16} color="#F0A500" />
+                  <View style={[styles.sectionIcon, { backgroundColor: '#FFFFFF' }]}>
+                    <AlertTriangle size={16} color="#67E8F9" />
                   </View>
                   <Text style={styles.sectionTitle}>Urge Patterns</Text>
                 </View>
@@ -381,7 +381,7 @@ export default function InsightsScreen() {
                     item={item}
                     maxCount={maxUrgeCount}
                     index={i}
-                    color="#F0A500"
+                    color="#67E8F9"
                   />
                 ))}
               </View>

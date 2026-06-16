@@ -59,11 +59,11 @@ function InlineUpgradePrompt({ feature }: { feature: PremiumFeature }) {
       testID={`premium-gate-inline-${feature}`}
     >
       <View style={styles.inlineIconWrap}>
-        <Lock size={14} color="#D4956A" />
+        <Lock size={14} color="#67E8F9" />
       </View>
       <Text style={styles.inlineText} numberOfLines={2}>{reason}</Text>
       <View style={styles.inlineArrow}>
-        <ArrowRight size={14} color="#D4956A" />
+        <ArrowRight size={14} color="#67E8F9" />
       </View>
     </TouchableOpacity>
   );
@@ -106,7 +106,7 @@ function FullUpgradePrompt({ feature }: { feature: PremiumFeature }) {
       ]}
     >
       <View style={styles.fullIconWrap}>
-        <Crown size={28} color="#D4956A" />
+        <Crown size={28} color="#67E8F9" />
       </View>
       <Text style={styles.fullTitle}>Premium Feature</Text>
       <Text style={styles.fullDescription}>{reason}</Text>
@@ -146,11 +146,11 @@ export function PremiumInlinePrompt({ feature, message }: { feature: PremiumFeat
       testID={`premium-inline-${feature}`}
     >
       <View style={styles.inlinePromptIconWrap}>
-        <Crown size={13} color="#D4956A" />
+        <Crown size={13} color="#67E8F9" />
       </View>
       <Text style={styles.inlinePromptText} numberOfLines={2}>{reason}</Text>
       <View style={styles.inlinePromptArrow}>
-        <ArrowRight size={12} color="#D4956A" />
+        <ArrowRight size={12} color="#67E8F9" />
       </View>
     </TouchableOpacity>
   );
@@ -159,7 +159,7 @@ export function PremiumInlinePrompt({ feature, message }: { feature: PremiumFeat
 export function PremiumBadge() {
   return (
     <View style={styles.badge} testID="premium-badge">
-      <Crown size={10} color="#D4956A" />
+      <Crown size={10} color="#67E8F9" />
       <Text style={styles.badgeText}>PRO</Text>
     </View>
   );
@@ -202,18 +202,18 @@ const styles = StyleSheet.create({
   inlinePromptContainer: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    backgroundColor: '#FFF8F2',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 12,
     marginTop: 12,
     borderWidth: 1,
-    borderColor: '#F5E0CC',
+    borderColor: '#0B1238',
   },
   inlinePromptIconWrap: {
     width: 28,
     height: 28,
     borderRadius: 8,
-    backgroundColor: '#FFF0E3',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     marginRight: 10,
@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
   inlinePromptText: {
     flex: 1,
     fontSize: 12,
-    color: '#A0785A',
+    color: '#3B82F6',
     lineHeight: 17,
     fontWeight: '500' as const,
   },
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 7,
-    backgroundColor: '#FFF0E3',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     marginLeft: 6,
@@ -237,17 +237,17 @@ const styles = StyleSheet.create({
   inlineContainer: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    backgroundColor: '#FFF8F2',
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#F5E0CC',
+    borderColor: '#0B1238',
   },
   inlineIconWrap: {
     width: 32,
     height: 32,
     borderRadius: 10,
-    backgroundColor: '#FFF0E3',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     marginRight: 10,
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 8,
-    backgroundColor: '#FFF0E3',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     marginLeft: 8,
@@ -277,12 +277,12 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 24,
-    backgroundColor: '#FFF5EB',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     marginBottom: 20,
     borderWidth: 2,
-    borderColor: '#F5E0CC',
+    borderColor: '#0B1238',
   },
   fullTitle: {
     fontSize: 22,
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
   badge: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    backgroundColor: '#FFF0E3',
+    backgroundColor: '#FFFFFF',
     borderRadius: 6,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 9,
     fontWeight: '800' as const,
-    color: '#D4956A',
+    color: '#67E8F9',
     letterSpacing: 0.5,
   },
   lockOverlayWrap: {

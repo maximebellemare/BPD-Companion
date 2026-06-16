@@ -11,13 +11,13 @@ import {
 } from '@/types/insightsDashboard';
 
 const EMOTION_COLORS = [
-  '#E17055', '#FDCB6E', '#00B894', '#3B82F6', '#8B5CF6',
-  '#E84393', '#6B9080', '#D4956A', '#636E72', '#2D3436',
+  '#3B82F6', '#0B1238', '#14B8A6', '#3B82F6', '#3B82F6',
+  '#3B82F6', '#14B8A6', '#67E8F9', '#2E2A72', '#2E2A72',
 ];
 
 const TRIGGER_COLORS = [
-  '#6B9080', '#D4956A', '#E17055', '#00B894', '#3B82F6',
-  '#8B5CF6', '#E84393', '#FDCB6E', '#636E72', '#2D3436',
+  '#14B8A6', '#67E8F9', '#3B82F6', '#14B8A6', '#3B82F6',
+  '#3B82F6', '#3B82F6', '#0B1238', '#2E2A72', '#2E2A72',
 ];
 
 function getDateKey(timestamp: number): string {

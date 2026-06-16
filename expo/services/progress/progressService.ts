@@ -13,7 +13,7 @@ import {
   EncouragingInsight,
 } from '@/types/progress';
 
-const EMOTION_COLORS = ['#6B9080', '#D4956A', '#E17055', '#00B894', '#3B82F6', '#8B5CF6', '#E84393', '#FDCB6E'];
+const EMOTION_COLORS = ['#14B8A6', '#67E8F9', '#3B82F6', '#14B8A6', '#3B82F6', '#3B82F6', '#3B82F6', '#0B1238'];
 
 function getDateKey(timestamp: number): string {
   const d = new Date(timestamp);

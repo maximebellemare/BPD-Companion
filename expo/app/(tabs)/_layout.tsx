@@ -7,14 +7,14 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors.brandTeal,
+        tabBarActiveTintColor: Colors.brandCyan,
         tabBarInactiveTintColor: Colors.textMuted,
         headerShown: false,
         tabBarStyle: {
           backgroundColor: Colors.card,
           borderTopColor: Colors.borderLight,
           borderTopWidth: 0.5,
-          shadowColor: 'rgba(27,40,56,0.04)',
+          shadowColor: Colors.shadow,
           shadowOffset: { width: 0, height: -3 },
           shadowOpacity: 1,
           shadowRadius: 12,

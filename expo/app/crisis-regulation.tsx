@@ -263,7 +263,7 @@ export default function CrisisRegulationScreen() {
               testID={`entry-${choice.id}`}
             >
               <View style={styles.entryChoiceIcon}>
-                <IconComp size={20} color="#5B7B6F" />
+                <IconComp size={20} color="#14B8A6" />
               </View>
               <Text style={styles.entryChoiceLabel}>{choice.label}</Text>
               <ArrowRight size={14} color={Colors.textMuted} />
@@ -505,7 +505,7 @@ export default function CrisisRegulationScreen() {
                 onPress={() => goToStep('breathing')}
                 activeOpacity={0.7}
               >
-                <Wind size={16} color="#6B9080" />
+                <Wind size={16} color="#14B8A6" />
                 <Text style={styles.urgeActionText}>Breathe first</Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -513,7 +513,7 @@ export default function CrisisRegulationScreen() {
                 onPress={() => goToStep('grounding')}
                 activeOpacity={0.7}
               >
-                <Eye size={16} color="#7BA7A0" />
+                <Eye size={16} color="#14B8A6" />
                 <Text style={styles.urgeActionText}>Ground me</Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -521,7 +521,7 @@ export default function CrisisRegulationScreen() {
                 onPress={() => goToStep('help_not_text')}
                 activeOpacity={0.7}
               >
-                <Clock size={16} color="#D4956A" />
+                <Clock size={16} color="#67E8F9" />
                 <Text style={styles.urgeActionText}>Delay action</Text>
               </TouchableOpacity>
             </View>
@@ -543,7 +543,7 @@ export default function CrisisRegulationScreen() {
   const renderHelpNotText = () => (
     <View style={styles.stepContent}>
       <View style={styles.notTextIcon}>
-        <MessageCircle size={28} color="#D4956A" />
+        <MessageCircle size={28} color="#67E8F9" />
       </View>
       <Text style={styles.sectionTitle}>Help me not text yet</Text>
       <Text style={styles.sectionSubtitle}>
@@ -614,7 +614,7 @@ export default function CrisisRegulationScreen() {
 
       {helpNotText.selectedDelay !== null && (
         <View style={styles.delayEncouragement}>
-          <Clock size={16} color="#D4956A" />
+          <Clock size={16} color="#67E8F9" />
           <Text style={styles.delayEncouragementText}>
             {getDelayEncouragement(helpNotText.selectedDelay)}
           </Text>
@@ -768,7 +768,7 @@ const hapicMedium = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F0F4F1',
+    backgroundColor: '#FFFFFF',
   },
   inner: {
     flex: 1,
@@ -818,11 +818,11 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#6B9080',
+    backgroundColor: '#14B8A6',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
-    shadowColor: '#6B9080',
+    shadowColor: '#14B8A6',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 16,
@@ -840,12 +840,12 @@ const styles = StyleSheet.create({
   primaryCta: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#6B9080',
+    backgroundColor: '#14B8A6',
     paddingVertical: 18,
     paddingHorizontal: 32,
     borderRadius: 28,
     gap: 10,
-    shadowColor: '#507A66',
+    shadowColor: '#14B8A6',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.25,
     shadowRadius: 14,
@@ -885,7 +885,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 15,
-    backgroundColor: '#E3EDE8',
+    backgroundColor: '#0B1238',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -931,8 +931,8 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   durationChipActive: {
-    borderColor: '#6B9080',
-    backgroundColor: '#E3EDE8',
+    borderColor: '#14B8A6',
+    backgroundColor: '#0B1238',
   },
   durationText: {
     fontSize: 16,
@@ -940,14 +940,14 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
   durationTextActive: {
-    color: '#507A66',
+    color: '#14B8A6',
   },
   startBreathButton: {
-    backgroundColor: '#6B9080',
+    backgroundColor: '#14B8A6',
     borderRadius: 24,
     paddingVertical: 18,
     paddingHorizontal: 40,
-    shadowColor: '#507A66',
+    shadowColor: '#14B8A6',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 10,
@@ -970,7 +970,7 @@ const styles = StyleSheet.create({
     width: 220,
     height: 220,
     borderRadius: 110,
-    backgroundColor: '#98C1D9',
+    backgroundColor: '#2E2A72',
   },
   breatheInnerCircle: {
     width: 130,
@@ -988,13 +988,13 @@ const styles = StyleSheet.create({
   breathePhaseLabel: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: '#3D5A80',
+    color: '#2E2A72',
     marginBottom: 2,
   },
   breatheTimerText: {
     fontSize: 28,
     fontWeight: '700' as const,
-    color: '#3D5A80',
+    color: '#2E2A72',
     fontVariant: ['tabular-nums'],
   },
   breatheHint: {
@@ -1010,12 +1010,12 @@ const styles = StyleSheet.create({
   continueBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#6B9080',
+    backgroundColor: '#14B8A6',
     borderRadius: 24,
     paddingVertical: 16,
     paddingHorizontal: 28,
     gap: 8,
-    shadowColor: '#507A66',
+    shadowColor: '#14B8A6',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -1048,13 +1048,13 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#D0D8D4',
+    backgroundColor: '#0B1238',
   },
   groundDotDone: {
     backgroundColor: Colors.success,
   },
   groundDotCurrent: {
-    backgroundColor: '#6B9080',
+    backgroundColor: '#14B8A6',
   },
   groundCard: {
     width: SCREEN_WIDTH - 80,
@@ -1090,7 +1090,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   groundDoneBtn: {
-    backgroundColor: '#6B9080',
+    backgroundColor: '#14B8A6',
     paddingHorizontal: 32,
     paddingVertical: 12,
     borderRadius: 20,
@@ -1148,8 +1148,8 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   urgeChipSelected: {
-    borderColor: '#D4956A',
-    backgroundColor: '#FFF8F0',
+    borderColor: '#67E8F9',
+    backgroundColor: '#FFFFFF',
   },
   urgeEmoji: {
     fontSize: 18,
@@ -1161,14 +1161,14 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
   urgeLabelSelected: {
-    color: '#D4956A',
+    color: '#67E8F9',
     fontWeight: '600' as const,
   },
   urgeCheck: {
     width: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: '#D4956A',
+    backgroundColor: '#67E8F9',
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 6,
@@ -1185,7 +1185,7 @@ const styles = StyleSheet.create({
   },
   urgeIntensityValue: {
     fontWeight: '700' as const,
-    color: '#D4956A',
+    color: '#67E8F9',
   },
   intensityTrack: {
     flexDirection: 'row',
@@ -1196,7 +1196,7 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: '#E8E4DF',
+    backgroundColor: '#0B1238',
     borderWidth: 2,
     borderColor: 'transparent',
   },
@@ -1204,13 +1204,13 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   intensityDotLow: {
-    backgroundColor: '#6B9080',
+    backgroundColor: '#14B8A6',
   },
   intensityDotMid: {
-    backgroundColor: '#D4956A',
+    backgroundColor: '#67E8F9',
   },
   intensityDotHigh: {
-    backgroundColor: '#E17055',
+    backgroundColor: '#3B82F6',
   },
   compassionCard: {
     backgroundColor: Colors.warmGlow,
@@ -1219,7 +1219,7 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 20,
     borderLeftWidth: 3,
-    borderLeftColor: '#D4956A',
+    borderLeftColor: '#67E8F9',
   },
   compassionText: {
     fontSize: 16,
@@ -1258,7 +1258,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 22,
-    backgroundColor: '#F5E6D8',
+    backgroundColor: '#0B1238',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -1294,7 +1294,7 @@ const styles = StyleSheet.create({
   saveDraftBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#6B9080',
+    backgroundColor: '#14B8A6',
     borderRadius: 16,
     paddingVertical: 12,
     paddingHorizontal: 20,
@@ -1352,7 +1352,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   delayChipSelected: {
-    borderColor: '#D4956A',
+    borderColor: '#67E8F9',
     backgroundColor: Colors.warmGlow,
   },
   delayChipText: {
@@ -1361,7 +1361,7 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
   delayChipTextSelected: {
-    color: '#D4956A',
+    color: '#67E8F9',
   },
   delayEncouragement: {
     flexDirection: 'row',

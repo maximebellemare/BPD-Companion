@@ -46,57 +46,57 @@ const CATEGORY_CONFIG: Record<CorrelationCategory, {
   label: string;
 }> = {
   medication_mood: {
-    icon: <Pill size={16} color="#7B68AE" />,
-    color: '#7B68AE',
-    bgColor: '#EDE7F6',
+    icon: <Pill size={16} color="#2E2A72" />,
+    color: '#2E2A72',
+    bgColor: '#0B1238',
     label: 'Medication & Mood',
   },
   appointment_intensity: {
     icon: <Calendar size={16} color="#3B82F6" />,
     color: '#3B82F6',
-    bgColor: '#EBF2FF',
+    bgColor: '#FFFFFF',
     label: 'Appointments & Intensity',
   },
   checkin_routine: {
-    icon: <CheckSquare size={16} color="#6B9080" />,
-    color: '#6B9080',
-    bgColor: '#E3EDE8',
+    icon: <CheckSquare size={16} color="#14B8A6" />,
+    color: '#14B8A6',
+    bgColor: '#0B1238',
     label: 'Check-in Routine',
   },
   coping_distress: {
-    icon: <Shield size={16} color="#00B894" />,
-    color: '#00B894',
-    bgColor: '#E0F5EF',
+    icon: <Shield size={16} color="#14B8A6" />,
+    color: '#14B8A6',
+    bgColor: '#FFFFFF',
     label: 'Coping & Distress',
   },
   pause_regret: {
-    icon: <MessageCircle size={16} color="#D4956A" />,
-    color: '#D4956A',
-    bgColor: '#F5E6D8',
+    icon: <MessageCircle size={16} color="#67E8F9" />,
+    color: '#67E8F9',
+    bgColor: '#0B1238',
     label: 'Pausing & Regret',
   },
   movement_mood: {
-    icon: <TrendingUp size={16} color="#00B894" />,
-    color: '#00B894',
-    bgColor: '#E0F5EF',
+    icon: <TrendingUp size={16} color="#14B8A6" />,
+    color: '#14B8A6',
+    bgColor: '#FFFFFF',
     label: 'Movement & Mood',
   },
   relationship_outcome: {
-    icon: <MessageCircle size={16} color="#E17055" />,
-    color: '#E17055',
-    bgColor: '#FDE8E3',
+    icon: <MessageCircle size={16} color="#3B82F6" />,
+    color: '#3B82F6',
+    bgColor: '#FFFFFF',
     label: 'Relationship Outcomes',
   },
   time_pattern: {
-    icon: <Clock size={16} color="#8B5CF6" />,
-    color: '#8B5CF6',
-    bgColor: '#EDE7F6',
+    icon: <Clock size={16} color="#3B82F6" />,
+    color: '#3B82F6',
+    bgColor: '#0B1238',
     label: 'Time Patterns',
   },
   routine_stability: {
-    icon: <Sprout size={16} color="#6B9080" />,
-    color: '#6B9080',
-    bgColor: '#E3EDE8',
+    icon: <Sprout size={16} color="#14B8A6" />,
+    color: '#14B8A6',
+    bgColor: '#0B1238',
     label: 'Routine & Stability',
   },
 };
@@ -106,9 +106,9 @@ const STRENGTH_CONFIG: Record<CorrelationStrength, {
   color: string;
   bgColor: string;
 }> = {
-  strong: { label: 'Strong', color: '#00B894', bgColor: '#E0F5EF' },
-  moderate: { label: 'Moderate', color: '#D4956A', bgColor: '#F5E6D8' },
-  weak: { label: 'Emerging', color: '#A8B0B5', bgColor: '#EFECE7' },
+  strong: { label: 'Strong', color: '#14B8A6', bgColor: '#FFFFFF' },
+  moderate: { label: 'Moderate', color: '#67E8F9', bgColor: '#0B1238' },
+  weak: { label: 'Emerging', color: '#3B82F6', bgColor: '#15145A' },
 };
 
 function CorrelationCard({
@@ -143,9 +143,9 @@ function CorrelationCard({
   }, [fadeAnim, slideAnim, index]);
 
   const directionColor = insight.direction === 'positive'
-    ? '#00B894'
+    ? '#14B8A6'
     : insight.direction === 'negative'
-      ? '#D4956A'
+      ? '#67E8F9'
       : Colors.textMuted;
 
   return (
@@ -297,7 +297,7 @@ function WhatHelpsSection({ items }: { items: WhatHelpsItem[] }) {
     <Animated.View style={[styles.whatHelpsCard, { opacity: fadeAnim }]}>
       <View style={styles.whatHelpsHeader}>
         <View style={styles.whatHelpsIconWrap}>
-          <Sprout size={18} color="#00B894" />
+          <Sprout size={18} color="#14B8A6" />
         </View>
         <Text style={styles.whatHelpsTitle}>What seems to help</Text>
       </View>
@@ -332,15 +332,15 @@ function SummaryCards({ total, strong }: { total: number; strong: number }) {
   return (
     <Animated.View style={[styles.summaryRow, { opacity: fadeAnim }]}>
       <View style={styles.summaryItem}>
-        <View style={[styles.summaryIconWrap, { backgroundColor: '#EDE7F6' }]}>
-          <Link2 size={16} color="#8B5CF6" />
+        <View style={[styles.summaryIconWrap, { backgroundColor: '#0B1238' }]}>
+          <Link2 size={16} color="#3B82F6" />
         </View>
         <Text style={styles.summaryValue}>{total}</Text>
         <Text style={styles.summaryLabel}>Correlations</Text>
       </View>
       <View style={styles.summaryItem}>
-        <View style={[styles.summaryIconWrap, { backgroundColor: '#E0F5EF' }]}>
-          <Eye size={16} color="#00B894" />
+        <View style={[styles.summaryIconWrap, { backgroundColor: '#FFFFFF' }]}>
+          <Eye size={16} color="#14B8A6" />
         </View>
         <Text style={styles.summaryValue}>{strong}</Text>
         <Text style={styles.summaryLabel}>Strong</Text>
@@ -610,7 +610,7 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 11,
-    backgroundColor: '#E0F5EF',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },

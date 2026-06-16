@@ -45,12 +45,12 @@ import {
 } from '@/types/behavioralCoach';
 
 const SECTION_COLORS = {
-  pattern: { bg: '#FFF0E8', border: '#F5D4BE', accent: '#C4704A' },
-  timing: { bg: '#E8F0F5', border: '#C0D8E8', accent: '#4A7A9B' },
-  coping: { bg: '#E3F0E8', border: '#C0DBC8', accent: '#4A8B60' },
-  growth: { bg: '#F0F5E3', border: '#D4E0B8', accent: '#6B8B4A' },
-  relationship: { bg: '#F5E6D8', border: '#E8D0BC', accent: '#C4885B' },
-  regulation: { bg: '#EDE8F5', border: '#D4C8E8', accent: '#7B5EA7' },
+  pattern: { bg: '#FFFFFF', border: '#0B1238', accent: '#3B82F6' },
+  timing: { bg: '#FFFFFF', border: '#0B1238', accent: '#3B82F6' },
+  coping: { bg: '#FFFFFF', border: '#0B1238', accent: '#14B8A6' },
+  growth: { bg: '#FFFFFF', border: '#0B1238', accent: '#14B8A6' },
+  relationship: { bg: '#0B1238', border: '#0B1238', accent: '#3B82F6' },
+  regulation: { bg: '#0B1238', border: '#0B1238', accent: '#2E2A72' },
 };
 
 function SectionHeader({ title, icon, color }: { title: string; icon: React.ReactNode; color: string }) {
@@ -220,7 +220,7 @@ function RegulationTipCard({ tip, index }: { tip: RegulationTip; index: number }
         <Zap size={14} color={SECTION_COLORS.regulation.accent} />
         <Text style={[styles.insightPattern, { color: SECTION_COLORS.regulation.accent }]}>When "{tip.trigger}" activates</Text>
         <View style={[styles.distressBadge, {
-          backgroundColor: tip.distressRange === 'high' ? '#E1705520' : '#D4956A20',
+          backgroundColor: tip.distressRange === 'high' ? '#3B82F620' : '#67E8F920',
         }]}>
           <Text style={[styles.distressText, {
             color: tip.distressRange === 'high' ? Colors.danger : Colors.accent,
@@ -236,10 +236,10 @@ function RegulationTipCard({ tip, index }: { tip: RegulationTip; index: number }
 
 function MomentCard({ moment, onAction }: { moment: CoachingMoment; onAction: (route: string) => void }) {
   const toneColors: Record<string, string> = {
-    encouraging: '#00B894',
-    grounding: '#6B9080',
-    reflective: '#D4956A',
-    celebratory: '#F59E0B',
+    encouraging: '#14B8A6',
+    grounding: '#14B8A6',
+    reflective: '#67E8F9',
+    celebratory: '#67E8F9',
   };
   const color = toneColors[moment.tone] ?? Colors.primary;
 

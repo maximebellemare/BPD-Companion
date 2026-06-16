@@ -414,8 +414,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.borderLight,
   },
   chipSelected: {
-    backgroundColor: Colors.brandNavy,
-    borderColor: Colors.brandNavy,
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
   chipText: {
     fontSize: 14,
@@ -444,12 +444,12 @@ const styles = StyleSheet.create({
     borderColor: Colors.borderLight,
   },
   distressBtnActive: {
-    backgroundColor: Colors.brandNavy,
-    borderColor: Colors.brandNavy,
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
   distressBtnHigh: {
-    backgroundColor: '#C47878',
-    borderColor: '#C47878',
+    backgroundColor: '#3B82F6',
+    borderColor: '#3B82F6',
   },
   distressBtnText: {
     fontSize: 14,
@@ -481,8 +481,8 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
   },
   contextBtnActive: {
-    backgroundColor: Colors.brandNavy,
-    borderColor: Colors.brandNavy,
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
   contextBtnText: {
     fontSize: 16,
@@ -604,7 +604,7 @@ const styles = StyleSheet.create({
   nextBtn: {
     height: 54,
     borderRadius: 16,
-    backgroundColor: Colors.brandNavy,
+    backgroundColor: Colors.primary,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },

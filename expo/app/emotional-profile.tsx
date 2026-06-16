@@ -42,14 +42,14 @@ import {
 } from '@/types/emotionalModel';
 
 const PALETTE = {
-  trigger: { bg: '#FFF0E8', border: '#F5D4BE', accent: '#C4704A' },
-  emotion: { bg: '#EDE8F5', border: '#D4C8E8', accent: '#7B5EA7' },
-  urge: { bg: '#FFF5E0', border: '#F0DFB8', accent: '#A08040' },
-  relationship: { bg: '#F5E6D8', border: '#E8D0BC', accent: '#C4885B' },
-  coping: { bg: '#E3F0E8', border: '#C0DBC8', accent: '#4A8B60' },
-  escalation: { bg: '#F8E8E8', border: '#E8C8C8', accent: '#A85050' },
-  growth: { bg: '#E8F0E3', border: '#C8DBC0', accent: '#5A8B4A' },
-  attention: { bg: '#FFF8E8', border: '#F0E0B8', accent: '#A09040' },
+  trigger: { bg: '#FFFFFF', border: '#0B1238', accent: '#3B82F6' },
+  emotion: { bg: '#0B1238', border: '#0B1238', accent: '#2E2A72' },
+  urge: { bg: '#FFFFFF', border: '#0B1238', accent: '#3B82F6' },
+  relationship: { bg: '#0B1238', border: '#0B1238', accent: '#3B82F6' },
+  coping: { bg: '#FFFFFF', border: '#0B1238', accent: '#14B8A6' },
+  escalation: { bg: '#FFFFFF', border: '#0B1238', accent: '#3B82F6' },
+  growth: { bg: '#FFFFFF', border: '#0B1238', accent: '#14B8A6' },
+  attention: { bg: '#FFFFFF', border: '#0B1238', accent: '#67E8F9' },
 };
 
 function TriggerCard({ trigger, index }: { trigger: EmotionalTriggerProfile; index: number }) {
@@ -467,8 +467,8 @@ export default function EmotionalProfileScreen() {
             {insights.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <View style={[styles.sectionIcon, { backgroundColor: '#EDE8F5' }]}>
-                    <Activity size={18} color="#7B5EA7" />
+                  <View style={[styles.sectionIcon, { backgroundColor: '#0B1238' }]}>
+                    <Activity size={18} color="#2E2A72" />
                   </View>
                   <Text style={styles.sectionTitle}>Key Insights</Text>
                 </View>
@@ -683,18 +683,18 @@ const styles = StyleSheet.create({
     width: 110,
     height: 110,
     borderRadius: 55,
-    backgroundColor: '#7B5EA7',
+    backgroundColor: '#2E2A72',
     top: 12,
   },
   heroIconWrap: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#7B5EA7',
+    backgroundColor: '#2E2A72',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 14,
-    shadowColor: '#7B5EA7',
+    shadowColor: '#2E2A72',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 16,
@@ -758,16 +758,16 @@ const styles = StyleSheet.create({
     color: Colors.primary,
   },
   narrativeCard: {
-    backgroundColor: '#F5F0FA',
+    backgroundColor: '#FFFFFF',
     borderRadius: 18,
     padding: 22,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#E0D5F0',
+    borderColor: '#0B1238',
   },
   narrativeText: {
     fontSize: 16,
-    color: '#7B5EA7',
+    color: '#2E2A72',
     fontWeight: '500' as const,
     lineHeight: 24,
     fontStyle: 'italic',

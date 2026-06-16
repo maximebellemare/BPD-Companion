@@ -45,7 +45,7 @@ import {
 
 const RISK_COLORS = {
   low: Colors.success,
-  medium: '#E8A87C',
+  medium: '#67E8F9',
   high: Colors.danger,
 } as const;
 

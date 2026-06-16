@@ -2,15 +2,15 @@ import { CategoryInfo, CommunityPost, PostReply, SupportCircle, CommunityGuideli
 import Colors from '@/constants/colors';
 
 export const CATEGORIES: CategoryInfo[] = [
-  { id: 'daily-check-in', label: 'Daily Check-In', emoji: '🌅', color: '#E8A87C' },
-  { id: 'relationships', label: 'Relationships', emoji: '💛', color: '#D4956A' },
-  { id: 'daily-struggles', label: 'Emotional Struggles', emoji: '🌧', color: '#8E9BAA' },
+  { id: 'daily-check-in', label: 'Daily Check-In', emoji: '🌅', color: '#67E8F9' },
+  { id: 'relationships', label: 'Relationships', emoji: '💛', color: '#67E8F9' },
+  { id: 'daily-struggles', label: 'Emotional Struggles', emoji: '🌧', color: '#2E2A72' },
   { id: 'coping-skills', label: 'Coping Skills', emoji: '🧘', color: Colors.primary },
-  { id: 'therapy-dbt', label: 'DBT Practice', emoji: '📖', color: '#0984E3' },
-  { id: 'progress-wins', label: 'Progress & Wins', emoji: '🌟', color: '#6BA38E' },
-  { id: 'ask-community', label: 'Ask Community', emoji: '💬', color: '#9B8EC4' },
-  { id: 'success-stories', label: 'Success Stories', emoji: '✨', color: '#00B894' },
-  { id: 'questions', label: 'Questions', emoji: '💭', color: '#6C5CE7' },
+  { id: 'therapy-dbt', label: 'DBT Practice', emoji: '📖', color: '#3B82F6' },
+  { id: 'progress-wins', label: 'Progress & Wins', emoji: '🌟', color: '#14B8A6' },
+  { id: 'ask-community', label: 'Ask Community', emoji: '💬', color: '#3B82F6' },
+  { id: 'success-stories', label: 'Success Stories', emoji: '✨', color: '#14B8A6' },
+  { id: 'questions', label: 'Questions', emoji: '💭', color: '#3B82F6' },
   { id: 'venting', label: 'Venting', emoji: '🔥', color: Colors.accent },
 ];
 
@@ -40,10 +40,10 @@ export const SUPPORT_REQUEST_TYPES = [
 ];
 
 export const RESPONSE_TYPES = [
-  { id: 'validation' as const, label: 'Validation', emoji: '💛', color: '#E8A87C' },
-  { id: 'shared-experience' as const, label: 'Shared experience', emoji: '🤝', color: '#6BA38E' },
-  { id: 'advice' as const, label: 'Advice', emoji: '💡', color: '#9B8EC4' },
-  { id: 'another-perspective' as const, label: 'Another perspective', emoji: '🔄', color: '#4A8B8D' },
+  { id: 'validation' as const, label: 'Validation', emoji: '💛', color: '#67E8F9' },
+  { id: 'shared-experience' as const, label: 'Shared experience', emoji: '🤝', color: '#14B8A6' },
+  { id: 'advice' as const, label: 'Advice', emoji: '💡', color: '#3B82F6' },
+  { id: 'another-perspective' as const, label: 'Another perspective', emoji: '🔄', color: '#14B8A6' },
 ];
 
 export const HELPFULNESS_OPTIONS = [
@@ -89,10 +89,10 @@ export const SUPPORT_REACTION_LABELS: Record<string, { emoji: string; label: str
 };
 
 export const REPLY_LABEL_INFO: Record<string, { emoji: string; label: string; color: string }> = {
-  'what-helped-me': { emoji: '💡', label: 'What helped me', color: '#E8A87C' },
+  'what-helped-me': { emoji: '💡', label: 'What helped me', color: '#67E8F9' },
   'a-skill-that-worked': { emoji: '🧘', label: 'A skill that worked', color: Colors.primary },
-  'another-perspective': { emoji: '🔄', label: 'Another perspective', color: '#9B8EC4' },
-  'personal-experience': { emoji: '🫂', label: 'Personal experience', color: '#6BA38E' },
+  'another-perspective': { emoji: '🔄', label: 'Another perspective', color: '#3B82F6' },
+  'personal-experience': { emoji: '🫂', label: 'Personal experience', color: '#14B8A6' },
 };
 
 export const EMOTION_OPTIONS = [
@@ -112,7 +112,7 @@ export const MOCK_CIRCLES: SupportCircle[] = [
     name: 'Relationship Triggers',
     description: 'A safe space to discuss relationship challenges, attachment patterns, and communication struggles.',
     emoji: '💛',
-    color: '#D4956A',
+    color: '#67E8F9',
     memberCount: 342,
     isJoined: false,
     recentActivity: now - 15 * 60000,
@@ -123,7 +123,7 @@ export const MOCK_CIRCLES: SupportCircle[] = [
     name: 'Shame Recovery',
     description: 'Supporting each other through shame spirals and building self-compassion together.',
     emoji: '🌿',
-    color: '#6BA38E',
+    color: '#14B8A6',
     memberCount: 218,
     isJoined: true,
     recentActivity: now - 45 * 60000,
@@ -145,7 +145,7 @@ export const MOCK_CIRCLES: SupportCircle[] = [
     name: 'Identity & Self',
     description: 'Exploring identity, sense of self, and finding who you are beyond the diagnosis.',
     emoji: '🪞',
-    color: '#9B8EC4',
+    color: '#3B82F6',
     memberCount: 187,
     isJoined: false,
     recentActivity: now - 4 * hour,
@@ -156,7 +156,7 @@ export const MOCK_CIRCLES: SupportCircle[] = [
     name: 'Daily Check-Ins',
     description: 'A gentle space for daily emotional check-ins. No pressure, just presence.',
     emoji: '🌅',
-    color: '#E8A87C',
+    color: '#67E8F9',
     memberCount: 523,
     isJoined: false,
     recentActivity: now - 30 * 60000,
@@ -482,10 +482,10 @@ export const SUPPORT_TOPICS: { id: SupportTopic; label: string; emoji: string; d
 ];
 
 export const CIRCLE_POST_TYPES: { id: CirclePostType; label: string; emoji: string; color: string }[] = [
-  { id: 'update', label: 'Update', emoji: '📝', color: '#4A8B8D' },
-  { id: 'question', label: 'Question', emoji: '❓', color: '#9B8EC4' },
-  { id: 'progress', label: 'Progress', emoji: '🌱', color: '#6BA38E' },
-  { id: 'encouragement', label: 'Encouragement', emoji: '💛', color: '#E8A87C' },
+  { id: 'update', label: 'Update', emoji: '📝', color: '#14B8A6' },
+  { id: 'question', label: 'Question', emoji: '❓', color: '#3B82F6' },
+  { id: 'progress', label: 'Progress', emoji: '🌱', color: '#14B8A6' },
+  { id: 'encouragement', label: 'Encouragement', emoji: '💛', color: '#67E8F9' },
 ];
 
 const challengeNow = Date.now();
@@ -497,7 +497,7 @@ export const MOCK_CHALLENGES: CommunityChallenge[] = [
     title: 'Pause Before Reacting',
     description: 'Practice taking a breath before responding to emotional triggers. Each day, commit to pausing at least once before reacting impulsively.',
     emoji: '⏸️',
-    color: '#4A8B8D',
+    color: '#14B8A6',
     durationDays: 5,
     dailyPrompt: 'Did you pause before reacting today? What happened?',
     participantCount: 87,
@@ -510,7 +510,7 @@ export const MOCK_CHALLENGES: CommunityChallenge[] = [
     title: 'Daily Emotional Check-In',
     description: 'Start each day by naming your emotions. Build awareness by checking in with yourself every morning for 7 days.',
     emoji: '🌤',
-    color: '#E8A87C',
+    color: '#67E8F9',
     durationDays: 7,
     dailyPrompt: 'How are you feeling right now? Name 2-3 emotions.',
     participantCount: 134,
@@ -523,7 +523,7 @@ export const MOCK_CHALLENGES: CommunityChallenge[] = [
     title: 'One DBT Skill Per Day',
     description: 'Practice a different DBT skill each day. Start small — even 2 minutes of practice counts.',
     emoji: '🧘',
-    color: '#9B8EC4',
+    color: '#3B82F6',
     durationDays: 7,
     dailyPrompt: 'Which DBT skill did you practice today? How did it go?',
     participantCount: 62,
@@ -536,7 +536,7 @@ export const MOCK_CHALLENGES: CommunityChallenge[] = [
     title: 'Self-Compassion Week',
     description: 'Replace one self-critical thought with a compassionate one each day. You deserve the kindness you give others.',
     emoji: '💛',
-    color: '#6BA38E',
+    color: '#14B8A6',
     durationDays: 7,
     dailyPrompt: 'What self-critical thought did you catch today? How did you respond with compassion?',
     participantCount: 95,
@@ -549,7 +549,7 @@ export const MOCK_CHALLENGES: CommunityChallenge[] = [
     title: 'Boundary Practice',
     description: 'Set or maintain one small boundary each day. It can be as simple as saying "I need a moment" before responding.',
     emoji: '🛡️',
-    color: '#D4956A',
+    color: '#67E8F9',
     durationDays: 5,
     dailyPrompt: 'What boundary did you practice today?',
     participantCount: 48,

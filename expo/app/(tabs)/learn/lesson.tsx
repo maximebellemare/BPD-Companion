@@ -93,9 +93,9 @@ function getReflectionPrompt(categoryId: string): string {
 }
 
 const SECTION_COLORS: Record<string, { bg: string; border: string; icon: string }> = {
-  callout: { bg: '#EEF4F0', border: '#6B9080', icon: '#6B9080' },
-  takeaway: { bg: '#FFF8F0', border: '#D4956A', icon: '#D4956A' },
-  exercise: { bg: '#F0F0FF', border: '#7B8CDE', icon: '#7B8CDE' },
+  callout: { bg: '#FFFFFF', border: '#14B8A6', icon: '#14B8A6' },
+  takeaway: { bg: '#FFFFFF', border: '#67E8F9', icon: '#67E8F9' },
+  exercise: { bg: '#FFFFFF', border: '#3B82F6', icon: '#3B82F6' },
 };
 
 export default function LessonScreen() {

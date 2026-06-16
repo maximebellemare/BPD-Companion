@@ -44,11 +44,11 @@ import {
 const SEVERITY_COLORS = {
   info: Colors.primary,
   gentle: Colors.accent,
-  important: '#E17055',
+  important: '#3B82F6',
 } as const;
 
 const TREND_CONFIG = {
-  rising: { label: 'Rising', icon: TrendingUp, color: '#E17055' },
+  rising: { label: 'Rising', icon: TrendingUp, color: '#3B82F6' },
   stable: { label: 'Stable', icon: Minus, color: Colors.primary },
   falling: { label: 'Improving', icon: TrendingDown, color: Colors.success },
   insufficient_data: { label: 'Not enough data', icon: AlertCircle, color: Colors.textMuted },
@@ -108,12 +108,12 @@ function RelationshipCard({ pattern, index }: { pattern: RelationshipPattern; in
           {pattern.conflictRate > 0 && (
             <View style={[
               styles.conflictBadge,
-              { backgroundColor: pattern.conflictRate > 40 ? '#E1705518' : Colors.primaryLight },
+              { backgroundColor: pattern.conflictRate > 40 ? '#3B82F618' : Colors.primaryLight },
             ]}>
-              <Zap size={11} color={pattern.conflictRate > 40 ? '#E17055' : Colors.primary} />
+              <Zap size={11} color={pattern.conflictRate > 40 ? '#3B82F6' : Colors.primary} />
               <Text style={[
                 styles.conflictBadgeText,
-                { color: pattern.conflictRate > 40 ? '#E17055' : Colors.primary },
+                { color: pattern.conflictRate > 40 ? '#3B82F6' : Colors.primary },
               ]}>
                 {pattern.conflictRate}%
               </Text>
@@ -444,8 +444,8 @@ export default function RelationshipInsightsScreen() {
               <AnimatedSection delay={200}>
                 <View style={styles.section}>
                   <View style={styles.sectionHeader}>
-                    <View style={[styles.sectionIconWrap, { backgroundColor: '#FFF0E6' }]}>
-                      <Zap size={16} color="#E17055" />
+                    <View style={[styles.sectionIconWrap, { backgroundColor: '#FFFFFF' }]}>
+                      <Zap size={16} color="#3B82F6" />
                     </View>
                     <View>
                       <Text style={styles.sectionTitle}>Relationship Triggers</Text>
@@ -463,8 +463,8 @@ export default function RelationshipInsightsScreen() {
               <AnimatedSection delay={300}>
                 <View style={styles.section}>
                   <View style={styles.sectionHeader}>
-                    <View style={[styles.sectionIconWrap, { backgroundColor: '#FFE6F0' }]}>
-                      <Activity size={16} color="#E84393" />
+                    <View style={[styles.sectionIconWrap, { backgroundColor: '#FFFFFF' }]}>
+                      <Activity size={16} color="#3B82F6" />
                     </View>
                     <View>
                       <Text style={styles.sectionTitle}>Emotional Reactions</Text>
@@ -499,7 +499,7 @@ export default function RelationshipInsightsScreen() {
               <AnimatedSection delay={400}>
                 <View style={styles.section}>
                   <View style={styles.sectionHeader}>
-                    <View style={[styles.sectionIconWrap, { backgroundColor: '#E6F0FF' }]}>
+                    <View style={[styles.sectionIconWrap, { backgroundColor: '#FFFFFF' }]}>
                       <MessageSquare size={16} color="#3B82F6" />
                     </View>
                     <View>

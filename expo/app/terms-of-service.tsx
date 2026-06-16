@@ -157,7 +157,7 @@ export default function TermsOfServiceScreen() {
 
         <TermsSection number="7" title="Limitation of Liability">
           <View style={styles.iconRow}>
-            <Scale size={16} color="#8B5CF6" />
+            <Scale size={16} color="#3B82F6" />
             <Text style={styles.iconRowText}>Legal Disclaimer</Text>
           </View>
           <Text style={styles.bodyText}>
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 8,
-    backgroundColor: Colors.brandNavy,
+    backgroundColor: Colors.primary,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },

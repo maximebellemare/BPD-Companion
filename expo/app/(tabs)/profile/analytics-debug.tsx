@@ -90,11 +90,11 @@ function EventRow({ event }: EventRowProps) {
 }
 
 function getEventCategoryColor(name: string): string {
-  if (name.startsWith('relationship_') || name.startsWith('message_')) return '#E84393';
+  if (name.startsWith('relationship_') || name.startsWith('message_')) return '#3B82F6';
   if (name.startsWith('crisis_') || name === 'safety_mode_activated') return Colors.danger;
-  if (name.startsWith('ai_')) return '#8B5CF6';
+  if (name.startsWith('ai_')) return '#3B82F6';
   if (name.startsWith('flow_')) return '#3B82F6';
-  if (name.includes('upgrade') || name.includes('premium') || name.includes('locked') || name.includes('limit')) return '#D4956A';
+  if (name.includes('upgrade') || name.includes('premium') || name.includes('locked') || name.includes('limit')) return '#67E8F9';
   if (name === 'screen_view') return Colors.textMuted;
   if (name === 'check_in_completed' || name === 'journal_entry_created') return Colors.primary;
   if (name.includes('regulation') || name.includes('grounding') || name.includes('dbt')) return Colors.success;
@@ -430,8 +430,8 @@ export default function AnalyticsDebugScreen() {
                 {PREMIUM_FEATURES.slice(0, 6).map(f => (
                   <View key={f.id} style={styles.contextRow}>
                     <Text style={styles.contextLabel} numberOfLines={1}>{f.title}</Text>
-                    <View style={[styles.contextBadge, { backgroundColor: canAccessFeature(f.id) ? Colors.successLight : '#FFF0E3' }]}>
-                      <Text style={[styles.contextBadgeText, { color: canAccessFeature(f.id) ? Colors.success : '#D4956A' }]}>
+                    <View style={[styles.contextBadge, { backgroundColor: canAccessFeature(f.id) ? Colors.successLight : '#FFFFFF' }]}>
+                      <Text style={[styles.contextBadgeText, { color: canAccessFeature(f.id) ? Colors.success : '#67E8F9' }]}>
                         {canAccessFeature(f.id) ? 'Unlocked' : 'Locked'}
                       </Text>
                     </View>
@@ -521,7 +521,7 @@ export default function AnalyticsDebugScreen() {
           {activeTab === 'premium' && (
             <View style={styles.sectionCard}>
               <View style={styles.premiumHeader}>
-                <Crown size={16} color="#D4956A" />
+                <Crown size={16} color="#67E8F9" />
                 <Text style={styles.sectionTitle}>Premium Conversion Signals</Text>
               </View>
               {premiumSignals.length === 0 ? (
@@ -529,10 +529,10 @@ export default function AnalyticsDebugScreen() {
               ) : (
                 premiumSignals.map(([signal, count]) => (
                   <View key={signal} style={styles.metricRow}>
-                    <View style={[styles.metricDot, { backgroundColor: '#D4956A' }]} />
+                    <View style={[styles.metricDot, { backgroundColor: '#67E8F9' }]} />
                     <Text style={styles.metricName} numberOfLines={1}>{signal}</Text>
-                    <View style={[styles.metricBadge, { backgroundColor: '#FFF5EB' }]}>
-                      <Text style={[styles.metricCount, { color: '#D4956A' }]}>{count}</Text>
+                    <View style={[styles.metricBadge, { backgroundColor: '#FFFFFF' }]}>
+                      <Text style={[styles.metricCount, { color: '#67E8F9' }]}>{count}</Text>
                     </View>
                   </View>
                 ))
@@ -637,7 +637,7 @@ const styles = StyleSheet.create({
   },
   actionBtnDanger: {
     borderColor: Colors.dangerLight,
-    backgroundColor: '#FFF8F6',
+    backgroundColor: '#FFFFFF',
   },
   actionBtnText: {
     fontSize: 13,
@@ -821,7 +821,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.success,
   },
   flowRateOk: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#67E8F9',
   },
   flowRateLow: {
     backgroundColor: Colors.danger,
@@ -901,8 +901,8 @@ const styles = StyleSheet.create({
 function getZoneColor(zone: string): string {
   switch (zone) {
     case 'crisis': return Colors.danger;
-    case 'relationship_distress': return '#E84393';
-    case 'activated': return '#E17055';
+    case 'relationship_distress': return '#3B82F6';
+    case 'activated': return '#3B82F6';
     case 'recovering': return Colors.success;
     case 'calm': return Colors.primary;
     default: return Colors.textMuted;
@@ -912,10 +912,10 @@ function getZoneColor(zone: string): string {
 function getInterventionCategoryColor(category: string): string {
   switch (category) {
     case 'crisis': return Colors.danger;
-    case 'relationship': return '#E84393';
+    case 'relationship': return '#3B82F6';
     case 'regulation': return Colors.primary;
-    case 'reflection': return '#8B5CF6';
-    case 'growth': return '#F59E0B';
+    case 'reflection': return '#3B82F6';
+    case 'growth': return '#67E8F9';
     default: return Colors.textMuted;
   }
 }

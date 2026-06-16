@@ -123,11 +123,11 @@ export default function JournalDailyScreen() {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.savedContainer}>
-          <View style={[styles.savedIcon, { backgroundColor: isMorning ? '#FFF5E6' : '#E8ECF7' }]}>
+          <View style={[styles.savedIcon, { backgroundColor: isMorning ? '#FFFFFF' : '#FFFFFF' }]}>
             {isMorning ? (
-              <Sun size={32} color="#E8A838" />
+              <Sun size={32} color="#67E8F9" />
             ) : (
-              <Moon size={32} color="#7A82AB" />
+              <Moon size={32} color="#2E2A72" />
             )}
           </View>
           <Text style={styles.savedTitle}>
@@ -158,9 +158,9 @@ export default function JournalDailyScreen() {
           </TouchableOpacity>
           <View style={styles.headerCenter}>
             {isMorning ? (
-              <Sun size={18} color="#E8A838" />
+              <Sun size={18} color="#67E8F9" />
             ) : (
-              <Moon size={18} color="#7A82AB" />
+              <Moon size={18} color="#2E2A72" />
             )}
             <Text style={styles.headerTitle}>
               {isMorning ? 'Morning Check-In' : 'Evening Reflection'}
@@ -174,7 +174,7 @@ export default function JournalDailyScreen() {
             style={[
               styles.progressFill,
               {
-                backgroundColor: isMorning ? '#E8A838' : '#7A82AB',
+                backgroundColor: isMorning ? '#67E8F9' : '#2E2A72',
                 width: progressAnim.interpolate({
                   inputRange: [0, 1],
                   outputRange: ['0%', '100%'],
@@ -224,7 +224,7 @@ export default function JournalDailyScreen() {
                 <View style={styles.activationRow}>
                   {Array.from({ length: 10 }, (_, i) => i + 1).map(level => {
                     const isActive = activationLevel === level;
-                    const color = level <= 3 ? Colors.success : level <= 6 ? '#E8A838' : Colors.danger;
+                    const color = level <= 3 ? Colors.success : level <= 6 ? '#67E8F9' : Colors.danger;
                     return (
                       <TouchableOpacity
                         key={level}
@@ -331,7 +331,7 @@ export default function JournalDailyScreen() {
 
           {step === totalSteps - 1 ? (
             <TouchableOpacity
-              style={[styles.saveBtn, { backgroundColor: isMorning ? '#E8A838' : '#7A82AB' }]}
+              style={[styles.saveBtn, { backgroundColor: isMorning ? '#67E8F9' : '#2E2A72' }]}
               onPress={handleSave}
             >
               <Check size={18} color={Colors.white} />
@@ -339,7 +339,7 @@ export default function JournalDailyScreen() {
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
-              style={[styles.nextBtn, { backgroundColor: isMorning ? '#E8A838' : '#7A82AB' }]}
+              style={[styles.nextBtn, { backgroundColor: isMorning ? '#67E8F9' : '#2E2A72' }]}
               onPress={goNext}
             >
               <Text style={styles.nextBtnText}>Next</Text>
@@ -507,8 +507,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
   },
   intentionChipSelected: {
-    backgroundColor: '#FFF5E6',
-    borderColor: '#E8A838',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#67E8F9',
   },
   intentionEmoji: {
     fontSize: 14,
@@ -519,7 +519,7 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   intentionLabelSelected: {
-    color: '#C08020',
+    color: '#3B82F6',
     fontWeight: '600' as const,
   },
   intentionInput: {

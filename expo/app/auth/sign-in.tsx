@@ -9,7 +9,6 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -34,6 +33,10 @@ export default function SignInScreen() {
       setError('Please enter your email and password.');
       return;
     }
+    if (!/^\S+@\S+\.\S+$/.test(trimmed)) {
+      setError('Please enter a valid email.');
+      return;
+    }
     setSubmitting(true);
     try {
       await signIn({ email: trimmed, password });
@@ -48,16 +51,11 @@ export default function SignInScreen() {
   }, [email, password, signIn]);
 
   const handleForgot = useCallback(() => {
-    const trimmed = email.trim().toLowerCase();
-    const msg = trimmed
-      ? `We'll send reset instructions to ${trimmed}. (Coming soon)`
-      : 'Enter your email above, then tap Forgot password again. (Coming soon)';
-    if (Platform.OS === 'web') {
-      if (typeof window !== 'undefined') window.alert(msg);
-    } else {
-      Alert.alert('Reset password', msg);
-    }
-  }, [email]);
+    router.push({
+      pathname: '/auth/forgot-password',
+      params: email.trim() ? { email: email.trim().toLowerCase() } : undefined,
+    });
+  }, [email, router]);
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
@@ -231,7 +229,7 @@ const styles = StyleSheet.create({
     fontWeight: '500' as const,
   },
   primary: {
-    backgroundColor: Colors.brandNavy,
+    backgroundColor: Colors.primary,
     borderRadius: 16,
     paddingVertical: 16,
     alignItems: 'center',

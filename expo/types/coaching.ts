@@ -54,10 +54,10 @@ export interface CoachingWin {
 
 export const COACHING_CATEGORY_META: Record<CoachingCategory, { label: string; emoji: string; color: string }> = {
   communication: { label: 'Communication', emoji: '💬', color: '#3B82F6' },
-  emotional_regulation: { label: 'Emotional Regulation', emoji: '🌊', color: '#6B9080' },
-  reassurance_seeking: { label: 'Reassurance Patterns', emoji: '🔄', color: '#D4956A' },
-  conflict_recovery: { label: 'Conflict Recovery', emoji: '🕊️', color: '#8B5CF6' },
-  pause_training: { label: 'Pause Training', emoji: '⏸️', color: '#E84393' },
-  self_soothing: { label: 'Self-Soothing', emoji: '🫶', color: '#00B894' },
-  shame_recovery: { label: 'Shame Recovery', emoji: '💛', color: '#F59E0B' },
+  emotional_regulation: { label: 'Emotional Regulation', emoji: '🌊', color: '#14B8A6' },
+  reassurance_seeking: { label: 'Reassurance Patterns', emoji: '🔄', color: '#67E8F9' },
+  conflict_recovery: { label: 'Conflict Recovery', emoji: '🕊️', color: '#3B82F6' },
+  pause_training: { label: 'Pause Training', emoji: '⏸️', color: '#3B82F6' },
+  self_soothing: { label: 'Self-Soothing', emoji: '🫶', color: '#14B8A6' },
+  shame_recovery: { label: 'Shame Recovery', emoji: '💛', color: '#67E8F9' },
 };

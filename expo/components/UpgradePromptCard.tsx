@@ -46,7 +46,7 @@ export default function UpgradePromptCard() {
       >
         <View style={styles.left}>
           <View style={styles.iconWrap}>
-            <Crown size={20} color="#D4956A" />
+            <Crown size={20} color="#67E8F9" />
           </View>
           <View style={styles.textWrap}>
             <Text style={styles.title}>Unlock deeper support</Text>
@@ -58,7 +58,7 @@ export default function UpgradePromptCard() {
           </View>
         </View>
         <View style={styles.arrowWrap}>
-          <ArrowRight size={16} color="#D4956A" />
+          <ArrowRight size={16} color="#67E8F9" />
         </View>
       </TouchableOpacity>
     </Animated.View>
@@ -72,11 +72,11 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    backgroundColor: '#FFF8F2',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#F5E0CC',
+    borderColor: '#0B1238',
   },
   left: {
     flex: 1,
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 14,
-    backgroundColor: '#FFF0E3',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     marginRight: 12,
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 10,
-    backgroundColor: '#FFF0E3',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     marginLeft: 8,

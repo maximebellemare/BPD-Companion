@@ -122,14 +122,14 @@ export const JOURNAL_EMOTIONS: Emotion[] = [
 ];
 
 export const JOURNAL_TAGS: JournalTag[] = [
-  { id: 'jt1', label: 'Therapy', color: '#4A8B8D' },
-  { id: 'jt2', label: 'Relationship', color: '#C4956A' },
-  { id: 'jt3', label: 'Growth', color: '#6BA38E' },
-  { id: 'jt4', label: 'Trigger', color: '#C47878' },
-  { id: 'jt5', label: 'Coping', color: '#9B8EC4' },
-  { id: 'jt6', label: 'Self-care', color: '#8EAEC4' },
-  { id: 'jt7', label: 'Breakthrough', color: '#7FA68E' },
-  { id: 'jt8', label: 'Identity', color: '#C4956A' },
+  { id: 'jt1', label: 'Therapy', color: '#14B8A6' },
+  { id: 'jt2', label: 'Relationship', color: '#67E8F9' },
+  { id: 'jt3', label: 'Growth', color: '#14B8A6' },
+  { id: 'jt4', label: 'Trigger', color: '#3B82F6' },
+  { id: 'jt5', label: 'Coping', color: '#3B82F6' },
+  { id: 'jt6', label: 'Self-care', color: '#2E2A72' },
+  { id: 'jt7', label: 'Breakthrough', color: '#14B8A6' },
+  { id: 'jt8', label: 'Identity', color: '#67E8F9' },
 ];
 
 export const FORMAT_CONFIG: Record<JournalEntryFormat, {

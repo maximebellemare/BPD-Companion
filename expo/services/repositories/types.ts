@@ -83,6 +83,7 @@ export interface IAuthRepository {
   getSession(): Promise<AuthSession | null>;
   signIn(credentials: AuthCredentials): Promise<AuthSession>;
   signUp(input: AuthSignUpInput): Promise<AuthSession>;
+  resetPassword(email: string): Promise<void>;
   signOut(): Promise<void>;
   refreshSession(): Promise<AuthSession | null>;
   updateUser(updates: Partial<AuthUser>): Promise<AuthUser>;

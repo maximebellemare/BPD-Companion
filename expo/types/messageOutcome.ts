@@ -121,28 +121,28 @@ export interface DraftVaultEntry {
 }
 
 export const DETAILED_OUTCOME_OPTIONS: { value: DetailedOutcome; label: string; emoji: string; color: string }[] = [
-  { value: 'sent_helped', label: 'Sent — it helped', emoji: '💚', color: '#6B9080' },
-  { value: 'sent_neutral', label: 'Sent — neutral', emoji: '😐', color: '#8E9BAA' },
-  { value: 'sent_regretted', label: 'Sent — regretted it', emoji: '💔', color: '#E17055' },
-  { value: 'not_sent_relieved', label: 'Didn\'t send — relieved', emoji: '😌', color: '#7FA68E' },
-  { value: 'not_sent_unsure', label: 'Didn\'t send — still unsure', emoji: '🤔', color: '#C4956A' },
-  { value: 'waited_then_sent', label: 'Waited, then sent', emoji: '⏳', color: '#9B8EC4' },
-  { value: 'rewrote_then_sent', label: 'Rewrote, then sent', emoji: '✏️', color: '#5B8FB9' },
-  { value: 'decided_not_to_send', label: 'Decided not to send', emoji: '🛑', color: '#C47878' },
+  { value: 'sent_helped', label: 'Sent — it helped', emoji: '💚', color: '#14B8A6' },
+  { value: 'sent_neutral', label: 'Sent — neutral', emoji: '😐', color: '#2E2A72' },
+  { value: 'sent_regretted', label: 'Sent — regretted it', emoji: '💔', color: '#3B82F6' },
+  { value: 'not_sent_relieved', label: 'Didn\'t send — relieved', emoji: '😌', color: '#14B8A6' },
+  { value: 'not_sent_unsure', label: 'Didn\'t send — still unsure', emoji: '🤔', color: '#67E8F9' },
+  { value: 'waited_then_sent', label: 'Waited, then sent', emoji: '⏳', color: '#3B82F6' },
+  { value: 'rewrote_then_sent', label: 'Rewrote, then sent', emoji: '✏️', color: '#3B82F6' },
+  { value: 'decided_not_to_send', label: 'Decided not to send', emoji: '🛑', color: '#3B82F6' },
 ];
 
 export const SENT_STATUS_OPTIONS: { value: SentStatus; label: string; emoji: string; color: string }[] = [
-  { value: 'sent_now', label: 'Sent it', emoji: '📤', color: '#4A8B8D' },
-  { value: 'sent_later', label: 'Sent later', emoji: '⏳', color: '#9B8EC4' },
-  { value: 'saved_unsent', label: 'Saved, not sent', emoji: '📂', color: '#C4956A' },
-  { value: 'not_sent', label: 'Chose not to send', emoji: '🛑', color: '#C47878' },
+  { value: 'sent_now', label: 'Sent it', emoji: '📤', color: '#14B8A6' },
+  { value: 'sent_later', label: 'Sent later', emoji: '⏳', color: '#3B82F6' },
+  { value: 'saved_unsent', label: 'Saved, not sent', emoji: '📂', color: '#67E8F9' },
+  { value: 'not_sent', label: 'Chose not to send', emoji: '🛑', color: '#3B82F6' },
 ];
 
 export const CONFLICT_RESULT_OPTIONS: { value: ConflictResult; label: string; emoji: string; color: string }[] = [
-  { value: 'helped', label: 'It helped', emoji: '💚', color: '#6B9080' },
-  { value: 'neutral', label: 'Neutral', emoji: '😐', color: '#8E9BAA' },
-  { value: 'escalated', label: 'Things escalated', emoji: '📈', color: '#E17055' },
-  { value: 'not_sure', label: 'Not sure yet', emoji: '🤔', color: '#C4956A' },
+  { value: 'helped', label: 'It helped', emoji: '💚', color: '#14B8A6' },
+  { value: 'neutral', label: 'Neutral', emoji: '😐', color: '#2E2A72' },
+  { value: 'escalated', label: 'Things escalated', emoji: '📈', color: '#3B82F6' },
+  { value: 'not_sure', label: 'Not sure yet', emoji: '🤔', color: '#67E8F9' },
 ];
 
 export const OUTCOME_CAPTURE_QUESTIONS = {

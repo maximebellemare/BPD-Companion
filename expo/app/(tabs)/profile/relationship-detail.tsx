@@ -37,10 +37,10 @@ import {
 } from '@/types/relationship';
 
 const INSIGHT_TYPE_CONFIG: Record<string, { icon: typeof Activity; color: string; bg: string }> = {
-  emotional: { icon: Activity, color: '#E84393', bg: '#FFE6F0' },
-  communication: { icon: MessageSquare, color: '#3B82F6', bg: '#E6F0FF' },
+  emotional: { icon: Activity, color: '#3B82F6', bg: '#FFFFFF' },
+  communication: { icon: MessageSquare, color: '#3B82F6', bg: '#FFFFFF' },
   coping: { icon: Shield, color: Colors.success, bg: Colors.successLight },
-  conflict: { icon: Zap, color: '#E17055', bg: '#FFF0E6' },
+  conflict: { icon: Zap, color: '#3B82F6', bg: '#FFFFFF' },
   growth: { icon: TrendingUp, color: Colors.primary, bg: Colors.primaryLight },
 };
 
@@ -273,8 +273,8 @@ export default function RelationshipDetailScreen() {
         {insights.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <View style={[styles.sectionIconWrap, { backgroundColor: '#FFE6F0' }]}>
-                <Sparkles size={16} color="#E84393" />
+              <View style={[styles.sectionIconWrap, { backgroundColor: '#FFFFFF' }]}>
+                <Sparkles size={16} color="#3B82F6" />
               </View>
               <View>
                 <Text style={styles.sectionTitle}>Emotional Patterns</Text>
@@ -379,7 +379,7 @@ export default function RelationshipDetailScreen() {
         {recentEvents.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <View style={[styles.sectionIconWrap, { backgroundColor: '#E6F0FF' }]}>
+              <View style={[styles.sectionIconWrap, { backgroundColor: '#FFFFFF' }]}>
                 <Clock size={16} color="#3B82F6" />
               </View>
               <View>

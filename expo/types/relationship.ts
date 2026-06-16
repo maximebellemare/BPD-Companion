@@ -65,12 +65,12 @@ export interface RelationshipProfileAnalysis {
 }
 
 export const RELATIONSHIP_TYPE_META: Record<RelationshipType, { label: string; emoji: string; color: string }> = {
-  partner: { label: 'Partner', emoji: '💕', color: '#E84393' },
-  ex: { label: 'Ex', emoji: '💔', color: '#D4956A' },
-  friend: { label: 'Friend', emoji: '🤝', color: '#6B9080' },
+  partner: { label: 'Partner', emoji: '💕', color: '#3B82F6' },
+  ex: { label: 'Ex', emoji: '💔', color: '#67E8F9' },
+  friend: { label: 'Friend', emoji: '🤝', color: '#14B8A6' },
   parent: { label: 'Parent', emoji: '🏠', color: '#3B82F6' },
-  sibling: { label: 'Sibling', emoji: '👫', color: '#8B5CF6' },
-  coworker: { label: 'Coworker', emoji: '💼', color: '#507A66' },
-  therapist: { label: 'Therapist', emoji: '🧠', color: '#00B894' },
-  other: { label: 'Other', emoji: '👤', color: '#636E72' },
+  sibling: { label: 'Sibling', emoji: '👫', color: '#3B82F6' },
+  coworker: { label: 'Coworker', emoji: '💼', color: '#14B8A6' },
+  therapist: { label: 'Therapist', emoji: '🧠', color: '#14B8A6' },
+  other: { label: 'Other', emoji: '👤', color: '#2E2A72' },
 };

@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useMemo, useState } from 'react';
+import { Platform } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import createContextHook from '@nkzw/create-context-hook';
-import type { PurchasesPackage } from '@revenuecat/purchases-capacitor';
 import {
   SubscriptionState,
   SubscriptionTier,
@@ -37,26 +37,65 @@ import {
   getActivePeriodType,
   isTrialActive as rcIsTrialActive,
 } from '@/services/subscription/purchasesService';
+import type { PurchasesPackage } from '@/services/subscription/purchasesService';
+import { useAuth } from '@/providers/AuthProvider';
+import { useUserProfile } from '@/providers/UserProfileProvider';
+import { isProfileTrialActive } from '@/lib/supabase/profiles';
+import {
+  REVENUECAT_MONTHLY_PRODUCT_ID,
+  REVENUECAT_YEARLY_PRODUCT_ID,
+} from '@/constants/revenuecat';
+
+type OfferingStatus = 'loading' | 'ready' | 'empty' | 'error' | 'preview';
+
+const FALLBACK_PREVIEW_PLANS: SubscriptionPlan[] = [
+  {
+    id: 'monthly',
+    name: 'Monthly',
+    period: 'monthly',
+    price: 9.99,
+    priceLabel: '$9.99/mo',
+    productIdentifier: REVENUECAT_MONTHLY_PRODUCT_ID,
+    isFallbackPrice: true,
+  },
+  {
+    id: 'yearly',
+    name: 'Yearly',
+    period: 'yearly',
+    price: 59.99,
+    priceLabel: '$59.99/yr',
+    savings: 'Best value',
+    popular: true,
+    productIdentifier: REVENUECAT_YEARLY_PRODUCT_ID,
+    isFallbackPrice: true,
+  },
+];
 
 export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   const queryClient = useQueryClient();
+  const { user, isAuthenticated } = useAuth();
+  const { profile } = useUserProfile();
   const [dailyAIUsage, setDailyAIUsage] = useState<number>(0);
   const [dailyRewriteUsage, setDailyRewriteUsage] = useState<number>(0);
 
   useEffect(() => {
-    void configurePurchases();
-  }, []);
+    if (isAuthenticated && user?.id) {
+      void configurePurchases(user.id);
+    }
+  }, [isAuthenticated, user?.id]);
 
   const customerInfoQuery = useQuery({
     queryKey: ['rc-customer-info'],
     queryFn: fetchCustomerInfo,
     staleTime: 60_000,
+    enabled: isAuthenticated && !!user?.id,
   });
 
   const offeringsQuery = useQuery({
     queryKey: ['rc-offerings'],
     queryFn: fetchOfferings,
     staleTime: 5 * 60_000,
+    enabled: isAuthenticated && !!user?.id,
   });
 
   const aiUsageQuery = useQuery({
@@ -83,15 +122,17 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
 
   const state: SubscriptionState = useMemo(() => {
     const info = customerInfoQuery.data ?? null;
-    const isActive = hasActiveEntitlement(info);
-    if (!isActive) {
+    const isEntitlementActive = hasActiveEntitlement(info);
+    const accountTrialActive = isProfileTrialActive(profile);
+    const profileTrialEndsAt = profile ? new Date(profile.trial_ends_at).getTime() : null;
+    if (!isEntitlementActive) {
       return {
-        tier: 'free',
+        tier: accountTrialActive ? 'premium' : 'free',
         plan: null,
         expiresAt: null,
         startedAt: null,
-        trialEndsAt: null,
-        isTrialActive: false,
+        trialEndsAt: profileTrialEndsAt,
+        isTrialActive: accountTrialActive,
       };
     }
     const expiresAt = getActiveExpiration(info);
@@ -114,10 +155,65 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
       trialEndsAt: trial ? expiresAt : null,
       isTrialActive: trial,
     };
-  }, [customerInfoQuery.data]);
+  }, [customerInfoQuery.data, profile]);
 
   const tier: SubscriptionTier = state.tier;
+  const isEntitlementActive = hasActiveEntitlement(customerInfoQuery.data ?? null);
   const isPremium = tier === 'premium';
+  const hasPremiumAccess = state.isTrialActive || isEntitlementActive;
+
+  const offeringStatus: OfferingStatus = useMemo(() => {
+    if (offeringsQuery.isLoading || customerInfoQuery.isLoading) return 'loading';
+    if (offeringsQuery.isError) return 'error';
+    if (offeringsQuery.data?.monthly || offeringsQuery.data?.annual) return 'ready';
+    if (offeringsQuery.data) return 'empty';
+    if (__DEV__) return 'preview';
+    return 'empty';
+  }, [customerInfoQuery.isLoading, offeringsQuery.data, offeringsQuery.isError, offeringsQuery.isLoading]);
+
+  const plans = useMemo<SubscriptionPlan[]>(() => {
+    const offering = offeringsQuery.data;
+    if (!offering) {
+      return offeringStatus === 'preview' ? FALLBACK_PREVIEW_PLANS : [];
+    }
+
+    const nextPlans: SubscriptionPlan[] = [];
+
+    if (offering.monthly) {
+      nextPlans.push({
+        id: 'monthly',
+        name: 'Monthly',
+        period: 'monthly',
+        price: 0,
+        priceLabel: `${offering.monthly.product.priceString}/mo`,
+        productIdentifier: offering.monthly.product.identifier ?? REVENUECAT_MONTHLY_PRODUCT_ID,
+        packageIdentifier: offering.monthly.identifier,
+      });
+    }
+
+    if (offering.annual) {
+      nextPlans.push({
+        id: 'yearly',
+        name: 'Yearly',
+        period: 'yearly',
+        price: 0,
+        priceLabel: `${offering.annual.product.priceString}/yr`,
+        savings: 'Best value',
+        popular: true,
+        productIdentifier: offering.annual.product.identifier ?? REVENUECAT_YEARLY_PRODUCT_ID,
+        packageIdentifier: offering.annual.identifier,
+      });
+    }
+
+    return nextPlans;
+  }, [offeringStatus, offeringsQuery.data]);
+
+  const offeringsError = useMemo(() => {
+    if (offeringsQuery.error instanceof Error) return offeringsQuery.error.message;
+    if (offeringStatus === 'empty') return 'No RevenueCat offering was returned for this app.';
+    if (offeringStatus === 'preview') return 'RevenueCat offerings are unavailable in this build preview.';
+    return null;
+  }, [offeringStatus, offeringsQuery.error]);
 
   const purchaseMutation = useMutation({
     mutationFn: (pkg: PurchasesPackage) => rcPurchasePackage(pkg),
@@ -190,10 +286,15 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     purchaseMutation.mutate(pkg);
   }, [purchaseMutation]);
 
+  const restore = useCallback(async () => {
+    const info = await restoreMutation.mutateAsync();
+    return hasActiveEntitlement(info ?? null);
+  }, [restoreMutation]);
+
   const subscribe = useCallback((_plan: SubscriptionPlan) => {
     const current = offeringsQuery.data;
     if (!current) {
-      console.log('[Subscription] No offering available');
+      console.log('[Subscription] No offering available for plan:', _plan.id);
       return;
     }
     const pkg = _plan.period === 'yearly' ? current.annual : current.monthly;
@@ -207,8 +308,13 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   return useMemo(() => ({
     tier,
     isPremium,
+    isEntitlementActive,
+    hasPremiumAccess,
     state,
     offering: offeringsQuery.data ?? null,
+    offeringStatus,
+    offeringsError,
+    plans,
     dailyAIUsage,
     aiLimitReached,
     remainingAIMessages,
@@ -217,9 +323,11 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     remainingRewrites,
     daysRemaining,
     expirationLabel,
-    isLoading: customerInfoQuery.isLoading,
+    isLoading: customerInfoQuery.isLoading || offeringsQuery.isLoading,
     isSubscribing: purchaseMutation.isPending,
     isRestoring: restoreMutation.isPending,
+    purchaseError: purchaseMutation.error instanceof Error ? purchaseMutation.error.message : null,
+    restoreError: restoreMutation.error instanceof Error ? restoreMutation.error.message : null,
     purchase,
     subscribe,
     startTrial: () => {
@@ -230,7 +338,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     cancel: () => {
       console.log('[Subscription] Cancel must be done in the App Store / Play Store');
     },
-    restore: restoreMutation.mutate,
+    restore,
     canAccessFeature,
     shouldPromptUpgrade,
     lockedFeatures,
@@ -239,8 +347,13 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   }), [
     tier,
     isPremium,
+    isEntitlementActive,
+    hasPremiumAccess,
     state,
     offeringsQuery.data,
+    offeringStatus,
+    offeringsError,
+    plans,
     dailyAIUsage,
     aiLimitReached,
     remainingAIMessages,
@@ -250,10 +363,13 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     daysRemaining,
     expirationLabel,
     customerInfoQuery.isLoading,
+    offeringsQuery.isLoading,
     purchaseMutation.isPending,
+    purchaseMutation.error,
     purchaseMutation,
     restoreMutation.isPending,
-    restoreMutation.mutate,
+    restoreMutation.error,
+    restore,
     purchase,
     subscribe,
     canAccessFeature,

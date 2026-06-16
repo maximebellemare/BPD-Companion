@@ -469,8 +469,8 @@ export default function MessagesScreen() {
           activeOpacity={0.7}
           testID="draft-vault-btn"
         >
-          <View style={[styles.toolStripIcon, { backgroundColor: '#9B8EC4' + '18' }]}>
-            <Archive size={16} color="#9B8EC4" />
+          <View style={[styles.toolStripIcon, { backgroundColor: '#3B82F6' + '18' }]}>
+            <Archive size={16} color="#3B82F6" />
           </View>
           <Text style={styles.toolStripLabel}>Draft Vault</Text>
         </TouchableOpacity>
@@ -523,8 +523,8 @@ export default function MessagesScreen() {
           activeOpacity={0.7}
           testID="guard-btn"
         >
-          <View style={[styles.toolStripIcon, { backgroundColor: '#5B8FB9' + '18' }]}>
-            <Eye size={16} color="#5B8FB9" />
+          <View style={[styles.toolStripIcon, { backgroundColor: '#3B82F6' + '18' }]}>
+            <Eye size={16} color="#3B82F6" />
           </View>
           <Text style={styles.toolStripLabel}>Guard</Text>
         </TouchableOpacity>
@@ -803,7 +803,7 @@ export default function MessagesScreen() {
         router.push('/grounding-mode' as never);
         break;
       case 'journal':
-        router.push('/journal-entry' as never);
+        router.push('/journal-write' as never);
         break;
       case 'grounding':
         router.push('/grounding-mode' as never);
@@ -901,7 +901,7 @@ export default function MessagesScreen() {
     const recColors: Record<string, string> = {
       safe_to_send: Colors.success,
       better_after_pause: Colors.accent,
-      better_rewritten: '#9B8EC4',
+      better_rewritten: '#3B82F6',
       better_not_sent: Colors.danger,
       do_not_send: Colors.dangerDark,
     };
@@ -1005,7 +1005,7 @@ export default function MessagesScreen() {
               )}
               {rewriteLimitReached && (
                 <TouchableOpacity
-                  style={[styles.analysisPrimaryBtn, { backgroundColor: Colors.brandNavy }]}
+                  style={[styles.analysisPrimaryBtn, { backgroundColor: Colors.primary }]}
                   onPress={() => router.push('/upgrade' as never)}
                   activeOpacity={0.8}
                   testID="rewrite-limit-btn"
@@ -1081,7 +1081,7 @@ export default function MessagesScreen() {
                       style={styles.analysisSmallBtn}
                       onPress={() => {
                         void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        router.push('/journal-entry' as never);
+                        router.push('/journal-write' as never);
                       }}
                       activeOpacity={0.7}
                     >
@@ -1371,7 +1371,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   heroSection: {
-    backgroundColor: Colors.brandNavy,
+    backgroundColor: Colors.primary,
     borderRadius: 20,
     padding: 22,
     marginBottom: 22,
@@ -1852,10 +1852,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: Colors.brandNavy,
+    backgroundColor: Colors.primary,
     borderRadius: 16,
     paddingVertical: 15,
-    shadowColor: Colors.brandNavy,
+    shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.2,
     shadowRadius: 8,

@@ -55,7 +55,7 @@ export default function BodyRegulationScreen() {
         >
           <View style={styles.introBanner}>
             <View style={styles.introIcon}>
-              <Activity size={24} color="#4A8B8D" />
+              <Activity size={24} color="#14B8A6" />
             </View>
             <Text style={styles.introTitle}>Physical Regulation</Text>
             <Text style={styles.introDesc}>
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   introBanner: {
-    backgroundColor: '#E8F4F4',
+    backgroundColor: 'rgba(20, 184, 166, 0.18)',
     borderRadius: 20,
     padding: 22,
     alignItems: 'center',
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 16,
-    backgroundColor: '#D0E8E8',
+    backgroundColor: '#0B1238',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 14,
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
   introTitle: {
     fontSize: 17,
     fontWeight: '700' as const,
-    color: '#3D7577',
+    color: '#14B8A6',
     textAlign: 'center' as const,
     marginBottom: 8,
   },
@@ -220,14 +220,14 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   tag: {
-    backgroundColor: '#E8F4F4',
+    backgroundColor: 'rgba(20, 184, 166, 0.18)',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
   },
   tagText: {
     fontSize: 11,
-    color: '#4A8B8D',
+    color: '#14B8A6',
     fontWeight: '500' as const,
   },
 });

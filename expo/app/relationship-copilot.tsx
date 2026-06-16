@@ -263,7 +263,7 @@ export default function RelationshipCopilotScreen() {
       ) : (
         <View style={styles.noProfilesContainer}>
           <View style={styles.noProfilesIconWrap}>
-            <Users size={28} color="#E84393" />
+            <Users size={28} color="#3B82F6" />
           </View>
           <Text style={styles.noProfilesTitle}>No relationship profiles yet</Text>
           <Text style={styles.noProfilesDesc}>
@@ -442,7 +442,7 @@ export default function RelationshipCopilotScreen() {
       <Animated.View style={[styles.resultContainer, { opacity: resultFade }]}>
         <View style={styles.resultHeaderCard}>
           <View style={styles.resultHeaderIcon}>
-            <Heart size={24} color="#E84393" fill="#E84393" />
+            <Heart size={24} color="#3B82F6" fill="#3B82F6" />
           </View>
           <Text style={styles.resultHeaderTitle}>Let's slow this down</Text>
           <Text style={styles.resultAffirmation}>{result.affirmation}</Text>
@@ -493,7 +493,7 @@ export default function RelationshipCopilotScreen() {
           <Text style={styles.resultSectionTitle}>If you choose to respond</Text>
           <View style={styles.secureMessageCard}>
             <View style={styles.secureMessageIcon}>
-              <Shield size={18} color="#E84393" />
+              <Shield size={18} color="#3B82F6" />
             </View>
             <Text style={styles.secureMessageText}>{result.secureMessagePrompt}</Text>
           </View>
@@ -630,7 +630,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#E84393',
+    backgroundColor: '#3B82F6',
     borderRadius: 2,
   },
   headerSpacer: {
@@ -675,8 +675,8 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   optionCardSelected: {
-    borderColor: '#E84393',
-    backgroundColor: '#FFF5F9',
+    borderColor: '#3B82F6',
+    backgroundColor: '#FFFFFF',
   },
   optionEmoji: {
     fontSize: 22,
@@ -689,7 +689,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   optionLabelSelected: {
-    color: '#E84393',
+    color: '#3B82F6',
     fontWeight: '600' as const,
   },
   checkBadge: {
@@ -699,7 +699,7 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: '#E84393',
+    backgroundColor: '#3B82F6',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -707,7 +707,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#E84393',
+    backgroundColor: '#3B82F6',
     borderRadius: 16,
     padding: 16,
     marginTop: 20,
@@ -729,7 +729,7 @@ const styles = StyleSheet.create({
   intensityNumber: {
     fontSize: 64,
     fontWeight: '700' as const,
-    color: '#E84393',
+    color: '#3B82F6',
     letterSpacing: -2,
   },
   intensityMax: {
@@ -762,12 +762,12 @@ const styles = StyleSheet.create({
     borderColor: Colors.borderLight,
   },
   intensityDotActive: {
-    backgroundColor: '#FFF5F9',
-    borderColor: '#E8439340',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#3B82F640',
   },
   intensityDotCurrent: {
-    backgroundColor: '#E84393',
-    borderColor: '#E84393',
+    backgroundColor: '#3B82F6',
+    borderColor: '#3B82F6',
   },
   intensityDotText: {
     fontSize: 12,
@@ -775,25 +775,25 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
   },
   intensityDotTextActive: {
-    color: '#E84393',
+    color: '#3B82F6',
   },
   resultContainer: {
     paddingTop: 8,
   },
   resultHeaderCard: {
-    backgroundColor: '#FFF5F9',
+    backgroundColor: '#FFFFFF',
     borderRadius: 24,
     padding: 28,
     alignItems: 'center',
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: '#F8D7E8',
+    borderColor: '#0B1238',
   },
   resultHeaderIcon: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#FFEDF5',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -869,20 +869,20 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   secureMessageCard: {
-    backgroundColor: '#FFF5F9',
+    backgroundColor: '#FFFFFF',
     borderRadius: 18,
     padding: 18,
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 14,
     borderWidth: 1,
-    borderColor: '#F8D7E8',
+    borderColor: '#0B1238',
   },
   secureMessageIcon: {
     width: 38,
     height: 38,
     borderRadius: 12,
-    backgroundColor: '#FFEDF5',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 2,
@@ -969,7 +969,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 20,
-    backgroundColor: '#FFF5F9',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     marginBottom: 14,
@@ -993,7 +993,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     gap: 8,
-    backgroundColor: '#E84393',
+    backgroundColor: '#3B82F6',
     borderRadius: 14,
     paddingHorizontal: 20,
     paddingVertical: 12,

@@ -37,7 +37,7 @@ export default React.memo(function CorrelationInsightsCard() {
     >
       <View style={styles.header}>
         <View style={styles.iconWrap}>
-          <Link2 size={18} color="#8B5CF6" />
+          <Link2 size={18} color="#3B82F6" />
         </View>
         <View style={styles.headerText}>
           <Text style={styles.title}>Correlation Insights</Text>
@@ -60,7 +60,7 @@ export default React.memo(function CorrelationInsightsCard() {
             <Text style={styles.previewLabel} numberOfLines={1}>{topItem.label}</Text>
             <Text style={styles.previewDesc} numberOfLines={1}>{topItem.description}</Text>
           </View>
-          <Sprout size={14} color="#00B894" />
+          <Sprout size={14} color="#14B8A6" />
         </View>
       )}
     </TouchableOpacity>
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 11,
-    backgroundColor: '#EDE7F6',
+    backgroundColor: '#0B1238',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   badge: {
-    backgroundColor: '#8B5CF6',
+    backgroundColor: '#3B82F6',
     borderRadius: 10,
     minWidth: 20,
     height: 20,

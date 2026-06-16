@@ -206,7 +206,7 @@ export default function NotificationDebugScreen() {
       case 'scheduled': return Colors.success;
       case 'triggered': return '#3B82F6';
       case 'cancelled': return Colors.textMuted;
-      case 'blocked_quiet': return '#6366F1';
+      case 'blocked_quiet': return '#3B82F6';
       case 'blocked_safety': return Colors.danger;
       default: return Colors.textMuted;
     }
@@ -626,7 +626,7 @@ export default function NotificationDebugScreen() {
               </View>
               <View style={styles.ruleDivider} />
               <View style={styles.ruleRow}>
-                <Moon size={14} color="#6366F1" />
+                <Moon size={14} color="#3B82F6" />
                 <Text style={styles.ruleText}>Quiet hours respected for all non-exempt categories</Text>
               </View>
               <View style={styles.ruleDivider} />
@@ -673,7 +673,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   headerCard: {
-    backgroundColor: '#E6F0FF',
+    backgroundColor: '#FFFFFF',
     borderRadius: 18,
     padding: 20,
     marginBottom: 24,

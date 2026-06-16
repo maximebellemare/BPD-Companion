@@ -129,6 +129,6 @@ class HttpApiClient implements IApiClient {
   }
 }
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_RORK_API_BASE_URL ?? 'https://api.placeholder.local';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? 'https://api.placeholder.local';
 
 export const apiClient: IApiClient = new HttpApiClient(API_BASE_URL);

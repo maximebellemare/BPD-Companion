@@ -162,7 +162,7 @@ function TriggerCard({ trigger, index, maxCount }: {
   maxCount: number;
 }) {
   const trendBadge = trigger.trend === 'increasing'
-    ? { label: '↑ Rising', color: '#E17055', bg: '#FDE8E3' }
+    ? { label: '↑ Rising', color: '#3B82F6', bg: '#FFFFFF' }
     : trigger.trend === 'decreasing'
       ? { label: '↓ Easing', color: Colors.success, bg: Colors.successLight }
       : null;
@@ -468,9 +468,9 @@ export default function EmotionalInsightsScreen() {
             {analysis.emotions.length > 0 && (
               <SectionCard
                 title="Emotional Patterns"
-                icon={<Heart size={16} color="#E17055" />}
-                iconColor="#E17055"
-                iconBg="#FDE8E3"
+                icon={<Heart size={16} color="#3B82F6" />}
+                iconColor="#3B82F6"
+                iconBg="#FFFFFF"
                 delay={200}
               >
                 <View style={styles.emotionGrid}>
@@ -491,9 +491,9 @@ export default function EmotionalInsightsScreen() {
             {analysis.urges.length > 0 && (
               <SectionCard
                 title="Urge Patterns"
-                icon={<AlertTriangle size={16} color="#FDCB6E" />}
-                iconColor="#FDCB6E"
-                iconBg="#FFF8E1"
+                icon={<AlertTriangle size={16} color="#0B1238" />}
+                iconColor="#0B1238"
+                iconBg="#FFFFFF"
                 delay={300}
               >
                 {analysis.urges.slice(0, 4).map((urge) => (
@@ -563,9 +563,9 @@ export default function EmotionalInsightsScreen() {
             {analysis.relationshipSignals.length > 0 && (
               <SectionCard
                 title="Relationship Stress Signals"
-                icon={<Users size={16} color="#8B5CF6" />}
-                iconColor="#8B5CF6"
-                iconBg="#EDE7F6"
+                icon={<Users size={16} color="#3B82F6" />}
+                iconColor="#3B82F6"
+                iconBg="#0B1238"
                 delay={500}
               >
                 {analysis.relationshipSignals.slice(0, 4).map((signal) => (
@@ -1004,7 +1004,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   relSignalBadge: {
-    backgroundColor: '#EDE7F6',
+    backgroundColor: '#0B1238',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
@@ -1012,7 +1012,7 @@ const styles = StyleSheet.create({
   relSignalCount: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: '#8B5CF6',
+    color: '#3B82F6',
   },
   relSignalMeta: {
     fontSize: 12,

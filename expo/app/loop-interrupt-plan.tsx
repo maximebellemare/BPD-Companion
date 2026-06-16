@@ -228,10 +228,10 @@ export default function LoopInterruptPlanScreen() {
               >
                 <Star
                   size={18}
-                  color={selectedPlan.isFavorite ? '#F59E0B' : Colors.textMuted}
-                  fill={selectedPlan.isFavorite ? '#F59E0B' : 'transparent'}
+                  color={selectedPlan.isFavorite ? '#67E8F9' : Colors.textMuted}
+                  fill={selectedPlan.isFavorite ? '#67E8F9' : 'transparent'}
                 />
-                <Text style={[styles.actionButtonLabel, selectedPlan.isFavorite && { color: '#F59E0B' }]}>
+                <Text style={[styles.actionButtonLabel, selectedPlan.isFavorite && { color: '#67E8F9' }]}>
                   {selectedPlan.isFavorite ? 'Favorited' : 'Favorite'}
                 </Text>
               </TouchableOpacity>
@@ -371,7 +371,7 @@ const PlanListItem = React.memo(function PlanListItem({
     <TouchableOpacity style={styles.planItem} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.planItemLeft}>
         {plan.isFavorite && (
-          <Star size={14} color="#F59E0B" fill="#F59E0B" style={{ marginRight: 6 }} />
+          <Star size={14} color="#67E8F9" fill="#67E8F9" style={{ marginRight: 6 }} />
         )}
         <View style={styles.planItemTextWrap}>
           <Text style={styles.planItemTrigger} numberOfLines={1}>{plan.triggerDescription}</Text>
@@ -562,8 +562,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.borderLight,
   },
   actionButtonActive: {
-    borderColor: '#F59E0B',
-    backgroundColor: '#FFFBEB',
+    borderColor: '#67E8F9',
+    backgroundColor: '#FFFFFF',
   },
   actionButtonHelpful: {
     borderColor: Colors.primary,

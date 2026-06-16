@@ -34,12 +34,12 @@ import { SimulationResult, SimulatedResponse, ResponseStyle, QuickAction } from 
 import { simulateResponses, EXAMPLE_SCENARIOS } from '@/services/simulator/emotionalSimulationService';
 
 const STYLE_ICONS: Record<ResponseStyle, React.ReactNode> = {
-  anxious: <AlertTriangle size={18} color="#E17055" />,
-  reassurance: <Users size={18} color="#E8A87C" />,
-  avoidance: <Eye size={18} color="#9B8EC4" />,
-  calm: <Heart size={18} color="#6B9080" />,
-  boundary: <Shield size={18} color="#D4956A" />,
-  secure: <Gem size={18} color="#5B8FB9" />,
+  anxious: <AlertTriangle size={18} color="#3B82F6" />,
+  reassurance: <Users size={18} color="#67E8F9" />,
+  avoidance: <Eye size={18} color="#3B82F6" />,
+  calm: <Heart size={18} color="#14B8A6" />,
+  boundary: <Shield size={18} color="#67E8F9" />,
+  secure: <Gem size={18} color="#3B82F6" />,
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -1076,7 +1076,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   healthierTextGreen: {
-    color: '#1a7a5c',
+    color: '#14B8A6',
   },
   summaryCard: {
     backgroundColor: Colors.warmGlow,

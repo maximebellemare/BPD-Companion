@@ -67,7 +67,7 @@ export default function ReflectionMirrorCard({
       <Animated.View style={[styles.glow, { opacity: glowOpacity }]} />
       <View style={styles.content}>
         <View style={styles.iconWrap}>
-          <Sparkles size={20} color="#6B9080" />
+          <Sparkles size={20} color="#14B8A6" />
         </View>
         <View style={styles.textWrap}>
           <Text style={styles.title}>Reflection Mirror</Text>
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#6B9080',
+    backgroundColor: '#14B8A6',
   },
   content: {
     flexDirection: 'row',
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: '#E8F0ED',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,

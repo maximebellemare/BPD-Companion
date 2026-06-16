@@ -85,35 +85,35 @@ export const SECURE_SUBTYPE_META: Record<SecureSubtype, {
   calm_boundary: {
     label: 'Calm Boundary',
     emoji: '🛡️',
-    color: '#5B8FB9',
+    color: '#3B82F6',
     description: 'Distance, dignity, or closure',
     bestFor: 'When you want to step back and protect your peace',
   },
   calm_clarity: {
     label: 'Calm Clarity',
     emoji: '🎯',
-    color: '#4A8B8D',
+    color: '#14B8A6',
     description: 'Express clearly without escalation',
     bestFor: 'When you want to be understood without fighting',
   },
   calm_repair: {
     label: 'Calm Repair',
     emoji: '🌱',
-    color: '#6BA38E',
+    color: '#14B8A6',
     description: 'Reconnect without collapsing',
     bestFor: 'When you want connection without panic or over-apologizing',
   },
   calm_exit: {
     label: 'Calm Exit',
     emoji: '🚪',
-    color: '#8E9BAA',
+    color: '#2E2A72',
     description: 'Step back instead of chase',
     bestFor: 'When chasing will only push them further away',
   },
   calm_ask: {
     label: 'Calm Ask',
     emoji: '💬',
-    color: '#9B8EC4',
+    color: '#3B82F6',
     description: 'Ask for clarity with self-respect',
     bestFor: 'When you need answers without desperation',
   },
@@ -125,10 +125,10 @@ export const SECURE_OUTCOME_OPTIONS: {
   emoji: string;
   color: string;
 }[] = [
-  { value: 'sent_helped', label: 'Sent — it helped', emoji: '💚', color: '#6BA38E' },
-  { value: 'sent_neutral', label: 'Sent — neutral', emoji: '😐', color: '#8E9BAA' },
-  { value: 'sent_regretted', label: 'Sent — regretted it', emoji: '💔', color: '#C47878' },
-  { value: 'not_sent_relieved', label: "Didn't send — relieved", emoji: '😌', color: '#7FA68E' },
-  { value: 'saved_for_later', label: 'Saved for later', emoji: '📂', color: '#9B8EC4' },
-  { value: 'switched_to_pause', label: 'Paused first', emoji: '⏳', color: '#C4956A' },
+  { value: 'sent_helped', label: 'Sent — it helped', emoji: '💚', color: '#14B8A6' },
+  { value: 'sent_neutral', label: 'Sent — neutral', emoji: '😐', color: '#2E2A72' },
+  { value: 'sent_regretted', label: 'Sent — regretted it', emoji: '💔', color: '#3B82F6' },
+  { value: 'not_sent_relieved', label: "Didn't send — relieved", emoji: '😌', color: '#14B8A6' },
+  { value: 'saved_for_later', label: 'Saved for later', emoji: '📂', color: '#3B82F6' },
+  { value: 'switched_to_pause', label: 'Paused first', emoji: '⏳', color: '#67E8F9' },
 ];

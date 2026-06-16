@@ -66,10 +66,10 @@ export interface TriggerSuggestion {
 export type MessageOutcome = 'sent' | 'not_sent' | 'helped' | 'made_worse';
 
 export const MESSAGE_OUTCOME_OPTIONS: { value: MessageOutcome; label: string; emoji: string; color: string }[] = [
-  { value: 'sent', label: 'Sent', emoji: '📤', color: '#6B9080' },
-  { value: 'not_sent', label: 'Did not send', emoji: '🚫', color: '#9B8EC4' },
-  { value: 'helped', label: 'Helped', emoji: '💚', color: '#00B894' },
-  { value: 'made_worse', label: 'Made things worse', emoji: '💔', color: '#E17055' },
+  { value: 'sent', label: 'Sent', emoji: '📤', color: '#14B8A6' },
+  { value: 'not_sent', label: 'Did not send', emoji: '🚫', color: '#3B82F6' },
+  { value: 'helped', label: 'Helped', emoji: '💚', color: '#14B8A6' },
+  { value: 'made_worse', label: 'Made things worse', emoji: '💔', color: '#3B82F6' },
 ];
 
 export const RELATIONSHIP_OPTIONS: { value: RelationshipContext; label: string; emoji: string }[] = [

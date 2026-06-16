@@ -76,9 +76,9 @@ export function getMovementTypeIcon(type: MovementType): string {
 
 export function getIntensityColor(intensity: MovementIntensity): string {
   switch (intensity) {
-    case 'gentle': return '#6B9080';
-    case 'moderate': return '#D4956A';
-    case 'vigorous': return '#E17055';
+    case 'gentle': return '#14B8A6';
+    case 'moderate': return '#67E8F9';
+    case 'vigorous': return '#3B82F6';
   }
 }
 

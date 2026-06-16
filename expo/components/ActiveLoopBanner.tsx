@@ -50,7 +50,7 @@ export default React.memo(function ActiveLoopBanner({ signals }: Props) {
 
   if (!topSignal || dismissed) return null;
 
-  const confidenceColor = topSignal.confidence >= 0.6 ? '#D4764E' : '#C8975A';
+  const confidenceColor = topSignal.confidence >= 0.6 ? '#3B82F6' : '#67E8F9';
 
   return (
     <Animated.View
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
   banner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF9F0',
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,

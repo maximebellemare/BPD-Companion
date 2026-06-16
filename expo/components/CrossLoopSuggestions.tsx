@@ -13,7 +13,7 @@ interface CrossLoopSuggestionsProps {
 
 const ICON_MAP: Record<string, React.ReactNode> = {
   'discuss_with_companion': <Sparkles size={14} color={Colors.primary} />,
-  'use_message_tool': <MessageSquare size={14} color="#5B8FB9" />,
+  'use_message_tool': <MessageSquare size={14} color="#3B82F6" />,
   'try_skill': <Compass size={14} color={Colors.brandSage} />,
   'write_reflection': <Leaf size={14} color={Colors.accent} />,
 };

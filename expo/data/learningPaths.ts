@@ -7,7 +7,7 @@ export const LEARNING_PATHS: LearningPath[] = [
     subtitle: 'Why emotions hit so hard',
     description: 'Learn why your emotional responses feel so intense, where they come from, and how to begin working with them instead of against them.',
     icon: 'heart',
-    color: '#D4956A',
+    color: '#67E8F9',
     steps: [
       { id: 'ped-1', lessonId: 'ubpd-2', title: 'Why Emotions Feel So Intense', description: 'Understanding emotional amplification', estimatedMinutes: 5 },
       { id: 'ped-2', lessonId: 'ubpd-3', title: 'The Emotional Sensitivity Model', description: 'Biology meets environment', estimatedMinutes: 6 },
@@ -25,7 +25,7 @@ export const LEARNING_PATHS: LearningPath[] = [
     subtitle: 'Why closeness feels dangerous',
     description: 'Explore why relationships activate deep emotional responses, how attachment patterns form, and how to build more secure connections.',
     icon: 'users',
-    color: '#7B8CDE',
+    color: '#3B82F6',
     steps: [
       { id: 'prt-1', lessonId: 'rel-1', title: 'The Push-Pull Pattern', description: 'Why you push away what you want most', estimatedMinutes: 6 },
       { id: 'prt-2', lessonId: 'rel-2', title: 'Attachment and BPD', description: 'How early bonds shape adult relationships', estimatedMinutes: 6 },
@@ -43,7 +43,7 @@ export const LEARNING_PATHS: LearningPath[] = [
     subtitle: 'Practical tools for steadier days',
     description: 'Build a practical toolkit of skills that help you manage intense emotions, reduce reactivity, and create more stability in daily life.',
     icon: 'anchor',
-    color: '#4A8B8D',
+    color: '#14B8A6',
     steps: [
       { id: 'prs-1', lessonId: 'er-3', title: 'Naming What You Feel', description: 'The foundation of regulation', estimatedMinutes: 4 },
       { id: 'prs-2', lessonId: 'er-4', title: 'Grounding When Everything Spins', description: 'Coming back to the present', estimatedMinutes: 4 },
@@ -61,7 +61,7 @@ export const LEARNING_PATHS: LearningPath[] = [
     subtitle: 'Expressing yourself without escalating',
     description: 'Learn to express your needs clearly, set boundaries, navigate conflict, and repair relationships after difficult moments.',
     icon: 'message-circle',
-    color: '#00B894',
+    color: '#14B8A6',
     steps: [
       { id: 'pcc-1', lessonId: 'comm-1', title: 'Why Texting Feels Dangerous', description: 'Communication anxiety and BPD', estimatedMinutes: 5 },
       { id: 'pcc-2', lessonId: 'comm-2', title: 'The DEAR MAN Skill', description: 'Asking for what you need', estimatedMinutes: 5 },
@@ -79,7 +79,7 @@ export const LEARNING_PATHS: LearningPath[] = [
     subtitle: 'Learning to be on your own side',
     description: 'Explore the roots of shame and self-criticism, learn to rebuild self-worth, and develop a kinder relationship with yourself.',
     icon: 'sprout',
-    color: '#A29BFE',
+    color: '#3B82F6',
     steps: [
       { id: 'psc-1', lessonId: 'is-1', title: 'When You Don\'t Know Who You Are', description: 'Identity and BPD', estimatedMinutes: 5 },
       { id: 'psc-2', lessonId: 'is-2', title: 'Shame vs Guilt', description: 'Understanding the difference', estimatedMinutes: 5 },

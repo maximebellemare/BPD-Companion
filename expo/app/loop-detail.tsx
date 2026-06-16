@@ -37,12 +37,12 @@ import { generateDefaultPlan } from '@/services/patterns/loopInterruptService';
 import { LoopNodeType, LoopPhase } from '@/types/emotionalLoop';
 
 const NODE_COLORS: Record<LoopNodeType, { bg: string; text: string; border: string; accent: string }> = {
-  trigger: { bg: '#FFF0ED', text: '#C94438', border: '#F5C4BE', accent: '#C94438' },
-  emotion: { bg: '#EDE9FE', text: '#7C3AED', border: '#C4B5FD', accent: '#7C3AED' },
-  urge: { bg: '#FFF7ED', text: '#C8762A', border: '#FCD9B6', accent: '#C8762A' },
-  behavior: { bg: '#E0F2FE', text: '#0369A1', border: '#93C5FD', accent: '#0369A1' },
-  outcome: { bg: Colors.successLight, text: '#047857', border: '#A7F3D0', accent: '#047857' },
-  coping: { bg: Colors.primaryLight, text: Colors.primaryDark, border: '#A7D5C3', accent: Colors.primaryDark },
+  trigger: { bg: '#FFFFFF', text: '#3B82F6', border: '#0B1238', accent: '#3B82F6' },
+  emotion: { bg: '#FFFFFF', text: '#3B82F6', border: '#2E2A72', accent: '#3B82F6' },
+  urge: { bg: '#FFFFFF', text: '#3B82F6', border: '#0B1238', accent: '#3B82F6' },
+  behavior: { bg: '#FFFFFF', text: '#3B82F6', border: '#3B82F6', accent: '#3B82F6' },
+  outcome: { bg: Colors.successLight, text: '#14B8A6', border: '#0B1238', accent: '#14B8A6' },
+  coping: { bg: Colors.primaryLight, text: Colors.primaryDark, border: '#14B8A6', accent: Colors.primaryDark },
 };
 
 const PHASE_ICONS: Record<string, typeof Timer> = {
@@ -191,9 +191,9 @@ export default function LoopDetailScreen() {
                 <Text style={styles.metaLabel}>{detail.distressLabel}</Text>
               </View>
               {detail.isRelationshipRelated && (
-                <View style={[styles.metaChip, { backgroundColor: '#FFF0ED' }]}>
-                  <Heart size={10} color="#C94438" />
-                  <Text style={[styles.metaLabel, { color: '#C94438' }]}>Relationship</Text>
+                <View style={[styles.metaChip, { backgroundColor: '#FFFFFF' }]}>
+                  <Heart size={10} color="#3B82F6" />
+                  <Text style={[styles.metaLabel, { color: '#3B82F6' }]}>Relationship</Text>
                 </View>
               )}
             </View>

@@ -1,3 +1,4 @@
+import "@/lib/productionConsole";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -6,10 +7,11 @@ import { Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AppProvider } from "@/providers/AppProvider";
 import { AuthProvider } from "@/providers/AuthProvider";
-import AuthGate from "@/components/AuthGate";
+import RouteGate from "@/components/RouteGate";
 import { AICompanionProvider } from "@/providers/AICompanionProvider";
 import { ProfileProvider } from "@/providers/ProfileProvider";
 import { SubscriptionProvider } from "@/providers/SubscriptionProvider";
+import { UserProfileProvider } from "@/providers/UserProfileProvider";
 import { EmotionalContextProvider } from "@/providers/EmotionalContextProvider";
 import { AnalyticsProvider } from "@/providers/AnalyticsProvider";
 import { NotificationEntryProvider } from "@/providers/NotificationEntryProvider";
@@ -22,7 +24,6 @@ import { JournalProvider } from "@/providers/JournalProvider";
 import { SpiralPreventionProvider } from "@/providers/SpiralPreventionProvider";
 import Colors from "@/constants/colors";
 import DeferredProviders from "@/components/DeferredProviders";
-import OnboardingGate from "@/components/OnboardingGate";
 import ErrorBoundary from "@/components/ErrorBoundary";
 const NotificationManagerLazy = Platform.OS !== 'web' 
   ? lazy(() => import("@/components/NotificationManager"))
@@ -631,6 +632,7 @@ export default function RootLayout() {
         <ErrorBoundary>
         <AuthProvider>
         <AppProvider>
+        <UserProfileProvider>
           <AnalyticsProvider>
             <OnboardingProvider>
               <SubscriptionProvider>
@@ -650,8 +652,7 @@ export default function RootLayout() {
                               <NotificationManagerLazy />
                             </Suspense>
                           )}
-                          <AuthGate />
-                          <OnboardingGate />
+                          <RouteGate />
                           <RootLayoutNav />
                         </NotificationEntryProvider>
                         </SpiralPreventionProvider>
@@ -667,6 +668,7 @@ export default function RootLayout() {
               </SubscriptionProvider>
             </OnboardingProvider>
           </AnalyticsProvider>
+        </UserProfileProvider>
         </AppProvider>
         </AuthProvider>
         </ErrorBoundary>

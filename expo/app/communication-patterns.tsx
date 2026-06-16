@@ -55,7 +55,7 @@ const TENDENCY_TREND_CONFIG = {
 };
 
 const INSIGHT_CATEGORY_COLORS: Record<string, string> = {
-  pattern: '#9B8EC4',
+  pattern: '#3B82F6',
   strength: Colors.success,
   suggestion: Colors.accent,
   learning: Colors.primary,

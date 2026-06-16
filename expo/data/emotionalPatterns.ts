@@ -6,7 +6,7 @@ export const EMOTIONAL_PATTERNS: EmotionalPattern[] = [
     title: 'Rejection Sensitivity',
     subtitle: 'When small signals feel like total rejection',
     icon: 'shield-alert',
-    color: '#E17055',
+    color: '#3B82F6',
     description: 'Rejection sensitivity means your nervous system responds to possible rejection the way most people respond to actual danger. A delayed text, a shift in tone, or a cancelled plan can trigger feelings of abandonment that feel absolutely real — even when the other person had no intention of rejecting you.',
     howItWorks: 'Your brain has learned from early experiences that disconnection is dangerous. So it scans constantly for signs of rejection and sounds the alarm at the slightest hint. This alarm is so fast it bypasses your rational mind. You feel the rejection before you can evaluate whether it is real.',
     commonTriggers: [
@@ -48,7 +48,7 @@ export const EMOTIONAL_PATTERNS: EmotionalPattern[] = [
     title: 'Emotional Escalation',
     subtitle: 'When feelings spiral from 0 to 10',
     icon: 'trending-up',
-    color: '#D4956A',
+    color: '#67E8F9',
     description: 'Emotional escalation is when a triggering event causes emotions to rapidly intensify beyond what the situation seems to call for. A small frustration becomes rage. A moment of sadness becomes despair. This happens because your emotional system reacts faster than your cognitive system can process.',
     howItWorks: 'Your amygdala fires before your prefrontal cortex has time to evaluate the situation. Each emotional wave builds on the previous one. One thought leads to another, each more intense, creating a snowball effect. Without intervention, the emotion takes over completely.',
     commonTriggers: [
@@ -89,7 +89,7 @@ export const EMOTIONAL_PATTERNS: EmotionalPattern[] = [
     title: 'Shame Spirals',
     subtitle: 'When one mistake makes you feel fundamentally broken',
     icon: 'arrow-down-circle',
-    color: '#A29BFE',
+    color: '#3B82F6',
     description: 'A shame spiral is when a single event — a mistake, a conflict, an impulsive action — triggers a cascade of self-blame that goes from "I did something bad" to "I am bad." Unlike guilt, which says "I made a mistake," shame says "I am the mistake."',
     howItWorks: 'Shame often starts with a real event but quickly becomes about your identity. Your mind searches for evidence that confirms the worst version of yourself. Each memory it finds adds fuel. The spiral deepens until the original event is dwarfed by the weight of self-hatred.',
     commonTriggers: [
@@ -131,7 +131,7 @@ export const EMOTIONAL_PATTERNS: EmotionalPattern[] = [
     title: 'Rumination Loops',
     subtitle: 'When your mind won\'t stop replaying',
     icon: 'repeat',
-    color: '#F0A500',
+    color: '#67E8F9',
     description: 'Rumination is when your mind gets stuck replaying a conversation, event, or worry on an endless loop. It feels like you are trying to solve something, but you are actually just re-experiencing the pain. Rumination intensifies emotions instead of resolving them.',
     howItWorks: 'Your brain believes that if you think about it enough, you will find an answer or feel better. But rumination is not problem-solving — it is re-living. Each replay reactivates the same emotional response, keeping the wound fresh and preventing natural emotional processing.',
     commonTriggers: [
@@ -171,7 +171,7 @@ export const EMOTIONAL_PATTERNS: EmotionalPattern[] = [
     title: 'Relationship Push-Pull',
     subtitle: 'Wanting closeness but fearing it',
     icon: 'git-pull-request',
-    color: '#7B8CDE',
+    color: '#3B82F6',
     description: 'The push-pull pattern is when you desperately want closeness but feel terrified when you get it. You pull someone close, then push them away when vulnerability feels too dangerous. This creates a cycle of intensity and withdrawal that confuses both you and the other person.',
     howItWorks: 'When someone gets close, your attachment system activates fear of engulfment or loss of identity. When they pull back (often because you pushed), your abandonment system activates. You cycle between "I need you" and "stay away from me" — not because you are confused about what you want, but because both states feel genuinely threatening.',
     commonTriggers: [

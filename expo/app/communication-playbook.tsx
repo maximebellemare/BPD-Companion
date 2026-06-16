@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   heroBanner: {
-    backgroundColor: Colors.brandNavy,
+    backgroundColor: Colors.primary,
     borderRadius: 20,
     padding: 22,
     marginBottom: 24,

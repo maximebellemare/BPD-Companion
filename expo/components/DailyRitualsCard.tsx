@@ -92,7 +92,7 @@ export default function DailyRitualsCard({ completions, onPress }: DailyRitualsC
 
       {streak.currentStreak > 0 && (
         <View style={styles.streakRow}>
-          <Flame size={14} color="#E17055" />
+          <Flame size={14} color="#3B82F6" />
           <Text style={styles.streakText}>{streak.currentStreak} day streak</Text>
         </View>
       )}
@@ -112,12 +112,12 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   cardActive: {
-    backgroundColor: '#FFF8F3',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#F5E6D8',
+    borderColor: '#0B1238',
   },
   cardComplete: {
-    backgroundColor: '#F7FBF9',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: Colors.primaryLight,
   },
@@ -155,12 +155,12 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   ritualPillDone: {
-    backgroundColor: '#E3EDE8',
+    backgroundColor: '#0B1238',
   },
   ritualPillCurrent: {
-    backgroundColor: '#FFF0E6',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#E8A87C',
+    borderColor: '#67E8F9',
   },
   ritualPillText: {
     fontSize: 12,
@@ -176,6 +176,6 @@ const styles = StyleSheet.create({
   streakText: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: '#E17055',
+    color: '#3B82F6',
   },
 });

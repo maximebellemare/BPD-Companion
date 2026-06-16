@@ -285,7 +285,7 @@ export default function JournalScreen() {
             <TouchableOpacity
               style={[
                 styles.dailyCard,
-                { backgroundColor: isMorningTime && !todayReflections.morning ? '#FFF8EE' : '#EEEDF7' },
+                { backgroundColor: isMorningTime && !todayReflections.morning ? '#FFFFFF' : '#FFFFFF' },
               ]}
               onPress={() => {
                 void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -297,12 +297,12 @@ export default function JournalScreen() {
               <View style={styles.dailyCardInner}>
                 <View style={[
                   styles.dailyIconCircle,
-                  { backgroundColor: isMorningTime && !todayReflections.morning ? '#FFEFC8' : '#D8D5ED' },
+                  { backgroundColor: isMorningTime && !todayReflections.morning ? '#FFFFFF' : '#0B1238' },
                 ]}>
                   {isMorningTime && !todayReflections.morning ? (
-                    <Sun size={22} color="#D49A20" />
+                    <Sun size={22} color="#67E8F9" />
                   ) : (
-                    <Moon size={22} color="#6B64A0" />
+                    <Moon size={22} color="#2E2A72" />
                   )}
                 </View>
                 <View style={{ flex: 1 }}>
@@ -319,7 +319,7 @@ export default function JournalScreen() {
               </View>
               {reflectionStreak.currentStreak > 0 && (
                 <View style={styles.streakRow}>
-                  <Flame size={13} color="#E8A838" />
+                  <Flame size={13} color="#67E8F9" />
                   <Text style={styles.streakText}>
                     {reflectionStreak.currentStreak} day streak
                   </Text>
@@ -331,7 +331,7 @@ export default function JournalScreen() {
               <View style={styles.dailyCompletedCard}>
                 <View style={styles.dailyCompletedInner}>
                   <View style={styles.dailyCompletedIcon}>
-                    <Flame size={16} color="#E8A838" />
+                    <Flame size={16} color="#67E8F9" />
                   </View>
                   <Text style={styles.dailyCompletedText}>
                     Today's reflections complete
@@ -410,7 +410,7 @@ export default function JournalScreen() {
               testID="cross-loop-message-banner"
             >
               <View style={styles.crossLoopIconWrap}>
-                <MessageSquare size={16} color="#5B8FB9" />
+                <MessageSquare size={16} color="#3B82F6" />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.crossLoopText}>{crossLoopContext.journalToMessageSuggestion}</Text>
@@ -672,7 +672,7 @@ const styles = StyleSheet.create({
   streakText: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: '#C08020',
+    color: '#3B82F6',
   },
   dailyCompletedCard: {
     backgroundColor: Colors.successLight,
@@ -689,7 +689,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#FFF5E6',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1244,7 +1244,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: '#F0F6FA',
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 14,
     marginBottom: 14,
@@ -1255,7 +1255,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 12,
-    backgroundColor: '#E3EFF7',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },

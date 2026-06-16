@@ -694,7 +694,7 @@ export default function ChatScreen() {
               activeOpacity={0.8}
               testID="ai-limit-banner"
             >
-              <Crown size={14} color="#D4956A" />
+              <Crown size={14} color="#67E8F9" />
               <Text style={styles.aiLimitText}>Daily AI limit reached. Upgrade for unlimited conversations.</Text>
             </TouchableOpacity>
           )}
@@ -1185,20 +1185,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     gap: 8,
-    backgroundColor: '#FFF8F2',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     paddingVertical: 10,
     paddingHorizontal: 14,
     marginHorizontal: 14,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#F5E0CC',
+    borderColor: '#0B1238',
   },
   aiLimitText: {
     flex: 1,
     fontSize: 12,
     fontWeight: '500' as const,
-    color: '#A0785A',
+    color: '#3B82F6',
     lineHeight: 17,
   },
   aiRemainingBanner: {

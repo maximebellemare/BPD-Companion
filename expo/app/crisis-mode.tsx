@@ -357,7 +357,7 @@ export default function CrisisModeScreen() {
 
         <View style={styles.groundingCard}>
           <View style={styles.groundingIconWrap}>
-            <IconComp size={28} color="#5B8FB9" />
+            <IconComp size={28} color="#3B82F6" />
           </View>
           <Text style={styles.groundingInstruction}>
             {currentPrompt.instruction}
@@ -527,7 +527,7 @@ export default function CrisisModeScreen() {
         onPress={() => handleCallCrisis('tel:988')}
         activeOpacity={0.7}
       >
-        <View style={[styles.contactCardIcon, { backgroundColor: '#FDE8E3' }]}>
+        <View style={[styles.contactCardIcon, { backgroundColor: '#FFFFFF' }]}>
           <Phone size={22} color={Colors.danger} />
         </View>
         <View style={styles.contactCardText}>
@@ -541,8 +541,8 @@ export default function CrisisModeScreen() {
         onPress={() => handleCallCrisis('sms:741741')}
         activeOpacity={0.7}
       >
-        <View style={[styles.contactCardIcon, { backgroundColor: '#E3EFF7' }]}>
-          <MessageCircle size={22} color="#5B8FB9" />
+        <View style={[styles.contactCardIcon, { backgroundColor: '#FFFFFF' }]}>
+          <MessageCircle size={22} color="#3B82F6" />
         </View>
         <View style={styles.contactCardText}>
           <Text style={styles.contactCardLabel}>Crisis Text Line</Text>
@@ -649,7 +649,7 @@ export default function CrisisModeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F0F4F8',
+    backgroundColor: '#FFFFFF',
   },
   inner: {
     flex: 1,
@@ -712,7 +712,7 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   phaseChipActive: {
-    backgroundColor: '#3D5A80',
+    backgroundColor: '#2E2A72',
   },
   phaseChipText: {
     fontSize: 13,
@@ -745,16 +745,16 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     borderRadius: 100,
-    backgroundColor: '#98C1D9',
+    backgroundColor: '#2E2A72',
   },
   breatheCircle: {
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: '#3D5A80',
+    backgroundColor: '#2E2A72',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#3D5A80',
+    shadowColor: '#2E2A72',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 20,
@@ -763,7 +763,7 @@ const styles = StyleSheet.create({
   breatheLabel: {
     fontSize: 22,
     fontWeight: '600' as const,
-    color: '#3D5A80',
+    color: '#2E2A72',
     marginBottom: 4,
   },
   breatheTimer: {
@@ -781,7 +781,7 @@ const styles = StyleSheet.create({
   nextPhaseButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#3D5A80',
+    backgroundColor: '#2E2A72',
     paddingHorizontal: 24,
     paddingVertical: 14,
     borderRadius: 24,
@@ -814,13 +814,13 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#D0D8E0',
+    backgroundColor: '#0B1238',
   },
   groundingDotDone: {
     backgroundColor: Colors.success,
   },
   groundingDotCurrent: {
-    backgroundColor: '#5B8FB9',
+    backgroundColor: '#3B82F6',
   },
   groundingCard: {
     backgroundColor: Colors.white,
@@ -839,7 +839,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 20,
-    backgroundColor: '#E3EFF7',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -861,7 +861,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   groundingDoneButton: {
-    backgroundColor: '#5B8FB9',
+    backgroundColor: '#3B82F6',
     paddingHorizontal: 32,
     paddingVertical: 12,
     borderRadius: 20,
@@ -1048,7 +1048,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 22,
-    backgroundColor: '#E3EFF7',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -1103,7 +1103,7 @@ const styles = StyleSheet.create({
   },
   contactReminder: {
     marginTop: 24,
-    backgroundColor: '#F0F4F8',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 20,
     width: '100%',
@@ -1118,9 +1118,9 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: 20,
     paddingTop: 12,
-    backgroundColor: '#F0F4F8',
+    backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: '#E0E6EC',
+    borderTopColor: '#0B1238',
   },
   footerNav: {
     flexDirection: 'row',

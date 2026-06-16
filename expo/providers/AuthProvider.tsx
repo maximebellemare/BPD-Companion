@@ -3,7 +3,7 @@ import createContextHook from '@nkzw/create-context-hook';
 import { useQueryClient } from '@tanstack/react-query';
 import { AuthSession, AuthUser, AuthCredentials, AuthSignUpInput } from '@/types/auth';
 import { authRepository } from '@/services/repositories';
-import { supabase } from '@/services/supabase/supabaseClient';
+import { supabase } from '@/lib/supabase/client';
 import { storageService } from '@/services/storage/storageService';
 
 type AuthMode = 'authenticated' | 'guest' | 'unauthenticated';
@@ -24,7 +24,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         const current = await authRepository.getSession();
         if (!mounted) return;
         if (current) {
-          console.log('[AuthProvider] Restored session for', current.user.email);
+          console.log('[AuthProvider] Restored session');
           storageService.setUser(current.user.id);
           setSession(current);
           setUser(current.user);
@@ -134,12 +134,12 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     await queryClient.invalidateQueries();
   }, [queryClient]);
 
+  const resetPassword = useCallback(async (email: string) => {
+    await authRepository.resetPassword(email);
+  }, []);
+
   const continueAsGuest = useCallback(() => {
-    console.log('[AuthProvider] Continuing as guest');
-    storageService.setUser(null);
-    setIsGuest(true);
-    setSession(null);
-    setUser(null);
+    throw new Error('Guest mode is disabled. Please create an account or sign in.');
   }, []);
 
   const mode: AuthMode = useMemo(() => {
@@ -160,8 +160,9 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       signIn,
       signUp,
       signOut,
+      resetPassword,
       continueAsGuest,
     }),
-    [session, user, isGuest, isLoading, isInitialized, mode, signIn, signUp, signOut, continueAsGuest],
+    [session, user, isGuest, isLoading, isInitialized, mode, signIn, signUp, signOut, resetPassword, continueAsGuest],
   );
 });

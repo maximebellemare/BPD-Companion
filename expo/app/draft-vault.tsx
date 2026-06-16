@@ -37,7 +37,7 @@ function formatDate(ts: number): string {
 }
 
 const REASON_LABELS: Record<string, { label: string; emoji: string; color: string }> = {
-  saved_for_later: { label: 'Saved for later', emoji: '📌', color: '#9B8EC4' },
+  saved_for_later: { label: 'Saved for later', emoji: '📌', color: '#3B82F6' },
   chose_not_to_send: { label: 'Chose not to send', emoji: '🛑', color: Colors.danger },
   paused: { label: 'Paused', emoji: '⏳', color: Colors.accent },
   vault_review: { label: 'Under review', emoji: '👁️', color: Colors.primary },

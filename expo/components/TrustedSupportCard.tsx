@@ -214,11 +214,11 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   crisisContainer: {
-    backgroundColor: '#FFF8F5',
+    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 18,
     borderWidth: 1.5,
-    borderColor: '#FADDD3',
+    borderColor: '#0B1238',
   },
   emptyCard: {
     flexDirection: 'row',
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerIconHome: {
-    backgroundColor: '#E6F0FF',
+    backgroundColor: '#FFFFFF',
   },
   headerIconCrisis: {
     backgroundColor: Colors.dangerLight,
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.2,
   },
   headerTitleCrisis: {
-    color: '#C0392B',
+    color: '#3B82F6',
   },
   headerSubtitle: {
     fontSize: 12,
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.borderLight,
   },
   contactRowCrisis: {
-    borderBottomColor: '#F5DDD5',
+    borderBottomColor: '#0B1238',
   },
   contactAvatar: {
     width: 38,
@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primaryLight,
   },
   textAction: {
-    backgroundColor: '#E6F0FF',
+    backgroundColor: '#FFFFFF',
   },
   moreText: {
     fontSize: 12,

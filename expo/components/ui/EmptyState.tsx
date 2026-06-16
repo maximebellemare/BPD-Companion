@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 24,
-    backgroundColor: Colors.brandTealSoft,
+    backgroundColor: Colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 20,
@@ -113,11 +113,11 @@ const styles = StyleSheet.create({
     marginBottom: 28,
   },
   button: {
-    backgroundColor: Colors.brandTeal,
+    backgroundColor: Colors.primary,
     borderRadius: 16,
     paddingVertical: 14,
     paddingHorizontal: 28,
-    shadowColor: Colors.primaryDark,
+    shadowColor: Colors.logoBlue,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.12,
     shadowRadius: 8,
@@ -136,6 +136,6 @@ const styles = StyleSheet.create({
   secondaryText: {
     fontSize: 14,
     fontWeight: '500' as const,
-    color: Colors.brandTeal,
+    color: Colors.brandCyan,
   },
 });

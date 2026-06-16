@@ -352,7 +352,7 @@ export default function DBTCoachScreen() {
             {bestSkills.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <Award size={16} color="#E8A838" />
+                  <Award size={16} color="#67E8F9" />
                   <Text style={styles.sectionTitle}>Best Skills for You</Text>
                 </View>
                 {bestSkills.slice(0, 3).map(best => {
@@ -381,7 +381,7 @@ export default function DBTCoachScreen() {
             {progress.favoriteSkills.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <Star size={16} color="#E8A838" />
+                  <Star size={16} color="#67E8F9" />
                   <Text style={styles.sectionTitle}>Favorites</Text>
                 </View>
                 {progress.favoriteSkills.map(skillId => {

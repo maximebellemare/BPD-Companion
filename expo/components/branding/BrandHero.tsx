@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   heroBackground: {
-    backgroundColor: Colors.brandNavy,
+    backgroundColor: Colors.primary,
     borderRadius: 26,
     paddingVertical: 30,
     paddingHorizontal: 24,
@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
   brandName: {
     fontSize: 26,
     fontWeight: '700' as const,
-    color: '#F0EDE9',
+    color: '#FFFFFF',
     letterSpacing: -0.6,
     textAlign: 'center' as const,
   },

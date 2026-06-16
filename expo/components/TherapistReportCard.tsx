@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   metaChipAccent: {
-    backgroundColor: '#F3E8FF',
+    backgroundColor: '#FFFFFF',
   },
   metaChipText: {
     fontSize: 12,
@@ -201,6 +201,6 @@ const styles = StyleSheet.create({
     color: Colors.primaryDark,
   },
   metaChipTextAccent: {
-    color: '#8B5CF6',
+    color: '#3B82F6',
   },
 });

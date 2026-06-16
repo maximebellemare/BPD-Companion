@@ -61,7 +61,7 @@ export default React.memo(function RelationshipHubCard() {
       >
         <View style={styles.headerRow}>
           <View style={styles.iconCircle}>
-            <HeartHandshake size={22} color="#E84393" />
+            <HeartHandshake size={22} color="#3B82F6" />
           </View>
           <View style={styles.headerContent}>
             <View style={styles.titleRow}>
@@ -77,7 +77,7 @@ export default React.memo(function RelationshipHubCard() {
                 : 'Track patterns and get support in relationships'}
             </Text>
           </View>
-          <ChevronRight size={16} color="#E84393" style={{ opacity: 0.6 }} />
+          <ChevronRight size={16} color="#3B82F6" style={{ opacity: 0.6 }} />
         </View>
 
         <View style={styles.actionsRow}>
@@ -97,7 +97,7 @@ export default React.memo(function RelationshipHubCard() {
             onPress={handleCopilot}
             activeOpacity={0.7}
           >
-            <Sparkles size={13} color="#E84393" />
+            <Sparkles size={13} color="#3B82F6" />
             <Text style={[styles.actionChipText, styles.actionChipTextAccent]}>Copilot</Text>
           </TouchableOpacity>
 
@@ -125,11 +125,11 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   card: {
-    backgroundColor: '#FFF5F9',
+    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 18,
     borderWidth: 1,
-    borderColor: '#F8D7E8',
+    borderColor: '#0B1238',
   },
   headerRow: {
     flexDirection: 'row',
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 16,
-    backgroundColor: '#FFEDF5',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -156,14 +156,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 15,
     fontWeight: '700' as const,
-    color: '#C23876',
+    color: '#3B82F6',
     letterSpacing: -0.1,
   },
   proBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: '#E84393',
+    backgroundColor: '#3B82F6',
     borderRadius: 6,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     marginTop: 14,
     paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: '#F8D7E8',
+    borderTopColor: '#0B1238',
   },
   actionChip: {
     flex: 1,
@@ -201,8 +201,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.borderLight,
   },
   actionChipAccent: {
-    backgroundColor: '#FFEDF5',
-    borderColor: '#F8D7E8',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#0B1238',
   },
   actionChipText: {
     fontSize: 12,
@@ -210,6 +210,6 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
   actionChipTextAccent: {
-    color: '#E84393',
+    color: '#3B82F6',
   },
 });

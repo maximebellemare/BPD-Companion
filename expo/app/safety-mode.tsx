@@ -31,8 +31,8 @@ const CRISIS_RESOURCES = [
     action: 'sms:741741',
     desc: 'Text HOME to 741741',
     icon: MessageCircle,
-    color: '#5B8FB9',
-    bg: '#E3EFF7',
+    color: '#3B82F6',
+    bg: '#FFFFFF',
   },
 ];
 

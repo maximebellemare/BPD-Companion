@@ -63,20 +63,20 @@ const SITUATION_ICON_MAP: Record<string, React.ComponentType<{ size: number; col
 };
 
 const EMOTION_COLORS: Record<string, { bg: string; accent: string }> = {
-  anger: { bg: '#F5E0E0', accent: '#C47878' },
-  shame: { bg: '#F5E8DA', accent: '#C4956A' },
-  fear: { bg: '#E3EFF7', accent: '#5B8FB9' },
-  sadness: { bg: '#E8ECF0', accent: '#7A8BA0' },
-  anxiety: { bg: '#E3EFF7', accent: '#5B8FB9' },
-  loneliness: { bg: '#E8ECF0', accent: '#7A8BA0' },
-  hurt: { bg: '#F5E0E0', accent: '#C47878' },
-  rejection: { bg: '#F0ECF7', accent: '#9B8EC4' },
-  overwhelm: { bg: '#FDE8E3', accent: '#E17055' },
-  confusion: { bg: '#F0ECF7', accent: '#9B8EC4' },
-  relief: { bg: '#E3F0EA', accent: '#6BA38E' },
-  hope: { bg: '#E8F4F4', accent: '#4A8B8D' },
-  jealousy: { bg: '#FDE8E3', accent: '#E17055' },
-  guilt: { bg: '#F5E8DA', accent: '#C4956A' },
+  anger: { bg: 'rgba(59, 130, 246, 0.18)', accent: '#3B82F6' },
+  shame: { bg: 'rgba(103, 232, 249, 0.18)', accent: '#67E8F9' },
+  fear: { bg: '#FFFFFF', accent: '#3B82F6' },
+  sadness: { bg: '#FFFFFF', accent: '#2E2A72' },
+  anxiety: { bg: '#FFFFFF', accent: '#3B82F6' },
+  loneliness: { bg: '#FFFFFF', accent: '#2E2A72' },
+  hurt: { bg: 'rgba(59, 130, 246, 0.18)', accent: '#3B82F6' },
+  rejection: { bg: 'rgba(59, 130, 246, 0.18)', accent: '#3B82F6' },
+  overwhelm: { bg: '#FFFFFF', accent: '#3B82F6' },
+  confusion: { bg: 'rgba(59, 130, 246, 0.18)', accent: '#3B82F6' },
+  relief: { bg: '#FFFFFF', accent: '#14B8A6' },
+  hope: { bg: 'rgba(20, 184, 166, 0.18)', accent: '#14B8A6' },
+  jealousy: { bg: '#FFFFFF', accent: '#3B82F6' },
+  guilt: { bg: 'rgba(103, 232, 249, 0.18)', accent: '#67E8F9' },
 };
 
 function getEmotionColor(emotion: string): { bg: string; accent: string } {
@@ -582,7 +582,7 @@ function InsightsTab({
   }
 
   const insightColors: Record<string, { bg: string; accent: string }> = {
-    pattern: { bg: '#F0ECF7', accent: Colors.brandLilac },
+    pattern: { bg: 'rgba(59, 130, 246, 0.18)', accent: Colors.brandLilac },
     effectiveness: { bg: Colors.successLight, accent: Colors.success },
     milestone: { bg: Colors.accentLight, accent: Colors.accent },
     suggestion: { bg: Colors.brandTealSoft, accent: Colors.brandTeal },
@@ -769,8 +769,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.borderLight,
   },
   tabBtnActive: {
-    backgroundColor: Colors.brandNavy,
-    borderColor: Colors.brandNavy,
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
   tabLabel: {
     fontSize: 13,
@@ -846,7 +846,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   emptyBtn: {
-    backgroundColor: Colors.brandNavy,
+    backgroundColor: Colors.primary,
     borderRadius: 14,
     paddingHorizontal: 32,
     paddingVertical: 15,
@@ -902,7 +902,7 @@ const styles = StyleSheet.create({
     fontWeight: '500' as const,
   },
   topToolCard: {
-    backgroundColor: Colors.brandNavy,
+    backgroundColor: Colors.primary,
     borderRadius: 18,
     padding: 20,
     marginBottom: 22,
@@ -959,7 +959,7 @@ const styles = StyleSheet.create({
   },
   topToolBarFill: {
     height: 5,
-    backgroundColor: '#6BE5A0',
+    backgroundColor: '#14B8A6',
     borderRadius: 3,
   },
   section: {

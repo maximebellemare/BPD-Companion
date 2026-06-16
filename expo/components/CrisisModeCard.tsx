@@ -70,9 +70,9 @@ export default React.memo(function CrisisModeCard({ detection }: Props) {
   if (!shouldActivate || signals.length === 0) return null;
 
   const isUrgent = severity >= 7;
-  const bgColor = isUrgent ? '#FFF0EE' : '#FFF5F0';
-  const borderColor = isUrgent ? '#FDCFCA' : '#F5DDD4';
-  const accentColor = isUrgent ? '#D63031' : '#E17055';
+  const bgColor = isUrgent ? '#FFFFFF' : '#FFFFFF';
+  const borderColor = isUrgent ? '#0B1238' : '#0B1238';
+  const accentColor = isUrgent ? '#3B82F6' : '#3B82F6';
 
   return (
     <Animated.View

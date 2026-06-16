@@ -233,7 +233,7 @@ const cardStyles = StyleSheet.create({
   },
   recommendedContainer: {
     borderColor: Colors.success + '30',
-    backgroundColor: '#F0FBF7',
+    backgroundColor: '#FFFFFF',
   },
   badge: {
     flexDirection: 'row',
@@ -1222,7 +1222,7 @@ const styles = StyleSheet.create({
   },
   toggleRowActive: {
     borderColor: Colors.primary + '40',
-    backgroundColor: '#F5FAF7',
+    backgroundColor: '#FFFFFF',
   },
   toggleCheckbox: {
     width: 24,

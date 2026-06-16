@@ -38,20 +38,20 @@ import { useLifeInsights } from '@/hooks/useLifeInsights';
 import { LifeInsight, WeeklySummary } from '@/types/lifeInsight';
 
 const CATEGORY_CONFIG: Record<string, { icon: React.ReactNode; color: string; bgColor: string }> = {
-  trigger: { icon: <Zap size={16} color="#D4956A" />, color: '#D4956A', bgColor: '#F5E6D8' },
-  relationship: { icon: <Heart size={16} color="#E17055" />, color: '#E17055', bgColor: '#FDE8E3' },
-  coping: { icon: <Shield size={16} color="#6B9080" />, color: '#6B9080', bgColor: '#E3EDE8' },
-  distress: { icon: <AlertTriangle size={16} color="#E17055" />, color: '#E17055', bgColor: '#FDE8E3' },
-  growth: { icon: <Leaf size={16} color="#00B894" />, color: '#00B894', bgColor: '#E0F5EF' },
-  communication: { icon: <MessageCircle size={16} color="#3B82F6" />, color: '#3B82F6', bgColor: '#EBF2FF' },
-  time_pattern: { icon: <Clock size={16} color="#8B5CF6" />, color: '#8B5CF6', bgColor: '#EDE7F6' },
-  emotional_loop: { icon: <Repeat size={16} color="#D4956A" />, color: '#D4956A', bgColor: '#F5E6D8' },
+  trigger: { icon: <Zap size={16} color="#67E8F9" />, color: '#67E8F9', bgColor: '#0B1238' },
+  relationship: { icon: <Heart size={16} color="#3B82F6" />, color: '#3B82F6', bgColor: '#FFFFFF' },
+  coping: { icon: <Shield size={16} color="#14B8A6" />, color: '#14B8A6', bgColor: '#0B1238' },
+  distress: { icon: <AlertTriangle size={16} color="#3B82F6" />, color: '#3B82F6', bgColor: '#FFFFFF' },
+  growth: { icon: <Leaf size={16} color="#14B8A6" />, color: '#14B8A6', bgColor: '#FFFFFF' },
+  communication: { icon: <MessageCircle size={16} color="#3B82F6" />, color: '#3B82F6', bgColor: '#FFFFFF' },
+  time_pattern: { icon: <Clock size={16} color="#3B82F6" />, color: '#3B82F6', bgColor: '#0B1238' },
+  emotional_loop: { icon: <Repeat size={16} color="#67E8F9" />, color: '#67E8F9', bgColor: '#0B1238' },
 };
 
 const SEVERITY_ACCENT: Record<string, string> = {
-  gentle: '#00B894',
-  notable: '#D4956A',
-  important: '#E17055',
+  gentle: '#14B8A6',
+  notable: '#67E8F9',
+  important: '#3B82F6',
 };
 
 function InsightCard({ insight, index, onPress }: { insight: LifeInsight; index: number; onPress: () => void }) {
@@ -395,7 +395,7 @@ export default function LifeInsightsScreen() {
         activeOpacity={0.7}
       >
         <View style={styles.correlationBannerIcon}>
-          <Link2 size={16} color="#8B5CF6" />
+          <Link2 size={16} color="#3B82F6" />
         </View>
         <Text style={styles.correlationBannerText}>Correlation Insights</Text>
         <ChevronRight size={14} color={Colors.textMuted} />
@@ -1002,7 +1002,7 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 9,
-    backgroundColor: '#EDE7F6',
+    backgroundColor: '#0B1238',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },

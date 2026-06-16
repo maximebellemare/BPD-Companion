@@ -55,7 +55,7 @@ export default function MentalizationScreen() {
         >
           <View style={styles.introBanner}>
             <View style={styles.introIcon}>
-              <Search size={24} color="#9B8EC4" />
+              <Search size={24} color="#3B82F6" />
             </View>
             <Text style={styles.introTitle}>MBT-Inspired Perspective Taking</Text>
             <Text style={styles.introDesc}>
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   introBanner: {
-    backgroundColor: '#F0ECF7',
+    backgroundColor: 'rgba(59, 130, 246, 0.18)',
     borderRadius: 20,
     padding: 22,
     alignItems: 'center',
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 16,
-    backgroundColor: '#E4DCF0',
+    backgroundColor: '#0B1238',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 14,
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
   introTitle: {
     fontSize: 17,
     fontWeight: '700' as const,
-    color: '#6B5CA5',
+    color: '#2E2A72',
     textAlign: 'center' as const,
     marginBottom: 8,
   },
@@ -220,14 +220,14 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   tag: {
-    backgroundColor: '#F0ECF7',
+    backgroundColor: 'rgba(59, 130, 246, 0.18)',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
   },
   tagText: {
     fontSize: 11,
-    color: '#9B8EC4',
+    color: '#3B82F6',
     fontWeight: '500' as const,
   },
 });

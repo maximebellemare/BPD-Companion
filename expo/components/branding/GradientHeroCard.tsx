@@ -20,7 +20,7 @@ export default function GradientHeroCard({
   variant = 'teal',
 }: GradientHeroCardProps) {
   const bgColor = variant === 'navy' ? Colors.brandNavy
-    : variant === 'warm' ? '#3D2E1F'
+    : variant === 'warm' ? '#2E2A72'
     : Colors.brandTeal;
 
   const accentColor = variant === 'navy' ? Colors.brandTeal
@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
   },
   title: {
     ...BrandTypography.subtitle,
-    color: '#F0EDE9',
+    color: '#FFFFFF',
     marginBottom: 3,
   },
   subtitle: {

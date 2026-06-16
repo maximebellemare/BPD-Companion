@@ -34,9 +34,9 @@ export default function EmotionalProfileCard() {
       : Minus;
 
   const trendColor = model.overallDistressTrend === 'improving'
-    ? '#4A8B60'
+    ? '#14B8A6'
     : model.overallDistressTrend === 'worsening'
-      ? '#A85050'
+      ? '#3B82F6'
       : Colors.textMuted;
 
   const trendLabel = model.overallDistressTrend === 'improving'
@@ -57,7 +57,7 @@ export default function EmotionalProfileCard() {
       >
         <View style={styles.header}>
           <View style={styles.iconWrap}>
-            <Brain size={20} color="#7B5EA7" />
+            <Brain size={20} color="#2E2A72" />
           </View>
           <View style={styles.headerText}>
             <Text style={styles.title}>Emotional Profile</Text>
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
     borderWidth: 1,
-    borderColor: '#E8E0F0',
+    borderColor: '#0B1238',
   },
   header: {
     flexDirection: 'row',
@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 14,
-    backgroundColor: '#F0EAF8',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
   },
   statsRow: {
     flexDirection: 'row',
-    backgroundColor: '#F8F5FC',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 12,
   },
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
   },
   statDivider: {
     width: 1,
-    backgroundColor: '#E0D5F0',
+    backgroundColor: '#0B1238',
     marginVertical: 2,
   },
   trendRow: {
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
   topCopingValue: {
     fontSize: 13,
     fontWeight: '600' as const,
-    color: '#4A8B60',
+    color: '#14B8A6',
   },
   emptyBody: {
     marginTop: 10,

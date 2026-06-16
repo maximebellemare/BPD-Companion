@@ -154,7 +154,7 @@ export default function ProfileScreen() {
 
   const premiumBadge = (
     <View style={styles.premiumBadge}>
-      <Crown size={10} color="#D4956A" />
+      <Crown size={10} color="#67E8F9" />
     </View>
   );
 
@@ -174,7 +174,7 @@ export default function ProfileScreen() {
               </View>
               {isPremium && (
                 <View style={styles.premiumAvatarBadge}>
-                  <Crown size={10} color="#C4956A" />
+                  <Crown size={10} color="#67E8F9" />
                 </View>
               )}
             </View>
@@ -212,8 +212,8 @@ export default function ProfileScreen() {
             <Text style={styles.statLabel}>Avg Dist.</Text>
           </View>
           <View style={styles.statCard}>
-            <View style={[styles.statIcon, { backgroundColor: '#F0E6FF' }]}>
-              <BookOpen size={14} color="#8B5CF6" />
+            <View style={[styles.statIcon, { backgroundColor: '#FFFFFF' }]}>
+              <BookOpen size={14} color="#3B82F6" />
             </View>
             <Text style={styles.statValue}>{patternSummary.totalJournalEntries}</Text>
             <Text style={styles.statLabel}>Entries</Text>
@@ -228,7 +228,7 @@ export default function ProfileScreen() {
             testID="upgrade-btn"
           >
             <View style={styles.upgradeBannerIcon}>
-              <Crown size={20} color={isPremium ? '#D4956A' : Colors.white} />
+              <Crown size={20} color={isPremium ? '#67E8F9' : Colors.white} />
             </View>
             <View style={styles.upgradeBannerContent}>
               <Text style={[styles.upgradeBannerTitle, isPremium && styles.upgradeBannerTitleActive]}>
@@ -240,7 +240,7 @@ export default function ProfileScreen() {
                   : 'Deeper insights, unlimited AI, therapy reports'}
               </Text>
             </View>
-            <ChevronRight size={18} color={isPremium ? '#D4956A' : Colors.white} style={{ opacity: 0.7 }} />
+            <ChevronRight size={18} color={isPremium ? '#67E8F9' : Colors.white} style={{ opacity: 0.7 }} />
           </TouchableOpacity>
         </Animated.View>
 
@@ -281,7 +281,7 @@ export default function ProfileScreen() {
               'patterns-btn',
             )}
             {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: '#E6F0FF' }]}>
+              <View style={[styles.navIcon, { backgroundColor: '#FFFFFF' }]}>
                 <BarChart3 size={16} color="#3B82F6" />
               </View>,
               'Insights Dashboard',
@@ -300,8 +300,8 @@ export default function ProfileScreen() {
               !isPremium ? premiumBadge : undefined,
             )}
             {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: '#FFF8F0' }]}>
-                <Flame size={16} color="#D4956A" />
+              <View style={[styles.navIcon, { backgroundColor: '#FFFFFF' }]}>
+                <Flame size={16} color="#67E8F9" />
               </View>,
               'Milestones',
               totalUnlocked > 0 ? `${totalUnlocked} earned` : 'Track your consistency',
@@ -310,8 +310,8 @@ export default function ProfileScreen() {
               hasUnseen ? <View style={styles.unseenDot} /> : undefined,
             )}
             {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: '#F0E6FF' }]}>
-                <FileText size={16} color="#8B5CF6" />
+              <View style={[styles.navIcon, { backgroundColor: '#FFFFFF' }]}>
+                <FileText size={16} color="#3B82F6" />
               </View>,
               'Weekly Reflection',
               'Therapy-style summary of your week',
@@ -336,8 +336,8 @@ export default function ProfileScreen() {
           <Text style={styles.sectionLabel}>RELATIONSHIPS</Text>
           <View style={styles.navGroup}>
             {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: '#FFE6F0' }]}>
-                <Heart size={16} color="#E84393" />
+              <View style={[styles.navIcon, { backgroundColor: '#FFFFFF' }]}>
+                <Heart size={16} color="#3B82F6" />
               </View>,
               'Relationship Patterns',
               'Understand your emotional reactions',
@@ -346,8 +346,8 @@ export default function ProfileScreen() {
               !isPremium ? premiumBadge : undefined,
             )}
             {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: '#FDE6E9' }]}>
-                <HeartHandshake size={16} color="#D63384" />
+              <View style={[styles.navIcon, { backgroundColor: '#FFFFFF' }]}>
+                <HeartHandshake size={16} color="#3B82F6" />
               </View>,
               'Relationship Copilot',
               'Guided support during triggers',
@@ -356,8 +356,8 @@ export default function ProfileScreen() {
               !isPremium ? premiumBadge : undefined,
             )}
             {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: '#FCE4EC' }]}>
-                <Users size={16} color="#C44D8E" />
+              <View style={[styles.navIcon, { backgroundColor: '#FFFFFF' }]}>
+                <Users size={16} color="#3B82F6" />
               </View>,
               'Relationship Profiles',
               'Track patterns with specific people',
@@ -381,7 +381,7 @@ export default function ProfileScreen() {
               !isPremium ? premiumBadge : undefined,
             )}
             {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: '#E8F5E9' }]}>
+              <View style={[styles.navIcon, { backgroundColor: '#FFFFFF' }]}>
                 <Sparkles size={16} color={Colors.success} />
               </View>,
               'Reflection Mirror',
@@ -401,8 +401,8 @@ export default function ProfileScreen() {
               !isPremium ? premiumBadge : undefined,
             )}
             {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: '#F0E6FF' }]}>
-                <Fingerprint size={16} color="#8B5CF6" />
+              <View style={[styles.navIcon, { backgroundColor: '#FFFFFF' }]}>
+                <Fingerprint size={16} color="#3B82F6" />
               </View>,
               'Identity & Values',
               'Build self-trust and a stable sense of self',
@@ -410,7 +410,7 @@ export default function ProfileScreen() {
               'identity-values-btn',
             )}
             {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: '#E3EDE8' }]}>
+              <View style={[styles.navIcon, { backgroundColor: '#0B1238' }]}>
                 <FileText size={16} color={Colors.primaryDark} />
               </View>,
               'Reflection Report',
@@ -431,7 +431,7 @@ export default function ProfileScreen() {
               activeOpacity={0.7}
               testID="edit-triggers-btn"
             >
-              <View style={[styles.chipDot, { backgroundColor: '#E17055' }]} />
+              <View style={[styles.chipDot, { backgroundColor: '#3B82F6' }]} />
               <Text style={styles.chipLabel}>Common Triggers</Text>
               <Text style={styles.chipCount}>
                 {profile.commonTriggers.length > 0 ? `${profile.commonTriggers.length}` : '—'}
@@ -445,7 +445,7 @@ export default function ProfileScreen() {
               activeOpacity={0.7}
               testID="edit-urges-btn"
             >
-              <View style={[styles.chipDot, { backgroundColor: '#8B5CF6' }]} />
+              <View style={[styles.chipDot, { backgroundColor: '#3B82F6' }]} />
               <Text style={styles.chipLabel}>Common Urges</Text>
               <Text style={styles.chipCount}>
                 {profile.commonUrges.length > 0 ? `${profile.commonUrges.length}` : '—'}
@@ -487,7 +487,7 @@ export default function ProfileScreen() {
               activeOpacity={0.7}
               testID="edit-relationship-btn"
             >
-              <View style={[styles.chipDot, { backgroundColor: '#E84393' }]} />
+              <View style={[styles.chipDot, { backgroundColor: '#3B82F6' }]} />
               <Text style={styles.chipLabel}>Relationship Triggers</Text>
               <Text style={styles.chipCount}>
                 {profile.relationshipTriggers.length > 0 ? `${profile.relationshipTriggers.length}` : '—'}
@@ -501,7 +501,7 @@ export default function ProfileScreen() {
               activeOpacity={0.7}
               testID="edit-spirals-btn"
             >
-              <View style={[styles.chipDot, { backgroundColor: '#D4956A' }]} />
+              <View style={[styles.chipDot, { backgroundColor: '#67E8F9' }]} />
               <Text style={styles.chipLabel}>Emotional Spirals</Text>
               <Text style={styles.chipCount}>
                 {(profile.emotionalSpirals?.length ?? 0) > 0 ? `${profile.emotionalSpirals.length}` : '—'}
@@ -556,7 +556,7 @@ export default function ProfileScreen() {
               'crisis-settings-btn',
             )}
             {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: '#E6F0FF' }]}>
+              <View style={[styles.navIcon, { backgroundColor: '#FFFFFF' }]}>
                 <Users size={16} color="#3B82F6" />
               </View>,
               'Trusted Support Contacts',
@@ -573,7 +573,7 @@ export default function ProfileScreen() {
           <Text style={styles.sectionLabel}>NOTIFICATIONS</Text>
           <View style={styles.smartReminderCard}>
             <View style={styles.smartReminderHeader}>
-              <View style={[styles.smartReminderIcon, { backgroundColor: '#E8F5E9' }]}>
+              <View style={[styles.smartReminderIcon, { backgroundColor: '#FFFFFF' }]}>
                 <Zap size={14} color={Colors.success} />
               </View>
               <View style={styles.smartReminderInfo}>
@@ -620,7 +620,7 @@ export default function ProfileScreen() {
           <View style={styles.toggleGroup}>
             <View style={styles.toggleRow}>
               <View style={styles.toggleLeft}>
-                <Lock size={15} color="#8B5CF6" />
+                <Lock size={15} color="#3B82F6" />
                 <View>
                   <Text style={styles.toggleTitle}>Anonymous Community</Text>
                   <Text style={styles.toggleDesc}>Default to anonymous when posting</Text>
@@ -672,7 +672,7 @@ export default function ProfileScreen() {
           <Text style={styles.sectionLabel}>SUPPORT & LEGAL</Text>
           <View style={styles.navGroup}>
             {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: '#E6F0FF' }]}>
+              <View style={[styles.navIcon, { backgroundColor: '#FFFFFF' }]}>
                 <MessageCircle size={16} color="#3B82F6" />
               </View>,
               'Support & Feedback',
@@ -708,7 +708,7 @@ export default function ProfileScreen() {
               'disclaimer-btn',
             )}
             {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: '#FFE6E6' }]}>
+              <View style={[styles.navIcon, { backgroundColor: '#FFFFFF' }]}>
                 <Trash2 size={16} color={Colors.danger} />
               </View>,
               'Delete My Data',
@@ -723,7 +723,7 @@ export default function ProfileScreen() {
           <Text style={styles.sectionLabel}>DEVELOPER</Text>
           <View style={styles.navGroup}>
             {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: '#E6F0FF' }]}>
+              <View style={[styles.navIcon, { backgroundColor: '#FFFFFF' }]}>
                 <Bug size={16} color="#3B82F6" />
               </View>,
               'Analytics Debug',
@@ -732,7 +732,7 @@ export default function ProfileScreen() {
               'analytics-debug-btn',
             )}
             {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: '#FFF5EB' }]}>
+              <View style={[styles.navIcon, { backgroundColor: '#FFFFFF' }]}>
                 <Bell size={16} color={Colors.accent} />
               </View>,
               'Notification Debug',
@@ -741,7 +741,7 @@ export default function ProfileScreen() {
               'notification-debug-btn',
             )}
             {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: '#E8F5E9' }]}>
+              <View style={[styles.navIcon, { backgroundColor: '#FFFFFF' }]}>
                 <Zap size={16} color={Colors.success} />
               </View>,
               'Smart Reminder Debug',
@@ -861,7 +861,7 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: '#FFF5EB',
+    backgroundColor: '#FFFFFF',
     borderWidth: 2,
     borderColor: Colors.white,
     alignItems: 'center' as const,
@@ -923,7 +923,7 @@ const styles = StyleSheet.create({
   upgradeBanner: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    backgroundColor: Colors.brandNavy,
+    backgroundColor: Colors.primary,
     padding: 16,
     borderRadius: 18,
     marginBottom: 20,
@@ -934,9 +934,9 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   upgradeBannerActive: {
-    backgroundColor: '#FFF8F2',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#F5E0CC',
+    borderColor: '#0B1238',
   },
   upgradeBannerIcon: {
     width: 40,
@@ -1068,7 +1068,7 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     gap: 8,
-    backgroundColor: Colors.brandNavy,
+    backgroundColor: Colors.primary,
     borderRadius: 14,
     paddingVertical: 14,
   },
@@ -1108,7 +1108,7 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
     borderRadius: 6,
-    backgroundColor: '#FFF0E3',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },

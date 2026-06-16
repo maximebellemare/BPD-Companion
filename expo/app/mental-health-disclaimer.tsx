@@ -138,7 +138,7 @@ export default function MentalHealthDisclaimerScreen() {
 
         <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
           <View style={styles.sectionHeader}>
-            <HandHeart size={16} color="#8B5CF6" />
+            <HandHeart size={16} color="#3B82F6" />
             <Text style={styles.sectionTitle}>AI-Generated Content</Text>
           </View>
           <View style={styles.sectionBody}>
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
     paddingLeft: 16,
   },
   crisisSection: {
-    backgroundColor: Colors.brandNavy,
+    backgroundColor: Colors.primary,
     borderRadius: 20,
     padding: 20,
     marginBottom: 16,

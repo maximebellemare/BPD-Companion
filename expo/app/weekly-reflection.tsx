@@ -112,14 +112,14 @@ export default function WeeklyReflectionScreen() {
   }, [router]);
 
   const getTrendIcon = (trend: 'rising' | 'falling' | 'steady') => {
-    if (trend === 'rising') return <TrendingUp size={14} color="#E17055" />;
+    if (trend === 'rising') return <TrendingUp size={14} color="#3B82F6" />;
     if (trend === 'falling') return <TrendingDown size={14} color={Colors.success} />;
     return <Minus size={14} color={Colors.textMuted} />;
   };
 
   const getIntensityTrendIcon = (trend: 'decreasing' | 'increasing' | 'stable') => {
     if (trend === 'decreasing') return <TrendingDown size={16} color={Colors.success} />;
-    if (trend === 'increasing') return <TrendingUp size={16} color="#E17055" />;
+    if (trend === 'increasing') return <TrendingUp size={16} color="#3B82F6" />;
     return <Minus size={16} color={Colors.textMuted} />;
   };
 
@@ -187,8 +187,8 @@ export default function WeeklyReflectionScreen() {
         {/* Emotional Landscape */}
         <Animated.View style={[styles.sectionCard, { opacity: slideOpacities[0], transform: [{ translateY: slideAnims[0] }] }]}>
           <View style={styles.sectionHeader}>
-            <View style={[styles.sectionIconWrap, { backgroundColor: '#FFF0E6' }]}>
-              <Heart size={18} color="#E17055" />
+            <View style={[styles.sectionIconWrap, { backgroundColor: '#FFFFFF' }]}>
+              <Heart size={18} color="#3B82F6" />
             </View>
             <Text style={styles.sectionTitle}>This Week's Emotional Landscape</Text>
           </View>
@@ -248,7 +248,7 @@ export default function WeeklyReflectionScreen() {
         {/* Relationship Patterns */}
         <Animated.View style={[styles.sectionCard, { opacity: slideOpacities[1], transform: [{ translateY: slideAnims[1] }] }]}>
           <View style={styles.sectionHeader}>
-            <View style={[styles.sectionIconWrap, { backgroundColor: '#E8F4FD' }]}>
+            <View style={[styles.sectionIconWrap, { backgroundColor: '#FFFFFF' }]}>
               <MessageCircle size={18} color="#3B82F6" />
             </View>
             <Text style={styles.sectionTitle}>Relationship Patterns</Text>
@@ -335,8 +335,8 @@ export default function WeeklyReflectionScreen() {
         {reflection.whatEscalated.escalationPatterns.length > 0 && (
           <Animated.View style={[styles.sectionCard, styles.escalatedCard, { opacity: slideOpacities[3], transform: [{ translateY: slideAnims[3] }] }]}>
             <View style={styles.sectionHeader}>
-              <View style={[styles.sectionIconWrap, { backgroundColor: '#FFF0E6' }]}>
-                <AlertTriangle size={18} color="#E17055" />
+              <View style={[styles.sectionIconWrap, { backgroundColor: '#FFFFFF' }]}>
+                <AlertTriangle size={18} color="#3B82F6" />
               </View>
               <Text style={styles.sectionTitle}>What Made Things Harder</Text>
             </View>
@@ -372,8 +372,8 @@ export default function WeeklyReflectionScreen() {
         {/* Growth Signals */}
         <Animated.View style={[styles.sectionCard, styles.growthCard, { opacity: slideOpacities[3], transform: [{ translateY: slideAnims[3] }] }]}>
           <View style={styles.sectionHeader}>
-            <View style={[styles.sectionIconWrap, { backgroundColor: '#FFF8E1' }]}>
-              <Sparkles size={18} color="#F59E0B" />
+            <View style={[styles.sectionIconWrap, { backgroundColor: '#FFFFFF' }]}>
+              <Sparkles size={18} color="#67E8F9" />
             </View>
             <Text style={styles.sectionTitle}>Growth Signals</Text>
           </View>
@@ -536,7 +536,7 @@ export default function WeeklyReflectionScreen() {
             >
               <Sparkles
                 size={18}
-                color={selectedFeedback === 'discuss' ? Colors.white : '#8B5CF6'}
+                color={selectedFeedback === 'discuss' ? Colors.white : '#3B82F6'}
               />
               <Text style={[
                 styles.feedbackButtonText,
@@ -625,7 +625,7 @@ const styles = StyleSheet.create({
   },
   growthCard: {
     borderWidth: 1,
-    borderColor: '#FFF3D6',
+    borderColor: '#FFFFFF',
   },
   focusCard: {
     borderWidth: 1,
@@ -895,11 +895,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 12,
-    backgroundColor: '#FFFDF5',
+    backgroundColor: '#FFFFFF',
     padding: 14,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#FFF3D6',
+    borderColor: '#FFFFFF',
   },
   growthIcon: {
     fontSize: 22,
@@ -1131,7 +1131,7 @@ const styles = StyleSheet.create({
   },
   escalatedCard: {
     borderWidth: 1,
-    borderColor: '#FDE8E3',
+    borderColor: '#FFFFFF',
   },
   escalationItem: {
     flexDirection: 'row',
@@ -1143,7 +1143,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#E17055',
+    backgroundColor: '#3B82F6',
     marginTop: 7,
   },
   escalationText: {
@@ -1159,7 +1159,7 @@ const styles = StyleSheet.create({
   },
   escalationStat: {
     flex: 1,
-    backgroundColor: '#FFF5F0',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 14,
     alignItems: 'center',
@@ -1167,7 +1167,7 @@ const styles = StyleSheet.create({
   escalationStatValue: {
     fontSize: 22,
     fontWeight: '700' as const,
-    color: '#E17055',
+    color: '#3B82F6',
     marginBottom: 2,
   },
   escalationStatLabel: {

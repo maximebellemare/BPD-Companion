@@ -99,7 +99,7 @@ function WeeklyCard({ insight, index, onDiscuss }: { insight: WeeklyCompanionIns
     <Animated.View style={[styles.weekCard, isLatest && styles.weekCardLatest, { opacity: fadeAnim }]}>
       <View style={styles.weekCardHeader}>
         <View style={styles.weekCardDateRow}>
-          <Calendar size={14} color={isLatest ? '#5B8FB9' : Colors.textMuted} />
+          <Calendar size={14} color={isLatest ? '#3B82F6' : Colors.textMuted} />
           <Text style={[styles.weekCardDate, isLatest && styles.weekCardDateLatest]}>{dateRange}</Text>
         </View>
         {isLatest && (
@@ -113,8 +113,8 @@ function WeeklyCard({ insight, index, onDiscuss }: { insight: WeeklyCompanionIns
 
       <InsightSection
         title="Emotional Patterns"
-        icon={<Heart size={14} color="#E17055" />}
-        iconBg="#FDE8E3"
+        icon={<Heart size={14} color="#3B82F6" />}
+        iconBg="#FFFFFF"
         items={insight.emotionalPatterns}
 
         index={0}
@@ -204,7 +204,7 @@ export default function WeeklyInsightsScreen() {
       >
         <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
           <View style={styles.headerIconWrap}>
-            <Sparkles size={20} color="#5B8FB9" />
+            <Sparkles size={20} color="#3B82F6" />
           </View>
           <Text style={styles.headerTitle}>Your Companion Insights</Text>
           <Text style={styles.headerSubtitle}>
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: '#E3EFF7',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     marginBottom: 14,
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
   },
   weekCardLatest: {
     borderColor: 'rgba(91, 143, 185, 0.2)',
-    backgroundColor: '#FAFCFE',
+    backgroundColor: '#FFFFFF',
   },
   weekCardHeader: {
     flexDirection: 'row' as const,
@@ -304,10 +304,10 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   weekCardDateLatest: {
-    color: '#5B8FB9',
+    color: '#3B82F6',
   },
   currentBadge: {
-    backgroundColor: '#E3EFF7',
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
   currentBadgeText: {
     fontSize: 11,
     fontWeight: '600' as const,
-    color: '#5B8FB9',
+    color: '#3B82F6',
   },
   weekCardSummary: {
     fontSize: 15,

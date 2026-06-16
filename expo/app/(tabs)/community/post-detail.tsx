@@ -827,8 +827,8 @@ export default function PostDetailScreen() {
                 <View style={styles.actionSheetHandle} />
                 <Text style={styles.actionSheetTitle}>Options</Text>
                 <TouchableOpacity style={styles.actionItem} onPress={handleOpenReportForPost} testID="report-post-btn">
-                  <View style={[styles.actionIcon, { backgroundColor: '#FFF3E0' }]}>
-                    <Flag size={18} color="#E65100" />
+                  <View style={[styles.actionIcon, { backgroundColor: '#FFFFFF' }]}>
+                    <Flag size={18} color="#3B82F6" />
                   </View>
                   <View style={styles.actionTextGroup}>
                     <Text style={styles.actionLabel}>Report this post</Text>

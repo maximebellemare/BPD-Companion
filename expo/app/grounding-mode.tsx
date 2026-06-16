@@ -31,11 +31,11 @@ import { useAnalytics } from '@/providers/AnalyticsProvider';
 type GroundingPhase = 'welcome' | 'breathing' | 'senses' | 'settled';
 
 const SENSE_STEPS = [
-  { id: 's1', sense: 'sight', instruction: 'Name 5 things you can see right now.', icon: Eye, color: '#4A8B8D' },
-  { id: 's2', sense: 'touch', instruction: 'Name 4 things you can touch or feel.', icon: Hand, color: '#C4956A' },
-  { id: 's3', sense: 'hearing', instruction: 'Name 3 things you can hear.', icon: Ear, color: '#9B8EC4' },
-  { id: 's4', sense: 'smell', instruction: 'Name 2 things you can smell.', icon: Wind, color: '#7FA68E' },
-  { id: 's5', sense: 'taste', instruction: 'Name 1 thing you can taste.', icon: Heart, color: '#8EAEC4' },
+  { id: 's1', sense: 'sight', instruction: 'Name 5 things you can see right now.', icon: Eye, color: '#14B8A6' },
+  { id: 's2', sense: 'touch', instruction: 'Name 4 things you can touch or feel.', icon: Hand, color: '#67E8F9' },
+  { id: 's3', sense: 'hearing', instruction: 'Name 3 things you can hear.', icon: Ear, color: '#3B82F6' },
+  { id: 's4', sense: 'smell', instruction: 'Name 2 things you can smell.', icon: Wind, color: '#14B8A6' },
+  { id: 's5', sense: 'taste', instruction: 'Name 1 thing you can taste.', icon: Heart, color: '#2E2A72' },
 ];
 
 const BREATHE_IN = 4000;
@@ -393,7 +393,7 @@ export default function GroundingModeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1B2838',
+    backgroundColor: '#020617',
   },
   header: {
     flexDirection: 'row',

@@ -1,6 +1,12 @@
 export type PrimaryReason =
-  | 'relationship_spirals'
+  | 'intense_emotions'
+  | 'relationship_conflict'
   | 'fear_of_abandonment'
+  | 'impulsive_urges'
+  | 'identity_confusion'
+  | 'mood_swings'
+  | 'self_reflection_journaling'
+  | 'relationship_spirals'
   | 'impulsive_messaging'
   | 'emotional_overwhelm'
   | 'therapy_support'
@@ -27,6 +33,12 @@ export type HardestMoment =
   | 'dissociation';
 
 export type PreferredTool =
+  | 'calm_emotional_spikes'
+  | 'understand_patterns'
+  | 'improve_relationships'
+  | 'dbt_coping_skills'
+  | 'track_moods_triggers'
+  | 'feel_less_alone'
   | 'ai_companion'
   | 'journaling'
   | 'grounding'
@@ -35,6 +47,15 @@ export type PreferredTool =
   | 'reflections_insights'
   | 'dbt_tools'
   | 'routines_reminders';
+
+export type DailyCheckInTrack =
+  | 'mood'
+  | 'emotions'
+  | 'triggers'
+  | 'urges'
+  | 'sleep'
+  | 'relationships'
+  | 'notes';
 
 export type ReminderTone = 'minimal' | 'balanced' | 'supportive';
 
@@ -64,8 +85,10 @@ export interface OnboardingProfile {
   hardestMoments: HardestMoment[];
   treatmentContext: TreatmentContext;
   preferredTools: PreferredTool[];
+  dailyCheckInTracks: DailyCheckInTrack[];
   reminderPreferences: ReminderPreferences;
   desiredOutcomes: DesiredOutcome[];
+  safetyAcknowledged: boolean;
   completedAt: number | null;
   skippedAt: number | null;
 }
@@ -80,12 +103,14 @@ export const DEFAULT_ONBOARDING_PROFILE: OnboardingProfile = {
     trackMedications: false,
   },
   preferredTools: [],
+  dailyCheckInTracks: [],
   reminderPreferences: {
     dailyReminders: true,
     weeklyReflectionReminders: true,
     tone: 'balanced',
   },
   desiredOutcomes: [],
+  safetyAcknowledged: false,
   completedAt: null,
   skippedAt: null,
 };
@@ -97,61 +122,79 @@ export interface OnboardingStepConfig {
 }
 
 export const ONBOARDING_STEPS: OnboardingStepConfig[] = [
-  { id: 'welcome', title: 'Welcome', subtitle: 'Your companion for emotional support' },
-  { id: 'primary_reason', title: 'What brings you here?', subtitle: 'This helps us personalize your experience' },
-  { id: 'hardest_moments', title: 'Hardest moments', subtitle: 'Select what feels most difficult' },
-  { id: 'treatment', title: 'Your support context', subtitle: 'Help us understand your care' },
-  { id: 'tools', title: 'What helps you most?', subtitle: 'We\'ll prioritize these for you' },
-  { id: 'reminders', title: 'Stay supported', subtitle: 'Set your reminder preferences' },
-  { id: 'outcomes', title: 'What does progress look like?', subtitle: 'Your personal goals' },
+  {
+    id: 'welcome',
+    title: 'Welcome to BPD Companion',
+    subtitle: 'A private space for emotional regulation, reflection, and coping support.',
+  },
+  {
+    id: 'reasons',
+    title: 'What brings you here?',
+    subtitle: 'Select the experiences you want support with.',
+  },
+  {
+    id: 'support',
+    title: 'What support do you want most?',
+    subtitle: 'We will shape your home screen around what matters now.',
+  },
+  {
+    id: 'daily_check_in',
+    title: 'Daily check-in setup',
+    subtitle: 'Choose what feels useful to track day to day.',
+  },
+  {
+    id: 'safety',
+    title: 'Safety and support',
+    subtitle: 'A clear agreement about what this app can and cannot do.',
+  },
+  {
+    id: 'finish',
+    title: 'You are set up',
+    subtitle: 'Your companion is ready to meet you where you are.',
+  },
 ];
 
 export const PRIMARY_REASON_OPTIONS: { value: PrimaryReason; label: string; icon: string }[] = [
-  { value: 'relationship_spirals', label: 'Relationship spirals', icon: 'Heart' },
+  { value: 'intense_emotions', label: 'Intense emotions', icon: 'CloudLightning' },
+  { value: 'relationship_conflict', label: 'Relationship conflict', icon: 'Heart' },
   { value: 'fear_of_abandonment', label: 'Fear of abandonment', icon: 'UserX' },
-  { value: 'impulsive_messaging', label: 'Impulsive texting / messaging', icon: 'MessageCircle' },
-  { value: 'emotional_overwhelm', label: 'Emotional overwhelm', icon: 'CloudLightning' },
-  { value: 'therapy_support', label: 'Therapy support', icon: 'Stethoscope' },
-  { value: 'building_stability', label: 'Building stability', icon: 'Anchor' },
-  { value: 'understanding_patterns', label: 'Understanding my patterns', icon: 'TrendingUp' },
-  { value: 'medication_routine', label: 'Medication & routine support', icon: 'Pill' },
+  { value: 'impulsive_urges', label: 'Impulsive urges', icon: 'Timer' },
+  { value: 'identity_confusion', label: 'Identity confusion', icon: 'Compass' },
+  { value: 'mood_swings', label: 'Mood swings', icon: 'Activity' },
+  { value: 'self_reflection_journaling', label: 'Self-reflection / journaling', icon: 'BookOpen' },
+];
+
+export const SUPPORT_GOAL_OPTIONS: { value: PreferredTool; label: string; icon: string }[] = [
+  { value: 'calm_emotional_spikes', label: 'Calm down during emotional spikes', icon: 'Wind' },
+  { value: 'understand_patterns', label: 'Understand my patterns', icon: 'TrendingUp' },
+  { value: 'improve_relationships', label: 'Improve relationships', icon: 'Users' },
+  { value: 'dbt_coping_skills', label: 'Build DBT-style coping skills', icon: 'Wrench' },
+  { value: 'track_moods_triggers', label: 'Track my moods and triggers', icon: 'BarChart3' },
+  { value: 'feel_less_alone', label: 'Feel less alone', icon: 'Sparkles' },
+];
+
+export const DAILY_CHECK_IN_OPTIONS: { value: DailyCheckInTrack; label: string; icon: string }[] = [
+  { value: 'mood', label: 'Mood', icon: 'Activity' },
+  { value: 'emotions', label: 'Emotions', icon: 'Heart' },
+  { value: 'triggers', label: 'Triggers', icon: 'CloudLightning' },
+  { value: 'urges', label: 'Urges', icon: 'Timer' },
+  { value: 'sleep', label: 'Sleep', icon: 'Moon' },
+  { value: 'relationships', label: 'Relationships', icon: 'Users' },
+  { value: 'notes', label: 'Notes', icon: 'BookOpen' },
 ];
 
 export const HARDEST_MOMENT_OPTIONS: { value: HardestMoment; label: string }[] = [
-  { value: 'delayed_replies', label: 'Delayed replies' },
   { value: 'conflict', label: 'Conflict' },
   { value: 'feeling_rejected', label: 'Feeling rejected' },
-  { value: 'shame_after_conflict', label: 'Shame after conflict' },
-  { value: 'not_knowing_how_to_respond', label: 'Not knowing how to respond' },
   { value: 'late_night_spirals', label: 'Late-night spirals' },
   { value: 'intense_mood_shifts', label: 'Intense mood shifts' },
-  { value: 'difficulty_staying_consistent', label: 'Difficulty staying consistent' },
-  { value: 'fear_of_being_too_much', label: 'Fear of being too much' },
-  { value: 'splitting', label: 'Splitting (black & white thinking)' },
-  { value: 'emotional_numbness', label: 'Emotional numbness' },
-  { value: 'self_destructive_urges', label: 'Self-destructive urges' },
-  { value: 'feeling_empty', label: 'Feeling empty' },
-  { value: 'trust_issues', label: 'Difficulty trusting others' },
-  { value: 'people_pleasing', label: 'People-pleasing' },
-  { value: 'dissociation', label: 'Dissociation or zoning out' },
 ];
 
-export const PREFERRED_TOOL_OPTIONS: { value: PreferredTool; label: string; icon: string }[] = [
-  { value: 'ai_companion', label: 'Guided emotional support chat', icon: 'Sparkles' },
-  { value: 'journaling', label: 'Journaling', icon: 'BookOpen' },
-  { value: 'grounding', label: 'Grounding exercises', icon: 'Wind' },
-  { value: 'pause_before_messaging', label: 'Pause before messaging', icon: 'Timer' },
-  { value: 'relationship_support', label: 'Relationship support', icon: 'Users' },
-  { value: 'reflections_insights', label: 'Reflections & insights', icon: 'BarChart3' },
-  { value: 'dbt_tools', label: 'DBT-style tools', icon: 'Wrench' },
-  { value: 'routines_reminders', label: 'Routines & reminders', icon: 'Clock' },
-];
+export const PREFERRED_TOOL_OPTIONS = SUPPORT_GOAL_OPTIONS;
 
 export const DESIRED_OUTCOME_OPTIONS: { value: DesiredOutcome; label: string }[] = [
   { value: 'fewer_relationship_spirals', label: 'Fewer relationship spirals' },
   { value: 'better_emotional_control', label: 'Better emotional control' },
   { value: 'more_pause_before_reacting', label: 'More pause before reacting' },
-  { value: 'better_therapy_support', label: 'Better therapy support' },
-  { value: 'more_consistency', label: 'More consistency' },
   { value: 'better_understanding_triggers', label: 'Better understanding of my triggers' },
 ];

@@ -10,10 +10,10 @@ export const RELATIONSHIP_TYPE_LABELS: Record<ContactRelationshipType, string> =
 
 export const RELATIONSHIP_TYPE_COLORS: Record<ContactRelationshipType, string> = {
   friend: '#3B82F6',
-  partner: '#E84393',
-  therapist: '#6B9080',
-  family: '#D4956A',
-  other: '#8B5CF6',
+  partner: '#3B82F6',
+  therapist: '#14B8A6',
+  family: '#67E8F9',
+  other: '#3B82F6',
 };
 
 export const SUPPORT_MESSAGE_TEMPLATES: { id: string; label: string; message: string }[] = [

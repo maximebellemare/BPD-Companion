@@ -236,7 +236,7 @@ export default function DailyRitualsScreen() {
       {streak.currentStreak > 0 && (
         <View style={styles.streakBanner}>
           <View style={styles.streakLeft}>
-            <Flame size={22} color="#E17055" />
+            <Flame size={22} color="#3B82F6" />
             <View>
               <Text style={styles.streakCount}>{streak.currentStreak} day streak</Text>
               <Text style={styles.streakMsg}>{getRitualStreakMessage(streak)}</Text>
@@ -417,7 +417,7 @@ export default function DailyRitualsScreen() {
                 styles.energyDot,
                 {
                   backgroundColor: i < energyLevel
-                    ? (i < 3 ? '#F44336' : i < 5 ? '#FF9800' : i < 7 ? '#FFC107' : '#4CAF50')
+                    ? (i < 3 ? '#3B82F6' : i < 5 ? '#67E8F9' : i < 7 ? '#67E8F9' : '#14B8A6')
                     : Colors.border,
                   transform: [{ scale: i + 1 === energyLevel ? 1.3 : 1 }],
                 },
@@ -616,7 +616,7 @@ export default function DailyRitualsScreen() {
 
         {streak.currentStreak > 0 && (
           <View style={styles.completeStreakBadge}>
-            <Flame size={18} color="#E17055" />
+            <Flame size={18} color="#3B82F6" />
             <Text style={styles.completeStreakText}>{streak.currentStreak + 1} day streak</Text>
           </View>
         )}
@@ -747,7 +747,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FDE8E3',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
     marginBottom: 24,
@@ -761,11 +761,11 @@ const styles = StyleSheet.create({
   streakCount: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#E17055',
+    color: '#3B82F6',
   },
   streakMsg: {
     fontSize: 12,
-    color: '#C0392B',
+    color: '#3B82F6',
     marginTop: 1,
   },
   bestBadge: {
@@ -807,11 +807,11 @@ const styles = StyleSheet.create({
   },
   ritualCardCompleted: {
     borderColor: Colors.primaryLight,
-    backgroundColor: '#F7FBF9',
+    backgroundColor: '#FFFFFF',
   },
   ritualCardCurrent: {
-    borderColor: '#E8A87C',
-    backgroundColor: '#FFF8F3',
+    borderColor: '#67E8F9',
+    backgroundColor: '#FFFFFF',
   },
   ritualIconWrap: {
     width: 44,
@@ -885,7 +885,7 @@ const styles = StyleSheet.create({
   },
   weekDayToday: {
     borderColor: Colors.primary,
-    backgroundColor: '#F7FBF9',
+    backgroundColor: '#FFFFFF',
   },
   weekDayLabel: {
     fontSize: 10,
@@ -1224,7 +1224,7 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
   copingLabelSelected: {
-    color: '#8B6914',
+    color: '#3B82F6',
     fontWeight: '600' as const,
   },
   completeContainer: {
@@ -1251,7 +1251,7 @@ const styles = StyleSheet.create({
   completeStreakBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FDE8E3',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 10,
@@ -1261,7 +1261,7 @@ const styles = StyleSheet.create({
   completeStreakText: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#E17055',
+    color: '#3B82F6',
   },
   completeBackBtn: {
     backgroundColor: Colors.primary,

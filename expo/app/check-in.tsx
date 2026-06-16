@@ -328,7 +328,7 @@ export default function CheckInScreen() {
                 >
                   <View style={[
                     styles.suggestionIconWrap,
-                    { backgroundColor: isHigh ? '#FDE8E3' : Colors.primaryLight },
+                    { backgroundColor: isHigh ? '#FFFFFF' : Colors.primaryLight },
                   ]}>
                     <IconComp size={20} color={isHigh ? Colors.danger : Colors.primary} />
                   </View>
@@ -653,8 +653,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
   },
   suggestionCardHighlight: {
-    backgroundColor: '#FFF8F5',
-    borderColor: '#FDDDD3',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#0B1238',
   },
   suggestionIconWrap: {
     width: 44,

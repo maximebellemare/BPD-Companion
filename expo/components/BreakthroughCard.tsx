@@ -19,24 +19,24 @@ interface BreakthroughCardProps {
 
 const TYPE_CONFIG: Record<string, { icon: React.ReactNode; accent: string; bg: string }> = {
   distress_reduction: {
-    icon: <TrendingDown size={16} color="#10B981" />,
-    accent: '#10B981',
-    bg: '#ECFDF5',
+    icon: <TrendingDown size={16} color="#14B8A6" />,
+    accent: '#14B8A6',
+    bg: '#FFFFFF',
   },
   pause_before_send: {
-    icon: <Pause size={16} color="#6366F1" />,
-    accent: '#6366F1',
-    bg: '#EEF2FF',
+    icon: <Pause size={16} color="#3B82F6" />,
+    accent: '#3B82F6',
+    bg: '#FFFFFF',
   },
   emotional_awareness: {
-    icon: <Brain size={16} color="#8B5CF6" />,
-    accent: '#8B5CF6',
-    bg: '#F5F3FF',
+    icon: <Brain size={16} color="#3B82F6" />,
+    accent: '#3B82F6',
+    bg: '#FFFFFF',
   },
   relationship_regulation: {
-    icon: <Heart size={16} color="#EC4899" />,
-    accent: '#EC4899',
-    bg: '#FDF2F8',
+    icon: <Heart size={16} color="#3B82F6" />,
+    accent: '#3B82F6',
+    bg: '#FFFFFF',
   },
   coping_success: {
     icon: <CheckCircle size={16} color={Colors.primary} />,
@@ -44,9 +44,9 @@ const TYPE_CONFIG: Record<string, { icon: React.ReactNode; accent: string; bg: s
     bg: Colors.primaryLight,
   },
   consistent_checkin: {
-    icon: <Star size={16} color="#F59E0B" />,
-    accent: '#F59E0B',
-    bg: '#FFFBEB',
+    icon: <Star size={16} color="#67E8F9" />,
+    accent: '#67E8F9',
+    bg: '#FFFFFF',
   },
 };
 
@@ -135,7 +135,7 @@ export default React.memo(function BreakthroughCard({ summary }: BreakthroughCar
 
         {summary.streakDays > 1 && (
           <View style={styles.streakRow}>
-            <Star size={12} color="#F59E0B" />
+            <Star size={12} color="#67E8F9" />
             <Text style={styles.streakText}>
               {summary.streakDays}-day growth streak
             </Text>
@@ -232,6 +232,6 @@ const styles = StyleSheet.create({
   streakText: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: '#F59E0B',
+    color: '#67E8F9',
   },
 });

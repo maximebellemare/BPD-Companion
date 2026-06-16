@@ -31,7 +31,39 @@ export function getPersonalizedCardBoosts(profile: OnboardingProfile): HomeCardB
   return Array.from(merged.values());
 }
 
-const REASON_BOOST_MAP: Record<PrimaryReason, HomeCardBoost[]> = {
+const REASON_BOOST_MAP: Partial<Record<PrimaryReason, HomeCardBoost[]>> = {
+  intense_emotions: [
+    { key: 'ai_companion', priorityBoost: -15, forceVisible: true },
+    { key: 'crisis_mode', priorityBoost: -10, forceVisible: true },
+    { key: 'emotional_playbook', priorityBoost: -8, forceVisible: true },
+    { key: 'smart_coping', priorityBoost: -5, forceVisible: true },
+  ],
+  relationship_conflict: [
+    { key: 'relationship_copilot', priorityBoost: -15, forceVisible: true },
+    { key: 'message_guard', priorityBoost: -12, forceVisible: true },
+    { key: 'relationship_hub', priorityBoost: -10, forceVisible: true },
+    { key: 'conflict_replay', priorityBoost: -5, forceVisible: true },
+  ],
+  impulsive_urges: [
+    { key: 'message_guard', priorityBoost: -15, forceVisible: true },
+    { key: 'smart_coping', priorityBoost: -10, forceVisible: true },
+    { key: 'ai_companion', priorityBoost: -5, forceVisible: true },
+  ],
+  identity_confusion: [
+    { key: 'identity_journal', priorityBoost: -15, forceVisible: true },
+    { key: 'reflection_mirror', priorityBoost: -10, forceVisible: true },
+    { key: 'emotional_profile', priorityBoost: -8, forceVisible: true },
+  ],
+  mood_swings: [
+    { key: 'emotional_timeline', priorityBoost: -15, forceVisible: true },
+    { key: 'daily_rituals', priorityBoost: -10, forceVisible: true },
+    { key: 'emotional_insights', priorityBoost: -8, forceVisible: true },
+  ],
+  self_reflection_journaling: [
+    { key: 'reflection_mirror', priorityBoost: -15, forceVisible: true },
+    { key: 'weekly_reflection', priorityBoost: -12, forceVisible: true },
+    { key: 'journal', priorityBoost: -8, forceVisible: true },
+  ],
   relationship_spirals: [
     { key: 'relationship_copilot', priorityBoost: -15, forceVisible: true },
     { key: 'message_guard', priorityBoost: -12, forceVisible: true },
@@ -100,6 +132,29 @@ function getToolBoosts(tools: PreferredTool[]): HomeCardBoost[] {
     const weight = -(10 - index * 2);
 
     switch (tool) {
+      case 'calm_emotional_spikes':
+        boosts.push({ key: 'smart_coping', priorityBoost: weight, forceVisible: true });
+        boosts.push({ key: 'crisis_mode', priorityBoost: weight + 2, forceVisible: true });
+        break;
+      case 'understand_patterns':
+        boosts.push({ key: 'emotional_insights', priorityBoost: weight, forceVisible: true });
+        boosts.push({ key: 'emotional_loops', priorityBoost: weight + 2, forceVisible: true });
+        break;
+      case 'improve_relationships':
+        boosts.push({ key: 'relationship_copilot', priorityBoost: weight, forceVisible: true });
+        boosts.push({ key: 'relationship_hub', priorityBoost: weight + 2, forceVisible: true });
+        break;
+      case 'dbt_coping_skills':
+        boosts.push({ key: 'coaching', priorityBoost: weight, forceVisible: true });
+        boosts.push({ key: 'emotional_playbook', priorityBoost: weight + 2, forceVisible: true });
+        break;
+      case 'track_moods_triggers':
+        boosts.push({ key: 'daily_rituals', priorityBoost: weight, forceVisible: true });
+        boosts.push({ key: 'emotional_timeline', priorityBoost: weight + 2, forceVisible: true });
+        break;
+      case 'feel_less_alone':
+        boosts.push({ key: 'ai_companion', priorityBoost: weight, forceVisible: true });
+        break;
       case 'ai_companion':
         boosts.push({ key: 'ai_companion', priorityBoost: weight, forceVisible: true });
         break;
@@ -136,7 +191,13 @@ function getToolBoosts(tools: PreferredTool[]): HomeCardBoost[] {
 export function getCompanionSuggestedPrompts(profile: OnboardingProfile): string[] {
   const prompts: string[] = [];
 
-  const REASON_PROMPTS: Record<PrimaryReason, string[]> = {
+  const REASON_PROMPTS: Partial<Record<PrimaryReason, string[]>> = {
+    intense_emotions: ["Everything feels too much right now", "Help me calm down before I react"],
+    relationship_conflict: ["I'm spiraling about a relationship right now", "Help me respond without escalating"],
+    impulsive_urges: ["I feel an urge I might regret", "Help me ride this out safely"],
+    identity_confusion: ["I feel unsure who I am today", "Help me reconnect with my values"],
+    mood_swings: ["My mood shifted suddenly", "Help me understand what changed"],
+    self_reflection_journaling: ["Help me reflect on what happened", "Guide me through a journal prompt"],
     relationship_spirals: ["I'm spiraling about a relationship right now", "Help me understand why I react this way in relationships"],
     fear_of_abandonment: ["I'm scared someone is going to leave me", "Help me sit with the uncertainty"],
     impulsive_messaging: ["I want to send a message I might regret", "Help me pause before I react"],
@@ -172,6 +233,12 @@ export function getMessageDefaultSuggestions(profile: OnboardingProfile): string
   }
   if (profile.primaryReasons.includes('impulsive_messaging')) {
     suggestions.push("Let me pause and think about this first");
+  }
+  if (profile.primaryReasons.includes('impulsive_urges')) {
+    suggestions.push("Help me ride out this urge before I act");
+  }
+  if (profile.primaryReasons.includes('relationship_conflict')) {
+    suggestions.push("I want to respond without escalating");
   }
 
   return suggestions.slice(0, 3);

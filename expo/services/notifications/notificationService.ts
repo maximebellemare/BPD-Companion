@@ -57,14 +57,14 @@ class NotificationService {
           name: 'BPD Companion',
           importance: Notifications.AndroidImportance.DEFAULT,
           vibrationPattern: [0, 100, 50, 100],
-          lightColor: '#6B9080',
+          lightColor: '#14B8A6',
         });
 
         await Notifications.setNotificationChannelAsync('reminders', {
           name: 'Reminders',
           importance: Notifications.AndroidImportance.HIGH,
           vibrationPattern: [0, 100],
-          lightColor: '#6B9080',
+          lightColor: '#14B8A6',
         });
       }
 

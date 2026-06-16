@@ -269,11 +269,11 @@ export function generateTriggerSuggestions(
 }
 
 export const REWRITE_STYLE_META: Record<RewriteStyle, { label: string; emoji: string; color: string; description: string }> = {
-  softer: { label: 'Softer', emoji: '🪶', color: '#6B9080', description: 'Gentler delivery, same truth' },
-  clearer: { label: 'Clearer', emoji: '🎯', color: '#D4956A', description: 'Direct without blame' },
-  warmer: { label: 'Warmer', emoji: '☀️', color: '#E8A87C', description: 'Wrapped in care' },
-  boundaried: { label: 'Boundaried', emoji: '🛡️', color: '#5B8FB9', description: 'Firm, kind limit' },
-  secure: { label: 'Secure', emoji: '🌿', color: '#7B9E6B', description: 'From a grounded place' },
-  delay: { label: 'Delay', emoji: '⏳', color: '#9B8EC4', description: 'Save it, send later' },
-  nosend: { label: "Don't send", emoji: '🚫', color: '#E17055', description: 'Express it, release it' },
+  softer: { label: 'Softer', emoji: '🪶', color: '#14B8A6', description: 'Gentler delivery, same truth' },
+  clearer: { label: 'Clearer', emoji: '🎯', color: '#67E8F9', description: 'Direct without blame' },
+  warmer: { label: 'Warmer', emoji: '☀️', color: '#67E8F9', description: 'Wrapped in care' },
+  boundaried: { label: 'Boundaried', emoji: '🛡️', color: '#3B82F6', description: 'Firm, kind limit' },
+  secure: { label: 'Secure', emoji: '🌿', color: '#14B8A6', description: 'From a grounded place' },
+  delay: { label: 'Delay', emoji: '⏳', color: '#3B82F6', description: 'Save it, send later' },
+  nosend: { label: "Don't send", emoji: '🚫', color: '#3B82F6', description: 'Express it, release it' },
 };

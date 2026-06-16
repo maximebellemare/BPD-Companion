@@ -104,12 +104,12 @@ export const CONFLICT_ACTION_META: Record<ConflictAction, { label: string; emoji
 };
 
 export const CONFLICT_OUTCOME_META: Record<ConflictOutcome, { label: string; emoji: string; color: string }> = {
-  calm: { label: 'Felt calmer', emoji: '🌊', color: '#6B9080' },
-  resolved: { label: 'Resolved', emoji: '✅', color: '#00B894' },
-  regret: { label: 'Regret', emoji: '😔', color: '#D4956A' },
-  shame: { label: 'Shame', emoji: '😞', color: '#E17055' },
-  relief: { label: 'Relief', emoji: '😮‍💨', color: '#6B9080' },
-  escalated: { label: 'Escalated', emoji: '📈', color: '#E17055' },
-  neutral: { label: 'Neutral', emoji: '😐', color: '#636E72' },
-  unclear: { label: 'Unclear', emoji: '🤷', color: '#A8B0B5' },
+  calm: { label: 'Felt calmer', emoji: '🌊', color: '#14B8A6' },
+  resolved: { label: 'Resolved', emoji: '✅', color: '#14B8A6' },
+  regret: { label: 'Regret', emoji: '😔', color: '#67E8F9' },
+  shame: { label: 'Shame', emoji: '😞', color: '#3B82F6' },
+  relief: { label: 'Relief', emoji: '😮‍💨', color: '#14B8A6' },
+  escalated: { label: 'Escalated', emoji: '📈', color: '#3B82F6' },
+  neutral: { label: 'Neutral', emoji: '😐', color: '#2E2A72' },
+  unclear: { label: 'Unclear', emoji: '🤷', color: '#3B82F6' },
 };

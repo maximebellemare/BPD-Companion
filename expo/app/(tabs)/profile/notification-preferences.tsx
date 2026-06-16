@@ -234,7 +234,7 @@ export default function NotificationPreferencesScreen() {
             <Text style={styles.sectionLabel}>DAILY REMINDERS</Text>
             <View style={styles.card}>
               {renderToggle(
-                <Sun size={16} color="#F59E0B" />,
+                <Sun size={16} color="#67E8F9" />,
                 'Daily Check-in',
                 'A gentle reminder to check in with yourself',
                 n.dailyCheckInReminder,
@@ -283,7 +283,7 @@ export default function NotificationPreferencesScreen() {
               <View style={styles.divider} />
 
               {renderToggle(
-                <Zap size={16} color="#8B5CF6" />,
+                <Zap size={16} color="#3B82F6" />,
                 'Streak Support',
                 'Encouragement to keep your check-in rhythm',
                 n.streakSupport ?? true,
@@ -348,7 +348,7 @@ export default function NotificationPreferencesScreen() {
             <Text style={styles.sectionLabel}>CONTEXTUAL SUPPORT</Text>
             <View style={styles.card}>
               {renderToggle(
-                <MessageCircle size={16} color="#E84393" />,
+                <MessageCircle size={16} color="#3B82F6" />,
                 'Relationship Support',
                 'Gentle pause reminders during relationship triggers',
                 n.relationshipSupportReminders,
@@ -388,7 +388,7 @@ export default function NotificationPreferencesScreen() {
               <View style={styles.divider} />
 
               {renderToggle(
-                <RefreshCw size={16} color="#6366F1" />,
+                <RefreshCw size={16} color="#3B82F6" />,
                 'Re-engagement',
                 'Supportive nudge if you haven\'t visited in a while',
                 n.reengagementReminders ?? true,
@@ -402,7 +402,7 @@ export default function NotificationPreferencesScreen() {
             <Text style={styles.sectionLabel}>PREMIUM</Text>
             <View style={styles.card}>
               {renderToggle(
-                <Sparkles size={16} color="#D4956A" />,
+                <Sparkles size={16} color="#67E8F9" />,
                 'Premium Insights',
                 'Deeper emotional pattern notifications',
                 n.premiumReflections ?? true,
@@ -412,7 +412,7 @@ export default function NotificationPreferencesScreen() {
               <View style={styles.divider} />
 
               {renderToggle(
-                <Crown size={16} color="#D4956A" />,
+                <Crown size={16} color="#67E8F9" />,
                 'Premium Feature Reminders',
                 'Occasional reminders about advanced features you\'ve explored',
                 n.premiumInsightReminders ?? true,
@@ -422,7 +422,7 @@ export default function NotificationPreferencesScreen() {
               <View style={styles.divider} />
 
               {renderToggle(
-                <Gift size={16} color="#D4956A" />,
+                <Gift size={16} color="#67E8F9" />,
                 'Upgrade Reminders',
                 'Respectful reminders about premium benefits',
                 n.upgradeReminders ?? true,
@@ -439,7 +439,7 @@ export default function NotificationPreferencesScreen() {
             <Text style={styles.sectionLabel}>SMART BEHAVIOR NOTIFICATIONS</Text>
             <View style={styles.card}>
               {renderToggle(
-                <Heart size={16} color="#10B981" />,
+                <Heart size={16} color="#14B8A6" />,
                 'Gentle Check-ins',
                 'Supportive nudge if you haven\'t visited in a while',
                 n.behaviorCheckIns ?? true,
@@ -459,7 +459,7 @@ export default function NotificationPreferencesScreen() {
               <View style={styles.divider} />
 
               {renderToggle(
-                <FileText size={16} color="#6366F1" />,
+                <FileText size={16} color="#3B82F6" />,
                 'Reflection Prompts',
                 'Journal prompts after intense message sessions',
                 n.behaviorJournalPrompts ?? true,
@@ -469,7 +469,7 @@ export default function NotificationPreferencesScreen() {
               <View style={styles.divider} />
 
               {renderToggle(
-                <Sparkles size={16} color="#F59E0B" />,
+                <Sparkles size={16} color="#67E8F9" />,
                 'Progress Celebrations',
                 'Celebrate streaks, insights, and emotional growth',
                 n.behaviorProgressCelebrations ?? true,
@@ -486,7 +486,7 @@ export default function NotificationPreferencesScreen() {
             <Text style={styles.sectionLabel}>QUIET HOURS</Text>
             <View style={styles.card}>
               {renderToggle(
-                <Moon size={16} color="#6366F1" />,
+                <Moon size={16} color="#3B82F6" />,
                 'Enable Quiet Hours',
                 'No notifications during this time window',
                 n.quietHoursEnabled ?? false,

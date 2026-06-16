@@ -63,11 +63,11 @@ const STEP_META: Record<StepKey, { title: string; subtitle: string; icon: React.
 };
 
 const GROUNDING_PROMPTS = [
-  { count: 5, sense: 'SEE', color: '#6B9080' },
-  { count: 4, sense: 'TOUCH', color: '#7BA7A0' },
-  { count: 3, sense: 'HEAR', color: '#D4956A' },
-  { count: 2, sense: 'SMELL', color: '#C4845A' },
-  { count: 1, sense: 'TASTE', color: '#B4744A' },
+  { count: 5, sense: 'SEE', color: '#14B8A6' },
+  { count: 4, sense: 'TOUCH', color: '#14B8A6' },
+  { count: 3, sense: 'HEAR', color: '#67E8F9' },
+  { count: 2, sense: 'SMELL', color: '#3B82F6' },
+  { count: 1, sense: 'TASTE', color: '#3B82F6' },
 ];
 
 const BREATHING_CYCLE = { inhale: 4, hold: 4, exhale: 6 };
@@ -478,8 +478,8 @@ export default function GuidedRegulationScreen() {
         icon: MessageCircle,
         label: 'Wait before messaging',
         desc: 'Give yourself space first',
-        color: '#7BA7A0',
-        bg: '#E3EDE8',
+        color: '#14B8A6',
+        bg: '#0B1238',
       },
       {
         id: 'journal',
@@ -494,8 +494,8 @@ export default function GuidedRegulationScreen() {
         icon: Bot,
         label: 'Talk to AI Companion',
         desc: 'Process with support',
-        color: '#5B8FB9',
-        bg: '#E3EFF7',
+        color: '#3B82F6',
+        bg: '#FFFFFF',
       },
       {
         id: 'exercise',
@@ -624,7 +624,7 @@ export default function GuidedRegulationScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F0F5F3',
+    backgroundColor: '#FFFFFF',
   },
   inner: {
     flex: 1,

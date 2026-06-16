@@ -46,16 +46,16 @@ import {
 
 const RISK_THEME: Record<SpiralRiskLevel, { bg: string; accent: string; label: string; icon: string }> = {
   calm: { bg: Colors.primaryLight, accent: Colors.primary, label: 'Calm', icon: '🌿' },
-  watchful: { bg: '#FFF9F0', accent: '#C8975A', label: 'Watchful', icon: '👀' },
-  rising: { bg: '#FFF5EE', accent: '#D4764E', label: 'Rising', icon: '🌊' },
-  urgent: { bg: '#FFF0ED', accent: '#C94438', label: 'Needs Attention', icon: '⚡' },
+  watchful: { bg: '#FFFFFF', accent: '#67E8F9', label: 'Watchful', icon: '👀' },
+  rising: { bg: '#FFFFFF', accent: '#3B82F6', label: 'Rising', icon: '🌊' },
+  urgent: { bg: '#FFFFFF', accent: '#3B82F6', label: 'Needs Attention', icon: '⚡' },
 };
 
 const ALERT_THEME: Record<GuardAlertLevel, { bg: string; accent: string; label: string }> = {
   none: { bg: Colors.primaryLight, accent: Colors.primary, label: 'Clear' },
-  gentle: { bg: '#F0F7F3', accent: '#6B9080', label: 'Gentle notice' },
-  moderate: { bg: '#FFF9F0', accent: '#C8975A', label: 'Take care' },
-  strong: { bg: '#FFF0ED', accent: '#D4764E', label: 'Slow down' },
+  gentle: { bg: '#FFFFFF', accent: '#14B8A6', label: 'Gentle notice' },
+  moderate: { bg: '#FFFFFF', accent: '#67E8F9', label: 'Take care' },
+  strong: { bg: '#FFFFFF', accent: '#3B82F6', label: 'Slow down' },
 };
 
 const INTERVENTION_ICONS: Record<string, typeof Timer> = {

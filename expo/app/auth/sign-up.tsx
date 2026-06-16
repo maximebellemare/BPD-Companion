@@ -19,7 +19,7 @@ import { useAuth } from '@/providers/AuthProvider';
 
 export default function SignUpScreen() {
   const router = useRouter();
-  const { signUp, isGuest } = useAuth();
+  const { signUp } = useAuth();
   const [displayName, setDisplayName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
@@ -45,7 +45,7 @@ export default function SignUpScreen() {
     }
     setSubmitting(true);
     try {
-      await signUp({ email: trimmed, password, displayName: name }, isGuest);
+      await signUp({ email: trimmed, password, displayName: name });
       if (Platform.OS !== 'web') void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Sign up failed';
@@ -54,7 +54,7 @@ export default function SignUpScreen() {
     } finally {
       setSubmitting(false);
     }
-  }, [displayName, email, password, signUp, isGuest]);
+  }, [displayName, email, password, signUp]);
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
@@ -143,7 +143,15 @@ export default function SignUpScreen() {
           ) : null}
 
           <Text style={styles.terms}>
-            By creating an account you agree to our Terms and Privacy Policy.
+            By creating an account you agree to our{' '}
+            <Text style={styles.termsLink} onPress={() => router.push('/terms-of-service' as never)}>
+              Terms
+            </Text>
+            {' '}and{' '}
+            <Text style={styles.termsLink} onPress={() => router.push('/privacy-policy' as never)}>
+              Privacy Policy
+            </Text>
+            .
           </Text>
 
           <TouchableOpacity
@@ -245,8 +253,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     lineHeight: 18,
   },
+  termsLink: {
+    color: Colors.brandTeal,
+    fontWeight: '700' as const,
+  },
   primary: {
-    backgroundColor: Colors.brandNavy,
+    backgroundColor: Colors.primary,
     borderRadius: 16,
     paddingVertical: 16,
     alignItems: 'center',

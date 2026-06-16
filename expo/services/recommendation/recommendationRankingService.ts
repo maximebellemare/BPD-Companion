@@ -12,6 +12,12 @@ const URGENCY_MULTIPLIER: Record<string, number> = {
 };
 
 const ONBOARDING_TOOL_MAP: Record<string, RecommendationToolId[]> = {
+  intense_emotions: ['crisis_regulation', 'guided_regulation', 'grounding_exercise', 'companion'],
+  relationship_conflict: ['relationship_copilot', 'message_guard', 'conflict_reflection'],
+  impulsive_urges: ['pause_mode', 'grounding_exercise', 'companion'],
+  identity_confusion: ['journal', 'weekly_reflection', 'learn_article'],
+  mood_swings: ['check_in', 'weekly_reflection', 'companion'],
+  self_reflection_journaling: ['journal', 'weekly_reflection'],
   relationship_spirals: ['relationship_copilot', 'message_guard', 'conflict_reflection'],
   fear_of_abandonment: ['reality_check', 'companion', 'self_soothe'],
   impulsive_messaging: ['message_guard', 'pause_mode', 'breathing_exercise'],
@@ -23,6 +29,12 @@ const ONBOARDING_TOOL_MAP: Record<string, RecommendationToolId[]> = {
 };
 
 const PREFERRED_TOOL_MAP: Record<string, RecommendationToolId[]> = {
+  calm_emotional_spikes: ['crisis_regulation', 'guided_regulation', 'grounding_exercise'],
+  understand_patterns: ['learn_article', 'weekly_reflection', 'companion'],
+  improve_relationships: ['relationship_copilot', 'relationship_hub'],
+  dbt_coping_skills: ['opposite_action', 'reality_check', 'emotional_playbook'],
+  track_moods_triggers: ['check_in', 'weekly_reflection', 'journal'],
+  feel_less_alone: ['companion'],
   ai_companion: ['companion'],
   journaling: ['journal', 'weekly_reflection'],
   grounding: ['grounding_exercise', 'breathing_exercise'],

@@ -55,7 +55,7 @@ export default function RelationshipRecoveryScreen() {
         >
           <View style={styles.introBanner}>
             <View style={styles.introIcon}>
-              <HeartCrack size={24} color="#C47878" />
+              <HeartCrack size={24} color="#3B82F6" />
             </View>
             <Text style={styles.introTitle}>After the Storm</Text>
             <Text style={styles.introDesc}>
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   introBanner: {
-    backgroundColor: '#F5E0E0',
+    backgroundColor: 'rgba(59, 130, 246, 0.18)',
     borderRadius: 20,
     padding: 22,
     alignItems: 'center',
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 16,
-    backgroundColor: '#EDCFCF',
+    backgroundColor: '#0B1238',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 14,
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
   introTitle: {
     fontSize: 17,
     fontWeight: '700' as const,
-    color: '#A85555',
+    color: '#3B82F6',
     textAlign: 'center' as const,
     marginBottom: 8,
   },
@@ -220,14 +220,14 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   tag: {
-    backgroundColor: '#F5E0E0',
+    backgroundColor: 'rgba(59, 130, 246, 0.18)',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
   },
   tagText: {
     fontSize: 11,
-    color: '#C47878',
+    color: '#3B82F6',
     fontWeight: '500' as const,
   },
 });

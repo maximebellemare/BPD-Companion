@@ -75,12 +75,12 @@ export interface DoNotSendOption {
 }
 
 export const SAFE_REWRITE_META: Record<SafeRewriteType, { label: string; emoji: string; color: string }> = {
-  secure: { label: 'Secure', emoji: '🌿', color: '#6B9080' },
-  calm_boundary: { label: 'Calm boundary', emoji: '🛡️', color: '#5B8FB9' },
-  short_boundary: { label: 'Short boundary', emoji: '✋', color: '#4A8B8D' },
-  no_send: { label: "Don't send", emoji: '🛑', color: '#C47878' },
-  save_for_later: { label: 'Save for later', emoji: '📂', color: '#9B8EC4' },
-  journal_instead: { label: 'Journal instead', emoji: '📝', color: '#C4956A' },
+  secure: { label: 'Secure', emoji: '🌿', color: '#14B8A6' },
+  calm_boundary: { label: 'Calm boundary', emoji: '🛡️', color: '#3B82F6' },
+  short_boundary: { label: 'Short boundary', emoji: '✋', color: '#14B8A6' },
+  no_send: { label: "Don't send", emoji: '🛑', color: '#3B82F6' },
+  save_for_later: { label: 'Save for later', emoji: '📂', color: '#3B82F6' },
+  journal_instead: { label: 'Journal instead', emoji: '📝', color: '#67E8F9' },
 };
 
 export const DO_NOT_SEND_OPTIONS: DoNotSendOption[] = [

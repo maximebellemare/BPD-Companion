@@ -200,7 +200,7 @@ export default function CompanionScreen() {
               >
                 <View style={styles.followUpHeader}>
                   <View style={styles.followUpIconWrap}>
-                    <Lightbulb size={14} color="#D4956A" />
+                    <Lightbulb size={14} color="#67E8F9" />
                   </View>
                   <Text style={styles.followUpTitle}>{fu.title}</Text>
                   <TouchableOpacity
@@ -399,7 +399,7 @@ export default function CompanionScreen() {
             >
               <View style={styles.weeklyInsightHeader}>
                 <View style={styles.weeklyInsightIconWrap}>
-                  <Calendar size={16} color="#5B8FB9" />
+                  <Calendar size={16} color="#3B82F6" />
                 </View>
                 <Text style={styles.weeklyInsightLabel}>This Week</Text>
                 <ChevronRight size={16} color={Colors.textMuted} />
@@ -441,7 +441,7 @@ export default function CompanionScreen() {
                 <View style={[
                   styles.patternAccent,
                   insight.category === 'growth' && { backgroundColor: Colors.success },
-                  insight.category === 'relationship' && { backgroundColor: '#D4956A' },
+                  insight.category === 'relationship' && { backgroundColor: '#67E8F9' },
                   insight.category === 'trigger' && { backgroundColor: Colors.danger },
                   insight.category === 'coping' && { backgroundColor: Colors.primary },
                 ]} />
@@ -492,8 +492,8 @@ export default function CompanionScreen() {
             activeOpacity={0.7}
             testID="weekly-insights-btn"
           >
-            <View style={[styles.exploreCardIcon, { backgroundColor: '#E3EFF7' }]}>
-              <Calendar size={20} color="#5B8FB9" />
+            <View style={[styles.exploreCardIcon, { backgroundColor: '#FFFFFF' }]}>
+              <Calendar size={20} color="#3B82F6" />
             </View>
             <View style={styles.exploreCardContent}>
               <Text style={styles.exploreCardTitle}>Weekly Insights</Text>
@@ -507,8 +507,8 @@ export default function CompanionScreen() {
             activeOpacity={0.7}
             testID="memory-btn"
           >
-            <View style={[styles.exploreCardIcon, { backgroundColor: '#E8F0FE' }]}>
-              <Brain size={20} color="#4A6FA5" />
+            <View style={[styles.exploreCardIcon, { backgroundColor: '#FFFFFF' }]}>
+              <Brain size={20} color="#3B82F6" />
             </View>
             <View style={styles.exploreCardContent}>
               <Text style={styles.exploreCardTitle}>Emotional Memory</Text>
@@ -526,8 +526,8 @@ export default function CompanionScreen() {
             activeOpacity={0.7}
             testID="patterns-btn"
           >
-            <View style={[styles.exploreCardIcon, { backgroundColor: '#EDE7F6' }]}>
-              <Brain size={20} color="#7E57C2" />
+            <View style={[styles.exploreCardIcon, { backgroundColor: '#0B1238' }]}>
+              <Brain size={20} color="#3B82F6" />
             </View>
             <View style={styles.exploreCardContent}>
               <Text style={styles.exploreCardTitle}>Emotional Patterns</Text>
@@ -541,8 +541,8 @@ export default function CompanionScreen() {
             activeOpacity={0.7}
             testID="spiral-btn"
           >
-            <View style={[styles.exploreCardIcon, { backgroundColor: '#FDECEA' }]}>
-              <HeartCrack size={20} color="#C94438" />
+            <View style={[styles.exploreCardIcon, { backgroundColor: '#FFFFFF' }]}>
+              <HeartCrack size={20} color="#3B82F6" />
             </View>
             <View style={styles.exploreCardContent}>
               <Text style={styles.exploreCardTitle}>Relationship Signals</Text>
@@ -560,8 +560,8 @@ export default function CompanionScreen() {
             activeOpacity={0.7}
             testID="loops-btn"
           >
-            <View style={[styles.exploreCardIcon, { backgroundColor: '#FFF7ED' }]}>
-              <Repeat size={20} color="#C8762A" />
+            <View style={[styles.exploreCardIcon, { backgroundColor: '#FFFFFF' }]}>
+              <Repeat size={20} color="#3B82F6" />
             </View>
             <View style={styles.exploreCardContent}>
               <Text style={styles.exploreCardTitle}>Emotional Loops</Text>
@@ -655,7 +655,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   companionHeroBg: {
-    backgroundColor: Colors.brandNavy,
+    backgroundColor: Colors.primary,
     borderRadius: 24,
     paddingVertical: 32,
     paddingHorizontal: 24,
@@ -689,7 +689,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: '800' as const,
-    color: '#F0EDE9',
+    color: '#FFFFFF',
     marginTop: 14,
     marginBottom: 8,
     letterSpacing: -0.5,
@@ -1098,7 +1098,7 @@ const styles = StyleSheet.create({
     color: Colors.primary,
   },
   weeklyInsightCard: {
-    backgroundColor: '#F0F6FA',
+    backgroundColor: '#FFFFFF',
     borderRadius: 18,
     padding: 18,
     borderWidth: 1,
@@ -1113,7 +1113,7 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 10,
-    backgroundColor: '#E3EFF7',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     marginRight: 8,
@@ -1122,7 +1122,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#4A7A9B',
+    color: '#3B82F6',
   },
   weeklyInsightSummary: {
     fontSize: 14,

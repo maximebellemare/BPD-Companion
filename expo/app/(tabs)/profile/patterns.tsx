@@ -70,8 +70,8 @@ export default function PatternsScreen() {
             </View>
 
             <View style={styles.overviewCard}>
-              <View style={[styles.overviewIcon, { backgroundColor: '#F0E6FF' }]}>
-                <AlertTriangle size={18} color="#8B5CF6" />
+              <View style={[styles.overviewIcon, { backgroundColor: '#FFFFFF' }]}>
+                <AlertTriangle size={18} color="#3B82F6" />
               </View>
               <Text style={styles.overviewLabel}>Common Urge</Text>
               <Text style={styles.overviewValue} numberOfLines={2}>

@@ -193,12 +193,12 @@ function RelationshipChainCard({ chain, index }: { chain: RelationshipChain; ind
 
       <View style={styles.relFlowContainer}>
         <View style={styles.relFlowStep}>
-          <View style={[styles.relFlowDot, { backgroundColor: '#E17055' }]} />
+          <View style={[styles.relFlowDot, { backgroundColor: '#3B82F6' }]} />
           <Text style={styles.relFlowLabel}>{chain.emotionalResponse}</Text>
         </View>
         <View style={styles.relFlowLine} />
         <View style={styles.relFlowStep}>
-          <View style={[styles.relFlowDot, { backgroundColor: '#D4956A' }]} />
+          <View style={[styles.relFlowDot, { backgroundColor: '#67E8F9' }]} />
           <Text style={styles.relFlowLabel}>{chain.behavioralUrge}</Text>
         </View>
         <View style={styles.relFlowLine} />
@@ -302,7 +302,7 @@ export default function EmotionalPatternsScreen() {
       >
         <Animated.View style={[styles.hero, { opacity: headerFade, transform: [{ translateY: headerSlide }] }]}>
           <View style={styles.heroIconWrap}>
-            <Brain size={28} color="#5B4A8A" />
+            <Brain size={28} color="#2E2A72" />
           </View>
           <Text style={styles.heroTitle}>Your Emotional Patterns</Text>
           <Text style={styles.heroSubtitle}>
@@ -350,10 +350,10 @@ export default function EmotionalPatternsScreen() {
         {hasTriggerChains && (
           <View style={styles.section} testID="trigger-chains-section">
             <SectionHeader
-              icon={<Zap size={16} color="#E17055" />}
+              icon={<Zap size={16} color="#3B82F6" />}
               title="Common Trigger Chains"
-              color="#E17055"
-              bgColor="#FDE8E3"
+              color="#3B82F6"
+              bgColor="#FFFFFF"
             />
             <Text style={styles.sectionDesc}>
               What tends to follow your most common triggers
@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 20,
-    backgroundColor: '#EDE7F6',
+    backgroundColor: '#0B1238',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     marginBottom: 14,
@@ -624,7 +624,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     gap: 6,
-    backgroundColor: '#FDE8E3',
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 10,
@@ -632,7 +632,7 @@ const styles = StyleSheet.create({
   chainTriggerText: {
     fontSize: 13,
     fontWeight: '600' as const,
-    color: '#C0392B',
+    color: '#3B82F6',
   },
   chainOccurrences: {
     fontSize: 12,
@@ -664,7 +664,7 @@ const styles = StyleSheet.create({
     color: Colors.primaryDark,
   },
   chainUrgeChip: {
-    backgroundColor: '#FFF0E6',
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
@@ -672,7 +672,7 @@ const styles = StyleSheet.create({
   chainUrgeText: {
     fontSize: 12,
     fontWeight: '500' as const,
-    color: '#C0392B',
+    color: '#3B82F6',
   },
   chainHelpRow: {
     flexDirection: 'row' as const,
@@ -712,7 +712,7 @@ const styles = StyleSheet.create({
     fontWeight: '500' as const,
   },
   clusterEmotionChip: {
-    backgroundColor: '#EDE7F6',
+    backgroundColor: '#0B1238',
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 10,
@@ -720,7 +720,7 @@ const styles = StyleSheet.create({
   clusterEmotionText: {
     fontSize: 13,
     fontWeight: '600' as const,
-    color: '#5B4A8A',
+    color: '#2E2A72',
   },
   clusterNarrative: {
     fontSize: 13,
@@ -759,7 +759,7 @@ const styles = StyleSheet.create({
   calmingToolText: {
     fontSize: 13,
     fontWeight: '600' as const,
-    color: '#00856A',
+    color: '#14B8A6',
   },
   calmingUseCount: {
     fontSize: 12,

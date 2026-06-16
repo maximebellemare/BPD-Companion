@@ -1,6 +1,7 @@
 import { AuthUser, AuthSession, AuthCredentials, AuthSignUpInput } from '@/types/auth';
 import { IAuthRepository } from './types';
-import { supabase } from '@/services/supabase/supabaseClient';
+import { supabase } from '@/lib/supabase/client';
+import { getOrCreateProfile } from '@/lib/supabase/profiles';
 import type { Session as SbSession, User as SbUser } from '@supabase/supabase-js';
 
 function mapUser(user: SbUser): AuthUser {
@@ -72,9 +73,26 @@ export class SupabaseAuthRepository implements IAuthRepository {
       if (signIn.error || !signIn.data.session) {
         throw new Error(signIn.error?.message ?? 'Please confirm your email to continue');
       }
+      await getOrCreateProfile(
+        signIn.data.session.user.id,
+        signIn.data.session.user.email,
+        signIn.data.session.user.created_at,
+      );
       return mapSession(signIn.data.session);
     }
+    await getOrCreateProfile(data.session.user.id, data.session.user.email, data.session.user.created_at);
     return mapSession(data.session);
+  }
+
+  async resetPassword(email: string): Promise<void> {
+    const redirectTo = process.env.EXPO_PUBLIC_PASSWORD_RESET_REDIRECT_URL;
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo,
+    });
+    if (error) {
+      console.log('[AuthRepository] resetPassword error:', error.message);
+      throw new Error(error.message);
+    }
   }
 
   async signOut(): Promise<void> {

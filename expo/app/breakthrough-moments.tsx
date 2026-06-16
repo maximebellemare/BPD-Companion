@@ -35,14 +35,14 @@ import { useAnalytics } from '@/providers/AnalyticsProvider';
 import type { BreakthroughMoment, BreakthroughType } from '@/types/breakthrough';
 
 const TYPE_META: Record<BreakthroughType, { label: string; color: string; bg: string; Icon: React.ElementType }> = {
-  distress_reduction: { label: 'Distress Reduced', color: '#10B981', bg: '#ECFDF5', Icon: TrendingDown },
-  pause_before_send: { label: 'Paused', color: '#6366F1', bg: '#EEF2FF', Icon: Pause },
-  loop_broken: { label: 'Loop Broken', color: '#F59E0B', bg: '#FFFBEB', Icon: Award },
-  emotional_awareness: { label: 'Awareness', color: '#8B5CF6', bg: '#F5F3FF', Icon: Brain },
+  distress_reduction: { label: 'Distress Reduced', color: '#14B8A6', bg: '#FFFFFF', Icon: TrendingDown },
+  pause_before_send: { label: 'Paused', color: '#3B82F6', bg: '#FFFFFF', Icon: Pause },
+  loop_broken: { label: 'Loop Broken', color: '#67E8F9', bg: '#FFFFFF', Icon: Award },
+  emotional_awareness: { label: 'Awareness', color: '#3B82F6', bg: '#FFFFFF', Icon: Brain },
   coping_success: { label: 'Coping Win', color: Colors.primary, bg: Colors.primaryLight, Icon: CheckCircle },
-  relationship_regulation: { label: 'Relationship', color: '#EC4899', bg: '#FDF2F8', Icon: Heart },
-  consistent_checkin: { label: 'Consistency', color: '#F59E0B', bg: '#FFFBEB', Icon: Star },
-  journal_reflection: { label: 'Reflection', color: '#0EA5E9', bg: '#F0F9FF', Icon: BookOpen },
+  relationship_regulation: { label: 'Relationship', color: '#3B82F6', bg: '#FFFFFF', Icon: Heart },
+  consistent_checkin: { label: 'Consistency', color: '#67E8F9', bg: '#FFFFFF', Icon: Star },
+  journal_reflection: { label: 'Reflection', color: '#3B82F6', bg: '#FFFFFF', Icon: BookOpen },
 };
 
 function formatTimestamp(ts: number): string {
@@ -284,7 +284,7 @@ export default function BreakthroughMomentsScreen() {
       >
         <Animated.View style={[styles.hero, { opacity: headerFade, transform: [{ translateY: headerSlide }] }]}>
           <View style={styles.heroIcon}>
-            <Sparkles size={32} color="#F59E0B" />
+            <Sparkles size={32} color="#67E8F9" />
           </View>
           <Text style={styles.heroTitle}>Your Growth Story</Text>
           <Text style={styles.heroSubtitle}>
@@ -304,7 +304,7 @@ export default function BreakthroughMomentsScreen() {
             <View style={styles.statDivider} />
             <View style={styles.statBox}>
               <View style={styles.streakInline}>
-                <Flame size={14} color="#F59E0B" />
+                <Flame size={14} color="#67E8F9" />
                 <Text style={styles.statNumber}>{summary.streakDays}</Text>
               </View>
               <Text style={styles.statLabel}>Streak</Text>
@@ -418,12 +418,12 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 20,
-    backgroundColor: '#FFFBEB',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#FEF3C7',
+    borderColor: '#FFFFFF',
   },
   heroTitle: {
     fontSize: 24,

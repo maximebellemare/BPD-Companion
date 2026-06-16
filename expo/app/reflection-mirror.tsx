@@ -29,18 +29,18 @@ import { generateReflectionMirror } from '@/services/reflection/reflectionMirror
 import { ReflectionTheme, RelationshipPattern, CopingInsight, GrowthSignal } from '@/types/reflectionMirror';
 
 const SECTION_COLORS = {
-  themes: '#E8F0ED',
-  themesBorder: '#C5D9D0',
-  themesAccent: '#6B9080',
-  relationship: '#F5E6D8',
-  relationshipBorder: '#E8D0BC',
-  relationshipAccent: '#C4885B',
-  coping: '#E3E8F0',
-  copingBorder: '#C5CEE0',
-  copingAccent: '#5B7AA8',
-  growth: '#F0ECE0',
-  growthBorder: '#DDD6C5',
-  growthAccent: '#8B7D5E',
+  themes: '#FFFFFF',
+  themesBorder: '#0B1238',
+  themesAccent: '#14B8A6',
+  relationship: '#0B1238',
+  relationshipBorder: '#0B1238',
+  relationshipAccent: '#3B82F6',
+  coping: '#0B1238',
+  copingBorder: '#0B1238',
+  copingAccent: '#2E2A72',
+  growth: '#FFFFFF',
+  growthBorder: '#0B1238',
+  growthAccent: '#2E2A72',
 };
 
 function TrendIcon({ trend }: { trend: 'rising' | 'falling' | 'steady' }) {

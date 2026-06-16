@@ -45,17 +45,17 @@ const CATEGORY_ICON: Record<Intervention['category'], typeof Heart> = {
 };
 
 const CATEGORY_COLORS: Record<Intervention['category'], { bg: string; accent: string }> = {
-  crisis: { bg: '#FFF0ED', accent: '#C94438' },
-  relationship: { bg: '#FFF5EE', accent: '#D4764E' },
-  regulation: { bg: '#F0F7F3', accent: '#6B9080' },
-  reflection: { bg: '#F5F0FF', accent: '#7C5CB8' },
-  growth: { bg: '#FFF9F0', accent: '#C8975A' },
+  crisis: { bg: '#FFFFFF', accent: '#3B82F6' },
+  relationship: { bg: '#FFFFFF', accent: '#3B82F6' },
+  regulation: { bg: '#FFFFFF', accent: '#14B8A6' },
+  reflection: { bg: '#FFFFFF', accent: '#3B82F6' },
+  growth: { bg: '#FFFFFF', accent: '#67E8F9' },
 };
 
 const QUICK_ACTIONS = [
-  { key: 'message', label: 'Write a draft', icon: MessageSquare, route: '/(tabs)/messages', color: '#4A8B8D' },
-  { key: 'journal', label: 'Journal', icon: PenLine, route: '/(tabs)/journal', color: '#9B8EC4' },
-  { key: 'companion', label: 'Talk to AI', icon: Sparkles, route: '/(tabs)/companion', color: '#C4956A' },
+  { key: 'message', label: 'Write a draft', icon: MessageSquare, route: '/(tabs)/messages', color: '#14B8A6' },
+  { key: 'journal', label: 'Journal', icon: PenLine, route: '/(tabs)/journal', color: '#3B82F6' },
+  { key: 'companion', label: 'Talk to AI', icon: Sparkles, route: '/(tabs)/companion', color: '#67E8F9' },
 ] as const;
 
 function getGreeting(): string {
@@ -198,7 +198,7 @@ export default function HomeScreen() {
   const distressColor = distressDirection === 'improved'
     ? Colors.success
     : distressDirection === 'worsened'
-      ? '#E17055'
+      ? '#3B82F6'
       : Colors.textMuted;
 
   const recentCheckInCount = useMemo(() => {
@@ -354,7 +354,7 @@ export default function HomeScreen() {
           >
             <View style={styles.insightHeader}>
               <View style={styles.insightIconWrap}>
-                <Sun size={18} color="#9B8EC4" />
+                <Sun size={18} color="#3B82F6" />
               </View>
               <Text style={styles.insightTitle}>Your patterns</Text>
               <ChevronRight size={14} color={Colors.textMuted} />
@@ -407,7 +407,7 @@ export default function HomeScreen() {
           >
             <View style={styles.progressHeader}>
               <View style={styles.progressIconWrap}>
-                <Flame size={18} color="#C4956A" />
+                <Flame size={18} color="#67E8F9" />
               </View>
               <Text style={styles.progressTitle}>Your progress</Text>
               <ChevronRight size={14} color={Colors.textMuted} />

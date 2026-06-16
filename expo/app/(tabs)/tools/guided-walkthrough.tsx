@@ -57,8 +57,8 @@ function getToolData(toolId: string, toolType: string): ToolData | null {
       duration: tool.duration,
       steps: tool.prompts.map(p => ({ title: p.title, instruction: p.instruction, tip: p.tip })),
       whenToUse: tool.whenToUse,
-      color: '#9B8EC4',
-      bgColor: '#F0ECF7',
+      color: '#3B82F6',
+      bgColor: 'rgba(59, 130, 246, 0.18)',
     };
   }
 
@@ -73,8 +73,8 @@ function getToolData(toolId: string, toolType: string): ToolData | null {
       duration: tool.duration,
       steps: tool.steps,
       whenToUse: tool.whenToUse,
-      color: '#C47878',
-      bgColor: '#F5E0E0',
+      color: '#3B82F6',
+      bgColor: 'rgba(59, 130, 246, 0.18)',
     };
   }
 
@@ -89,8 +89,8 @@ function getToolData(toolId: string, toolType: string): ToolData | null {
       duration: tool.duration,
       steps: tool.steps,
       whenToUse: tool.whenToUse,
-      color: '#4A8B8D',
-      bgColor: '#E8F4F4',
+      color: '#14B8A6',
+      bgColor: 'rgba(20, 184, 166, 0.18)',
     };
   }
 
@@ -98,10 +98,10 @@ function getToolData(toolId: string, toolType: string): ToolData | null {
     const skill = DBT_SKILLS.find(s => s.id === toolId);
     if (!skill) return null;
     const moduleColors: Record<string, { color: string; bgColor: string }> = {
-      'distress-tolerance': { color: '#E17055', bgColor: '#FDE8E3' },
-      'emotional-regulation': { color: '#6B9080', bgColor: '#E3EDE8' },
-      'interpersonal-effectiveness': { color: '#5B8FB9', bgColor: '#E3EFF7' },
-      'mindfulness': { color: '#C77DBA', bgColor: '#F5E6F3' },
+      'distress-tolerance': { color: '#3B82F6', bgColor: '#FFFFFF' },
+      'emotional-regulation': { color: '#14B8A6', bgColor: '#0B1238' },
+      'interpersonal-effectiveness': { color: '#3B82F6', bgColor: '#FFFFFF' },
+      'mindfulness': { color: '#67E8F9', bgColor: '#FFFFFF' },
     };
     const colors = moduleColors[skill.moduleId] ?? { color: Colors.primary, bgColor: Colors.primaryLight };
     return {

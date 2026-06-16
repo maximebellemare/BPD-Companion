@@ -41,9 +41,9 @@ const ICON_MAP: Record<string, React.ComponentType<{ size: number; color: string
 };
 
 const RISK_THEME: Record<CrisisRiskLevel, { bg: string; border: string; accent: string; glow: string }> = {
-  low: { bg: Colors.primaryLight, border: '#C8DDD1', accent: Colors.primary, glow: '#6B908020' },
-  moderate: { bg: '#FFF8F0', border: '#F5E6D8', accent: '#D4956A', glow: '#D4956A18' },
-  high: { bg: '#FFF0EE', border: '#FDCFCA', accent: '#D63031', glow: '#D6303115' },
+  low: { bg: Colors.primaryLight, border: '#0B1238', accent: Colors.primary, glow: '#14B8A620' },
+  moderate: { bg: '#FFFFFF', border: '#0B1238', accent: '#67E8F9', glow: '#67E8F918' },
+  high: { bg: '#FFFFFF', border: '#0B1238', accent: '#3B82F6', glow: '#3B82F615' },
 };
 
 export default React.memo(function EarlySupportCard({ prediction }: Props) {

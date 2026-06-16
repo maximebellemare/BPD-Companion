@@ -60,7 +60,7 @@ const IdentityBuilderCard = React.memo(function IdentityBuilderCard({ pinnedAnch
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <View style={styles.headerIcon}>
-          <Fingerprint size={18} color="#2D8B7A" />
+          <Fingerprint size={18} color="#14B8A6" />
         </View>
         <View style={styles.headerText}>
           <Text style={styles.title}>Identity & Self-Trust</Text>
@@ -70,7 +70,7 @@ const IdentityBuilderCard = React.memo(function IdentityBuilderCard({ pinnedAnch
 
       {displayAnchor && (
         <Animated.View style={[styles.anchorBanner, { opacity: accentOpacity }]}>
-          <Anchor size={14} color="#2D8B7A" />
+          <Anchor size={14} color="#14B8A6" />
           <Text style={styles.anchorText} numberOfLines={2}>
             {displayAnchor}
           </Text>
@@ -100,8 +100,8 @@ const IdentityBuilderCard = React.memo(function IdentityBuilderCard({ pinnedAnch
           activeOpacity={0.7}
           testID="identity-values-btn"
         >
-          <View style={[styles.linkIcon, { backgroundColor: '#E0F5EF' }]}>
-            <Compass size={16} color="#2D8B7A" />
+          <View style={[styles.linkIcon, { backgroundColor: '#FFFFFF' }]}>
+            <Compass size={16} color="#14B8A6" />
           </View>
           <Text style={styles.linkLabel}>Values</Text>
           <ChevronRight size={14} color={Colors.textMuted} />
@@ -113,8 +113,8 @@ const IdentityBuilderCard = React.memo(function IdentityBuilderCard({ pinnedAnch
           activeOpacity={0.7}
           testID="identity-trust-btn"
         >
-          <View style={[styles.linkIcon, { backgroundColor: '#F0E6FF' }]}>
-            <Shield size={16} color="#8B5CF6" />
+          <View style={[styles.linkIcon, { backgroundColor: '#FFFFFF' }]}>
+            <Shield size={16} color="#3B82F6" />
           </View>
           <Text style={styles.linkLabel}>Self-Trust</Text>
           <ChevronRight size={14} color={Colors.textMuted} />
@@ -126,7 +126,7 @@ const IdentityBuilderCard = React.memo(function IdentityBuilderCard({ pinnedAnch
           activeOpacity={0.7}
           testID="identity-journal-btn"
         >
-          <View style={[styles.linkIcon, { backgroundColor: '#E8F0FE' }]}>
+          <View style={[styles.linkIcon, { backgroundColor: '#FFFFFF' }]}>
             <BookOpen size={16} color="#3B82F6" />
           </View>
           <Text style={styles.linkLabel}>Journal</Text>
@@ -139,8 +139,8 @@ const IdentityBuilderCard = React.memo(function IdentityBuilderCard({ pinnedAnch
           activeOpacity={0.7}
           testID="identity-anchors-btn"
         >
-          <View style={[styles.linkIcon, { backgroundColor: '#FFF8F0' }]}>
-            <Anchor size={16} color="#D4956A" />
+          <View style={[styles.linkIcon, { backgroundColor: '#FFFFFF' }]}>
+            <Anchor size={16} color="#67E8F9" />
           </View>
           <Text style={styles.linkLabel}>Anchors</Text>
           <ChevronRight size={14} color={Colors.textMuted} />
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: '#E0F5EF',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -215,18 +215,18 @@ const styles = StyleSheet.create({
   anchorBanner: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#E0F5EF',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 12,
     gap: 8,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#C0E5D8',
+    borderColor: '#0B1238',
   },
   anchorText: {
     flex: 1,
     fontSize: 13,
-    color: '#2D6B5A',
+    color: '#14B8A6',
     lineHeight: 19,
     fontStyle: 'italic',
     fontWeight: '500' as const,
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
   conflictBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2D8B7A',
+    backgroundColor: '#14B8A6',
     borderRadius: 14,
     padding: 14,
   },

@@ -42,10 +42,10 @@ const ICON_MAP: Record<string, React.ComponentType<{ size: number; color: string
 };
 
 const INTENSITY_THEME: Record<StormIntensity, { bg: string; border: string; accent: string; iconBg: string }> = {
-  calm: { bg: Colors.primaryLight, border: '#C8DDD1', accent: Colors.primary, iconBg: '#6B908018' },
-  building: { bg: '#FFF8F0', border: '#F5E6D8', accent: '#C4884F', iconBg: '#C4884F14' },
-  approaching: { bg: '#FFF3EC', border: '#F2D8C6', accent: '#D07A42', iconBg: '#D07A4214' },
-  active: { bg: '#FFF0EE', border: '#FDCFCA', accent: '#C0392B', iconBg: '#C0392B12' },
+  calm: { bg: Colors.primaryLight, border: '#0B1238', accent: Colors.primary, iconBg: '#14B8A618' },
+  building: { bg: '#FFFFFF', border: '#0B1238', accent: '#3B82F6', iconBg: '#3B82F614' },
+  approaching: { bg: '#FFFFFF', border: '#0B1238', accent: '#3B82F6', iconBg: '#3B82F614' },
+  active: { bg: '#FFFFFF', border: '#0B1238', accent: '#3B82F6', iconBg: '#3B82F612' },
 };
 
 const INTENSITY_LABEL: Record<StormIntensity, string> = {

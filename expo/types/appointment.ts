@@ -56,11 +56,11 @@ export const APPOINTMENT_TYPE_LABELS: Record<AppointmentType, string> = {
 };
 
 export const APPOINTMENT_TYPE_COLORS: Record<AppointmentType, string> = {
-  therapist: '#6B9080',
-  psychiatrist: '#6366F1',
-  support_group: '#F59E0B',
+  therapist: '#14B8A6',
+  psychiatrist: '#3B82F6',
+  support_group: '#67E8F9',
   coach: '#3B82F6',
-  other: '#A8B0B5',
+  other: '#3B82F6',
 };
 
 export const LOCATION_TYPE_LABELS: Record<AppointmentLocation, string> = {

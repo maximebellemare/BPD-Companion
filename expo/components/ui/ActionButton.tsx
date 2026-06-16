@@ -31,9 +31,9 @@ interface ActionButtonProps {
 }
 
 const VARIANT_STYLES: Record<ButtonVariant, { bg: string; text: string; border?: string }> = {
-  primary: { bg: Colors.brandTeal, text: Colors.white },
-  secondary: { bg: Colors.brandTealSoft, text: Colors.brandTeal },
-  outline: { bg: 'transparent', text: Colors.brandTeal, border: Colors.brandTeal },
+  primary: { bg: Colors.primary, text: Colors.white },
+  secondary: { bg: Colors.brandTealSoft, text: Colors.brandCyan },
+  outline: { bg: 'transparent', text: Colors.brandCyan, border: Colors.brandCyan },
   ghost: { bg: 'transparent', text: Colors.textSecondary },
   danger: { bg: Colors.dangerLight, text: Colors.dangerDark },
 };

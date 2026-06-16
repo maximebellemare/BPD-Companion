@@ -47,13 +47,13 @@ function ProgressDashboardCardComponent() {
   const trendIcon = weekComparison.direction === 'improved'
     ? <TrendingDown size={13} color={Colors.success} />
     : weekComparison.direction === 'worsened'
-      ? <TrendingUp size={13} color="#E17055" />
+      ? <TrendingUp size={13} color="#3B82F6" />
       : <Minus size={13} color={Colors.textMuted} />;
 
   const trendColor = weekComparison.direction === 'improved'
     ? Colors.success
     : weekComparison.direction === 'worsened'
-      ? '#E17055'
+      ? '#3B82F6'
       : Colors.textMuted;
 
   const trendLabel = weekComparison.direction === 'improved'
@@ -73,7 +73,7 @@ function ProgressDashboardCardComponent() {
 
       <View style={styles.topRow}>
         <View style={styles.iconWrap}>
-          <Award size={20} color="#D4956A" />
+          <Award size={20} color="#67E8F9" />
         </View>
         <View style={styles.titleArea}>
           <Text style={styles.title}>Recovery Progress</Text>
@@ -97,7 +97,7 @@ function ProgressDashboardCardComponent() {
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
               <View style={styles.streakRow}>
-                <Flame size={14} color="#D4956A" />
+                <Flame size={14} color="#67E8F9" />
                 <Text style={styles.statValue}>{metrics.journalStreak}</Text>
               </View>
               <Text style={styles.statLabel}>Day streak</Text>
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   },
   glowOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#D4956A',
+    backgroundColor: '#67E8F9',
     borderRadius: 18,
   },
   topRow: {
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 12,
-    backgroundColor: '#FFF0E6',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,

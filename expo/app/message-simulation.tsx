@@ -591,7 +591,7 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   recommendationBanner: {
-    backgroundColor: Colors.brandNavy,
+    backgroundColor: Colors.primary,
     borderRadius: 18,
     padding: 20,
     marginBottom: 20,

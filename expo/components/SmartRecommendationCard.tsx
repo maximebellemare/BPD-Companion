@@ -54,21 +54,21 @@ const URGENCY_STYLE: Record<RecommendationUrgency, {
   label: string;
 }> = {
   immediate: {
-    bg: '#FFF0ED',
-    border: '#FDCFCA',
-    accent: '#C94438',
+    bg: '#FFFFFF',
+    border: '#0B1238',
+    accent: '#3B82F6',
     label: 'Right now',
   },
   suggested: {
-    bg: '#FFF8F0',
-    border: '#F5E6D8',
-    accent: '#C8975A',
+    bg: '#FFFFFF',
+    border: '#0B1238',
+    accent: '#67E8F9',
     label: 'This may help',
   },
   gentle: {
-    bg: '#F0F7F3',
-    border: '#D4E8DC',
-    accent: '#6B9080',
+    bg: '#FFFFFF',
+    border: '#0B1238',
+    accent: '#14B8A6',
     label: 'A useful next step',
   },
 };

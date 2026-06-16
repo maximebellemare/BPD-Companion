@@ -141,7 +141,7 @@ export const QUICK_ENTRY_CARDS: QuickEntryCard[] = [
     label: "I'm about to text someone",
     subtitle: 'Check before you send',
     emoji: '📱',
-    color: '#5B8FB9',
+    color: '#3B82F6',
     defaultEmotion: 'anxious',
   },
   {
@@ -149,7 +149,7 @@ export const QUICK_ENTRY_CARDS: QuickEntryCard[] = [
     label: 'Help me figure out what to say',
     subtitle: 'Get clarity on your message',
     emoji: '💭',
-    color: '#9B8EC4',
+    color: '#3B82F6',
     defaultEmotion: 'confused',
   },
   {
@@ -157,7 +157,7 @@ export const QUICK_ENTRY_CARDS: QuickEntryCard[] = [
     label: 'I need to calm down first',
     subtitle: 'Pause before responding',
     emoji: '🧘',
-    color: '#6B9080',
+    color: '#14B8A6',
     defaultEmotion: 'angry',
   },
   {
@@ -165,7 +165,7 @@ export const QUICK_ENTRY_CARDS: QuickEntryCard[] = [
     label: "Should I send this?",
     subtitle: 'Get a recommendation',
     emoji: '🤔',
-    color: '#C4956A',
+    color: '#67E8F9',
     defaultEmotion: 'calm_unsure',
   },
   {
@@ -173,7 +173,7 @@ export const QUICK_ENTRY_CARDS: QuickEntryCard[] = [
     label: 'Help me set a boundary',
     subtitle: 'Firm, kind, clear',
     emoji: '🛡️',
-    color: '#5B8FB9',
+    color: '#3B82F6',
     defaultEmotion: 'hurt',
   },
   {
@@ -181,7 +181,7 @@ export const QUICK_ENTRY_CARDS: QuickEntryCard[] = [
     label: 'Repair after conflict',
     subtitle: 'Reconnect without losing yourself',
     emoji: '🌱',
-    color: '#7FA68E',
+    color: '#14B8A6',
     defaultEmotion: 'ashamed',
   },
 ];

@@ -24,9 +24,9 @@ interface Props {
 
 const ALERT_THEME: Record<GuardAlertLevel, { bg: string; border: string; accent: string; label: string }> = {
   none: { bg: Colors.white, border: Colors.border, accent: Colors.primary, label: 'Clear' },
-  gentle: { bg: '#F0F7F3', border: '#D4E8DC', accent: '#6B9080', label: 'Gentle notice' },
-  moderate: { bg: '#FFF9F0', border: '#F5E6D8', accent: '#C8975A', label: 'Take care' },
-  strong: { bg: '#FFF0ED', border: '#FDCFB8', accent: '#D4764E', label: 'Slow down' },
+  gentle: { bg: '#FFFFFF', border: '#0B1238', accent: '#14B8A6', label: 'Gentle notice' },
+  moderate: { bg: '#FFFFFF', border: '#0B1238', accent: '#67E8F9', label: 'Take care' },
+  strong: { bg: '#FFFFFF', border: '#0B1238', accent: '#3B82F6', label: 'Slow down' },
 };
 
 const ICON_MAP: Record<string, typeof Timer> = {

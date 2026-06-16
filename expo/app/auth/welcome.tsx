@@ -4,9 +4,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   Platform,
-  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -14,11 +12,10 @@ import * as Haptics from 'expo-haptics';
 import { ArrowRight, Shield, Cloud, Lock } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { BRAND } from '@/constants/branding';
-import { useAuth } from '@/providers/AuthProvider';
+import BrandLogo from '@/components/branding/BrandLogo';
 
 export default function WelcomeScreen() {
   const router = useRouter();
-  const { continueAsGuest } = useAuth();
 
   const handleSignUp = useCallback(() => {
     if (Platform.OS !== 'web') void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -29,28 +26,6 @@ export default function WelcomeScreen() {
     if (Platform.OS !== 'web') void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push('/auth/sign-in');
   }, [router]);
-
-  const handleGuest = useCallback(() => {
-    if (Platform.OS !== 'web') void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    const proceed = () => {
-      continueAsGuest();
-    };
-    if (Platform.OS === 'web') {
-      const ok = typeof window !== 'undefined' ? window.confirm(
-        'Continue as guest?\n\nYour journal entries, check-ins, moods, medications, and all other data will only live on this device. If you delete the app, switch devices, or clear data — it will be permanently lost.\n\nYou can create an account anytime later.',
-      ) : true;
-      if (ok) proceed();
-      return;
-    }
-    Alert.alert(
-      'Continue as guest?',
-      'Your journal entries, check-ins, moods, medications, and all other data will only live on this device. If you delete the app, switch devices, or clear data — it will be permanently lost.\n\nYou can create an account anytime later.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Continue as guest', style: 'destructive', onPress: proceed },
-      ],
-    );
-  }, [continueAsGuest]);
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
@@ -63,12 +38,13 @@ export default function WelcomeScreen() {
         <Text style={styles.subtitle}>{BRAND.tagline}</Text>
 
         <View style={styles.illustration}>
-          <Image
-            source={{ uri: 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=800' }}
-            style={styles.heroImage}
-            resizeMode="cover"
-          />
-          <View style={styles.heroOverlay} />
+          <BrandLogo size={108} animated />
+          <View style={styles.bpdMark}>
+            <Text style={styles.bpdLetters}>BPD Companion</Text>
+          </View>
+          <Text style={styles.heroText}>
+            Tools for emotional storms, relationship triggers, reflection, and safer communication.
+          </Text>
         </View>
       </View>
 
@@ -90,6 +66,11 @@ export default function WelcomeScreen() {
             <Text style={styles.featureTitle}>Built for privacy</Text>
             <Text style={styles.featureSub}>Only you see what you write — encrypted in transit</Text>
           </View>
+        </View>
+        <View style={styles.disclaimerBox}>
+          <Text style={styles.disclaimerText}>
+            BPD Companion is educational support, not medical advice, crisis support, or a replacement for therapy.
+          </Text>
         </View>
       </View>
 
@@ -113,14 +94,6 @@ export default function WelcomeScreen() {
           <Text style={styles.secondaryButtonText}>I already have an account</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.ghostButton}
-          onPress={handleGuest}
-          activeOpacity={0.7}
-          testID="auth-guest"
-        >
-          <Text style={styles.ghostButtonText}>Continue as guest</Text>
-        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -156,8 +129,8 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 36,
     fontWeight: '700' as const,
-    color: Colors.brandNavy,
-    letterSpacing: -0.5,
+    color: Colors.text,
+    letterSpacing: 0,
   },
   subtitle: {
     fontSize: 16,
@@ -169,17 +142,32 @@ const styles = StyleSheet.create({
     flex: 1,
     marginTop: 24,
     borderRadius: 24,
-    overflow: 'hidden',
-    backgroundColor: Colors.brandTealSoft,
+    backgroundColor: Colors.primaryLight,
+    borderWidth: 1,
+    borderColor: Colors.border,
     minHeight: 200,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
   },
-  heroImage: {
-    width: '100%',
-    height: '100%',
+  bpdMark: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 18,
   },
-  heroOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(27,40,56,0.08)',
+  bpdLetters: {
+    color: Colors.text,
+    fontSize: 24,
+    fontWeight: '800' as const,
+    letterSpacing: 0,
+  },
+  heroText: {
+    color: Colors.textSecondary,
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'center',
+    marginTop: 14,
   },
   features: {
     gap: 14,
@@ -204,19 +192,31 @@ const styles = StyleSheet.create({
   featureTitle: {
     fontSize: 15,
     fontWeight: '600' as const,
-    color: Colors.brandNavy,
+    color: Colors.text,
   },
   featureSub: {
     fontSize: 13,
     color: Colors.textSecondary,
     marginTop: 2,
   },
+  disclaimerBox: {
+    backgroundColor: Colors.brandLilacSoft,
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  disclaimerText: {
+    color: Colors.textSecondary,
+    fontSize: 12,
+    lineHeight: 17,
+  },
   actions: {
     gap: 10,
     paddingBottom: 8,
   },
   primaryButton: {
-    backgroundColor: Colors.brandNavy,
+    backgroundColor: Colors.primary,
     borderRadius: 16,
     paddingVertical: 16,
     flexDirection: 'row',
@@ -238,18 +238,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   secondaryButtonText: {
-    color: Colors.brandNavy,
+    color: Colors.text,
     fontSize: 15,
     fontWeight: '600' as const,
-  },
-  ghostButton: {
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  ghostButtonText: {
-    color: Colors.textMuted,
-    fontSize: 14,
-    fontWeight: '500' as const,
-    textDecorationLine: 'underline',
   },
 });

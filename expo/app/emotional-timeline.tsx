@@ -37,19 +37,19 @@ import {
 import { EmotionalEpisode, EpisodeNode, EpisodeNodeType } from '@/types/emotionalEpisode';
 
 const NODE_TYPE_CONFIG: Record<EpisodeNodeType, { icon: React.ElementType; label: string; bg: string; color: string }> = {
-  trigger: { icon: Zap, label: 'Trigger', bg: '#FEF5E7', color: '#E67E22' },
-  emotion: { icon: Heart, label: 'Emotion', bg: '#FDE8E3', color: '#E17055' },
-  urge: { icon: AlertTriangle, label: 'Urge', bg: '#FDEBD0', color: '#D35400' },
-  behavior: { icon: MessageSquare, label: 'Action', bg: '#F5E6D8', color: '#D4956A' },
-  coping: { icon: Shield, label: 'Coping', bg: '#E0F5EF', color: '#00B894' },
-  outcome: { icon: Activity, label: 'Outcome', bg: '#E3EDE8', color: '#6B9080' },
+  trigger: { icon: Zap, label: 'Trigger', bg: '#FFFFFF', color: '#3B82F6' },
+  emotion: { icon: Heart, label: 'Emotion', bg: '#FFFFFF', color: '#3B82F6' },
+  urge: { icon: AlertTriangle, label: 'Urge', bg: '#FFFFFF', color: '#3B82F6' },
+  behavior: { icon: MessageSquare, label: 'Action', bg: '#0B1238', color: '#67E8F9' },
+  coping: { icon: Shield, label: 'Coping', bg: '#FFFFFF', color: '#14B8A6' },
+  outcome: { icon: Activity, label: 'Outcome', bg: '#0B1238', color: '#14B8A6' },
 };
 
 const OUTCOME_CONFIG = {
-  managed: { label: 'Managed', color: '#00B894', bg: '#E0F5EF', icon: TrendingDown },
-  escalated: { label: 'Escalated', color: '#E17055', bg: '#FDE8E3', icon: TrendingUp },
-  deescalated: { label: 'De-escalated', color: '#6B9080', bg: '#E3EDE8', icon: TrendingDown },
-  neutral: { label: 'Neutral', color: '#8E9AAF', bg: '#F0ECE7', icon: Minus },
+  managed: { label: 'Managed', color: '#14B8A6', bg: '#FFFFFF', icon: TrendingDown },
+  escalated: { label: 'Escalated', color: '#3B82F6', bg: '#FFFFFF', icon: TrendingUp },
+  deescalated: { label: 'De-escalated', color: '#14B8A6', bg: '#0B1238', icon: TrendingDown },
+  neutral: { label: 'Neutral', color: '#2E2A72', bg: '#FFFFFF', icon: Minus },
 };
 
 function formatDate(ts: number): string {
@@ -143,10 +143,10 @@ const TimelineNode = React.memo(function TimelineNode({
                   {
                     width: `${(node.intensity / 10) * 100}%`,
                     backgroundColor: node.intensity <= 3
-                      ? '#00B894'
+                      ? '#14B8A6'
                       : node.intensity <= 6
-                        ? '#D4956A'
-                        : '#E17055',
+                        ? '#67E8F9'
+                        : '#3B82F6',
                   },
                 ]}
               />
@@ -170,10 +170,10 @@ const EpisodeCard = React.memo(function EpisodeCard({
   const OutcomeIcon = outcomeConfig.icon;
 
   const intensityColor = episode.peakIntensity <= 3
-    ? '#00B894'
+    ? '#14B8A6'
     : episode.peakIntensity <= 6
-      ? '#D4956A'
-      : '#E17055';
+      ? '#67E8F9'
+      : '#3B82F6';
 
   return (
     <TouchableOpacity
@@ -218,7 +218,7 @@ const EpisodeCard = React.memo(function EpisodeCard({
 
       <View style={styles.episodeMetaRow}>
         <View style={styles.episodeMetaItem}>
-          <Zap size={12} color="#E67E22" />
+          <Zap size={12} color="#3B82F6" />
           <Text style={styles.episodeMetaText}>{episode.triggers.length} trigger{episode.triggers.length !== 1 ? 's' : ''}</Text>
         </View>
         <View style={[styles.episodeIntensityPill, { backgroundColor: intensityColor + '18' }]}>
@@ -228,7 +228,7 @@ const EpisodeCard = React.memo(function EpisodeCard({
         </View>
         {episode.isRelationshipRelated && (
           <View style={styles.relationshipBadge}>
-            <Heart size={10} color="#C38D9E" />
+            <Heart size={10} color="#67E8F9" />
             <Text style={styles.relationshipBadgeText}>Relationship</Text>
           </View>
         )}
@@ -301,7 +301,7 @@ function EpisodeDetail({
           </View>
           {episode.isRelationshipRelated && (
             <View style={styles.relationshipBadge}>
-              <Heart size={10} color="#C38D9E" />
+              <Heart size={10} color="#67E8F9" />
               <Text style={styles.relationshipBadgeText}>Relationship</Text>
             </View>
           )}
@@ -344,7 +344,7 @@ function EpisodeDetail({
       <Animated.View style={[styles.reflectionCard, { opacity: reflectionFade }]}>
         <View style={styles.reflectionIconRow}>
           <View style={styles.reflectionIconWrap}>
-            <Lightbulb size={18} color="#D4956A" />
+            <Lightbulb size={18} color="#67E8F9" />
           </View>
           <Text style={styles.reflectionTitle}>What may have happened</Text>
         </View>
@@ -353,8 +353,8 @@ function EpisodeDetail({
 
       <Animated.View style={[styles.interruptCard, { opacity: reflectionFade }]}>
         <View style={styles.reflectionIconRow}>
-          <View style={[styles.reflectionIconWrap, { backgroundColor: '#E3EDE8' }]}>
-            <RotateCcw size={16} color="#6B9080" />
+          <View style={[styles.reflectionIconWrap, { backgroundColor: '#0B1238' }]}>
+            <RotateCcw size={16} color="#14B8A6" />
           </View>
           <Text style={styles.reflectionTitle}>Where to interrupt next time</Text>
         </View>
@@ -393,7 +393,7 @@ function EpisodeDetail({
           <View style={styles.chipRow}>
             {episode.copingUsed.map(c => (
               <View key={c} style={styles.copingChip}>
-                <Shield size={10} color="#00B894" />
+                <Shield size={10} color="#14B8A6" />
                 <Text style={styles.copingChipText}>{c}</Text>
               </View>
             ))}
@@ -481,14 +481,14 @@ export default function EmotionalTimelineReplayScreen() {
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
-                  <Text style={[styles.statValue, { color: '#E17055' }]}>
+                  <Text style={[styles.statValue, { color: '#3B82F6' }]}>
                     {replayState.highIntensityCount}
                   </Text>
                   <Text style={styles.statLabel}>High intensity</Text>
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
-                  <Text style={[styles.statValue, { color: '#00B894' }]}>
+                  <Text style={[styles.statValue, { color: '#14B8A6' }]}>
                     {replayState.managedCount}
                   </Text>
                   <Text style={styles.statLabel}>Managed</Text>
@@ -729,14 +729,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#F9E8ED',
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 10,
   },
   relationshipBadgeText: {
     fontSize: 11,
-    color: '#C38D9E',
+    color: '#67E8F9',
     fontWeight: '600' as const,
   },
   episodeTapHint: {
@@ -967,7 +967,7 @@ const styles = StyleSheet.create({
     padding: 18,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#C8DDD2',
+    borderColor: '#0B1238',
   },
   interruptText: {
     fontSize: 14,
@@ -991,14 +991,14 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   emotionChip: {
-    backgroundColor: '#FDE8E3',
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 12,
   },
   emotionChipText: {
     fontSize: 13,
-    color: '#E17055',
+    color: '#3B82F6',
     fontWeight: '600' as const,
   },
   triggerChip: {
@@ -1016,14 +1016,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#E0F5EF',
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 12,
   },
   copingChipText: {
     fontSize: 13,
-    color: '#00B894',
+    color: '#14B8A6',
     fontWeight: '600' as const,
   },
 });

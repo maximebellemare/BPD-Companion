@@ -98,7 +98,7 @@ export default function MessageAnalysisScreen() {
   const recColors: Record<string, string> = {
     safe_to_send: Colors.success,
     better_after_pause: Colors.accent,
-    better_rewritten: '#9B8EC4',
+    better_rewritten: '#3B82F6',
     better_not_sent: Colors.danger,
     do_not_send: Colors.dangerDark,
   };

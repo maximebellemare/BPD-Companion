@@ -475,8 +475,8 @@ export default function DBTSkillScreen() {
           >
             <Star
               size={22}
-              color={isFavorite ? '#E8A838' : Colors.textMuted}
-              fill={isFavorite ? '#E8A838' : 'none'}
+              color={isFavorite ? '#67E8F9' : Colors.textMuted}
+              fill={isFavorite ? '#67E8F9' : 'none'}
             />
           </TouchableOpacity>
         </View>
@@ -581,9 +581,9 @@ export default function DBTSkillScreen() {
 
 function getDiffColor(difficulty: string): { bg: string; text: string } {
   switch (difficulty) {
-    case 'beginner': return { bg: '#E0F5EF', text: '#00B894' };
-    case 'intermediate': return { bg: '#FFF8F0', text: '#D4956A' };
-    case 'advanced': return { bg: '#FDE8E3', text: '#E17055' };
+    case 'beginner': return { bg: '#FFFFFF', text: '#14B8A6' };
+    case 'intermediate': return { bg: '#FFFFFF', text: '#67E8F9' };
+    case 'advanced': return { bg: '#FFFFFF', text: '#3B82F6' };
     default: return { bg: Colors.surface, text: Colors.textSecondary };
   }
 }

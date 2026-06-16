@@ -116,7 +116,7 @@ export default function PrivacyPolicyScreen() {
         </PolicySection>
 
         <PolicySection
-          icon={<Lock size={16} color="#8B5CF6" />}
+          icon={<Lock size={16} color="#3B82F6" />}
           title="How We Protect Your Data"
           index={1}
           fadeAnim={fadeAnim}

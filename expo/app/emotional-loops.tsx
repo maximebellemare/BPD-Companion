@@ -34,12 +34,12 @@ import { useLoopInterruptPlans } from '@/hooks/useLoopInterruptPlans';
 import { EmotionalLoop, InterruptPoint, LoopNodeType } from '@/types/emotionalLoop';
 
 const NODE_COLORS: Record<LoopNodeType, { bg: string; text: string; border: string }> = {
-  trigger: { bg: '#FFF0ED', text: '#C94438', border: '#F5C4BE' },
-  emotion: { bg: '#EDE9FE', text: '#7C3AED', border: '#C4B5FD' },
-  urge: { bg: '#FFF7ED', text: '#C8762A', border: '#FCD9B6' },
-  behavior: { bg: '#E0F2FE', text: '#0369A1', border: '#93C5FD' },
-  outcome: { bg: Colors.successLight, text: '#047857', border: '#A7F3D0' },
-  coping: { bg: Colors.primaryLight, text: Colors.primaryDark, border: '#A7D5C3' },
+  trigger: { bg: '#FFFFFF', text: '#3B82F6', border: '#0B1238' },
+  emotion: { bg: '#FFFFFF', text: '#3B82F6', border: '#2E2A72' },
+  urge: { bg: '#FFFFFF', text: '#3B82F6', border: '#0B1238' },
+  behavior: { bg: '#FFFFFF', text: '#3B82F6', border: '#3B82F6' },
+  outcome: { bg: Colors.successLight, text: '#14B8A6', border: '#0B1238' },
+  coping: { bg: Colors.primaryLight, text: Colors.primaryDark, border: '#14B8A6' },
 };
 
 const NODE_LABELS: Record<LoopNodeType, string> = {
@@ -181,7 +181,7 @@ export default function EmotionalLoopsScreen() {
 
         {report.triggerChains.length > 0 && (
           <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
-            <SectionHeader icon={<Zap size={16} color="#C94438" />} title="Trigger Chains" color="#C94438" />
+            <SectionHeader icon={<Zap size={16} color="#3B82F6" />} title="Trigger Chains" color="#3B82F6" />
             {report.triggerChains.map(loop => (
               <LoopCard key={loop.id} loop={loop} onPress={handleLoopPress} />
             ))}
@@ -190,7 +190,7 @@ export default function EmotionalLoopsScreen() {
 
         {report.emotionChains.length > 0 && (
           <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
-            <SectionHeader icon={<Heart size={16} color="#7C3AED" />} title="Emotion Chains" color="#7C3AED" />
+            <SectionHeader icon={<Heart size={16} color="#3B82F6" />} title="Emotion Chains" color="#3B82F6" />
             {report.emotionChains.map(loop => (
               <LoopCard key={loop.id} loop={loop} onPress={handleLoopPress} />
             ))}
@@ -199,7 +199,7 @@ export default function EmotionalLoopsScreen() {
 
         {report.behaviorChains.length > 0 && (
           <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
-            <SectionHeader icon={<Repeat size={16} color="#0369A1" />} title="Behavior Chains" color="#0369A1" />
+            <SectionHeader icon={<Repeat size={16} color="#3B82F6" />} title="Behavior Chains" color="#3B82F6" />
             {report.behaviorChains.map(loop => (
               <LoopCard key={loop.id} loop={loop} onPress={handleLoopPress} />
             ))}

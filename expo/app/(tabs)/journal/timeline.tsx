@@ -44,8 +44,8 @@ const MARKER_CONFIG: Record<
     icon: CheckCircle,
   },
   relationship_conflict: {
-    color: '#E67E22',
-    bg: '#FEF5E7',
+    color: '#3B82F6',
+    bg: '#FFFFFF',
     label: 'Conflict',
     icon: Users,
   },
@@ -250,7 +250,7 @@ function StatsBar({
       </View>
       <View style={[styles.statDivider]} />
       <View style={styles.statItem}>
-        <Text style={[styles.statValue, { color: '#E67E22' }]}>
+        <Text style={[styles.statValue, { color: '#3B82F6' }]}>
           {stats.conflictCount}
         </Text>
         <Text style={styles.statLabel}>Conflicts</Text>

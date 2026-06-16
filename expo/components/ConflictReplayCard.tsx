@@ -59,7 +59,7 @@ export default React.memo(function ConflictReplayCard({
       >
         <View style={styles.headerRow}>
           <View style={styles.iconCircle}>
-            <RotateCcw size={20} color="#6366F1" />
+            <RotateCcw size={20} color="#3B82F6" />
           </View>
           <View style={styles.headerContent}>
             <Text style={styles.title}>Conflict Replay</Text>
@@ -69,7 +69,7 @@ export default React.memo(function ConflictReplayCard({
                 : 'Review past emotional conflicts'}
             </Text>
           </View>
-          <ChevronRight size={16} color="#6366F1" style={{ opacity: 0.6 }} />
+          <ChevronRight size={16} color="#3B82F6" style={{ opacity: 0.6 }} />
         </View>
 
         {latestTrigger && (
@@ -91,11 +91,11 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   card: {
-    backgroundColor: '#F0F0FF',
+    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 18,
     borderWidth: 1,
-    borderColor: '#E0E0F6',
+    borderColor: '#0B1238',
   },
   headerRow: {
     flexDirection: 'row',
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: '#E8E8FF',
+    backgroundColor: '#0B1238',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 15,
     fontWeight: '700' as const,
-    color: '#4338CA',
+    color: '#3B82F6',
     letterSpacing: -0.1,
     marginBottom: 3,
   },
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#E0E0F6',
+    borderTopColor: '#0B1238',
   },
   previewText: {
     fontSize: 12,

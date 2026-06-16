@@ -21,7 +21,7 @@ const FEATURES = [
     text: 'Reflect and slow down with supportive conversations',
   },
   {
-    icon: <Brain size={16} color="#7E57C2" />,
+    icon: <Brain size={16} color="#3B82F6" />,
     text: 'Get insights based on your patterns and check-ins',
   },
   {

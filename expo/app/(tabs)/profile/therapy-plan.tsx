@@ -82,10 +82,10 @@ function getFocusIcon(iconName: string): React.ComponentType<{ size: number; col
 
 function TypeBadge({ type }: { type: TherapyPlanItem['type'] }) {
   const config = {
-    skill: { label: 'Skill', color: '#3B82F6', bg: '#E6F0FF' },
+    skill: { label: 'Skill', color: '#3B82F6', bg: '#FFFFFF' },
     exercise: { label: 'Exercise', color: Colors.primary, bg: Colors.primaryLight },
     reflection: { label: 'Reflection', color: Colors.accent, bg: Colors.accentLight },
-    strategy: { label: 'Strategy', color: '#8B5CF6', bg: '#F0E6FF' },
+    strategy: { label: 'Strategy', color: '#3B82F6', bg: '#FFFFFF' },
   }[type];
 
   return (
@@ -553,7 +553,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#F0E4D6',
+    borderColor: '#0B1238',
   },
   insightIconWrap: {
     width: 36,

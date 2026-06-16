@@ -6,11 +6,11 @@ import Colors from '@/constants/colors';
 import { EmotionalLoopReport, LoopNodeType } from '@/types/emotionalLoop';
 
 const NODE_DOT_COLORS: Record<LoopNodeType, string> = {
-  trigger: '#C94438',
-  emotion: '#7C3AED',
-  urge: '#C8762A',
-  behavior: '#0369A1',
-  outcome: '#047857',
+  trigger: '#3B82F6',
+  emotion: '#3B82F6',
+  urge: '#3B82F6',
+  behavior: '#3B82F6',
+  outcome: '#14B8A6',
   coping: Colors.primaryDark,
 };
 

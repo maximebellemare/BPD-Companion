@@ -40,10 +40,10 @@ import {
 } from '@/types/conflictReplay';
 
 const STEP_COLORS: Record<string, string> = {
-  trigger: '#E17055',
-  emotion: '#D4956A',
-  urge: '#E84393',
-  action: '#6B9080',
+  trigger: '#3B82F6',
+  emotion: '#67E8F9',
+  urge: '#3B82F6',
+  action: '#14B8A6',
   outcome: '#3B82F6',
 };
 

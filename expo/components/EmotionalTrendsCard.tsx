@@ -19,17 +19,17 @@ interface Props {
 }
 
 const TREND_CONFIG = {
-  rising: { label: 'Rising', color: '#E17055', Icon: TrendingUp },
-  falling: { label: 'Falling', color: '#00B894', Icon: TrendingDown },
+  rising: { label: 'Rising', color: '#3B82F6', Icon: TrendingUp },
+  falling: { label: 'Falling', color: '#14B8A6', Icon: TrendingDown },
   stable: { label: 'Stable', color: Colors.primary, Icon: Minus },
   unknown: { label: 'Not enough data', color: Colors.textMuted, Icon: Activity },
 } as const;
 
 const WARNING_ACCENT: Record<WarningLevel, string> = {
   none: Colors.primary,
-  mild: '#D4956A',
-  moderate: '#E17055',
-  elevated: '#D63031',
+  mild: '#67E8F9',
+  moderate: '#3B82F6',
+  elevated: '#3B82F6',
 };
 
 export default React.memo(function EmotionalTrendsCard({ trend, warningLevel, onPress }: Props) {
@@ -130,8 +130,8 @@ export default React.memo(function EmotionalTrendsCard({ trend, warningLevel, on
           <View style={styles.metricDivider} />
 
           <View style={styles.metric}>
-            <View style={[styles.metricIconWrap, { backgroundColor: '#8B5CF6' + '18' }]}>
-              <Heart size={16} color="#8B5CF6" />
+            <View style={[styles.metricIconWrap, { backgroundColor: '#3B82F6' + '18' }]}>
+              <Heart size={16} color="#3B82F6" />
             </View>
             <Text style={styles.metricLabel}>Top Emotion</Text>
             <Text style={styles.metricValue} numberOfLines={1}>

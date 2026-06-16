@@ -38,10 +38,10 @@ import {
 
 const BAR_MAX_HEIGHT = 120;
 const CHART_COLORS = {
-  bar: '#6B9080',
-  barLight: '#E3EDE8',
-  barHighlight: '#D4956A',
-  gridLine: '#F0ECE7',
+  bar: '#14B8A6',
+  barLight: '#0B1238',
+  barHighlight: '#67E8F9',
+  gridLine: '#FFFFFF',
 };
 
 function AnimatedBar({ value, maxValue, index, color }: { value: number; maxValue: number; index: number; color: string }) {
@@ -76,7 +76,7 @@ function WeeklyChart({ data }: { data: WeeklyIntensityPoint[] }) {
     <View style={styles.chartCard}>
       <View style={styles.chartHeader}>
         <View style={styles.chartTitleRow}>
-          <View style={[styles.chartIconWrap, { backgroundColor: '#E3EDE8' }]}>
+          <View style={[styles.chartIconWrap, { backgroundColor: '#0B1238' }]}>
             <BarChart3 size={16} color={Colors.primary} />
           </View>
           <Text style={styles.chartTitle}>Weekly Intensity</Text>
@@ -224,8 +224,8 @@ function MoodChart({ data }: { data: MoodDistributionItem[] }) {
     <View style={styles.chartCard}>
       <View style={styles.chartHeader}>
         <View style={styles.chartTitleRow}>
-          <View style={[styles.chartIconWrap, { backgroundColor: '#FDE8E3' }]}>
-            <Heart size={16} color="#E17055" />
+          <View style={[styles.chartIconWrap, { backgroundColor: '#FFFFFF' }]}>
+            <Heart size={16} color="#3B82F6" />
           </View>
           <Text style={styles.chartTitle}>Mood Distribution</Text>
         </View>
@@ -327,8 +327,8 @@ function CopingChart({ data }: { data: CopingToolUsage[] }) {
     <View style={styles.chartCard}>
       <View style={styles.chartHeader}>
         <View style={styles.chartTitleRow}>
-          <View style={[styles.chartIconWrap, { backgroundColor: '#EDE7F6' }]}>
-            <Shield size={16} color="#8B5CF6" />
+          <View style={[styles.chartIconWrap, { backgroundColor: '#0B1238' }]}>
+            <Shield size={16} color="#3B82F6" />
           </View>
           <Text style={styles.chartTitle}>Most Helpful Tools</Text>
         </View>
@@ -434,8 +434,8 @@ export default function InsightsScreen() {
                 <Text style={styles.summaryLabel}>Check-ins</Text>
               </View>
               <View style={styles.summaryCard}>
-                <View style={[styles.summaryIcon, { backgroundColor: '#FDE8E3' }]}>
-                  <Heart size={16} color="#E17055" />
+                <View style={[styles.summaryIcon, { backgroundColor: '#FFFFFF' }]}>
+                  <Heart size={16} color="#3B82F6" />
                 </View>
                 <Text style={styles.summaryValue}>{insights.averageDistress || '—'}</Text>
                 <Text style={styles.summaryLabel}>Avg Distress</Text>
@@ -462,7 +462,7 @@ export default function InsightsScreen() {
             {insights.topEmotionThisMonth && (
               <View style={styles.highlightCard}>
                 <View style={styles.highlightRow}>
-                  <Heart size={16} color="#E17055" />
+                  <Heart size={16} color="#3B82F6" />
                   <Text style={styles.highlightLabel}>Top emotion this month</Text>
                 </View>
                 <Text style={styles.highlightValue}>{insights.topEmotionThisMonth}</Text>
@@ -472,7 +472,7 @@ export default function InsightsScreen() {
             {insights.topUrge && (
               <View style={styles.highlightCard}>
                 <View style={styles.highlightRow}>
-                  <AlertTriangle size={16} color="#FDCB6E" />
+                  <AlertTriangle size={16} color="#0B1238" />
                   <Text style={styles.highlightLabel}>Most common urge</Text>
                 </View>
                 <Text style={styles.highlightValue}>{insights.topUrge}</Text>
@@ -496,7 +496,7 @@ export default function InsightsScreen() {
               activeOpacity={0.7}
             >
               <View style={styles.correlationLinkIcon}>
-                <Link2 size={18} color="#8B5CF6" />
+                <Link2 size={18} color="#3B82F6" />
               </View>
               <View style={styles.correlationLinkText}>
                 <Text style={styles.correlationLinkTitle}>Correlation Insights</Text>
@@ -895,7 +895,7 @@ const styles = StyleSheet.create({
   copingBarFill: {
     height: '100%' as const,
     borderRadius: 5,
-    backgroundColor: '#8B5CF6',
+    backgroundColor: '#3B82F6',
   },
   copingCount: {
     width: 30,
@@ -975,7 +975,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: '#EDE7F6',
+    backgroundColor: '#0B1238',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },

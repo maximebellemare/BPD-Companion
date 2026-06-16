@@ -12,7 +12,7 @@ export const AI_MODE_CONFIGS: Record<AIMode, AIModeConfig> = {
     shortLabel: 'Calm me',
     icon: '🌊',
     description: 'Shorter responses, grounding first, soft reassurance',
-    color: '#6B9080',
+    color: '#14B8A6',
     responseStyle: {
       maxLength: 'short',
       tone: 'soothing',
@@ -29,7 +29,7 @@ export const AI_MODE_CONFIGS: Record<AIMode, AIModeConfig> = {
     shortLabel: 'Help me understand',
     icon: '🔍',
     description: 'Explore emotions, gentle questions, deeper understanding',
-    color: '#7E57C2',
+    color: '#3B82F6',
     responseStyle: {
       maxLength: 'medium',
       tone: 'curious',
@@ -46,7 +46,7 @@ export const AI_MODE_CONFIGS: Record<AIMode, AIModeConfig> = {
     shortLabel: 'Help me think clearly',
     icon: '💡',
     description: 'Organize thoughts, reduce confusion, find what matters most',
-    color: '#2196F3',
+    color: '#3B82F6',
     responseStyle: {
       maxLength: 'medium',
       tone: 'structured',
@@ -63,7 +63,7 @@ export const AI_MODE_CONFIGS: Record<AIMode, AIModeConfig> = {
     shortLabel: 'Help me respond well',
     icon: '💬',
     description: 'Communication support, slow down texting urges, secure tone',
-    color: '#D4956A',
+    color: '#67E8F9',
     responseStyle: {
       maxLength: 'medium',
       tone: 'supportive',
@@ -80,7 +80,7 @@ export const AI_MODE_CONFIGS: Record<AIMode, AIModeConfig> = {
     shortLabel: 'Give me a next step',
     icon: '⚡',
     description: 'Practical steps, one clear action, immediate guidance',
-    color: '#00B894',
+    color: '#14B8A6',
     responseStyle: {
       maxLength: 'short',
       tone: 'direct',
@@ -97,7 +97,7 @@ export const AI_MODE_CONFIGS: Record<AIMode, AIModeConfig> = {
     shortLabel: 'I need simple help',
     icon: '🤲',
     description: 'Very short, one step at a time, grounding-first',
-    color: '#E17055',
+    color: '#3B82F6',
     responseStyle: {
       maxLength: 'short',
       tone: 'gentle',

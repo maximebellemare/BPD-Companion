@@ -434,7 +434,7 @@ export default function InsightsDashboardScreen() {
               {dashboard.emotionDistribution.length > 0 && (
                 <View style={styles.section}>
                   <View style={styles.sectionHeader}>
-                    <Heart size={16} color="#8B5CF6" />
+                    <Heart size={16} color="#3B82F6" />
                     <Text style={styles.sectionTitle}>Emotional States</Text>
                   </View>
                   <View style={styles.card}>

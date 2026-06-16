@@ -87,12 +87,12 @@ interface ResponseTemplate {
 }
 
 const RESPONSE_TEMPLATES: ResponseTemplate[] = [
-  { style: 'anxious', label: 'Anxious / Urgent', emoji: '😰', color: '#E17055' },
-  { style: 'reassurance', label: 'Reassurance-Seeking', emoji: '🫂', color: '#E8A87C' },
-  { style: 'avoidance', label: 'Withdrawn / Avoidant', emoji: '🚪', color: '#9B8EC4' },
-  { style: 'calm', label: 'Calm / Regulated', emoji: '🌊', color: '#6B9080' },
-  { style: 'boundary', label: 'Boundaried', emoji: '🛡️', color: '#D4956A' },
-  { style: 'secure', label: 'Secure / Self-Respecting', emoji: '💎', color: '#5B8FB9' },
+  { style: 'anxious', label: 'Anxious / Urgent', emoji: '😰', color: '#3B82F6' },
+  { style: 'reassurance', label: 'Reassurance-Seeking', emoji: '🫂', color: '#67E8F9' },
+  { style: 'avoidance', label: 'Withdrawn / Avoidant', emoji: '🚪', color: '#3B82F6' },
+  { style: 'calm', label: 'Calm / Regulated', emoji: '🌊', color: '#14B8A6' },
+  { style: 'boundary', label: 'Boundaried', emoji: '🛡️', color: '#67E8F9' },
+  { style: 'secure', label: 'Secure / Self-Respecting', emoji: '💎', color: '#3B82F6' },
 ];
 
 type Theme = 'abandonment' | 'rejection' | 'conflict' | 'criticism' | 'shame' | 'general';

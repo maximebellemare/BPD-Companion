@@ -164,12 +164,12 @@ const styles = StyleSheet.create({
   growthBadge: {
     marginTop: 12,
     alignSelf: 'flex-start',
-    backgroundColor: '#F0FFF4',
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#C6F6D5',
+    borderColor: '#0B1238',
   },
   growthBadgeText: {
     fontSize: 12,

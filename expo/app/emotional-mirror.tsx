@@ -139,14 +139,14 @@ function LandscapeCard({ report }: { report: EmotionalMirrorReport }) {
 function InsightRow({ insight }: { insight: EmotionalMirrorInsight }) {
   const iconColor = insight.category === 'growth' ? Colors.success
     : insight.category === 'trigger' ? Colors.accent
-    : insight.category === 'distress' ? '#E17055'
-    : insight.category === 'relationship' ? '#8B5CF6'
+    : insight.category === 'distress' ? '#3B82F6'
+    : insight.category === 'relationship' ? '#3B82F6'
     : Colors.primary;
 
   const iconBg = insight.category === 'growth' ? Colors.successLight
     : insight.category === 'trigger' ? Colors.accentLight
-    : insight.category === 'distress' ? '#FDE8E3'
-    : insight.category === 'relationship' ? '#EDE7F6'
+    : insight.category === 'distress' ? '#FFFFFF'
+    : insight.category === 'relationship' ? '#0B1238'
     : Colors.primaryLight;
 
   const IconComponent = insight.category === 'growth' ? TrendingUp
@@ -429,7 +429,7 @@ export default function EmotionalMirrorScreen() {
               <FadeInView delay={100}>
                 <View style={styles.sectionCard}>
                   <View style={styles.sectionHeader}>
-                    <View style={[styles.sectionIconWrap, { backgroundColor: '#FFF3E8' }]}>
+                    <View style={[styles.sectionIconWrap, { backgroundColor: '#FFFFFF' }]}>
                       <Sparkles size={16} color={Colors.accent} />
                     </View>
                     <Text style={styles.sectionTitle}>Insights</Text>
@@ -461,8 +461,8 @@ export default function EmotionalMirrorScreen() {
               <FadeInView delay={300}>
                 <View style={styles.sectionCard}>
                   <View style={styles.sectionHeader}>
-                    <View style={[styles.sectionIconWrap, { backgroundColor: '#EDE7F6' }]}>
-                      <Users size={16} color="#8B5CF6" />
+                    <View style={[styles.sectionIconWrap, { backgroundColor: '#0B1238' }]}>
+                      <Users size={16} color="#3B82F6" />
                     </View>
                     <Text style={styles.sectionTitle}>Relationship Patterns</Text>
                   </View>

@@ -10,29 +10,29 @@ import {
 const EPISODE_GAP_MS = 4 * 60 * 60 * 1000;
 
 const EMOTION_COLORS: Record<string, string> = {
-  anxious: '#E8A87C',
-  anxiety: '#E8A87C',
-  abandoned: '#C38D9E',
-  fear: '#C38D9E',
-  angry: '#E17055',
-  anger: '#E17055',
-  hurt: '#D4956A',
-  ashamed: '#A8738B',
-  shame: '#A8738B',
-  confused: '#8E9AAF',
-  numb: '#B0B5C1',
-  sad: '#7B9ACC',
-  sadness: '#7B9ACC',
-  happy: '#6B9080',
-  calm: '#6B9080',
-  relieved: '#00B894',
-  overwhelmed: '#E67E22',
-  panicked: '#E74C3C',
-  lonely: '#9B8EC4',
-  frustrated: '#D35400',
-  jealous: '#A3CB38',
-  guilty: '#A8738B',
-  hopeless: '#636E72',
+  anxious: '#67E8F9',
+  anxiety: '#67E8F9',
+  abandoned: '#67E8F9',
+  fear: '#67E8F9',
+  angry: '#3B82F6',
+  anger: '#3B82F6',
+  hurt: '#67E8F9',
+  ashamed: '#3B82F6',
+  shame: '#3B82F6',
+  confused: '#2E2A72',
+  numb: '#3B82F6',
+  sad: '#3B82F6',
+  sadness: '#3B82F6',
+  happy: '#14B8A6',
+  calm: '#14B8A6',
+  relieved: '#14B8A6',
+  overwhelmed: '#3B82F6',
+  panicked: '#3B82F6',
+  lonely: '#3B82F6',
+  frustrated: '#3B82F6',
+  jealous: '#14B8A6',
+  guilty: '#3B82F6',
+  hopeless: '#2E2A72',
 };
 
 function getEmotionColor(emotion: string): string {
@@ -40,18 +40,18 @@ function getEmotionColor(emotion: string): string {
   for (const [key, color] of Object.entries(EMOTION_COLORS)) {
     if (lower.includes(key)) return color;
   }
-  return '#8E9AAF';
+  return '#2E2A72';
 }
 
 function getNodeColor(type: EpisodeNodeType, label: string): string {
   switch (type) {
-    case 'trigger': return '#E67E22';
+    case 'trigger': return '#3B82F6';
     case 'emotion': return getEmotionColor(label);
-    case 'urge': return '#E17055';
-    case 'behavior': return '#D4956A';
-    case 'coping': return '#00B894';
-    case 'outcome': return '#6B9080';
-    default: return '#8E9AAF';
+    case 'urge': return '#3B82F6';
+    case 'behavior': return '#67E8F9';
+    case 'coping': return '#14B8A6';
+    case 'outcome': return '#14B8A6';
+    default: return '#2E2A72';
   }
 }
 

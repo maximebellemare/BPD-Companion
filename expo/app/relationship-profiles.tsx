@@ -33,14 +33,14 @@ import {
 } from '@/types/relationship';
 
 const RELATIONSHIP_TYPES: { type: RelationshipType; label: string; emoji: string; color: string }[] = [
-  { type: 'partner', label: 'Partner', emoji: '💕', color: '#E84393' },
-  { type: 'ex', label: 'Ex', emoji: '💔', color: '#D4956A' },
-  { type: 'friend', label: 'Friend', emoji: '🤝', color: '#6B9080' },
+  { type: 'partner', label: 'Partner', emoji: '💕', color: '#3B82F6' },
+  { type: 'ex', label: 'Ex', emoji: '💔', color: '#67E8F9' },
+  { type: 'friend', label: 'Friend', emoji: '🤝', color: '#14B8A6' },
   { type: 'parent', label: 'Parent', emoji: '🏠', color: '#3B82F6' },
-  { type: 'sibling', label: 'Sibling', emoji: '👫', color: '#8B5CF6' },
-  { type: 'coworker', label: 'Coworker', emoji: '💼', color: '#507A66' },
-  { type: 'therapist', label: 'Therapist', emoji: '🧠', color: '#00B894' },
-  { type: 'other', label: 'Other', emoji: '👤', color: '#636E72' },
+  { type: 'sibling', label: 'Sibling', emoji: '👫', color: '#3B82F6' },
+  { type: 'coworker', label: 'Coworker', emoji: '💼', color: '#14B8A6' },
+  { type: 'therapist', label: 'Therapist', emoji: '🧠', color: '#14B8A6' },
+  { type: 'other', label: 'Other', emoji: '👤', color: '#2E2A72' },
 ];
 
 export default function RelationshipProfilesScreen() {
@@ -184,8 +184,8 @@ export default function RelationshipProfilesScreen() {
               activeOpacity={0.7}
               testID="quick-copilot"
             >
-              <View style={[styles.quickIconWrap, { backgroundColor: '#FFEDF5' }]}>
-                <Heart size={18} color="#E84393" />
+              <View style={[styles.quickIconWrap, { backgroundColor: '#FFFFFF' }]}>
+                <Heart size={18} color="#3B82F6" />
               </View>
               <Text style={styles.quickLabel}>Copilot</Text>
               <Text style={styles.quickDesc}>Get guided support</Text>
@@ -197,8 +197,8 @@ export default function RelationshipProfilesScreen() {
               activeOpacity={0.7}
               testID="quick-spiral"
             >
-              <View style={[styles.quickIconWrap, { backgroundColor: '#FFF0E6' }]}>
-                <Shield size={18} color="#D4764E" />
+              <View style={[styles.quickIconWrap, { backgroundColor: '#FFFFFF' }]}>
+                <Shield size={18} color="#3B82F6" />
               </View>
               <Text style={styles.quickLabel}>Spiral Guard</Text>
               <Text style={styles.quickDesc}>Detect patterns</Text>
@@ -446,10 +446,10 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#E84393',
+    backgroundColor: '#3B82F6',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#E84393',
+    shadowColor: '#3B82F6',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -528,7 +528,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#E84393',
+    backgroundColor: '#3B82F6',
     borderRadius: 18,
     paddingHorizontal: 24,
     paddingVertical: 14,
@@ -594,7 +594,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   statChipWarn: {
-    backgroundColor: '#FFF0ED',
+    backgroundColor: '#FFFFFF',
   },
   statChipText: {
     fontSize: 12,
@@ -602,7 +602,7 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   statChipTextWarn: {
-    color: '#D4764E',
+    color: '#3B82F6',
   },
   profileNotes: {
     fontSize: 13,
@@ -725,7 +725,7 @@ const styles = StyleSheet.create({
     fontWeight: '500' as const,
   },
   createSubmit: {
-    backgroundColor: '#E84393',
+    backgroundColor: '#3B82F6',
     borderRadius: 16,
     padding: 16,
     alignItems: 'center',

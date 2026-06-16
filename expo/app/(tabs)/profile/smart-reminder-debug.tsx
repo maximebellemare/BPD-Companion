@@ -268,9 +268,9 @@ export default function SmartReminderDebugScreen() {
 function getPriorityColor(priority: string): string {
   switch (priority) {
     case 'critical_support': return Colors.danger;
-    case 'high_value_support': return '#E67E22';
+    case 'high_value_support': return '#3B82F6';
     case 'routine_support': return Colors.primary;
-    case 'premium_insight': return '#8B5CF6';
+    case 'premium_insight': return '#3B82F6';
     case 'reengagement': return Colors.textMuted;
     default: return Colors.textSecondary;
   }
@@ -282,8 +282,8 @@ function getEventTypeColor(type: string): string {
     case 'delivered': return Colors.success;
     case 'opened': return '#3B82F6';
     case 'dismissed': return Colors.textMuted;
-    case 'converted': return '#8B5CF6';
-    case 'suppressed': return '#E67E22';
+    case 'converted': return '#3B82F6';
+    case 'suppressed': return '#3B82F6';
     default: return Colors.textSecondary;
   }
 }

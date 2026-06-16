@@ -38,12 +38,12 @@ import { useIdentityValues } from '@/hooks/useIdentity';
 import type { GrowthSignal } from '@/types/identity';
 
 const SIGNAL_TYPE_META: Record<GrowthSignal['type'], { label: string; color: string; bg: string; icon: string }> = {
-  value_alignment: { label: 'Value Alignment', color: '#6B9080', bg: '#E3EDE8', icon: 'compass' },
-  regulation_win: { label: 'Regulation Win', color: '#00B894', bg: '#E0F5EF', icon: 'shield' },
-  boundary_set: { label: 'Boundary Set', color: '#3B82F6', bg: '#E8F0FE', icon: 'shield' },
-  self_awareness: { label: 'Self-Awareness', color: '#8B5CF6', bg: '#F0E6FF', icon: 'eye' },
-  relationship_skill: { label: 'Relationship Skill', color: '#E84393', bg: '#FFF0F6', icon: 'heart' },
-  emotional_growth: { label: 'Emotional Growth', color: '#D4956A', bg: '#FFF8F0', icon: 'trending' },
+  value_alignment: { label: 'Value Alignment', color: '#14B8A6', bg: '#0B1238', icon: 'compass' },
+  regulation_win: { label: 'Regulation Win', color: '#14B8A6', bg: '#FFFFFF', icon: 'shield' },
+  boundary_set: { label: 'Boundary Set', color: '#3B82F6', bg: '#FFFFFF', icon: 'shield' },
+  self_awareness: { label: 'Self-Awareness', color: '#3B82F6', bg: '#FFFFFF', icon: 'eye' },
+  relationship_skill: { label: 'Relationship Skill', color: '#3B82F6', bg: '#FFFFFF', icon: 'heart' },
+  emotional_growth: { label: 'Emotional Growth', color: '#67E8F9', bg: '#FFFFFF', icon: 'trending' },
 };
 
 export default function MyGrowthScreen() {
@@ -233,7 +233,7 @@ export default function MyGrowthScreen() {
                 </View>
                 {(snapshot?.identityStreakDays ?? 0) > 0 && (
                   <View style={styles.streakBadge}>
-                    <Flame size={12} color="#E17055" />
+                    <Flame size={12} color="#3B82F6" />
                     <Text style={styles.streakBadgeText}>{snapshot?.identityStreakDays}d</Text>
                   </View>
                 )}
@@ -311,7 +311,7 @@ export default function MyGrowthScreen() {
           {personalStrengths.length > 0 && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Star size={18} color="#D4956A" />
+                <Star size={18} color="#67E8F9" />
                 <Text style={styles.sectionTitle}>Personal Strengths</Text>
                 <TouchableOpacity
                   onPress={() => setShowAddStrength(true)}
@@ -323,7 +323,7 @@ export default function MyGrowthScreen() {
               {personalStrengths.slice(0, 5).map((strength) => (
                 <View key={strength.id} style={styles.strengthCard}>
                   <View style={styles.strengthIcon}>
-                    <Star size={16} color="#D4956A" />
+                    <Star size={16} color="#67E8F9" />
                   </View>
                   <View style={styles.strengthContent}>
                     <Text style={styles.strengthLabel}>{strength.label}</Text>
@@ -342,14 +342,14 @@ export default function MyGrowthScreen() {
               onPress={() => setShowAddStrength(true)}
               activeOpacity={0.7}
             >
-              <Star size={20} color="#D4956A" />
+              <Star size={20} color="#67E8F9" />
               <View style={styles.addStrengthPromptContent}>
                 <Text style={styles.addStrengthPromptTitle}>Name a Strength</Text>
                 <Text style={styles.addStrengthPromptDesc}>
                   What are you good at, even when things feel hard?
                 </Text>
               </View>
-              <ChevronRight size={16} color="#D4956A" />
+              <ChevronRight size={16} color="#67E8F9" />
             </TouchableOpacity>
           )}
 
@@ -396,7 +396,7 @@ export default function MyGrowthScreen() {
           {recentSignals.length > 0 && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <TrendingUp size={18} color="#00B894" />
+                <TrendingUp size={18} color="#14B8A6" />
                 <Text style={styles.sectionTitle}>Growth Signals</Text>
               </View>
               {recentSignals.map((signal) => {
@@ -419,7 +419,7 @@ export default function MyGrowthScreen() {
 
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <BookOpen size={18} color="#8B5CF6" />
+              <BookOpen size={18} color="#3B82F6" />
               <Text style={styles.sectionTitle}>Identity Reflections</Text>
               <TouchableOpacity
                 onPress={() => setShowPastResponses(!showPastResponses)}
@@ -466,8 +466,8 @@ export default function MyGrowthScreen() {
                 onPress={() => router.push('/values-explorer')}
                 activeOpacity={0.7}
               >
-                <View style={[styles.toolIcon, { backgroundColor: '#E3EDE8' }]}>
-                  <Compass size={20} color="#6B9080" />
+                <View style={[styles.toolIcon, { backgroundColor: '#0B1238' }]}>
+                  <Compass size={20} color="#14B8A6" />
                 </View>
                 <Text style={styles.toolLabel}>Values Explorer</Text>
               </TouchableOpacity>
@@ -477,8 +477,8 @@ export default function MyGrowthScreen() {
                 onPress={() => router.push('/identity-journal')}
                 activeOpacity={0.7}
               >
-                <View style={[styles.toolIcon, { backgroundColor: '#F0E6FF' }]}>
-                  <BookOpen size={20} color="#8B5CF6" />
+                <View style={[styles.toolIcon, { backgroundColor: '#FFFFFF' }]}>
+                  <BookOpen size={20} color="#3B82F6" />
                 </View>
                 <Text style={styles.toolLabel}>Identity Journal</Text>
               </TouchableOpacity>
@@ -488,8 +488,8 @@ export default function MyGrowthScreen() {
                 onPress={() => router.push('/self-trust-prompts')}
                 activeOpacity={0.7}
               >
-                <View style={[styles.toolIcon, { backgroundColor: '#E0F5EF' }]}>
-                  <Shield size={20} color="#00B894" />
+                <View style={[styles.toolIcon, { backgroundColor: '#FFFFFF' }]}>
+                  <Shield size={20} color="#14B8A6" />
                 </View>
                 <Text style={styles.toolLabel}>Self-Trust</Text>
               </TouchableOpacity>
@@ -499,8 +499,8 @@ export default function MyGrowthScreen() {
                 onPress={() => router.push('/anchor-statements')}
                 activeOpacity={0.7}
               >
-                <View style={[styles.toolIcon, { backgroundColor: '#FFF8F0' }]}>
-                  <Anchor size={20} color="#D4956A" />
+                <View style={[styles.toolIcon, { backgroundColor: '#FFFFFF' }]}>
+                  <Anchor size={20} color="#67E8F9" />
                 </View>
                 <Text style={styles.toolLabel}>Anchors</Text>
               </TouchableOpacity>
@@ -628,7 +628,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#FFF0ED',
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 10,
@@ -636,7 +636,7 @@ const styles = StyleSheet.create({
   streakBadgeText: {
     fontSize: 12,
     fontWeight: '700' as const,
-    color: '#E17055',
+    color: '#3B82F6',
   },
   dailyPromptText: {
     fontSize: 20,
@@ -789,7 +789,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 12,
-    backgroundColor: '#FFF8F0',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -810,13 +810,13 @@ const styles = StyleSheet.create({
   addStrengthPrompt: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF8F0',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 18,
     marginBottom: 24,
     gap: 14,
     borderWidth: 1,
-    borderColor: '#F5E6D8',
+    borderColor: '#0B1238',
   },
   addStrengthPromptContent: {
     flex: 1,

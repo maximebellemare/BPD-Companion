@@ -128,8 +128,8 @@ const PostCard = React.memo(function PostCard({ post, onPress }: { post: Communi
               </View>
             )}
             {post.emotionalContext.supportRequestType && (
-              <View style={[styles.ecMiniChip, { backgroundColor: '#F0ECF7' }]}>
-                <Text style={[styles.ecMiniChipText, { color: '#9B8EC4' }]}>
+              <View style={[styles.ecMiniChip, { backgroundColor: 'rgba(59, 130, 246, 0.18)' }]}>
+                <Text style={[styles.ecMiniChipText, { color: '#3B82F6' }]}>
                   {getSupportRequestLabel(post.emotionalContext.supportRequestType).emoji}{' '}
                   {getSupportRequestLabel(post.emotionalContext.supportRequestType).label}
                 </Text>

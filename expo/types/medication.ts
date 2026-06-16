@@ -128,13 +128,13 @@ export function formatTime(hour: number, minute: number): string {
 
 export function getCategoryColor(category: MedicationCategory): string {
   switch (category) {
-    case 'antidepressant': return '#6B9080';
-    case 'mood_stabilizer': return '#7B68AE';
-    case 'antipsychotic': return '#5B8FA8';
-    case 'anxiolytic': return '#D4956A';
-    case 'sleep_aid': return '#6B7FA6';
-    case 'stimulant': return '#C7956D';
-    case 'supplement': return '#7BA87B';
-    case 'other': return '#8B8B8B';
+    case 'antidepressant': return '#14B8A6';
+    case 'mood_stabilizer': return '#2E2A72';
+    case 'antipsychotic': return '#2E2A72';
+    case 'anxiolytic': return '#67E8F9';
+    case 'sleep_aid': return '#2E2A72';
+    case 'stimulant': return '#67E8F9';
+    case 'supplement': return '#14B8A6';
+    case 'other': return '#3B82F6';
   }
 }

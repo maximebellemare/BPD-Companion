@@ -34,16 +34,16 @@ import { MemoryInsight, PatternItem } from '@/types/memory';
 import { UserMemory, MemoryNarrative } from '@/types/userMemory';
 
 const CATEGORY_CONFIG: Record<string, { color: string; bg: string; icon: string }> = {
-  trigger: { color: '#E17055', bg: '#FDE8E3', icon: '⚡' },
-  emotion: { color: '#6B9080', bg: '#E3EDE8', icon: '💜' },
-  coping: { color: '#00B894', bg: '#E0F5EF', icon: '🛡️' },
-  relationship: { color: '#D4956A', bg: '#F5E6D8', icon: '💬' },
-  improvement: { color: '#6B9080', bg: '#E3EDE8', icon: '🌱' },
-  pattern: { color: '#636E72', bg: '#F0ECE7', icon: '🔄' },
-  loop: { color: '#C8762A', bg: '#FFF7ED', icon: '🔄' },
-  growth: { color: '#00B894', bg: '#E0F5EF', icon: '🌱' },
-  value: { color: '#6B9080', bg: '#E3EDE8', icon: '💎' },
-  preference: { color: '#636E72', bg: '#F0ECE7', icon: '⚙️' },
+  trigger: { color: '#3B82F6', bg: '#FFFFFF', icon: '⚡' },
+  emotion: { color: '#14B8A6', bg: '#0B1238', icon: '💜' },
+  coping: { color: '#14B8A6', bg: '#FFFFFF', icon: '🛡️' },
+  relationship: { color: '#67E8F9', bg: '#0B1238', icon: '💬' },
+  improvement: { color: '#14B8A6', bg: '#0B1238', icon: '🌱' },
+  pattern: { color: '#2E2A72', bg: '#FFFFFF', icon: '🔄' },
+  loop: { color: '#3B82F6', bg: '#FFFFFF', icon: '🔄' },
+  growth: { color: '#14B8A6', bg: '#FFFFFF', icon: '🌱' },
+  value: { color: '#14B8A6', bg: '#0B1238', icon: '💎' },
+  preference: { color: '#2E2A72', bg: '#FFFFFF', icon: '⚙️' },
 };
 
 function StrengthDots({ strength }: { strength: string }) {
@@ -586,8 +586,8 @@ export default function MemoryScreen() {
             {summary.topTriggers.length > 0 && (
               <View style={styles.sectionCard} testID="memory-persistent-triggers">
                 <View style={styles.sectionHeader}>
-                  <View style={[styles.sectionIcon, { backgroundColor: '#FDE8E3' }]}>
-                    <Zap size={16} color="#E17055" />
+                  <View style={[styles.sectionIcon, { backgroundColor: '#FFFFFF' }]}>
+                    <Zap size={16} color="#3B82F6" />
                   </View>
                   <Text style={styles.sectionTitle}>Known Triggers</Text>
                 </View>
@@ -600,8 +600,8 @@ export default function MemoryScreen() {
             {summary.commonLoops.length > 0 && (
               <View style={styles.sectionCard} testID="memory-loops-section">
                 <View style={styles.sectionHeader}>
-                  <View style={[styles.sectionIcon, { backgroundColor: '#FFF7ED' }]}>
-                    <Repeat size={16} color="#C8762A" />
+                  <View style={[styles.sectionIcon, { backgroundColor: '#FFFFFF' }]}>
+                    <Repeat size={16} color="#3B82F6" />
                   </View>
                   <Text style={styles.sectionTitle}>Common Loops</Text>
                 </View>
@@ -614,7 +614,7 @@ export default function MemoryScreen() {
             {summary.helpfulTools.length > 0 && (
               <View style={styles.sectionCard} testID="memory-coping-section">
                 <View style={styles.sectionHeader}>
-                  <View style={[styles.sectionIcon, { backgroundColor: '#E0F5EF' }]}>
+                  <View style={[styles.sectionIcon, { backgroundColor: '#FFFFFF' }]}>
                     <Shield size={16} color={Colors.success} />
                   </View>
                   <Text style={styles.sectionTitle}>What Helps</Text>
@@ -628,7 +628,7 @@ export default function MemoryScreen() {
             {summary.relationshipPatterns.length > 0 && (
               <View style={styles.sectionCard} testID="memory-relationship-section">
                 <View style={styles.sectionHeader}>
-                  <View style={[styles.sectionIcon, { backgroundColor: '#F5E6D8' }]}>
+                  <View style={[styles.sectionIcon, { backgroundColor: '#0B1238' }]}>
                     <Users size={16} color={Colors.accent} />
                   </View>
                   <Text style={styles.sectionTitle}>Relationship Patterns</Text>
@@ -656,8 +656,8 @@ export default function MemoryScreen() {
             {memoryProfile.topTriggers.length > 0 && (
               <View style={styles.sectionCard} testID="memory-frequency-triggers">
                 <View style={styles.sectionHeader}>
-                  <View style={[styles.sectionIcon, { backgroundColor: '#FDE8E3' }]}>
-                    <Zap size={16} color="#E17055" />
+                  <View style={[styles.sectionIcon, { backgroundColor: '#FFFFFF' }]}>
+                    <Zap size={16} color="#3B82F6" />
                   </View>
                   <Text style={styles.sectionTitle}>Trigger Frequency</Text>
                 </View>
@@ -667,7 +667,7 @@ export default function MemoryScreen() {
                     item={item}
                     maxCount={maxTriggerCount}
                     delay={i * 60}
-                    color="#E17055"
+                    color="#3B82F6"
                   />
                 ))}
               </View>
@@ -676,7 +676,7 @@ export default function MemoryScreen() {
             {memoryProfile.topEmotions.length > 0 && (
               <View style={styles.sectionCard} testID="memory-frequency-emotions">
                 <View style={styles.sectionHeader}>
-                  <View style={[styles.sectionIcon, { backgroundColor: '#E3EDE8' }]}>
+                  <View style={[styles.sectionIcon, { backgroundColor: '#0B1238' }]}>
                     <Heart size={16} color={Colors.primary} />
                   </View>
                   <Text style={styles.sectionTitle}>Emotion Frequency</Text>
@@ -695,7 +695,7 @@ export default function MemoryScreen() {
             {memoryProfile.copingToolsUsed.length > 0 && (
               <View style={styles.sectionCard} testID="memory-frequency-coping">
                 <View style={styles.sectionHeader}>
-                  <View style={[styles.sectionIcon, { backgroundColor: '#E0F5EF' }]}>
+                  <View style={[styles.sectionIcon, { backgroundColor: '#FFFFFF' }]}>
                     <Shield size={16} color={Colors.success} />
                   </View>
                   <Text style={styles.sectionTitle}>Coping Tool Usage</Text>

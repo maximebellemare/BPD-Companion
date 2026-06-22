@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   cardActive: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#0B1238',
+    borderColor: '#D9E2EC',
   },
   cardComplete: {
     backgroundColor: '#FFFFFF',
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   ritualPillDone: {
-    backgroundColor: '#0B1238',
+    backgroundColor: '#D9E2EC',
   },
   ritualPillCurrent: {
     backgroundColor: '#FFFFFF',

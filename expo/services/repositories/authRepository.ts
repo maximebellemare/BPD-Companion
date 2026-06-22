@@ -1,6 +1,6 @@
 import { AuthUser, AuthSession, AuthCredentials, AuthSignUpInput } from '@/types/auth';
 import { IAuthRepository } from './types';
-import { supabase } from '@/lib/supabase/client';
+import { assertSupabaseConfigured, formatSupabaseError, supabase } from '@/lib/supabase/client';
 import { getOrCreateProfile } from '@/lib/supabase/profiles';
 import type { Session as SbSession, User as SbUser } from '@supabase/supabase-js';
 
@@ -27,33 +27,35 @@ function mapSession(session: SbSession): AuthSession {
 
 export class SupabaseAuthRepository implements IAuthRepository {
   async getCurrentUser(): Promise<AuthUser | null> {
+    assertSupabaseConfigured();
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) {
-      console.log('[AuthRepository] getCurrentUser: null');
       return null;
     }
     return mapUser(data.user);
   }
 
   async getSession(): Promise<AuthSession | null> {
+    assertSupabaseConfigured();
     const { data, error } = await supabase.auth.getSession();
     if (error || !data.session) return null;
     return mapSession(data.session);
   }
 
   async signIn(credentials: AuthCredentials): Promise<AuthSession> {
+    assertSupabaseConfigured();
     const { data, error } = await supabase.auth.signInWithPassword({
       email: credentials.email,
       password: credentials.password,
     });
     if (error || !data.session) {
-      console.log('[AuthRepository] signIn error:', error?.message);
-      throw new Error(error?.message ?? 'Sign in failed');
+      throw new Error(formatSupabaseError(error, 'Sign in failed'));
     }
     return mapSession(data.session);
   }
 
   async signUp(input: AuthSignUpInput): Promise<AuthSession> {
+    assertSupabaseConfigured();
     const { data, error } = await supabase.auth.signUp({
       email: input.email,
       password: input.password,
@@ -62,8 +64,7 @@ export class SupabaseAuthRepository implements IAuthRepository {
       },
     });
     if (error) {
-      console.log('[AuthRepository] signUp error:', error.message);
-      throw new Error(error.message);
+      throw new Error(formatSupabaseError(error, 'Sign up failed'));
     }
     if (!data.session) {
       const signIn = await supabase.auth.signInWithPassword({
@@ -71,7 +72,7 @@ export class SupabaseAuthRepository implements IAuthRepository {
         password: input.password,
       });
       if (signIn.error || !signIn.data.session) {
-        throw new Error(signIn.error?.message ?? 'Please confirm your email to continue');
+        throw new Error(formatSupabaseError(signIn.error, 'Please confirm your email to continue'));
       }
       await getOrCreateProfile(
         signIn.data.session.user.id,
@@ -85,30 +86,32 @@ export class SupabaseAuthRepository implements IAuthRepository {
   }
 
   async resetPassword(email: string): Promise<void> {
+    assertSupabaseConfigured();
     const redirectTo = process.env.EXPO_PUBLIC_PASSWORD_RESET_REDIRECT_URL;
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo,
     });
     if (error) {
-      console.log('[AuthRepository] resetPassword error:', error.message);
-      throw new Error(error.message);
+      throw new Error(formatSupabaseError(error, 'Unable to send reset instructions.'));
     }
   }
 
   async signOut(): Promise<void> {
     const { error } = await supabase.auth.signOut();
     if (error) {
-      console.log('[AuthRepository] signOut error:', error.message);
+      throw new Error(formatSupabaseError(error, 'Sign out failed'));
     }
   }
 
   async refreshSession(): Promise<AuthSession | null> {
+    assertSupabaseConfigured();
     const { data, error } = await supabase.auth.refreshSession();
     if (error || !data.session) return null;
     return mapSession(data.session);
   }
 
   async updateUser(updates: Partial<AuthUser>): Promise<AuthUser> {
+    assertSupabaseConfigured();
     const { data, error } = await supabase.auth.updateUser({
       data: {
         display_name: updates.displayName,
@@ -116,7 +119,7 @@ export class SupabaseAuthRepository implements IAuthRepository {
       },
     });
     if (error || !data.user) {
-      throw new Error(error?.message ?? 'Update failed');
+      throw new Error(formatSupabaseError(error, 'Update failed'));
     }
     return mapUser(data.user);
   }

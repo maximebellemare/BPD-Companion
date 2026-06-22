@@ -491,8 +491,8 @@ export default function EmotionalInsightsScreen() {
             {analysis.urges.length > 0 && (
               <SectionCard
                 title="Urge Patterns"
-                icon={<AlertTriangle size={16} color="#0B1238" />}
-                iconColor="#0B1238"
+                icon={<AlertTriangle size={16} color="#D9E2EC" />}
+                iconColor="#D9E2EC"
                 iconBg="#FFFFFF"
                 delay={300}
               >
@@ -565,7 +565,7 @@ export default function EmotionalInsightsScreen() {
                 title="Relationship Stress Signals"
                 icon={<Users size={16} color="#3B82F6" />}
                 iconColor="#3B82F6"
-                iconBg="#0B1238"
+                iconBg="#D9E2EC"
                 delay={500}
               >
                 {analysis.relationshipSignals.slice(0, 4).map((signal) => (
@@ -1004,7 +1004,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   relSignalBadge: {
-    backgroundColor: '#0B1238',
+    backgroundColor: '#D9E2EC',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,

@@ -42,14 +42,14 @@ import {
 } from '@/types/emotionalModel';
 
 const PALETTE = {
-  trigger: { bg: '#FFFFFF', border: '#0B1238', accent: '#3B82F6' },
-  emotion: { bg: '#0B1238', border: '#0B1238', accent: '#2E2A72' },
-  urge: { bg: '#FFFFFF', border: '#0B1238', accent: '#3B82F6' },
-  relationship: { bg: '#0B1238', border: '#0B1238', accent: '#3B82F6' },
-  coping: { bg: '#FFFFFF', border: '#0B1238', accent: '#14B8A6' },
-  escalation: { bg: '#FFFFFF', border: '#0B1238', accent: '#3B82F6' },
-  growth: { bg: '#FFFFFF', border: '#0B1238', accent: '#14B8A6' },
-  attention: { bg: '#FFFFFF', border: '#0B1238', accent: '#67E8F9' },
+  trigger: { bg: '#FFFFFF', border: '#D9E2EC', accent: '#3B82F6' },
+  emotion: { bg: '#D9E2EC', border: '#D9E2EC', accent: '#2E2A72' },
+  urge: { bg: '#FFFFFF', border: '#D9E2EC', accent: '#3B82F6' },
+  relationship: { bg: '#D9E2EC', border: '#D9E2EC', accent: '#3B82F6' },
+  coping: { bg: '#FFFFFF', border: '#D9E2EC', accent: '#14B8A6' },
+  escalation: { bg: '#FFFFFF', border: '#D9E2EC', accent: '#3B82F6' },
+  growth: { bg: '#FFFFFF', border: '#D9E2EC', accent: '#14B8A6' },
+  attention: { bg: '#FFFFFF', border: '#D9E2EC', accent: '#67E8F9' },
 };
 
 function TriggerCard({ trigger, index }: { trigger: EmotionalTriggerProfile; index: number }) {
@@ -467,7 +467,7 @@ export default function EmotionalProfileScreen() {
             {insights.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <View style={[styles.sectionIcon, { backgroundColor: '#0B1238' }]}>
+                  <View style={[styles.sectionIcon, { backgroundColor: '#D9E2EC' }]}>
                     <Activity size={18} color="#2E2A72" />
                   </View>
                   <Text style={styles.sectionTitle}>Key Insights</Text>
@@ -763,7 +763,7 @@ const styles = StyleSheet.create({
     padding: 22,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#0B1238',
+    borderColor: '#D9E2EC',
   },
   narrativeText: {
     fontSize: 16,

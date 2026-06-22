@@ -40,15 +40,15 @@ const NODE_TYPE_CONFIG: Record<EpisodeNodeType, { icon: React.ElementType; label
   trigger: { icon: Zap, label: 'Trigger', bg: '#FFFFFF', color: '#3B82F6' },
   emotion: { icon: Heart, label: 'Emotion', bg: '#FFFFFF', color: '#3B82F6' },
   urge: { icon: AlertTriangle, label: 'Urge', bg: '#FFFFFF', color: '#3B82F6' },
-  behavior: { icon: MessageSquare, label: 'Action', bg: '#0B1238', color: '#67E8F9' },
+  behavior: { icon: MessageSquare, label: 'Action', bg: '#D9E2EC', color: '#67E8F9' },
   coping: { icon: Shield, label: 'Coping', bg: '#FFFFFF', color: '#14B8A6' },
-  outcome: { icon: Activity, label: 'Outcome', bg: '#0B1238', color: '#14B8A6' },
+  outcome: { icon: Activity, label: 'Outcome', bg: '#D9E2EC', color: '#14B8A6' },
 };
 
 const OUTCOME_CONFIG = {
   managed: { label: 'Managed', color: '#14B8A6', bg: '#FFFFFF', icon: TrendingDown },
   escalated: { label: 'Escalated', color: '#3B82F6', bg: '#FFFFFF', icon: TrendingUp },
-  deescalated: { label: 'De-escalated', color: '#14B8A6', bg: '#0B1238', icon: TrendingDown },
+  deescalated: { label: 'De-escalated', color: '#14B8A6', bg: '#D9E2EC', icon: TrendingDown },
   neutral: { label: 'Neutral', color: '#2E2A72', bg: '#FFFFFF', icon: Minus },
 };
 
@@ -353,7 +353,7 @@ function EpisodeDetail({
 
       <Animated.View style={[styles.interruptCard, { opacity: reflectionFade }]}>
         <View style={styles.reflectionIconRow}>
-          <View style={[styles.reflectionIconWrap, { backgroundColor: '#0B1238' }]}>
+          <View style={[styles.reflectionIconWrap, { backgroundColor: '#D9E2EC' }]}>
             <RotateCcw size={16} color="#14B8A6" />
           </View>
           <Text style={styles.reflectionTitle}>Where to interrupt next time</Text>
@@ -967,7 +967,7 @@ const styles = StyleSheet.create({
     padding: 18,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#0B1238',
+    borderColor: '#D9E2EC',
   },
   interruptText: {
     fontSize: 14,

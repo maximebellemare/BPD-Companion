@@ -125,7 +125,7 @@ export const ONBOARDING_STEPS: OnboardingStepConfig[] = [
   {
     id: 'welcome',
     title: 'Welcome to BPD Companion',
-    subtitle: 'A private space for emotional regulation, reflection, and coping support.',
+    subtitle: 'Understand emotional patterns, pause impulsive reactions, and build regulation skills.',
   },
   {
     id: 'reasons',
@@ -135,12 +135,12 @@ export const ONBOARDING_STEPS: OnboardingStepConfig[] = [
   {
     id: 'support',
     title: 'What support do you want most?',
-    subtitle: 'We will shape your home screen around what matters now.',
+    subtitle: 'Choose the kind of help you want in hard moments.',
   },
   {
     id: 'daily_check_in',
     title: 'Daily check-in setup',
-    subtitle: 'Choose what feels useful to track day to day.',
+    subtitle: 'Choose what helps you understand your emotional chain.',
   },
   {
     id: 'safety',
@@ -150,7 +150,7 @@ export const ONBOARDING_STEPS: OnboardingStepConfig[] = [
   {
     id: 'finish',
     title: 'You are set up',
-    subtitle: 'Your companion is ready to meet you where you are.',
+    subtitle: 'Your Companion is ready when emotions feel intense.',
   },
 ];
 

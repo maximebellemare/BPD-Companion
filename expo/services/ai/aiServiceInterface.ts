@@ -38,22 +38,21 @@ class MockAIServiceAdapter implements IAIService {
 }
 
 export function createAIService(config: AIServiceConfig): IAIService {
-  console.log('[AIServiceFactory] Creating AI service with provider:', config.provider);
-
   switch (config.provider) {
     case 'mock': {
+      if (!__DEV__) {
+        throw new Error('Mock AI is disabled in production.');
+      }
       const { generateMockResponse, generateConversationTitle } = require('@/services/ai/mockAIService');
       return new MockAIServiceAdapter(generateMockResponse, generateConversationTitle);
     }
     case 'openai':
     case 'anthropic':
     case 'custom':
-      console.log('[AIServiceFactory] Provider not yet implemented, falling back to mock');
-      const { generateMockResponse, generateConversationTitle } = require('@/services/ai/mockAIService');
-      return new MockAIServiceAdapter(generateMockResponse, generateConversationTitle);
+      throw new Error('Companion is temporarily unavailable. Please try again later.');
     default:
       throw new Error(`Unknown AI provider: ${config.provider}`);
   }
 }
 
-export const defaultAIService: IAIService = createAIService({ provider: 'mock' });
+export const defaultAIService: IAIService | null = __DEV__ ? createAIService({ provider: 'mock' }) : null;

@@ -47,10 +47,10 @@ const ICON_MAP: Record<string, React.ComponentType<{ size: number; color: string
 };
 
 const PHASE_THEME: Record<StormPhase, { bg: string; border: string; accent: string; iconBg: string }> = {
-  clear: { bg: Colors.primaryLight, border: '#0B1238', accent: Colors.primary, iconBg: '#14B8A614' },
-  early_signs: { bg: '#FFFFFF', border: '#0B1238', accent: '#2E2A72', iconBg: '#2E2A7212' },
-  building: { bg: '#FFFFFF', border: '#0B1238', accent: '#67E8F9', iconBg: '#67E8F912' },
-  escalating: { bg: '#FFFFFF', border: '#0B1238', accent: '#3B82F6', iconBg: '#3B82F612' },
+  clear: { bg: Colors.primaryLight, border: '#D9E2EC', accent: Colors.primary, iconBg: '#14B8A614' },
+  early_signs: { bg: '#FFFFFF', border: '#D9E2EC', accent: '#2E2A72', iconBg: '#2E2A7212' },
+  building: { bg: '#FFFFFF', border: '#D9E2EC', accent: '#67E8F9', iconBg: '#67E8F912' },
+  escalating: { bg: '#FFFFFF', border: '#D9E2EC', accent: '#3B82F6', iconBg: '#3B82F612' },
 };
 
 const PHASE_LABEL: Record<StormPhase, string> = {

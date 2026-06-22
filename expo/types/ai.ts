@@ -1,3 +1,5 @@
+import type { RelationshipType } from '@/types/relationship';
+
 export interface AIMessage {
   id: string;
   role: 'user' | 'assistant';
@@ -16,6 +18,7 @@ export interface AIConversation {
   saved: boolean;
   preview: string;
   tags: string[];
+  relationshipTags?: RelationshipType[];
 }
 
 export interface AIConversationSummary {
@@ -45,6 +48,17 @@ export interface SuggestedPrompt {
   label: string;
   icon: string;
   prompt: string;
+}
+
+export interface CompanionContextSummary {
+  recentEmotions: string[];
+  recentTriggers: string[];
+  currentIntensity: number | null;
+  onboardingGoals: string[];
+  commonPatterns: string[];
+  relationshipStressCount: number;
+  highIntensity: boolean;
+  promptContext: string;
 }
 
 export interface AIServiceConfig {

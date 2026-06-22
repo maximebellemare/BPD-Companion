@@ -9,6 +9,7 @@ import {
 import { appointmentRepository } from '@/services/repositories';
 import { appointmentService } from '@/services/appointments/appointmentService';
 import { appointmentReminderService } from '@/services/appointments/appointmentReminderService';
+import { normalizeAppointmentState } from '@/services/care/careDataNormalizer';
 
 export const [AppointmentProvider, useAppointments] = createContextHook(() => {
   const queryClient = useQueryClient();
@@ -20,16 +21,16 @@ export const [AppointmentProvider, useAppointments] = createContextHook(() => {
   });
 
   useEffect(() => {
-    if (stateQuery.data) {
-      setAppointments(stateQuery.data.appointments);
-    }
+    const normalized = normalizeAppointmentState(stateQuery.data, 'AppointmentProvider.stateQuery');
+    setAppointments(normalized.appointments);
   }, [stateQuery.data]);
 
   const addAppointmentMutation = useMutation({
     mutationFn: (appt: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt' | 'completed' | 'preSessionNotes' | 'postSessionNotes'>) =>
       appointmentService.addAppointment(appt),
     onSuccess: (newAppt) => {
-      const updated = [newAppt, ...appointments];
+      const current = normalizeAppointmentState({ appointments }, 'AppointmentProvider.addMutation');
+      const updated = [newAppt, ...current.appointments];
       setAppointments(updated);
       void appointmentReminderService.syncReminders(updated);
       void queryClient.invalidateQueries({ queryKey: ['appointments'] });
@@ -41,7 +42,8 @@ export const [AppointmentProvider, useAppointments] = createContextHook(() => {
       appointmentService.updateAppointment(id, updates),
     onSuccess: (result) => {
       if (result) {
-        const updated = appointments.map(a => a.id === result.id ? result : a);
+        const current = normalizeAppointmentState({ appointments }, 'AppointmentProvider.updateMutation');
+        const updated = current.appointments.map(a => a.id === result.id ? result : a);
         setAppointments(updated);
         void appointmentReminderService.syncReminders(updated);
         void queryClient.invalidateQueries({ queryKey: ['appointments'] });
@@ -52,7 +54,8 @@ export const [AppointmentProvider, useAppointments] = createContextHook(() => {
   const deleteAppointmentMutation = useMutation({
     mutationFn: (id: string) => appointmentService.deleteAppointment(id),
     onSuccess: (_, id) => {
-      const updated = appointments.filter(a => a.id !== id);
+      const current = normalizeAppointmentState({ appointments }, 'AppointmentProvider.deleteMutation');
+      const updated = current.appointments.filter(a => a.id !== id);
       setAppointments(updated);
       void appointmentReminderService.syncReminders(updated);
       void queryClient.invalidateQueries({ queryKey: ['appointments'] });
@@ -64,7 +67,8 @@ export const [AppointmentProvider, useAppointments] = createContextHook(() => {
       appointmentService.savePreSessionNotes(id, notes),
     onSuccess: (result) => {
       if (result) {
-        const updated = appointments.map(a => a.id === result.id ? result : a);
+        const current = normalizeAppointmentState({ appointments }, 'AppointmentProvider.savePreMutation');
+        const updated = current.appointments.map(a => a.id === result.id ? result : a);
         setAppointments(updated);
         void queryClient.invalidateQueries({ queryKey: ['appointments'] });
       }
@@ -76,7 +80,8 @@ export const [AppointmentProvider, useAppointments] = createContextHook(() => {
       appointmentService.savePostSessionNotes(id, notes),
     onSuccess: (result) => {
       if (result) {
-        const updated = appointments.map(a => a.id === result.id ? result : a);
+        const current = normalizeAppointmentState({ appointments }, 'AppointmentProvider.savePostMutation');
+        const updated = current.appointments.map(a => a.id === result.id ? result : a);
         setAppointments(updated);
         void queryClient.invalidateQueries({ queryKey: ['appointments'] });
       }
@@ -87,7 +92,8 @@ export const [AppointmentProvider, useAppointments] = createContextHook(() => {
     mutationFn: (id: string) => appointmentService.markCompleted(id),
     onSuccess: (result) => {
       if (result) {
-        const updated = appointments.map(a => a.id === result.id ? result : a);
+        const current = normalizeAppointmentState({ appointments }, 'AppointmentProvider.markCompletedMutation');
+        const updated = current.appointments.map(a => a.id === result.id ? result : a);
         setAppointments(updated);
         void queryClient.invalidateQueries({ queryKey: ['appointments'] });
       }
@@ -100,39 +106,45 @@ export const [AppointmentProvider, useAppointments] = createContextHook(() => {
     [updateAppointmentMutation],
   );
 
-  const upcomingAppointments = useMemo(
-    () => appointmentService.getUpcomingAppointments(appointments),
+  const normalizedState = useMemo(
+    () => normalizeAppointmentState({ appointments }, 'AppointmentProvider.render'),
     [appointments],
+  );
+  const safeAppointments = normalizedState.appointments;
+
+  const upcomingAppointments = useMemo(
+    () => appointmentService.getUpcomingAppointments(safeAppointments),
+    [safeAppointments],
   );
 
   const todayAppointments = useMemo(
-    () => appointmentService.getTodayAppointments(appointments),
-    [appointments],
+    () => appointmentService.getTodayAppointments(safeAppointments),
+    [safeAppointments],
   );
 
   const pastAppointments = useMemo(
-    () => appointmentService.getPastAppointments(appointments),
-    [appointments],
+    () => appointmentService.getPastAppointments(safeAppointments),
+    [safeAppointments],
   );
 
   const nextAppointment = useMemo(
-    () => appointmentService.getNextAppointment(appointments),
-    [appointments],
+    () => appointmentService.getNextAppointment(safeAppointments),
+    [safeAppointments],
   );
 
   const needsPostSession = useMemo(
-    () => appointmentService.getNeedsPostSession(appointments),
-    [appointments],
+    () => appointmentService.getNeedsPostSession(safeAppointments),
+    [safeAppointments],
   );
 
   const needsPreSession = useMemo(
-    () => appointmentService.getNeedsPreSession(appointments),
-    [appointments],
+    () => appointmentService.getNeedsPreSession(safeAppointments),
+    [safeAppointments],
   );
 
   const getAppointmentById = useCallback(
-    (id: string) => appointments.find(a => a.id === id) ?? null,
-    [appointments],
+    (id: string) => safeAppointments.find(a => a.id === id) ?? null,
+    [safeAppointments],
   );
 
   const savePreSession = useCallback(
@@ -148,7 +160,7 @@ export const [AppointmentProvider, useAppointments] = createContextHook(() => {
   );
 
   return useMemo(() => ({
-    appointments,
+    appointments: safeAppointments,
     upcomingAppointments,
     todayAppointments,
     pastAppointments,
@@ -167,7 +179,7 @@ export const [AppointmentProvider, useAppointments] = createContextHook(() => {
     isSavingPostSession: savePostSessionMutation.isPending,
     getAppointmentById,
   }), [
-    appointments, upcomingAppointments, todayAppointments, pastAppointments,
+    safeAppointments, upcomingAppointments, todayAppointments, pastAppointments,
     nextAppointment, needsPostSession, needsPreSession, stateQuery.isLoading,
     addAppointmentMutation.mutateAsync, addAppointmentMutation.isPending,
     updateAppointment, deleteAppointmentMutation.mutateAsync,

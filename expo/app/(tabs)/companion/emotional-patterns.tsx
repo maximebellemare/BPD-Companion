@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 20,
-    backgroundColor: '#0B1238',
+    backgroundColor: '#D9E2EC',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     marginBottom: 14,
@@ -712,7 +712,7 @@ const styles = StyleSheet.create({
     fontWeight: '500' as const,
   },
   clusterEmotionChip: {
-    backgroundColor: '#0B1238',
+    backgroundColor: '#D9E2EC',
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 10,

@@ -297,7 +297,7 @@ export default function JournalScreen() {
               <View style={styles.dailyCardInner}>
                 <View style={[
                   styles.dailyIconCircle,
-                  { backgroundColor: isMorningTime && !todayReflections.morning ? '#FFFFFF' : '#0B1238' },
+                  { backgroundColor: isMorningTime && !todayReflections.morning ? '#FFFFFF' : '#D9E2EC' },
                 ]}>
                   {isMorningTime && !todayReflections.morning ? (
                     <Sun size={22} color="#67E8F9" />

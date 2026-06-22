@@ -2,7 +2,7 @@
   "expo": {
     "name": "BPD Companion",
     "slug": "bpd-companion",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "bpd-companion",
@@ -11,19 +11,17 @@
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#020617"
+      "backgroundColor": "#F8FBFF"
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.maximebellemare.bpdcompanion",
-      "buildNumber": "1",
+      "bundleIdentifier": "app.rork.zh9wtiagi54193nc7wcvb",
+      "buildNumber": "2",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSUserTrackingUsageDescription": "BPD Companion does not track you across apps or websites.",
+        "NSMicrophoneUsageDescription": "BPD Companion uses the microphone only when you choose voice input for Companion.",
+        "NSSpeechRecognitionUsageDescription": "BPD Companion uses speech recognition only to transcribe what you choose to say into Companion.",
         "LSApplicationQueriesSchemes": [
-          "tel",
-          "sms",
-          "mailto",
           "tel",
           "sms",
           "mailto"
@@ -33,7 +31,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#020617"
+        "backgroundColor": "#F8FBFF"
       },
       "package": "com.maximebellemare.bpdcompanion",
       "permissions": [
@@ -45,7 +43,29 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Allow BPD Companion to use the microphone when you choose voice input.",
+          "speechRecognitionPermission": "Allow BPD Companion to transcribe voice input into text.",
+          "androidSpeechServicePackages": [
+            "com.google.android.googlequicksearchbox",
+            "com.google.android.tts"
+          ]
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#F8FBFF"
+        }
+      ],
+      "@react-native-community/datetimepicker",
+      "expo-audio",
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true

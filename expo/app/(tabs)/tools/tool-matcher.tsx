@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
+  TextInput,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
@@ -16,14 +17,16 @@ import { matchTools } from '@/services/tools/toolMatcherService';
 import { ToolMatchResult } from '@/types/tools';
 
 const EMOTION_OPTIONS = [
-  'Angry', 'Ashamed', 'Afraid', 'Sad', 'Lonely',
-  'Abandoned', 'Jealous', 'Confused', 'Overwhelmed',
-  'Anxious', 'Numb', 'Desperate',
+  'Anxious', 'Angry', 'Sad', 'Empty', 'Ashamed', 'Lonely',
+  'Rejected', 'Abandoned', 'Jealous', 'Numb', 'Overwhelmed',
+  'Calm', 'Something else',
 ];
 
 const URGE_OPTIONS = [
-  'Send an angry text', 'Push someone away', 'Beg for reassurance',
-  'Isolate completely', 'Quit / end things', 'Lash out',
+  'Text again', 'Call repeatedly', 'Argue', 'Withdraw',
+  'Apologize too much', 'Check social media', 'Ask for reassurance',
+  'Spend money', 'Drink/use substances', 'End the relationship',
+  'Say something hurtful', 'I don’t know', 'Something else',
 ];
 
 type MatcherStep = 'emotions' | 'urges' | 'distress' | 'context' | 'results';
@@ -37,6 +40,8 @@ export default function ToolMatcherScreen() {
   const [step, setStep] = useState<MatcherStep>('emotions');
   const [selectedEmotions, setSelectedEmotions] = useState<string[]>([]);
   const [selectedUrges, setSelectedUrges] = useState<string[]>([]);
+  const [customEmotion, setCustomEmotion] = useState<string>('');
+  const [customUrge, setCustomUrge] = useState<string>('');
   const [distressLevel, setDistressLevel] = useState<number>(5);
   const [relationshipContext, setRelationshipContext] = useState<boolean>(false);
   const [results, setResults] = useState<ToolMatchResult[]>([]);
@@ -78,10 +83,14 @@ export default function ToolMatcherScreen() {
     const currentIdx = steps.indexOf(step);
 
     if (step === 'context') {
+      const emotions = [...selectedEmotions.filter(e => e !== 'Something else')];
+      const urges = [...selectedUrges.filter(u => u !== 'Something else')];
+      if (customEmotion.trim()) emotions.push(customEmotion.trim());
+      if (customUrge.trim()) urges.push(customUrge.trim());
       const matched = matchTools({
-        emotions: selectedEmotions,
+        emotions,
         triggers: [],
-        urges: selectedUrges,
+        urges,
         distressLevel,
         relationshipContext,
       });
@@ -90,7 +99,7 @@ export default function ToolMatcherScreen() {
     } else if (currentIdx < steps.length - 1) {
       setStep(steps[currentIdx + 1]);
     }
-  }, [step, selectedEmotions, selectedUrges, distressLevel, relationshipContext]);
+  }, [step, selectedEmotions, selectedUrges, customEmotion, customUrge, distressLevel, relationshipContext]);
 
   const handleToolPress = useCallback((route: string) => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -125,6 +134,15 @@ export default function ToolMatcherScreen() {
                 );
               })}
             </View>
+            {selectedEmotions.includes('Something else') && (
+              <TextInput
+                style={styles.customInput}
+                placeholder="Write what you feel"
+                placeholderTextColor={Colors.textMuted}
+                value={customEmotion}
+                onChangeText={setCustomEmotion}
+              />
+            )}
           </Animated.View>
         );
 
@@ -149,6 +167,15 @@ export default function ToolMatcherScreen() {
                 );
               })}
             </View>
+            {selectedUrges.includes('Something else') && (
+              <TextInput
+                style={styles.customInput}
+                placeholder="Write the urge"
+                placeholderTextColor={Colors.textMuted}
+                value={customUrge}
+                onChangeText={setCustomUrge}
+              />
+            )}
           </Animated.View>
         );
 
@@ -260,6 +287,8 @@ export default function ToolMatcherScreen() {
                 setStep('emotions');
                 setSelectedEmotions([]);
                 setSelectedUrges([]);
+                setCustomEmotion('');
+                setCustomUrge('');
                 setDistressLevel(5);
                 setRelationshipContext(false);
                 setResults([]);
@@ -424,6 +453,17 @@ const styles = StyleSheet.create({
   },
   chipTextSelected: {
     color: Colors.white,
+  },
+  customInput: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 15,
+    color: Colors.text,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    marginTop: 16,
   },
   distressContainer: {
     marginTop: 8,

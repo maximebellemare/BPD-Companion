@@ -11,6 +11,7 @@ import {
 import { medicationRepository } from '@/services/repositories';
 import { medicationService } from '@/services/medications/medicationService';
 import { medicationReminderService } from '@/services/medications/medicationReminderService';
+import { normalizeMedicationState } from '@/services/care/careDataNormalizer';
 
 export const [MedicationProvider, useMedications] = createContextHook(() => {
   const queryClient = useQueryClient();
@@ -23,17 +24,17 @@ export const [MedicationProvider, useMedications] = createContextHook(() => {
   });
 
   useEffect(() => {
-    if (stateQuery.data) {
-      setMedications(stateQuery.data.medications);
-      setLogs(stateQuery.data.logs);
-    }
+    const normalized = normalizeMedicationState(stateQuery.data, 'MedicationProvider.stateQuery');
+    setMedications(normalized.medications);
+    setLogs(normalized.logs);
   }, [stateQuery.data]);
 
   const addMedicationMutation = useMutation({
     mutationFn: (med: Omit<Medication, 'id' | 'createdAt' | 'updatedAt'>) =>
       medicationService.addMedication(med),
     onSuccess: (newMed) => {
-      const updated = [newMed, ...medications];
+      const current = normalizeMedicationState({ medications, logs }, 'MedicationProvider.addMutation');
+      const updated = [newMed, ...current.medications];
       setMedications(updated);
       void medicationReminderService.syncReminders(updated);
       void queryClient.invalidateQueries({ queryKey: ['medications'] });
@@ -45,7 +46,8 @@ export const [MedicationProvider, useMedications] = createContextHook(() => {
       medicationService.updateMedication(id, updates),
     onSuccess: (result) => {
       if (result) {
-        const updated = medications.map(m => m.id === result.id ? result : m);
+        const current = normalizeMedicationState({ medications, logs }, 'MedicationProvider.updateMutation');
+        const updated = current.medications.map(m => m.id === result.id ? result : m);
         setMedications(updated);
         void medicationReminderService.syncReminders(updated);
         void queryClient.invalidateQueries({ queryKey: ['medications'] });
@@ -56,7 +58,8 @@ export const [MedicationProvider, useMedications] = createContextHook(() => {
   const deleteMedicationMutation = useMutation({
     mutationFn: (id: string) => medicationService.deleteMedication(id),
     onSuccess: (_, id) => {
-      const updated = medications.filter(m => m.id !== id);
+      const current = normalizeMedicationState({ medications, logs }, 'MedicationProvider.deleteMutation');
+      const updated = current.medications.filter(m => m.id !== id);
       setMedications(updated);
       setLogs(prev => prev.filter(l => l.medicationId !== id));
       void medicationReminderService.syncReminders(updated);
@@ -86,7 +89,8 @@ export const [MedicationProvider, useMedications] = createContextHook(() => {
     mutationFn: (id: string) => medicationService.toggleMedicationActive(id),
     onSuccess: (result) => {
       if (result) {
-        const updated = medications.map(m => m.id === result.id ? result : m);
+        const current = normalizeMedicationState({ medications, logs }, 'MedicationProvider.toggleMutation');
+        const updated = current.medications.map(m => m.id === result.id ? result : m);
         setMedications(updated);
         void medicationReminderService.syncReminders(updated);
         void queryClient.invalidateQueries({ queryKey: ['medications'] });
@@ -100,45 +104,52 @@ export const [MedicationProvider, useMedications] = createContextHook(() => {
     [updateMedicationMutation],
   );
 
-  const activeMedications = useMemo(() => medications.filter(m => m.active), [medications]);
-  const inactiveMedications = useMemo(() => medications.filter(m => !m.active), [medications]);
-
-  const dueMedications = useMemo(
-    () => medicationService.getDueMedications(medications, logs),
+  const normalizedState = useMemo(
+    () => normalizeMedicationState({ medications, logs }, 'MedicationProvider.render'),
     [medications, logs],
   );
+  const safeMedications = normalizedState.medications;
+  const safeLogs = normalizedState.logs;
 
-  const todayLogs = useMemo(() => medicationService.getTodayLogs(logs), [logs]);
+  const activeMedications = useMemo(() => safeMedications.filter(m => m.active), [safeMedications]);
+  const inactiveMedications = useMemo(() => safeMedications.filter(m => !m.active), [safeMedications]);
+
+  const dueMedications = useMemo(
+    () => medicationService.getDueMedications(safeMedications, safeLogs),
+    [safeMedications, safeLogs],
+  );
+
+  const todayLogs = useMemo(() => medicationService.getTodayLogs(safeLogs), [safeLogs]);
 
   const overallAdherence = useMemo(
-    () => medicationService.getAdherenceRate(logs),
-    [logs],
+    () => medicationService.getAdherenceRate(safeLogs),
+    [safeLogs],
   );
 
   const getMedicationById = useCallback(
-    (id: string) => medications.find(m => m.id === id) ?? null,
-    [medications],
+    (id: string) => safeMedications.find(m => m.id === id) ?? null,
+    [safeMedications],
   );
 
   const getLogsForMedication = useCallback(
-    (medicationId: string) => logs.filter(l => l.medicationId === medicationId),
-    [logs],
+    (medicationId: string) => safeLogs.filter(l => l.medicationId === medicationId),
+    [safeLogs],
   );
 
   const getAdherenceRate = useCallback(
     (medicationId?: string, days?: number) =>
-      medicationService.getAdherenceRate(logs, medicationId, days),
-    [logs],
+      medicationService.getAdherenceRate(safeLogs, medicationId, days),
+    [safeLogs],
   );
 
   const getStreak = useCallback(
-    (medicationId: string) => medicationService.getStreakDays(logs, medicationId),
-    [logs],
+    (medicationId: string) => medicationService.getStreakDays(safeLogs, medicationId),
+    [safeLogs],
   );
 
   return useMemo(() => ({
-    medications,
-    logs,
+    medications: safeMedications,
+    logs: safeLogs,
     activeMedications,
     inactiveMedications,
     dueMedications,
@@ -157,7 +168,7 @@ export const [MedicationProvider, useMedications] = createContextHook(() => {
     getAdherenceRate,
     getStreak,
   }), [
-    medications, logs, activeMedications, inactiveMedications,
+    safeMedications, safeLogs, activeMedications, inactiveMedications,
     dueMedications, todayLogs, overallAdherence, stateQuery.isLoading,
     addMedicationMutation.mutateAsync, addMedicationMutation.isPending,
     updateMedication, deleteMedicationMutation.mutateAsync,

@@ -16,6 +16,7 @@ export interface TrustedContact {
 export interface UserProfile {
   displayName: string;
   createdAt: number;
+  appearancePreference: 'light' | 'dark';
   commonTriggers: string[];
   commonUrges: string[];
   emotionalSpirals: string[];
@@ -88,6 +89,7 @@ export interface PatternSummary {
 export const DEFAULT_PROFILE: UserProfile = {
   displayName: '',
   createdAt: Date.now(),
+  appearancePreference: 'light',
   commonTriggers: [],
   commonUrges: [],
   emotionalSpirals: [],

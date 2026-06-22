@@ -3,18 +3,18 @@ import { View, StyleSheet } from 'react-native';
 import Svg, { Circle, Path, Defs, LinearGradient, Stop, G, Rect, Ellipse, Line } from 'react-native-svg';
 
 const PALETTE = {
-  navy: '#020617',
-  navyLight: '#0B1238',
+  navy: '#F8FBFF',
+  navyLight: '#D9E2EC',
   teal: '#14B8A6',
   tealLight: '#67E8F9',
-  tealSoft: '#0B1238',
+  tealSoft: '#D9E2EC',
   lilac: '#3B82F6',
   lilacLight: '#67E8F9',
   sage: '#14B8A6',
   mist: '#2E2A72',
   amber: '#67E8F9',
   rose: '#3B82F6',
-  cream: '#020617',
+  cream: '#F8FBFF',
 };
 
 interface IllustrationProps {

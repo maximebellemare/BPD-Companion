@@ -56,9 +56,9 @@ const ICON_MAP: Record<string, React.ReactNode> = {
 };
 
 const CATEGORY_COLORS: Record<TabKey, { bg: string; accent: string; light: string }> = {
-  coping: { bg: Colors.primaryLight, accent: Colors.primary, light: '#0B1238' },
+  coping: { bg: Colors.primaryLight, accent: Colors.primary, light: '#D9E2EC' },
   relationship: { bg: '#FFFFFF', accent: '#3B82F6', light: '#FFFFFF' },
-  calming: { bg: '#FFFFFF', accent: '#3B82F6', light: '#0B1238' },
+  calming: { bg: '#FFFFFF', accent: '#3B82F6', light: '#D9E2EC' },
   identity: { bg: '#FFFFFF', accent: '#67E8F9', light: '#FFFFFF' },
 };
 
@@ -436,7 +436,7 @@ const styles = StyleSheet.create({
   },
   effectivenessBarFill: {
     height: 6,
-    backgroundColor: '#0B1238',
+    backgroundColor: '#D9E2EC',
     borderRadius: 3,
   },
   effectivenessText: {

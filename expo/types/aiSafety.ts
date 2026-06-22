@@ -79,21 +79,3 @@ export interface SafetyAnalyticsEvent {
   actionsTriggered: SafetyAction[];
   timestamp: number;
 }
-
-export const CRISIS_RESOURCES = {
-  hotline988: {
-    name: '988 Suicide & Crisis Lifeline',
-    action: 'Call or text 988',
-    description: 'Free, confidential support 24/7',
-  },
-  crisisText: {
-    name: 'Crisis Text Line',
-    action: 'Text HOME to 741741',
-    description: 'Free crisis counseling via text',
-  },
-  emergencyServices: {
-    name: 'Emergency Services',
-    action: 'Call 911',
-    description: 'For immediate danger',
-  },
-} as const;

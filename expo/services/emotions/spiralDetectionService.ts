@@ -1,4 +1,5 @@
 import { JournalEntry, MessageDraft } from '@/types';
+import { AIConversation } from '@/types/ai';
 import { SmartJournalEntry } from '@/types/journalEntry';
 import {
   SpiralRiskLevel,
@@ -20,6 +21,77 @@ function withinDays(timestamp: number, days: number): boolean {
 
 function getHour(timestamp: number): number {
   return new Date(timestamp).getHours();
+}
+
+function entryText(entry: JournalEntry): string {
+  return [
+    entry.reflection ?? '',
+    entry.checkIn.notes ?? '',
+    ...entry.checkIn.triggers.map(trigger => trigger.label),
+    ...entry.checkIn.emotions.map(emotion => emotion.label),
+    ...entry.checkIn.urges.map(urge => urge.label),
+  ].join(' ').toLowerCase();
+}
+
+function conversationText(conversation: AIConversation): string {
+  return [
+    conversation.title,
+    conversation.preview,
+    ...conversation.tags,
+    ...conversation.messages.filter(message => message.role === 'user').map(message => message.content),
+  ].join(' ').toLowerCase();
+}
+
+function includesAny(text: string, terms: string[]): boolean {
+  return terms.some(term => text.includes(term));
+}
+
+function extractPatternFeatures(
+  entries: JournalEntry[],
+  drafts: MessageDraft[],
+  conversations: AIConversation[],
+): Set<string> {
+  const features = new Set<string>();
+  const text = [
+    ...entries.map(entryText),
+    ...drafts.map(draft => `${draft.originalText} ${draft.rewrittenText ?? ''}`.toLowerCase()),
+    ...conversations.map(conversationText),
+  ].join(' ');
+
+  entries.forEach(entry => {
+    entry.checkIn.emotions.forEach(emotion => {
+      const label = emotion.label.trim().toLowerCase();
+      if (label) features.add(`emotion:${label}`);
+    });
+    entry.checkIn.triggers.forEach(trigger => {
+      const label = trigger.label.trim().toLowerCase();
+      if (label) features.add(`trigger:${label}`);
+      if (trigger.category === 'relationship') features.add('category:relationship');
+    });
+    entry.checkIn.urges.forEach(urge => {
+      const label = urge.label.trim().toLowerCase();
+      if (label) features.add(`urge:${label}`);
+    });
+    if (entry.checkIn.intensityLevel >= 7) features.add('intensity:high');
+  });
+
+  if (includesAny(text, ['conflict', 'fight', 'argument', 'criticized', 'criticism'])) features.add('theme:conflict');
+  if (includesAny(text, ['abandon', 'ignored', 'no reply', 'delayed reply', 'rejected', 'ghosted'])) features.add('theme:abandonment');
+  if (includesAny(text, ['shame', 'ashamed', 'worthless', 'too much', 'my fault'])) features.add('theme:shame');
+  if (includesAny(text, ['sleep', 'tired', 'exhausted', 'insomnia', 'no sleep', 'poor sleep'])) features.add('theme:sleep');
+  if (includesAny(text, ['text again', 'call repeatedly', 'send', 'reply', 'react'])) features.add('theme:reactive_message');
+  if (drafts.some(draft => draft.sent && !draft.paused)) features.add('message:sent_without_pause');
+  if (drafts.some(draft => draft.paused || draft.outcome === 'not_sent')) features.add('message:pause_attempt');
+
+  return features;
+}
+
+function countFeatureOverlap(a: Set<string>, b: Set<string>): number {
+  let overlap = 0;
+  a.forEach(feature => {
+    if (b.has(feature)) overlap += 1;
+  });
+  return overlap;
 }
 
 function detectRapidDistressEscalation(entries: JournalEntry[]): SpiralSignal | null {
@@ -52,7 +124,7 @@ function detectRapidDistressEscalation(entries: JournalEntry[]): SpiralSignal | 
       id: 'sp_rapid_escalation',
       type: 'rapid_distress_escalation',
       label: 'Distress climbing quickly',
-      narrative: 'Your distress has been rising across recent entries. Slowing down now may help prevent a spiral.',
+      narrative: 'Your distress appears to be rising across recent entries. Slowing down now may help reduce escalation.',
       weight,
       dataPoints: recent.length,
       detectedAt: Date.now(),
@@ -92,7 +164,7 @@ function detectRepeatedRejectionLanguage(entries: JournalEntry[]): SpiralSignal 
       id: 'sp_rejection_language',
       type: 'repeated_rejection_language',
       label: 'Rejection themes recurring',
-      narrative: 'Rejection or abandonment themes have appeared repeatedly. This pattern often intensifies — being aware of it now is powerful.',
+      narrative: 'Rejection or abandonment themes have appeared repeatedly. This may be a useful moment to pause before the feeling grows.',
       weight: Math.min(hits * 0.9, 5),
       dataPoints: hits,
       detectedAt: Date.now(),
@@ -125,7 +197,7 @@ function detectRelationshipConflictLoop(entries: JournalEntry[], drafts: Message
       id: 'sp_conflict_loop',
       type: 'relationship_conflict_loop',
       label: 'Conflict cycle active',
-      narrative: 'A relationship conflict cycle seems to be active. Pausing before responding may help break the pattern.',
+      narrative: 'A relationship conflict cycle may be active. Pausing before responding could help interrupt the pattern.',
       weight: Math.min(conflictPoints * 0.7, 6),
       dataPoints: Math.round(conflictPoints),
       detectedAt: Date.now(),
@@ -151,7 +223,7 @@ function detectLateNightSpike(entries: JournalEntry[]): SpiralSignal | null {
       id: 'sp_late_night_spike',
       type: 'late_night_spike',
       label: 'Late-night emotional intensity',
-      narrative: 'Strong emotions tend to feel more overwhelming at night. Tomorrow may bring a calmer perspective.',
+      narrative: 'Strong emotions may feel more overwhelming at night. A short pause may help you avoid making big decisions while activated.',
       weight: Math.min(lateNightIntense * 1.3, 4),
       dataPoints: lateNightIntense,
       detectedAt: Date.now(),
@@ -184,7 +256,7 @@ function detectEmotionalVolatility(entries: JournalEntry[]): SpiralSignal | null
       id: 'sp_emotional_volatility',
       type: 'emotional_volatility',
       label: 'Emotional shifts intensifying',
-      narrative: 'Your emotions have been shifting rapidly. This kind of volatility often precedes a spiral — grounding can help.',
+      narrative: 'Your emotions appear to be shifting rapidly. Grounding may help before the pattern escalates.',
       weight: Math.min(swingCount * 1.2 + (maxSwing >= 5 ? 1.5 : 0), 5),
       dataPoints: swingCount,
       detectedAt: Date.now(),
@@ -219,7 +291,7 @@ function detectShameCascade(entries: JournalEntry[]): SpiralSignal | null {
       id: 'sp_shame_cascade',
       type: 'shame_cascade',
       label: 'Shame pattern building',
-      narrative: 'Shame seems to be building up. Remember — shame is an emotion, not a truth about who you are.',
+      narrative: 'Shame appears to be building. It may help to treat this as an emotion, not a verdict about who you are.',
       weight: Math.min(shameHits * 1.1, 5),
       dataPoints: shameHits,
       detectedAt: Date.now(),
@@ -253,7 +325,7 @@ function detectUrgeIntensification(entries: JournalEntry[]): SpiralSignal | null
       id: 'sp_urge_intensification',
       type: 'urge_intensification',
       label: 'Strong urges recurring',
-      narrative: 'Strong urges have been showing up repeatedly. You\'re doing well to notice them — that awareness is protective.',
+      narrative: 'Strong urges have been showing up repeatedly. Naming them may create a little more space before acting.',
       weight: Math.min(highRiskUrgeCount * 1.0, 5),
       dataPoints: highRiskUrgeCount,
       detectedAt: Date.now(),
@@ -279,7 +351,7 @@ function detectCopingAbandonment(entries: JournalEntry[]): SpiralSignal | null {
       id: 'sp_coping_abandonment',
       type: 'coping_abandonment',
       label: 'Coping tools dropped off',
-      narrative: 'You\'ve been using coping tools less while distress is rising. Even a small step — a breath, a grounding moment — can help.',
+      narrative: 'Coping tools appear less often while distress is rising. A small support step may help right now.',
       weight: 3,
       dataPoints: recent.length,
       detectedAt: Date.now(),
@@ -310,7 +382,7 @@ function detectIsolationPattern(entries: JournalEntry[]): SpiralSignal | null {
       id: 'sp_isolation_pattern',
       type: 'isolation_pattern',
       label: 'Withdrawal pattern emerging',
-      narrative: 'Withdrawal has been showing up in your entries. Connection — even small moments — can help break this pattern.',
+      narrative: 'Withdrawal has been showing up in your entries. A small moment of connection may help soften this pattern.',
       weight: Math.min(isolationHits * 1.2, 4),
       dataPoints: isolationHits,
       detectedAt: Date.now(),
@@ -318,6 +390,126 @@ function detectIsolationPattern(entries: JournalEntry[]): SpiralSignal | null {
   }
 
   return null;
+}
+
+function detectPoorSleepVulnerability(entries: JournalEntry[]): SpiralSignal | null {
+  const recent = entries.filter(e => withinDays(e.timestamp, 5));
+  if (recent.length < 2) return null;
+
+  let sleepMentions = 0;
+  let highIntensityAfterSleep = 0;
+
+  recent.forEach(entry => {
+    const text = entryText(entry);
+    const hasSleepSignal = includesAny(text, ['poor sleep', 'bad sleep', 'no sleep', 'insomnia', 'exhausted', 'tired', 'sleep']);
+    if (!hasSleepSignal) return;
+    sleepMentions++;
+    if (entry.checkIn.intensityLevel >= 6) highIntensityAfterSleep++;
+  });
+
+  if (sleepMentions >= 2 && highIntensityAfterSleep >= 1) {
+    return {
+      id: 'sp_poor_sleep_vulnerability',
+      type: 'poor_sleep_vulnerability',
+      label: 'Sleep may be affecting vulnerability',
+      narrative: 'Sleep or exhaustion has appeared near recent intense check-ins. This may be a moment for extra gentleness and fewer big decisions.',
+      weight: Math.min(sleepMentions + highIntensityAfterSleep, 5),
+      dataPoints: sleepMentions,
+      detectedAt: Date.now(),
+    };
+  }
+
+  return null;
+}
+
+function detectConversationSpiralLanguage(conversations: AIConversation[]): SpiralSignal | null {
+  const recent = conversations.filter(conversation => withinHours(conversation.updatedAt, 72));
+  if (recent.length === 0) return null;
+
+  let hits = 0;
+  const spiralTerms = [
+    'spiraling',
+    'spiral',
+    'can\'t stop thinking',
+    'cannot stop thinking',
+    'what if',
+    'they hate me',
+    'they are leaving',
+    'i need to text',
+    'i want to text',
+    'i feel abandoned',
+    'i feel rejected',
+    'ignored',
+    'no reply',
+  ];
+
+  recent.forEach(conversation => {
+    const text = conversationText(conversation);
+    const termHits = spiralTerms.filter(term => text.includes(term)).length;
+    if (termHits > 0) hits += Math.min(termHits, 3);
+  });
+
+  if (hits >= 3) {
+    return {
+      id: 'sp_conversation_spiral_language',
+      type: 'conversation_spiral_language',
+      label: 'Spiral language in recent conversations',
+      narrative: 'Recent Companion conversations include language that often appears when emotions are starting to loop.',
+      weight: Math.min(hits * 0.9, 5),
+      dataPoints: hits,
+      detectedAt: Date.now(),
+    };
+  }
+
+  return null;
+}
+
+function detectFamiliarSpiralPattern(
+  entries: JournalEntry[],
+  drafts: MessageDraft[],
+  conversations: AIConversation[],
+): SpiralSignal | null {
+  const recentEntries = entries.filter(e => withinHours(e.timestamp, 72));
+  const recentDrafts = drafts.filter(d => withinHours(d.timestamp, 72));
+  const recentConversations = conversations.filter(c => withinHours(c.updatedAt, 72));
+
+  if (recentEntries.length + recentDrafts.length + recentConversations.length < 2) return null;
+
+  const olderEntries = entries.filter(e => !withinHours(e.timestamp, 72) && withinDays(e.timestamp, 45));
+  const olderDrafts = drafts.filter(d => !withinHours(d.timestamp, 72) && withinDays(d.timestamp, 45));
+  const olderConversations = conversations.filter(c => !withinHours(c.updatedAt, 72) && withinDays(c.updatedAt, 45));
+  if (olderEntries.length + olderDrafts.length + olderConversations.length < 3) return null;
+
+  const recentFeatures = extractPatternFeatures(recentEntries, recentDrafts, recentConversations);
+  if (recentFeatures.size < 2) return null;
+
+  const matchingOlderEpisodes = olderEntries.filter(entry => {
+    const windowStart = entry.timestamp - 12 * 60 * 60 * 1000;
+    const windowEnd = entry.timestamp + 12 * 60 * 60 * 1000;
+    const pairedDrafts = olderDrafts.filter(draft => draft.timestamp >= windowStart && draft.timestamp <= windowEnd);
+    const pairedConversations = olderConversations.filter(conversation => conversation.updatedAt >= windowStart && conversation.updatedAt <= windowEnd);
+    const features = extractPatternFeatures([entry], pairedDrafts, pairedConversations);
+    const overlap = countFeatureOverlap(recentFeatures, features);
+    return overlap >= 2 && entry.checkIn.intensityLevel >= 6;
+  });
+
+  if (matchingOlderEpisodes.length < 2) return null;
+
+  const highDistressMatches = matchingOlderEpisodes.filter(entry => entry.checkIn.intensityLevel >= 7).length;
+  const overlapStrength = matchingOlderEpisodes.reduce((sum, entry) => {
+    const features = extractPatternFeatures([entry], [], []);
+    return sum + countFeatureOverlap(recentFeatures, features);
+  }, 0);
+
+  return {
+    id: 'sp_familiar_pattern',
+    type: 'familiar_spiral_pattern',
+    label: 'Familiar pattern detected',
+    narrative: 'This resembles a pattern that previously led to distress. It may be a good moment to slow down before the next step.',
+    weight: Math.min(4 + highDistressMatches + overlapStrength * 0.25, 7),
+    dataPoints: matchingOlderEpisodes.length,
+    detectedAt: Date.now(),
+  };
 }
 
 function calculateRiskLevel(signals: SpiralSignal[]): SpiralRiskLevel {
@@ -340,18 +532,46 @@ function calculateConfidence(signals: SpiralSignal[]): number {
 }
 
 function generateInterventions(signals: SpiralSignal[], riskLevel: SpiralRiskLevel): SpiralIntervention[] {
-  const interventions: SpiralIntervention[] = [];
+  const interventions: SpiralIntervention[] = [
+    {
+      id: 'sp_int_calm_now',
+      type: 'grounding',
+      title: 'Calm Me Down',
+      description: 'Use a short grounding flow before this escalates.',
+      route: '/grounding-mode',
+      icon: 'Anchor',
+      priority: 1,
+    },
+    {
+      id: 'sp_int_companion',
+      type: 'ai_companion',
+      title: 'Companion',
+      description: 'Talk through what is happening before it builds.',
+      route: '/(tabs)/companion',
+      icon: 'Sparkles',
+      priority: 2,
+    },
+    {
+      id: 'sp_int_dont_send_it',
+      type: 'message_guard',
+      title: 'Don’t Send It',
+      description: 'Check a message before sending from intensity.',
+      route: '/dont-send-it',
+      icon: 'PenLine',
+      priority: 3,
+    },
+  ];
   const types = new Set(signals.map(s => s.type));
 
   if (riskLevel === 'high') {
     interventions.push({
       id: 'sp_int_grounding_mode',
       type: 'grounding',
-      title: 'Open Grounding Mode',
+      title: 'Open Calm Me Down',
       description: 'A calm, simplified space to help you settle.',
       route: '/grounding-mode',
       icon: 'Anchor',
-      priority: 1,
+      priority: 4,
     });
   }
 
@@ -363,19 +583,19 @@ function generateInterventions(signals: SpiralSignal[], riskLevel: SpiralRiskLev
       description: 'A few slow breaths to calm your nervous system.',
       route: '/exercise?id=c1',
       icon: 'Wind',
-      priority: 2,
+      priority: 5,
     });
   }
 
   if (types.has('relationship_conflict_loop') || types.has('repeated_rejection_language')) {
     interventions.push({
       id: 'sp_int_pause',
-      type: 'pause',
-      title: 'Pause before messaging',
-      description: '2 minutes can change everything.',
-      route: '/message-guard',
+      type: 'message_guard',
+      title: 'Don’t Send It',
+      description: 'Pause and check a message before sending.',
+      route: '/dont-send-it',
       icon: 'Timer',
-      priority: 3,
+      priority: 6,
     });
   }
 
@@ -387,7 +607,7 @@ function generateInterventions(signals: SpiralSignal[], riskLevel: SpiralRiskLev
       description: 'Work through shame step by step.',
       route: '/journal-guided',
       icon: 'Shield',
-      priority: 4,
+      priority: 7,
     });
   }
 
@@ -399,7 +619,7 @@ function generateInterventions(signals: SpiralSignal[], riskLevel: SpiralRiskLev
       description: 'Navigate what\'s happening with support.',
       route: '/relationship-copilot',
       icon: 'HeartHandshake',
-      priority: 5,
+      priority: 8,
     });
   }
 
@@ -410,20 +630,16 @@ function generateInterventions(signals: SpiralSignal[], riskLevel: SpiralRiskLev
     description: 'Write it out to process what you\'re feeling.',
     route: '/journal-write',
     icon: 'BookOpen',
-    priority: 6,
+    priority: 9,
   });
 
-  interventions.push({
-    id: 'sp_int_companion',
-    type: 'ai_companion',
-    title: 'Talk to AI Companion',
-    description: 'Process what\'s happening in a safe space.',
-    route: '/(tabs)/companion',
-    icon: 'Sparkles',
-    priority: 7,
-  });
-
-  return interventions.sort((a, b) => a.priority - b.priority);
+  const unique = new Map<string, SpiralIntervention>();
+  interventions
+    .sort((a, b) => a.priority - b.priority)
+    .forEach(intervention => {
+      if (!unique.has(intervention.route)) unique.set(intervention.route, intervention);
+    });
+  return [...unique.values()];
 }
 
 function generateNarrative(riskLevel: SpiralRiskLevel, signals: SpiralSignal[]): string | null {
@@ -432,13 +648,19 @@ function generateNarrative(riskLevel: SpiralRiskLevel, signals: SpiralSignal[]):
   const types = new Set(signals.map(s => s.type));
 
   if (riskLevel === 'high') {
+    if (types.has('familiar_spiral_pattern')) {
+      return 'We’ve seen similar patterns before. This resembles a pattern that previously led to distress, so slowing down now may help.';
+    }
+    if (signals.length >= 2) {
+      return 'We’ve seen similar patterns before. You may be entering a period of heightened emotional vulnerability, so this could be a good moment to slow down before acting.';
+    }
     if (types.has('relationship_conflict_loop') && types.has('rapid_distress_escalation')) {
-      return 'Things seem emotionally intense right now, especially around a relationship. This is a moment to slow down and take care of yourself first.';
+      return 'Things appear emotionally intense right now, especially around a relationship. This may be a moment to slow down and take care of yourself first.';
     }
     if (types.has('shame_cascade')) {
-      return 'Shame seems to be building up strongly. This feeling will pass — right now, being gentle with yourself is the most important thing.';
+      return 'Shame seems to be building strongly. Right now, being gentle with yourself may matter more than solving everything.';
     }
-    return 'Multiple signs suggest your emotions may be escalating. A brief pause can help prevent things from spiraling further.';
+    return 'Multiple signs suggest your emotions may be escalating. A brief pause may help reduce the chance of spiraling further.';
   }
 
   if (riskLevel === 'moderate') {
@@ -446,12 +668,12 @@ function generateNarrative(riskLevel: SpiralRiskLevel, signals: SpiralSignal[]):
       return 'Emotions tend to feel more overwhelming at night. Would a quick grounding reset help before bed?';
     }
     if (types.has('repeated_rejection_language')) {
-      return 'Rejection themes have been showing up in your recent entries. Being aware of this pattern is a strength.';
+      return 'Rejection themes have been showing up in your recent entries. Noticing this early may help you choose a steadier next step.';
     }
     if (types.has('emotional_volatility')) {
       return 'Your emotions have been shifting more than usual. A moment of stillness may help you find your center.';
     }
-    return 'It seems like today has been emotionally intense. Would a quick grounding reset help?';
+    return 'Today appears emotionally intense. Would a quick grounding reset help?';
   }
 
   return null;
@@ -460,6 +682,7 @@ function generateNarrative(riskLevel: SpiralRiskLevel, signals: SpiralSignal[]):
 export function detectSpiral(
   journalEntries: JournalEntry[],
   messageDrafts: MessageDraft[],
+  conversations: AIConversation[] = [],
 ): SpiralDetectionResult {
   const signals: SpiralSignal[] = [];
 
@@ -490,6 +713,15 @@ export function detectSpiral(
   const isolation = detectIsolationPattern(journalEntries);
   if (isolation) signals.push(isolation);
 
+  const sleep = detectPoorSleepVulnerability(journalEntries);
+  if (sleep) signals.push(sleep);
+
+  const conversation = detectConversationSpiralLanguage(conversations);
+  if (conversation) signals.push(conversation);
+
+  const familiar = detectFamiliarSpiralPattern(journalEntries, messageDrafts, conversations);
+  if (familiar) signals.push(familiar);
+
   const riskLevel = calculateRiskLevel(signals);
   const confidenceScore = calculateConfidence(signals);
   const interventions = generateInterventions(signals, riskLevel);
@@ -514,8 +746,9 @@ export function detectSpiralFromSmartEntries(
   smartEntries: SmartJournalEntry[],
   journalEntries: JournalEntry[],
   messageDrafts: MessageDraft[],
+  conversations: AIConversation[] = [],
 ): SpiralDetectionResult {
-  const baseResult = detectSpiral(journalEntries, messageDrafts);
+  const baseResult = detectSpiral(journalEntries, messageDrafts, conversations);
 
   const recentSmart = smartEntries.filter(e => withinHours(e.timestamp, 48));
   let extraWeight = 0;
@@ -540,7 +773,7 @@ export function detectSpiralFromSmartEntries(
       ...baseResult,
       riskLevel: 'high',
       interventions: generateInterventions(baseResult.signals, 'high'),
-      narrative: baseResult.narrative ?? 'Multiple signals from your journal suggest this is a moment to pause and ground.',
+      narrative: baseResult.narrative ?? 'Multiple signals from your journal suggest this may be a moment to pause and ground.',
     };
   }
 
@@ -659,13 +892,26 @@ export function getSpiralPausePrompt(signals: SpiralSignal[]): SpiralPausePrompt
 
   if (types.has('relationship_conflict_loop') || types.has('repeated_rejection_language')) {
     return {
-      title: 'Before you respond...',
-      message: 'Strong emotions can make responses feel urgent. Would you like to pause for a moment before replying?',
+      title: 'We’ve seen similar patterns before.',
+      message: 'This resembles a pattern that previously led to distress. It is not certain, but it may be a good moment to pause before responding.',
       options: [
-        { id: 'pause_timer', label: '2-minute pause', route: null, icon: 'Timer' },
-        { id: 'grounding', label: 'Quick grounding', route: '/exercise?id=c2', icon: 'Anchor' },
-        { id: 'rewrite', label: 'Rewrite with care', route: '/message-guard', icon: 'PenLine' },
-        { id: 'continue', label: 'Continue anyway', route: null, icon: 'ArrowRight' },
+        { id: 'calm_down', label: 'Calm Me Down', route: '/grounding-mode', icon: 'Anchor' },
+        { id: 'companion', label: 'Companion', route: '/(tabs)/companion', icon: 'Sparkles' },
+        { id: 'dont_send_it', label: 'Don’t Send It', route: '/dont-send-it', icon: 'PenLine' },
+        { id: 'continue', label: 'Not now', route: null, icon: 'ArrowRight' },
+      ],
+    };
+  }
+
+  if (types.has('familiar_spiral_pattern')) {
+    return {
+      title: 'We’ve seen similar patterns before.',
+      message: 'This resembles a pattern that previously led to distress. It is only a signal, but slowing down now may help.',
+      options: [
+        { id: 'calm_down', label: 'Calm Me Down', route: '/grounding-mode', icon: 'Anchor' },
+        { id: 'companion', label: 'Companion', route: '/(tabs)/companion', icon: 'Sparkles' },
+        { id: 'dont_send_it', label: 'Don’t Send It', route: '/dont-send-it', icon: 'PenLine' },
+        { id: 'continue', label: 'Not now', route: null, icon: 'ArrowRight' },
       ],
     };
   }
@@ -673,24 +919,24 @@ export function getSpiralPausePrompt(signals: SpiralSignal[]): SpiralPausePrompt
   if (types.has('shame_cascade')) {
     return {
       title: 'A gentle pause',
-      message: 'Shame can feel overwhelming. You don\'t need to act on it right now.',
+      message: 'Shame can feel overwhelming. You may not need to act on it right now.',
       options: [
-        { id: 'breathe', label: 'Breathe first', route: '/exercise?id=c1', icon: 'Wind' },
-        { id: 'journal', label: 'Write it out', route: '/journal-write', icon: 'BookOpen' },
-        { id: 'companion', label: 'Talk to companion', route: '/(tabs)/companion', icon: 'Sparkles' },
-        { id: 'continue', label: 'I\'m okay', route: null, icon: 'ArrowRight' },
+        { id: 'calm_down', label: 'Calm Me Down', route: '/grounding-mode', icon: 'Anchor' },
+        { id: 'companion', label: 'Companion', route: '/(tabs)/companion', icon: 'Sparkles' },
+        { id: 'dont_send_it', label: 'Don’t Send It', route: '/dont-send-it', icon: 'PenLine' },
+        { id: 'continue', label: 'I’m okay', route: null, icon: 'ArrowRight' },
       ],
     };
   }
 
   return {
-    title: 'Take a moment',
-    message: 'It seems like things are emotionally intense right now. A small pause can make a big difference.',
+    title: 'We’ve seen similar patterns before.',
+    message: 'You may be entering a period of heightened emotional vulnerability. This is not certain, but a small pause could help.',
     options: [
-      { id: 'grounding', label: 'Grounding Mode', route: '/grounding-mode', icon: 'Anchor' },
-      { id: 'breathe', label: 'Breathing exercise', route: '/exercise?id=c1', icon: 'Wind' },
-      { id: 'companion', label: 'AI Companion', route: '/(tabs)/companion', icon: 'Sparkles' },
-      { id: 'continue', label: 'Continue', route: null, icon: 'ArrowRight' },
+      { id: 'calm_down', label: 'Calm Me Down', route: '/grounding-mode', icon: 'Anchor' },
+      { id: 'companion', label: 'Companion', route: '/(tabs)/companion', icon: 'Sparkles' },
+      { id: 'dont_send_it', label: 'Don’t Send It', route: '/dont-send-it', icon: 'PenLine' },
+      { id: 'continue', label: 'Not now', route: null, icon: 'ArrowRight' },
     ],
   };
 }

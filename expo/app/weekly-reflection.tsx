@@ -29,6 +29,7 @@ import {
   FileText,
   ChevronRight,
   AlertTriangle,
+  Search,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
@@ -39,6 +40,39 @@ import { useNotificationEntry } from '@/providers/NotificationEntryProvider';
 import NotificationEntryBanner from '@/components/NotificationEntryBanner';
 import { generateWeeklyReflection, setReflectionFeedback } from '@/services/reflection/weeklyReflectionService';
 import { WeeklyReflection, ReflectionFeedback } from '@/types/weeklyReflection';
+import {
+  generateWeeklyDiscoveries,
+  getWeeklyDiscoveryItems,
+  WeeklyDiscoveryItem,
+} from '@/services/insights/weeklyDiscoveriesService';
+
+function getConfidenceColor(confidence: WeeklyDiscoveryItem['confidence']) {
+  if (confidence === 'high') return Colors.success;
+  if (confidence === 'medium') return Colors.primary;
+  return Colors.textMuted;
+}
+
+function WeeklyDiscoveryCard({ item }: { item: WeeklyDiscoveryItem }) {
+  const confidenceColor = getConfidenceColor(item.confidence);
+  return (
+    <View style={styles.discoveryCard}>
+      <View style={styles.discoveryTopRow}>
+        <Text style={styles.discoveryLabel}>{item.label}</Text>
+        <View style={[styles.confidencePill, { borderColor: confidenceColor }]}>
+          <Text style={[styles.confidenceText, { color: confidenceColor }]}>
+            {item.confidence} confidence
+          </Text>
+        </View>
+      </View>
+      <Text style={styles.discoveryTitle}>{item.title}</Text>
+      <Text style={styles.discoveryBody}>{item.body}</Text>
+      <View style={styles.discoveryWhyRow}>
+        <Search size={13} color={Colors.primary} />
+        <Text style={styles.discoveryWhy}>{item.why}</Text>
+      </View>
+    </View>
+  );
+}
 
 export default function WeeklyReflectionScreen() {
   const router = useRouter();
@@ -57,13 +91,21 @@ export default function WeeklyReflectionScreen() {
     () => generateWeeklyReflection(journalEntries, messageDrafts),
     [journalEntries, messageDrafts],
   );
+  const weeklyDiscoveries = useMemo(
+    () => generateWeeklyDiscoveries(journalEntries, messageDrafts),
+    [journalEntries, messageDrafts],
+  );
+  const weeklyDiscoveryItems = useMemo(
+    () => getWeeklyDiscoveryItems(weeklyDiscoveries),
+    [weeklyDiscoveries],
+  );
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnims = useRef(
-    Array.from({ length: 7 }, () => new Animated.Value(30)),
+    Array.from({ length: 8 }, () => new Animated.Value(30)),
   ).current;
   const slideOpacities = useRef(
-    Array.from({ length: 7 }, () => new Animated.Value(0)),
+    Array.from({ length: 8 }, () => new Animated.Value(0)),
   ).current;
 
   useEffect(() => {
@@ -103,6 +145,24 @@ export default function WeeklyReflectionScreen() {
       router.push('/(tabs)/companion');
     }
   }, [router]);
+
+  const handleDiscussDiscoveries = useCallback(() => {
+    if (Platform.OS !== 'web') {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    const discoverySummary = weeklyDiscoveryItems
+      .map(item => `${item.label}: ${item.title}. ${item.body} Why it was generated: ${item.why}`)
+      .join('\n\n');
+    trackEvent('weekly_discovery_discuss_tapped', {
+      entry_count: weeklyDiscoveries.weekEntryCount,
+    });
+    router.push({
+      pathname: '/(tabs)/companion/chat',
+      params: {
+        initialMessage: `I want to discuss my Weekly Discovery. Please help me understand it gently and choose one useful next step.\n\n${discoverySummary}`,
+      },
+    } as never);
+  }, [router, trackEvent, weeklyDiscoveries.weekEntryCount, weeklyDiscoveryItems]);
 
   const handleClose = useCallback(() => {
     if (Platform.OS !== 'web') {
@@ -184,8 +244,40 @@ export default function WeeklyReflectionScreen() {
           />
         </Animated.View>
 
+        <Animated.View style={[styles.sectionCard, styles.discoverySectionCard, { opacity: slideOpacities[0], transform: [{ translateY: slideAnims[0] }] }]}>
+          <View style={styles.sectionHeader}>
+            <View style={[styles.sectionIconWrap, { backgroundColor: '#FFFFFF' }]}>
+              <Lightbulb size={18} color={Colors.primary} />
+            </View>
+            <View style={styles.discoveryHeaderText}>
+              <Text style={styles.sectionTitle}>Weekly Discoveries</Text>
+              <Text style={styles.discoverySubtitle}>
+                Generated from {weeklyDiscoveries.weekEntryCount} check-in{weeklyDiscoveries.weekEntryCount === 1 ? '' : 's'} and {weeklyDiscoveries.weekDraftCount} message moment{weeklyDiscoveries.weekDraftCount === 1 ? '' : 's'} this week.
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.discoveryList}>
+            {weeklyDiscoveryItems.map((item) => (
+              <WeeklyDiscoveryCard key={item.id} item={item} />
+            ))}
+          </View>
+
+          <View style={styles.discoveryActions}>
+            <TouchableOpacity
+              style={styles.discoveryActionButton}
+              onPress={handleDiscussDiscoveries}
+              activeOpacity={0.76}
+              testID="discuss-weekly-discovery"
+            >
+              <MessageCircle size={16} color={Colors.primary} />
+              <Text style={styles.discoveryActionText}>Discuss</Text>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+
         {/* Emotional Landscape */}
-        <Animated.View style={[styles.sectionCard, { opacity: slideOpacities[0], transform: [{ translateY: slideAnims[0] }] }]}>
+        <Animated.View style={[styles.sectionCard, { opacity: slideOpacities[1], transform: [{ translateY: slideAnims[1] }] }]}>
           <View style={styles.sectionHeader}>
             <View style={[styles.sectionIconWrap, { backgroundColor: '#FFFFFF' }]}>
               <Heart size={18} color="#3B82F6" />
@@ -246,7 +338,7 @@ export default function WeeklyReflectionScreen() {
         </Animated.View>
 
         {/* Relationship Patterns */}
-        <Animated.View style={[styles.sectionCard, { opacity: slideOpacities[1], transform: [{ translateY: slideAnims[1] }] }]}>
+        <Animated.View style={[styles.sectionCard, { opacity: slideOpacities[2], transform: [{ translateY: slideAnims[2] }] }]}>
           <View style={styles.sectionHeader}>
             <View style={[styles.sectionIconWrap, { backgroundColor: '#FFFFFF' }]}>
               <MessageCircle size={18} color="#3B82F6" />
@@ -290,7 +382,7 @@ export default function WeeklyReflectionScreen() {
         </Animated.View>
 
         {/* What Helped */}
-        <Animated.View style={[styles.sectionCard, { opacity: slideOpacities[2], transform: [{ translateY: slideAnims[2] }] }]}>
+        <Animated.View style={[styles.sectionCard, { opacity: slideOpacities[3], transform: [{ translateY: slideAnims[3] }] }]}>
           <View style={styles.sectionHeader}>
             <View style={[styles.sectionIconWrap, { backgroundColor: Colors.successLight }]}>
               <Shield size={18} color={Colors.success} />
@@ -333,7 +425,7 @@ export default function WeeklyReflectionScreen() {
 
         {/* What Escalated */}
         {reflection.whatEscalated.escalationPatterns.length > 0 && (
-          <Animated.View style={[styles.sectionCard, styles.escalatedCard, { opacity: slideOpacities[3], transform: [{ translateY: slideAnims[3] }] }]}>
+          <Animated.View style={[styles.sectionCard, styles.escalatedCard, { opacity: slideOpacities[4], transform: [{ translateY: slideAnims[4] }] }]}>
             <View style={styles.sectionHeader}>
               <View style={[styles.sectionIconWrap, { backgroundColor: '#FFFFFF' }]}>
                 <AlertTriangle size={18} color="#3B82F6" />
@@ -370,7 +462,7 @@ export default function WeeklyReflectionScreen() {
         )}
 
         {/* Growth Signals */}
-        <Animated.View style={[styles.sectionCard, styles.growthCard, { opacity: slideOpacities[3], transform: [{ translateY: slideAnims[3] }] }]}>
+        <Animated.View style={[styles.sectionCard, styles.growthCard, { opacity: slideOpacities[5], transform: [{ translateY: slideAnims[5] }] }]}>
           <View style={styles.sectionHeader}>
             <View style={[styles.sectionIconWrap, { backgroundColor: '#FFFFFF' }]}>
               <Sparkles size={18} color="#67E8F9" />
@@ -414,7 +506,7 @@ export default function WeeklyReflectionScreen() {
         </Animated.View>
 
         {/* Next Week Focus */}
-        <Animated.View style={[styles.sectionCard, styles.focusCard, { opacity: slideOpacities[4], transform: [{ translateY: slideAnims[4] }] }]}>
+        <Animated.View style={[styles.sectionCard, styles.focusCard, { opacity: slideOpacities[6], transform: [{ translateY: slideAnims[6] }] }]}>
           <View style={styles.sectionHeader}>
             <View style={[styles.sectionIconWrap, { backgroundColor: Colors.primaryLight }]}>
               <Target size={18} color={Colors.primary} />
@@ -452,11 +544,11 @@ export default function WeeklyReflectionScreen() {
         </Animated.View>
 
         {/* Closing */}
-        <Animated.View style={[styles.closingCard, { opacity: slideOpacities[5], transform: [{ translateY: slideAnims[5] }] }]}>
+        <Animated.View style={[styles.closingCard, { opacity: slideOpacities[7], transform: [{ translateY: slideAnims[7] }] }]}>
           <Text style={styles.closingText}>{reflection.closingMessage}</Text>
         </Animated.View>
 
-        <Animated.View style={[styles.reportLink, { opacity: slideOpacities[6], transform: [{ translateY: slideAnims[6] }] }]}>
+        <Animated.View style={[styles.reportLink, { opacity: slideOpacities[7], transform: [{ translateY: slideAnims[7] }] }]}>
           <TouchableOpacity
             style={styles.reportLinkButton}
             onPress={() => {
@@ -480,7 +572,7 @@ export default function WeeklyReflectionScreen() {
         </Animated.View>
 
         {/* Feedback */}
-        <Animated.View style={[styles.feedbackSection, { opacity: slideOpacities[6], transform: [{ translateY: slideAnims[6] }] }]}>
+        <Animated.View style={[styles.feedbackSection, { opacity: slideOpacities[7], transform: [{ translateY: slideAnims[7] }] }]}>
           <Text style={styles.feedbackTitle}>How does this feel?</Text>
           <View style={styles.feedbackRow}>
             <TouchableOpacity
@@ -622,6 +714,115 @@ const styles = StyleSheet.create({
     shadowOpacity: 1,
     shadowRadius: 12,
     elevation: 3,
+  },
+  discoverySectionCard: {
+    borderWidth: 1,
+    borderColor: Colors.primaryLight,
+  },
+  discoveryHeaderText: {
+    flex: 1,
+  },
+  discoverySubtitle: {
+    color: Colors.textSecondary,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '600' as const,
+    marginTop: 3,
+  },
+  discoveryList: {
+    gap: 10,
+  },
+  discoveryActions: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 14,
+  },
+  discoveryActionButton: {
+    flex: 1,
+    minHeight: 44,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    backgroundColor: Colors.surface,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingHorizontal: 8,
+  },
+  discoveryActionButtonActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  discoveryActionText: {
+    color: Colors.primary,
+    fontSize: 12,
+    fontWeight: '800' as const,
+  },
+  discoveryActionTextActive: {
+    color: Colors.white,
+  },
+  discoveryCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+  },
+  discoveryTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+    marginBottom: 8,
+  },
+  discoveryLabel: {
+    flex: 1,
+    color: Colors.primary,
+    fontSize: 11,
+    fontWeight: '800' as const,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase' as const,
+  },
+  confidencePill: {
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  confidenceText: {
+    fontSize: 10,
+    fontWeight: '800' as const,
+    textTransform: 'uppercase' as const,
+  },
+  discoveryTitle: {
+    color: Colors.text,
+    fontSize: 16,
+    lineHeight: 21,
+    fontWeight: '800' as const,
+    marginBottom: 5,
+  },
+  discoveryBody: {
+    color: Colors.textSecondary,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '600' as const,
+    marginBottom: 10,
+  },
+  discoveryWhyRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 7,
+    borderTopWidth: 1,
+    borderTopColor: Colors.borderLight,
+    paddingTop: 9,
+  },
+  discoveryWhy: {
+    flex: 1,
+    color: Colors.textSecondary,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '600' as const,
   },
   growthCard: {
     borderWidth: 1,

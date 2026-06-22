@@ -50,15 +50,14 @@ export const [OnboardingProvider, useOnboarding] = createContextHook(() => {
     [accountProfile?.onboarding_completed, onboardingProfile],
   );
 
-  const completeOnboardingAndProfile = useCallback((finalProfile: OnboardingProfile) => {
+  const completeOnboardingAndProfile = useCallback(async (finalProfile: OnboardingProfile) => {
     const completed = { ...finalProfile, completedAt: Date.now() };
     setOnboardingProfile(completed);
-    saveMutation.mutate(completed);
-    void completeAccountOnboarding(completed as unknown as Record<string, unknown>).catch((e) => {
-      console.log('[OnboardingProvider] Supabase onboarding update failed:', e);
-    });
+    await saveMutation.mutateAsync(completed);
+    await completeAccountOnboarding(completed as unknown as Record<string, unknown>);
+    await queryClient.invalidateQueries({ queryKey: ['account-profile'] });
     console.log('[OnboardingProvider] Onboarding completed');
-  }, [completeAccountOnboarding, saveMutation]);
+  }, [completeAccountOnboarding, queryClient, saveMutation]);
 
   return useMemo(() => ({
     onboardingProfile,

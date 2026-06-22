@@ -17,13 +17,14 @@ import Colors from '@/constants/colors';
 import { EMOTIONS, TRIGGERS, BODY_SENSATIONS, URGES } from '@/constants/data';
 import { useApp } from '@/providers/AppProvider';
 import { Emotion, Trigger, BodySensation, Urge, CheckInEntry, JournalEntry } from '@/types';
+import { RelationshipType, RELATIONSHIP_TAG_OPTIONS } from '@/types/relationship';
 import { generateCheckInRecommendations } from '@/services/recommendation/copingRecommendationService';
 import { CopingRecommendation } from '@/types/recommendation';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
 import { useNotificationEntry } from '@/providers/NotificationEntryProvider';
 import NotificationEntryBanner from '@/components/NotificationEntryBanner';
 
-const STEPS = ['triggers', 'emotions', 'body', 'urges', 'intensity', 'notes', 'suggestions'] as const;
+const STEPS = ['triggers', 'relationships', 'emotions', 'body', 'urges', 'intensity', 'notes', 'suggestions'] as const;
 
 const CI_ICON_MAP: Record<string, React.ComponentType<{ size: number; color: string }>> = {
   Wind, Anchor, BookOpen, Heart, RefreshCw, Search, MessageCircle, Timer,
@@ -32,6 +33,7 @@ type Step = typeof STEPS[number];
 
 const STEP_TITLES: Record<Step, string> = {
   triggers: 'What triggered this?',
+  relationships: 'Who did this involve?',
   emotions: 'What are you feeling?',
   body: 'Where do you feel it?',
   urges: 'What urges are coming up?',
@@ -42,6 +44,7 @@ const STEP_TITLES: Record<Step, string> = {
 
 const STEP_SUBTITLES: Record<Step, string> = {
   triggers: 'Select all that apply. No judgment here.',
+  relationships: 'Optional. This helps relationship insights stay specific.',
   emotions: 'Name it to tame it. Pick what fits.',
   body: 'Your body holds wisdom. Notice where.',
   urges: "It's okay to have urges. Naming them gives you power.",
@@ -65,9 +68,14 @@ export default function CheckInScreen() {
 
   const [stepIndex, setStepIndex] = useState<number>(0);
   const [selectedTriggers, setSelectedTriggers] = useState<Trigger[]>([]);
+  const [selectedRelationshipTags, setSelectedRelationshipTags] = useState<RelationshipType[]>([]);
   const [selectedEmotions, setSelectedEmotions] = useState<Emotion[]>([]);
   const [selectedSensations, setSelectedSensations] = useState<BodySensation[]>([]);
   const [selectedUrges, setSelectedUrges] = useState<Urge[]>([]);
+  const [customTrigger, setCustomTrigger] = useState<string>('');
+  const [customEmotion, setCustomEmotion] = useState<string>('');
+  const [customSensation, setCustomSensation] = useState<string>('');
+  const [customUrge, setCustomUrge] = useState<string>('');
   const [intensity, setIntensity] = useState<number>(5);
   const [notes, setNotes] = useState<string>(params.prefillNotes ?? '');
 
@@ -138,21 +146,54 @@ export default function CheckInScreen() {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
 
+    const now = Date.now();
+    const finalTriggers = selectedTriggers
+      .filter(trigger => trigger.label !== 'Something else')
+      .map(trigger => ({
+        ...trigger,
+        relationshipTags: trigger.category === 'relationship' && selectedRelationshipTags.length > 0
+          ? selectedRelationshipTags
+          : trigger.relationshipTags,
+      }));
+    const finalEmotions = selectedEmotions.filter(emotion => emotion.label !== 'Something else');
+    const finalSensations = selectedSensations.filter(sensation => sensation.label !== 'Somewhere else');
+    const finalUrges = selectedUrges.filter(urge => urge.label !== 'Something else');
+
+    if (customTrigger.trim()) {
+      finalTriggers.push({
+        id: `custom_trigger_${now}`,
+        label: customTrigger.trim(),
+        category: 'other',
+        relationshipTags: selectedRelationshipTags.length > 0 ? selectedRelationshipTags : undefined,
+      });
+    }
+    if (customEmotion.trim()) {
+      finalEmotions.push({ id: `custom_emotion_${now}`, label: customEmotion.trim(), emoji: '✍️' });
+    }
+    if (customSensation.trim()) {
+      finalSensations.push({ id: `custom_body_${now}`, label: customSensation.trim(), area: 'other' });
+    }
+    if (customUrge.trim()) {
+      finalUrges.push({ id: `custom_urge_${now}`, label: customUrge.trim(), risk: 'low' });
+    }
+
     const checkIn: CheckInEntry = {
-      id: `ci_${Date.now()}`,
-      timestamp: Date.now(),
-      triggers: selectedTriggers,
-      emotions: selectedEmotions,
-      urges: selectedUrges,
-      bodySensations: selectedSensations,
+      id: `ci_${now}`,
+      timestamp: now,
+      triggers: finalTriggers,
+      emotions: finalEmotions,
+      urges: finalUrges,
+      bodySensations: finalSensations,
       intensityLevel: intensity,
       notes,
+      relationshipTags: selectedRelationshipTags,
     };
 
     const entry: JournalEntry = {
-      id: `j_${Date.now()}`,
-      timestamp: Date.now(),
+      id: `j_${now}`,
+      timestamp: now,
       checkIn,
+      relationshipTags: selectedRelationshipTags,
     };
 
     addJournalEntry(entry);
@@ -163,13 +204,15 @@ export default function CheckInScreen() {
 
     trackFlowComplete('check_in', {
       intensity,
-      trigger_count: selectedTriggers.length,
-      emotion_count: selectedEmotions.length,
-      urge_count: selectedUrges.length,
+      trigger_count: finalTriggers.length,
+      emotion_count: finalEmotions.length,
+      urge_count: finalUrges.length,
+      relationship_tag_count: selectedRelationshipTags.length,
     });
     trackEvent('check_in_completed', {
       intensity,
-      trigger_count: selectedTriggers.length,
+      trigger_count: finalTriggers.length,
+      relationship_tag_count: selectedRelationshipTags.length,
     });
 
     if (intensity >= 8) {
@@ -184,10 +227,10 @@ export default function CheckInScreen() {
 
     const recs = generateCheckInRecommendations(
       intensity,
-      selectedEmotions.map(e => e.label),
-      selectedTriggers.map(t => t.label),
-      selectedTriggers.map(t => t.category),
-      selectedUrges.map(u => ({ label: u.label, risk: u.risk })),
+      finalEmotions.map(e => e.label),
+      finalTriggers.map(t => t.label),
+      finalTriggers.map(t => t.category),
+      finalUrges.map(u => ({ label: u.label, risk: u.risk })),
     );
     setCheckInRecs(recs);
 
@@ -199,7 +242,7 @@ export default function CheckInScreen() {
         setTimeout(() => router.push('/safety-mode'), 300);
       }
     }
-  }, [selectedTriggers, selectedEmotions, selectedUrges, selectedSensations, intensity, notes, addJournalEntry, setDistressLevel, router, animateTransition, trackFlowComplete, trackEvent, isFromNotification, markFlowCompleted]);
+  }, [selectedTriggers, selectedRelationshipTags, selectedEmotions, selectedUrges, selectedSensations, customTrigger, customEmotion, customSensation, customUrge, intensity, notes, addJournalEntry, setDistressLevel, router, animateTransition, trackFlowComplete, trackEvent, isFromNotification, markFlowCompleted]);
 
   const handleComplete = useCallback(() => {
     router.back();
@@ -251,6 +294,58 @@ export default function CheckInScreen() {
     </View>
   ), [toggleItem]);
 
+  const toggleRelationshipTag = useCallback((tag: RelationshipType) => {
+    if (Platform.OS !== 'web') {
+      void Haptics.selectionAsync();
+    }
+    setSelectedRelationshipTags(prev => (
+      prev.includes(tag)
+        ? prev.filter(value => value !== tag)
+        : [...prev, tag]
+    ));
+  }, []);
+
+  const renderRelationshipTags = useCallback(() => (
+    <View style={styles.chipGrid}>
+      {RELATIONSHIP_TAG_OPTIONS.map(option => {
+        const isSelected = selectedRelationshipTags.includes(option.value);
+        return (
+          <TouchableOpacity
+            key={option.value}
+            style={[styles.chip, isSelected && styles.chipSelected]}
+            onPress={() => toggleRelationshipTag(option.value)}
+            activeOpacity={0.7}
+            testID={`checkin-relationship-${option.value}`}
+          >
+            <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
+              {option.label}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  ), [selectedRelationshipTags, toggleRelationshipTag]);
+
+  const customInputForStep = () => {
+    const shared = {
+      placeholderTextColor: Colors.textMuted,
+      style: styles.customInput,
+    };
+    if (step === 'triggers' && selectedTriggers.some(t => t.label === 'Something else')) {
+      return <TextInput {...shared} placeholder="Write what triggered this" value={customTrigger} onChangeText={setCustomTrigger} />;
+    }
+    if (step === 'emotions' && selectedEmotions.some(e => e.label === 'Something else')) {
+      return <TextInput {...shared} placeholder="Write what you feel" value={customEmotion} onChangeText={setCustomEmotion} />;
+    }
+    if (step === 'body' && selectedSensations.some(s => s.label === 'Somewhere else')) {
+      return <TextInput {...shared} placeholder="Write where you feel it" value={customSensation} onChangeText={setCustomSensation} />;
+    }
+    if (step === 'urges' && selectedUrges.some(u => u.label === 'Something else')) {
+      return <TextInput {...shared} placeholder="Write the urge" value={customUrge} onChangeText={setCustomUrge} />;
+    }
+    return null;
+  };
+
   const renderIntensitySlider = () => (
     <View style={styles.intensityContainer}>
       <Text style={styles.intensityValue}>{intensity}</Text>
@@ -286,6 +381,8 @@ export default function CheckInScreen() {
     switch (step) {
       case 'triggers':
         return renderChips(TRIGGERS, selectedTriggers, setSelectedTriggers);
+      case 'relationships':
+        return renderRelationshipTags();
       case 'emotions':
         return renderChips(EMOTIONS, selectedEmotions, setSelectedEmotions, (e: Emotion) => e.emoji);
       case 'body':
@@ -418,6 +515,7 @@ export default function CheckInScreen() {
           <Text style={styles.stepTitle}>{STEP_TITLES[step]}</Text>
           <Text style={styles.stepSubtitle}>{STEP_SUBTITLES[step]}</Text>
           {renderStepContent()}
+          {customInputForStep()}
         </Animated.View>
       </ScrollView>
 
@@ -587,6 +685,17 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     lineHeight: 24,
   },
+  customInput: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 15,
+    color: Colors.text,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    marginTop: 16,
+  },
   footer: {
     paddingHorizontal: 24,
     paddingTop: 12,
@@ -654,7 +763,7 @@ const styles = StyleSheet.create({
   },
   suggestionCardHighlight: {
     backgroundColor: '#FFFFFF',
-    borderColor: '#0B1238',
+    borderColor: '#D9E2EC',
   },
   suggestionIconWrap: {
     width: 44,

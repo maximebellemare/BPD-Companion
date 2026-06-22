@@ -71,7 +71,7 @@ export default React.memo(function CrisisModeCard({ detection }: Props) {
 
   const isUrgent = severity >= 7;
   const bgColor = isUrgent ? '#FFFFFF' : '#FFFFFF';
-  const borderColor = isUrgent ? '#0B1238' : '#0B1238';
+  const borderColor = isUrgent ? '#D9E2EC' : '#D9E2EC';
   const accentColor = isUrgent ? '#3B82F6' : '#3B82F6';
 
   return (

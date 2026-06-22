@@ -55,19 +55,19 @@ const URGENCY_STYLE: Record<RecommendationUrgency, {
 }> = {
   immediate: {
     bg: '#FFFFFF',
-    border: '#0B1238',
+    border: '#D9E2EC',
     accent: '#3B82F6',
     label: 'Right now',
   },
   suggested: {
     bg: '#FFFFFF',
-    border: '#0B1238',
+    border: '#D9E2EC',
     accent: '#67E8F9',
     label: 'This may help',
   },
   gentle: {
     bg: '#FFFFFF',
-    border: '#0B1238',
+    border: '#D9E2EC',
     accent: '#14B8A6',
     label: 'A useful next step',
   },

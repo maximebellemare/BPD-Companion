@@ -6,6 +6,8 @@ import {
   fetchReplies,
   createPost,
   createReply,
+  deletePost,
+  deleteReply,
   toggleReaction,
   reportContent,
   blockUser,
@@ -48,6 +50,24 @@ export function useCommunityFeed() {
   };
 }
 
+export function useDeleteCommunityPost() {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: (postId: string) => deletePost(postId),
+    onSuccess: (_data, postId) => {
+      void queryClient.invalidateQueries({ queryKey: ['community', 'posts'] });
+      void queryClient.invalidateQueries({ queryKey: ['community', 'post', postId] });
+      void queryClient.invalidateQueries({ queryKey: ['community', 'replies', postId] });
+    },
+  });
+
+  return {
+    deletePost: mutation.mutateAsync,
+    isDeletingPost: mutation.isPending,
+  };
+}
+
 export function usePostDetail(postId: string) {
   const queryClient = useQueryClient();
 
@@ -69,6 +89,24 @@ export function usePostDetail(postId: string) {
       void queryClient.invalidateQueries({ queryKey: ['community', 'replies', postId] });
       void queryClient.invalidateQueries({ queryKey: ['community', 'post', postId] });
       void queryClient.invalidateQueries({ queryKey: ['community', 'posts'] });
+    },
+  });
+
+  const deleteReplyMutation = useMutation({
+    mutationFn: (replyId: string) => deleteReply(postId, replyId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['community', 'replies', postId] });
+      void queryClient.invalidateQueries({ queryKey: ['community', 'post', postId] });
+      void queryClient.invalidateQueries({ queryKey: ['community', 'posts'] });
+    },
+  });
+
+  const deletePostMutation = useMutation({
+    mutationFn: () => deletePost(postId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['community', 'posts'] });
+      void queryClient.invalidateQueries({ queryKey: ['community', 'post', postId] });
+      void queryClient.invalidateQueries({ queryKey: ['community', 'replies', postId] });
     },
   });
 
@@ -127,6 +165,10 @@ export function usePostDetail(postId: string) {
     isLoading: postQuery.isLoading || repliesQuery.isLoading,
     addReply: replyMutation.mutate,
     isAddingReply: replyMutation.isPending,
+    deletePost: deletePostMutation.mutateAsync,
+    isDeletingPost: deletePostMutation.isPending,
+    deleteReply: deleteReplyMutation.mutateAsync,
+    isDeletingReply: deleteReplyMutation.isPending,
     toggleReaction: reactionMutation.mutate,
     reportContent: reportMutation.mutateAsync,
     isReporting: reportMutation.isPending,

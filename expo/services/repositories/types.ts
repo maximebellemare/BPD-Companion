@@ -68,6 +68,8 @@ export interface ICommunityRepository {
   getReplies(postId: string): Promise<PostReply[]>;
   createPost(input: NewPostInput): Promise<CommunityPost>;
   createReply(input: NewReplyInput): Promise<PostReply>;
+  deletePost(postId: string): Promise<void>;
+  deleteReply(postId: string, replyId: string): Promise<void>;
   toggleReaction(postId: string, reactionType: string, replyId?: string): Promise<void>;
   reportContent(input: ReportInput): Promise<void>;
   blockUser(userId: string): Promise<void>;

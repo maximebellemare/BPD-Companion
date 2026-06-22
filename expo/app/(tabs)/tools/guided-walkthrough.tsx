@@ -99,7 +99,7 @@ function getToolData(toolId: string, toolType: string): ToolData | null {
     if (!skill) return null;
     const moduleColors: Record<string, { color: string; bgColor: string }> = {
       'distress-tolerance': { color: '#3B82F6', bgColor: '#FFFFFF' },
-      'emotional-regulation': { color: '#14B8A6', bgColor: '#0B1238' },
+      'emotional-regulation': { color: '#14B8A6', bgColor: '#D9E2EC' },
       'interpersonal-effectiveness': { color: '#3B82F6', bgColor: '#FFFFFF' },
       'mindfulness': { color: '#67E8F9', bgColor: '#FFFFFF' },
     };

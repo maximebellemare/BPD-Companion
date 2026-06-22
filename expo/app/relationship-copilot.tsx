@@ -787,7 +787,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: '#0B1238',
+    borderColor: '#D9E2EC',
   },
   resultHeaderIcon: {
     width: 56,
@@ -876,7 +876,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 14,
     borderWidth: 1,
-    borderColor: '#0B1238',
+    borderColor: '#D9E2EC',
   },
   secureMessageIcon: {
     width: 38,

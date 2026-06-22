@@ -173,11 +173,106 @@ export interface MemoryReferenceLog {
   conversationId: string;
 }
 
+export type CompanionMemorySignalType =
+  | 'core_fear'
+  | 'core_belief'
+  | 'major_trigger'
+  | 'long_term_goal'
+  | 'recurring_pattern';
+
+export type CompanionMemorySource =
+  | 'check_in'
+  | 'journal'
+  | 'conversation'
+  | 'insight'
+  | 'onboarding'
+  | 'memory';
+
+export interface CompanionMemorySignal {
+  id: string;
+  type: CompanionMemorySignalType;
+  label: string;
+  description: string;
+  evidenceCount: number;
+  confidence: number;
+  sources: CompanionMemorySource[];
+  firstSeenAt: number;
+  lastSeenAt: number;
+  relatedEmotions: string[];
+  relatedTriggers: string[];
+}
+
+export interface EmotionalTimelineEvent {
+  id: string;
+  timestamp: number;
+  source: CompanionMemorySource;
+  trigger: string;
+  emotion: string;
+  fear: string;
+  urge: string;
+  action: string;
+  outcome: string;
+  intensity?: number;
+  relationshipContext?: string;
+  conversationId?: string;
+  journalEntryId?: string;
+  confidence: number;
+  tags: string[];
+}
+
+export interface RecurringEmotionalLoop {
+  id: string;
+  signature: string;
+  count: number;
+  firstSeenAt: number;
+  lastSeenAt: number;
+  sources: CompanionMemorySource[];
+  timelineEventIds: string[];
+  trigger: string;
+  emotion: string;
+  fear: string;
+  urge: string;
+  commonAction: string;
+  commonOutcome: string;
+  suggestedInterruption: string;
+  confidence: number;
+}
+
+export interface CompanionMemorySystem {
+  emotionalGPS: EmotionalGPSMap;
+  coreFears: CompanionMemorySignal[];
+  coreBeliefs: CompanionMemorySignal[];
+  majorTriggers: CompanionMemorySignal[];
+  importantRelationships: RelationshipMemory[];
+  longTermGoals: CompanionMemorySignal[];
+  recurringPatterns: CompanionMemorySignal[];
+  emotionalTimeline: EmotionalTimelineEvent[];
+  recurringLoops: RecurringEmotionalLoop[];
+  narrative: string;
+  updatedAt: number;
+}
+
+export interface EmotionalGPSMap {
+  timeline: EmotionalTimelineEvent[];
+  recurringLoops: RecurringEmotionalLoop[];
+  strongestLoop: RecurringEmotionalLoop | null;
+  aiTimelineNarrative: string;
+  userPatternSummary: string | null;
+  updatedAt: number;
+}
+
 export interface EnhancedCompanionMemoryStore extends CompanionMemoryStore {
   relationships: RelationshipMemory[];
   copingPreferences: CopingPreference[];
   strugglesAndWins: StruggleWinMemory[];
   referenceLog: MemoryReferenceLog[];
+  coreFears: CompanionMemorySignal[];
+  coreBeliefs: CompanionMemorySignal[];
+  majorTriggers: CompanionMemorySignal[];
+  longTermGoals: CompanionMemorySignal[];
+  recurringPatterns: CompanionMemorySignal[];
+  emotionalTimeline: EmotionalTimelineEvent[];
+  recurringLoops: RecurringEmotionalLoop[];
 }
 
 export interface MemoryRetrievalContext {

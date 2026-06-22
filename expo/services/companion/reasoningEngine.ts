@@ -552,7 +552,7 @@ function determineBestApproach(
   depth: string,
 ): string {
   if (urgency === 'crisis') {
-    return 'Ultra-short, grounding-first. Acknowledge pain. One breath at a time. Suggest crisis resources if needed. Do NOT ask complex questions.';
+    return 'Ultra-short. Acknowledge pain. Offer one simple stabilizing choice. Suggest crisis resources if needed. Do NOT ask complex questions.';
   }
 
   if (urgency === 'high') {
@@ -628,7 +628,7 @@ function generateSuggestedQuestion(
   }
 
   if (mode === 'relationship') {
-    return 'What do you actually need from this person right now — the real need underneath the urgency?';
+    return 'What do you want from this person right now: reassurance, clarity, space, repair, or an apology?';
   }
 
   if (history.length > 6) {
@@ -663,7 +663,7 @@ function buildResponseGuidance(params: {
 
   parts.push(`[DEEP REASONING ANALYSIS]`);
   parts.push(`Primary emotion: ${params.userEmotion}`);
-  parts.push(`Core emotion underneath: ${params.inferredCoreEmotion}`);
+  parts.push(`Possible core emotion: ${params.inferredCoreEmotion}`);
   parts.push(`User's interpretation: ${params.userInterpretation}`);
   parts.push(`What the user needs most: ${params.inferredNeed}`);
   parts.push(`Urgency: ${params.urgencyLevel}`);

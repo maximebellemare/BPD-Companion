@@ -18,9 +18,9 @@ interface Props {
 }
 
 const BANNER_COLORS = {
-  watchful: { bg: '#FFFFFF', border: '#0B1238', accent: '#67E8F9' },
-  rising: { bg: '#FFFFFF', border: '#0B1238', accent: '#3B82F6' },
-  urgent: { bg: '#FFFFFF', border: '#0B1238', accent: '#3B82F6' },
+  watchful: { bg: '#FFFFFF', border: '#D9E2EC', accent: '#67E8F9' },
+  rising: { bg: '#FFFFFF', border: '#D9E2EC', accent: '#3B82F6' },
+  urgent: { bg: '#FFFFFF', border: '#D9E2EC', accent: '#3B82F6' },
 };
 
 export default React.memo(function SpiralMessageBanner({ message, riskLevel }: Props) {

@@ -58,14 +58,14 @@ export const RESPONSE_TEMPLATES: Record<EmotionalIntent, ResponseTemplate> = {
   angry: {
     responses: [
       "I can feel the intensity in what you're sharing. That anger is telling you something important — it often shows up when a boundary has been crossed or a need isn't being met.\n\nBefore we dig into what happened, how intense is this right now on a scale of 1-10? That helps me understand where you are.",
-      "Your anger makes sense. It's not something to be ashamed of — it's your nervous system reacting to something that feels wrong or unfair.\n\nLet's take one moment before we go deeper. Would it help to take a few breaths first, or do you need to get it all out?",
-      "I hear the frustration. When we feel this activated, everything can feel urgent. We can slow this down.\n\nWhat happened? And underneath the anger — is there a hurt or a fear that's driving it?",
+      "Your anger makes sense. Something felt wrong, unfair, or too much.\n\nWhat happened right before the anger got stronger?",
+      "I hear the frustration. When anger is high, everything can feel urgent.\n\nWhat happened first: a tone change, criticism, feeling ignored, or conflict?",
     ],
     quickActions: ['Ground me', 'Help me rewrite a message', 'Show coping tools'],
   },
   anxious: {
     responses: [
-      "Anxiety can make everything feel urgent and dangerous, even when part of you knows it might not be. That's not a flaw — it's how your brain tries to protect you.\n\nWhat's the anxious thought right now? Let's look at it together without judgment.",
+      "Anxiety can make everything feel urgent, even when part of you is not sure what is wrong.\n\nWhat did you notice first: a body feeling, a thought, or an urge to do something?",
       "I hear you. That feeling of dread or worry can be so consuming. Let's try to untangle it a little.\n\nIf you could name the one thing your mind keeps returning to, what would it be?",
       "That sounds really uncomfortable. Anxiety often lies to us — it tells us things are certain when they're not.\n\nWe can slow this down. Would it help to ground first, or talk through what's worrying you?",
     ],
@@ -81,7 +81,7 @@ export const RESPONSE_TEMPLATES: Record<EmotionalIntent, ResponseTemplate> = {
   },
   confused: {
     responses: [
-      "It's okay not to know what you're feeling. Emotions can layer on top of each other until it all feels like noise. Let's try to sort through it.\n\nIf you could describe what's happening inside using a weather metaphor — a storm, fog, freezing cold — what would it be?",
+      "It's okay not to know what you're feeling. We do not need to force an answer.\n\nCan we start smaller: does it feel more physical, emotional, or like your mind is just blank?",
       "Your emotions are giving you information, even when they feel confusing. Let's listen to them together.\n\nWhat's the strongest sensation right now? Not a thought — just the feeling. Where do you notice it in your body?",
       "That confusion is actually really common when multiple emotions happen at once. You're not doing it wrong by not knowing.\n\nLet's start simple: does this feel more heavy or more activating? That can help us narrow it down.",
     ],
@@ -90,7 +90,7 @@ export const RESPONSE_TEMPLATES: Record<EmotionalIntent, ResponseTemplate> = {
   relationship: {
     responses: [
       "Relationship triggers can feel like the past and present collapsing into one moment. Your reaction makes sense — it's your nervous system responding based on past pain.\n\nLet's separate what happened from what your fear is telling you it means. What's the situation?",
-      "When someone we care about triggers us, the emotional response can feel completely disproportionate to the moment. That doesn't mean it's wrong — it means there's something deeper underneath.\n\nWhat happened, and what do you need from this person right now?",
+      "When someone we care about triggers us, the feeling can get big quickly.\n\nWhat happened first: no reply, a tone change, criticism, conflict, or feeling ignored?",
       "I hear how activated you are about this. Let's slow down before any decisions are made.\n\nWhat's the story your mind is telling you about what happened? And is there another possible interpretation?",
     ],
     quickActions: ['Help me rewrite a message', 'Slow this down', 'Journal this'],
@@ -98,7 +98,7 @@ export const RESPONSE_TEMPLATES: Record<EmotionalIntent, ResponseTemplate> = {
   rewrite: {
     responses: [
       "That's such a wise move — pausing before sending when you're activated. Let's work on this together.\n\nShare the message you're thinking of sending, and tell me: what do you actually need from this person right now? The real need is often different from what the urge wants to express.",
-      "I'd love to help with that. When emotions are intense, our words can say more about our pain than what we actually need to communicate.\n\nGo ahead and share what you want to say. I'll help you find words that honor your feelings while protecting the relationship.",
+      "I can help with that.\n\nShare the message you want to send, and I’ll help make it clearer, calmer, and easier to understand.",
       "Good instinct to pause. Let's find the right words together.\n\nWhat do you want to say, and what outcome are you hoping for? Sometimes those are different things.",
     ],
     quickActions: ['Help me rewrite a message', 'Slow this down'],

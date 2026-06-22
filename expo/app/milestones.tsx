@@ -44,9 +44,9 @@ const ICON_MAP: Record<string, React.ComponentType<{ size: number; color: string
 };
 
 const LEVEL_META: Record<MilestoneLevel, { label: string; color: string; bg: string; border: string }> = {
-  bronze: { label: 'Beginning', color: '#3B82F6', bg: '#FFFFFF', border: '#0B1238' },
-  silver: { label: 'Growing', color: '#2E2A72', bg: '#FFFFFF', border: '#0B1238' },
-  gold: { label: 'Strong', color: '#3B82F6', bg: '#FFFFFF', border: '#0B1238' },
+  bronze: { label: 'Beginning', color: '#3B82F6', bg: '#FFFFFF', border: '#D9E2EC' },
+  silver: { label: 'Growing', color: '#2E2A72', bg: '#FFFFFF', border: '#D9E2EC' },
+  gold: { label: 'Strong', color: '#3B82F6', bg: '#FFFFFF', border: '#D9E2EC' },
 };
 
 const CATEGORY_LABELS: Record<string, string> = {

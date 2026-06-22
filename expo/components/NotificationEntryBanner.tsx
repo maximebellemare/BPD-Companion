@@ -78,12 +78,12 @@ export default function NotificationEntryBanner({
 
   const getCategoryAccent = (): string => {
     switch (entryState.category) {
-      case 'relationship_support': return '#0B1238';
+      case 'relationship_support': return '#D9E2EC';
       case 'calm_followup':
-      case 'regulation_followup': return '#0B1238';
-      case 'weekly_reflection': return '#0B1238';
-      case 'therapist_report': return '#0B1238';
-      case 'ritual_reminder': return '#0B1238';
+      case 'regulation_followup': return '#D9E2EC';
+      case 'weekly_reflection': return '#D9E2EC';
+      case 'therapist_report': return '#D9E2EC';
+      case 'ritual_reminder': return '#D9E2EC';
       default: return Colors.primaryLight;
     }
   };

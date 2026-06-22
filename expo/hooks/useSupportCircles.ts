@@ -7,7 +7,12 @@ import {
   checkInChallenge,
   fetchChallengeProgress,
   fetchCirclePosts,
+  fetchCirclePost,
+  fetchCircleReplies,
   createCirclePost,
+  createCircleReply,
+  deleteCircleReply,
+  toggleCircleReaction,
 } from '@/services/community/communityService';
 import {
   loadSupportPreferences,
@@ -144,5 +149,60 @@ export function useCirclePosts(circleId: string) {
     isLoading: postsQuery.isLoading,
     createPost: createMutation.mutate,
     isCreating: createMutation.isPending,
+  };
+}
+
+export function useCircleThread(circleId: string, postId: string) {
+  const queryClient = useQueryClient();
+
+  const postQuery = useQuery({
+    queryKey: ['community', 'circle-post', circleId, postId],
+    queryFn: () => fetchCirclePost(circleId, postId),
+    enabled: !!circleId && !!postId,
+  });
+
+  const repliesQuery = useQuery({
+    queryKey: ['community', 'circle-replies', postId],
+    queryFn: () => fetchCircleReplies(postId),
+    enabled: !!postId,
+  });
+
+  const replyMutation = useMutation({
+    mutationFn: (body: string) => createCircleReply(postId, body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['community', 'circle-replies', postId] });
+      void queryClient.invalidateQueries({ queryKey: ['community', 'circle-post', circleId, postId] });
+      void queryClient.invalidateQueries({ queryKey: ['community', 'circle-posts', circleId] });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (replyId: string) => deleteCircleReply(postId, replyId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['community', 'circle-replies', postId] });
+      void queryClient.invalidateQueries({ queryKey: ['community', 'circle-post', circleId, postId] });
+      void queryClient.invalidateQueries({ queryKey: ['community', 'circle-posts', circleId] });
+    },
+  });
+
+  const reactionMutation = useMutation({
+    mutationFn: ({ reactionType, replyId }: { reactionType: string; replyId?: string }) =>
+      toggleCircleReaction(postId, reactionType, replyId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['community', 'circle-replies', postId] });
+      void queryClient.invalidateQueries({ queryKey: ['community', 'circle-post', circleId, postId] });
+      void queryClient.invalidateQueries({ queryKey: ['community', 'circle-posts', circleId] });
+    },
+  });
+
+  return {
+    post: postQuery.data ?? null,
+    replies: repliesQuery.data ?? [],
+    isLoading: postQuery.isLoading || repliesQuery.isLoading,
+    isError: postQuery.isError || repliesQuery.isError,
+    addReply: replyMutation.mutate,
+    isAddingReply: replyMutation.isPending,
+    deleteReply: deleteMutation.mutateAsync,
+    toggleReaction: reactionMutation.mutate,
   };
 }

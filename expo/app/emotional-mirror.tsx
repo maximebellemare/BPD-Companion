@@ -146,7 +146,7 @@ function InsightRow({ insight }: { insight: EmotionalMirrorInsight }) {
   const iconBg = insight.category === 'growth' ? Colors.successLight
     : insight.category === 'trigger' ? Colors.accentLight
     : insight.category === 'distress' ? '#FFFFFF'
-    : insight.category === 'relationship' ? '#0B1238'
+    : insight.category === 'relationship' ? '#D9E2EC'
     : Colors.primaryLight;
 
   const IconComponent = insight.category === 'growth' ? TrendingUp
@@ -461,7 +461,7 @@ export default function EmotionalMirrorScreen() {
               <FadeInView delay={300}>
                 <View style={styles.sectionCard}>
                   <View style={styles.sectionHeader}>
-                    <View style={[styles.sectionIconWrap, { backgroundColor: '#0B1238' }]}>
+                    <View style={[styles.sectionIconWrap, { backgroundColor: '#D9E2EC' }]}>
                       <Users size={16} color="#3B82F6" />
                     </View>
                     <Text style={styles.sectionTitle}>Relationship Patterns</Text>

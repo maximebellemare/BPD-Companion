@@ -38,6 +38,7 @@ import {
   CRISIS_PHASES,
   getCalmnessResponse,
 } from '@/services/crisis/crisisModeService';
+import { getCrisisResources, getResourceContactText, getResourceUrl } from '@/services/safety/crisisResources';
 
 const SENSE_ICONS: Record<string, React.ComponentType<{ size: number; color: string }>> = {
   Eye,
@@ -71,6 +72,7 @@ export default function CrisisModeScreen() {
   const [calmResponseIndex, setCalmResponseIndex] = useState<number>(0);
   const [selectedDelay, setSelectedDelay] = useState<number | null>(null);
   const [delayConfirmed, setDelayConfirmed] = useState<boolean>(false);
+  const crisisResources = getCrisisResources();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const breatheScale = useRef(new Animated.Value(0.7)).current;
@@ -248,7 +250,8 @@ export default function CrisisModeScreen() {
     setDelayConfirmed(true);
   }, []);
 
-  const handleCallCrisis = useCallback((action: string) => {
+  const handleCallCrisis = useCallback((action: string | null) => {
+    if (!action) return;
     if (Platform.OS !== 'web') {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
@@ -522,36 +525,32 @@ export default function CrisisModeScreen() {
 
       <Text style={styles.crisisLinesHeader}>Crisis Lines</Text>
 
-      <TouchableOpacity
-        style={styles.contactCard}
-        onPress={() => handleCallCrisis('tel:988')}
-        activeOpacity={0.7}
-      >
-        <View style={[styles.contactCardIcon, { backgroundColor: '#FFFFFF' }]}>
-          <Phone size={22} color={Colors.danger} />
-        </View>
-        <View style={styles.contactCardText}>
-          <Text style={styles.contactCardLabel}>988 Suicide & Crisis Lifeline</Text>
-          <Text style={styles.contactCardDesc}>Call or text 24/7</Text>
-        </View>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.contactCard}
-        onPress={() => handleCallCrisis('sms:741741')}
-        activeOpacity={0.7}
-      >
-        <View style={[styles.contactCardIcon, { backgroundColor: '#FFFFFF' }]}>
-          <MessageCircle size={22} color="#3B82F6" />
-        </View>
-        <View style={styles.contactCardText}>
-          <Text style={styles.contactCardLabel}>Crisis Text Line</Text>
-          <Text style={styles.contactCardDesc}>Text HOME to 741741</Text>
-        </View>
-      </TouchableOpacity>
+      {crisisResources.map((resource, index) => {
+        const Icon = index === 0 ? Phone : MessageCircle;
+        const url = getResourceUrl(resource);
+        return (
+          <TouchableOpacity
+            key={resource.id}
+            style={styles.contactCard}
+            onPress={() => handleCallCrisis(url)}
+            disabled={!url}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.contactCardIcon, { backgroundColor: '#FFFFFF' }]}>
+              <Icon size={22} color={index === 0 ? Colors.danger : '#3B82F6'} />
+            </View>
+            <View style={styles.contactCardText}>
+              <Text style={styles.contactCardLabel}>{resource.label}</Text>
+              <Text style={styles.contactCardNumber}>{getResourceContactText(resource)}</Text>
+              <Text style={styles.contactCardDesc}>{resource.description}</Text>
+            </View>
+          </TouchableOpacity>
+        );
+      })}
 
       <View style={styles.contactReminder}>
         <Text style={styles.contactReminderText}>
+          If you are in immediate danger, call your local emergency number now.{'\n\n'}
           You've survived every hard moment before this one.{'\n'}
           You will survive this one too.
         </Text>
@@ -814,7 +813,7 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#0B1238',
+    backgroundColor: '#D9E2EC',
   },
   groundingDotDone: {
     backgroundColor: Colors.success,
@@ -1097,6 +1096,12 @@ const styles = StyleSheet.create({
     color: Colors.text,
     marginBottom: 2,
   },
+  contactCardNumber: {
+    fontSize: 15,
+    fontWeight: '800' as const,
+    color: Colors.danger,
+    marginBottom: 3,
+  },
   contactCardDesc: {
     fontSize: 13,
     color: Colors.textSecondary,
@@ -1120,7 +1125,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: '#0B1238',
+    borderTopColor: '#D9E2EC',
   },
   footerNav: {
     flexDirection: 'row',

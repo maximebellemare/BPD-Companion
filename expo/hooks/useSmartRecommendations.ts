@@ -19,8 +19,11 @@ export function useSmartRecommendations(): SmartRecommendationResult & {
 } {
   const { journalEntries, messageDrafts } = useApp();
   const { onboardingProfile } = useOnboarding();
-  const { activeMedications, logs: medicationLogs } = useMedications();
-  const { appointments } = useAppointments();
+  const medicationContext = useMedications();
+  const appointmentContext = useAppointments();
+  const activeMedications = medicationContext?.activeMedications ?? [];
+  const medicationLogs = medicationContext?.logs ?? [];
+  const appointments = appointmentContext?.appointments ?? [];
   const { entries: movementEntries } = useMovement();
   const { trackEvent } = useAnalytics();
   const shownTrackedRef = useRef(false);

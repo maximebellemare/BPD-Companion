@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -30,10 +30,12 @@ import { useCreatePost } from '@/hooks/useCommunityFeed';
 import { PostCategory, SituationTag, SupportRequestType } from '@/types/community';
 import { checkContentSafety, getPostSuggestions } from '@/services/community/communitySafetyService';
 import { getDistressLabel, trackEmotionalContextEvent } from '@/services/community/communityEmotionalContextService';
+import { CommunityProfile, loadCommunityProfile } from '@/services/community/communityProfileService';
 
 export default function NewPostScreen() {
   const router = useRouter();
   const { createPost, isCreating } = useCreatePost();
+  const [communityProfile, setCommunityProfile] = useState<CommunityProfile | null>(null);
 
   const [title, setTitle] = useState<string>('');
   const [body, setBody] = useState<string>('');
@@ -52,6 +54,20 @@ export default function NewPostScreen() {
   const [showEmotionalContext, setShowEmotionalContext] = useState<boolean>(false);
 
   const canSubmit = title.trim().length > 0 && body.trim().length > 0 && category !== null;
+
+  useEffect(() => {
+    let mounted = true;
+    loadCommunityProfile()
+      .then((profile) => {
+        if (mounted) setCommunityProfile(profile);
+      })
+      .catch(() => {
+        if (mounted) setCommunityProfile(null);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const suggestions = useMemo(
     () => getPostSuggestions(title, body),
@@ -116,12 +132,23 @@ export default function NewPostScreen() {
       router.back();
     } catch (error) {
       console.error('[NewPost] Failed to create post:', error);
-      Alert.alert('Something went wrong', 'Please try again in a moment.');
+      Alert.alert('Could not share post', error instanceof Error ? error.message : 'Please try again in a moment.');
     }
   }, [category, title, body, isAnonymous, hasContentWarning, contentWarningText, situationTag, selectedEmotions, supportType, createPost, router, primaryEmotion, distressLevel, supportRequestType, hasEmotionalContext]);
 
   const handleSubmit = useCallback(async () => {
-    if (!canSubmit || !category) return;
+    if (!title.trim()) {
+      Alert.alert('Add a title', 'Give your post a short title so people know what you need.');
+      return;
+    }
+    if (!body.trim()) {
+      Alert.alert('Write your post', 'Share a little about what is going on before posting.');
+      return;
+    }
+    if (!category) {
+      Alert.alert('Choose a category', 'Pick the category that best fits your post.');
+      return;
+    }
 
     const safety = checkContentSafety(body);
     if (!safety.isSafe) {
@@ -142,7 +169,7 @@ export default function NewPostScreen() {
     }
 
     await doSubmit();
-  }, [canSubmit, category, body, doSubmit]);
+  }, [category, title, body, doSubmit]);
 
   return (
     <View style={styles.container}>
@@ -155,7 +182,7 @@ export default function NewPostScreen() {
           <TouchableOpacity
             style={[styles.submitBtn, canSubmit && styles.submitBtnActive]}
             onPress={handleSubmit}
-            disabled={!canSubmit || isCreating}
+            disabled={isCreating}
             testID="submit-btn"
           >
             {isCreating ? (
@@ -180,6 +207,21 @@ export default function NewPostScreen() {
               This is a safe space. Share what feels right for you.
             </Text>
           </View>
+
+          {!communityProfile && (
+            <TouchableOpacity
+              style={styles.profilePrompt}
+              onPress={() => router.push('/(tabs)/profile' as never)}
+              activeOpacity={0.78}
+              testID="community-profile-prompt"
+            >
+              <Sparkles size={17} color={Colors.primary} />
+              <View style={styles.profilePromptText}>
+                <Text style={styles.profilePromptTitle}>Optional community profile</Text>
+                <Text style={styles.profilePromptBody}>Add a username when you want. You can still post now.</Text>
+              </View>
+            </TouchableOpacity>
+          )}
 
           <View style={styles.toggleRow}>
             <TouchableOpacity
@@ -555,6 +597,31 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.primaryDark,
     fontWeight: '500' as const,
+  },
+  profilePrompt: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.primary + '30',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 16,
+  },
+  profilePromptText: {
+    flex: 1,
+  },
+  profilePromptTitle: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: Colors.text,
+    marginBottom: 2,
+  },
+  profilePromptBody: {
+    fontSize: 12,
+    lineHeight: 17,
+    color: Colors.textSecondary,
   },
   toggleRow: {
     flexDirection: 'row',

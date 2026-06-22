@@ -45,7 +45,7 @@ import { CopingRecommendation } from '@/types/recommendation';
 const ICON_MAP: Record<string, React.ReactNode> = {
   trigger: <Zap size={18} color={Colors.accent} />,
   emotion: <Heart size={18} color="#3B82F6" />,
-  urge: <AlertTriangle size={18} color="#0B1238" />,
+  urge: <AlertTriangle size={18} color="#D9E2EC" />,
   coping: <Shield size={18} color={Colors.primary} />,
   pattern: <Layers size={18} color="#3B82F6" />,
   message: <MessageSquareText size={18} color={Colors.primary} />,
@@ -57,7 +57,7 @@ const BG_MAP: Record<string, string> = {
   emotion: '#FFFFFF',
   urge: '#FFFFFF',
   coping: Colors.primaryLight,
-  pattern: '#0B1238',
+  pattern: '#D9E2EC',
   message: Colors.primaryLight,
   progress: Colors.successLight,
 };
@@ -266,7 +266,7 @@ export default function InsightsScreen() {
 
   const handleCheckIn = useCallback(() => {
     if (Platform.OS !== 'web') void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.push('/check-in');
+    router.push('/(tabs)/(home)');
   }, [router]);
 
   return (

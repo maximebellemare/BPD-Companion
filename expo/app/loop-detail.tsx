@@ -37,11 +37,11 @@ import { generateDefaultPlan } from '@/services/patterns/loopInterruptService';
 import { LoopNodeType, LoopPhase } from '@/types/emotionalLoop';
 
 const NODE_COLORS: Record<LoopNodeType, { bg: string; text: string; border: string; accent: string }> = {
-  trigger: { bg: '#FFFFFF', text: '#3B82F6', border: '#0B1238', accent: '#3B82F6' },
+  trigger: { bg: '#FFFFFF', text: '#3B82F6', border: '#D9E2EC', accent: '#3B82F6' },
   emotion: { bg: '#FFFFFF', text: '#3B82F6', border: '#2E2A72', accent: '#3B82F6' },
-  urge: { bg: '#FFFFFF', text: '#3B82F6', border: '#0B1238', accent: '#3B82F6' },
+  urge: { bg: '#FFFFFF', text: '#3B82F6', border: '#D9E2EC', accent: '#3B82F6' },
   behavior: { bg: '#FFFFFF', text: '#3B82F6', border: '#3B82F6', accent: '#3B82F6' },
-  outcome: { bg: Colors.successLight, text: '#14B8A6', border: '#0B1238', accent: '#14B8A6' },
+  outcome: { bg: Colors.successLight, text: '#14B8A6', border: '#D9E2EC', accent: '#14B8A6' },
   coping: { bg: Colors.primaryLight, text: Colors.primaryDark, border: '#14B8A6', accent: Colors.primaryDark },
 };
 

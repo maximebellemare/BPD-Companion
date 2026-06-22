@@ -573,9 +573,9 @@ function InsightsTab({
     return (
       <View style={styles.emptyTab}>
         <Sparkles size={28} color={Colors.textMuted} />
-        <Text style={styles.emptyTabTitle}>Insights coming soon</Text>
+        <Text style={styles.emptyTabTitle}>Tool insights are building</Text>
         <Text style={styles.emptyTabDesc}>
-          Use more tools and track their helpfulness. Patterns and insights will emerge.
+          Mark which tools help after you use them. BPD Companion will show what lowers intensity for you.
         </Text>
       </View>
     );

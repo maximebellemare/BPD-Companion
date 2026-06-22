@@ -39,9 +39,9 @@ const ICON_MAP: Record<string, typeof Wind> = {
 
 const WARNING_COLORS: Record<WarningLevel, { bg: string; border: string; accent: string }> = {
   none: { bg: Colors.white, border: Colors.border, accent: Colors.primary },
-  mild: { bg: '#FFFFFF', border: '#0B1238', accent: '#67E8F9' },
+  mild: { bg: '#FFFFFF', border: '#D9E2EC', accent: '#67E8F9' },
   moderate: { bg: '#FFFFFF', border: '#FFFFFF', accent: '#3B82F6' },
-  elevated: { bg: '#FFFFFF', border: '#0B1238', accent: '#3B82F6' },
+  elevated: { bg: '#FFFFFF', border: '#D9E2EC', accent: '#3B82F6' },
 };
 
 export default React.memo(function EarlyWarningBanner({

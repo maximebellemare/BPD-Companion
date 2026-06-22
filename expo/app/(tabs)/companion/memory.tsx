@@ -35,14 +35,14 @@ import { UserMemory, MemoryNarrative } from '@/types/userMemory';
 
 const CATEGORY_CONFIG: Record<string, { color: string; bg: string; icon: string }> = {
   trigger: { color: '#3B82F6', bg: '#FFFFFF', icon: '⚡' },
-  emotion: { color: '#14B8A6', bg: '#0B1238', icon: '💜' },
+  emotion: { color: '#14B8A6', bg: '#D9E2EC', icon: '💜' },
   coping: { color: '#14B8A6', bg: '#FFFFFF', icon: '🛡️' },
-  relationship: { color: '#67E8F9', bg: '#0B1238', icon: '💬' },
-  improvement: { color: '#14B8A6', bg: '#0B1238', icon: '🌱' },
+  relationship: { color: '#67E8F9', bg: '#D9E2EC', icon: '💬' },
+  improvement: { color: '#14B8A6', bg: '#D9E2EC', icon: '🌱' },
   pattern: { color: '#2E2A72', bg: '#FFFFFF', icon: '🔄' },
   loop: { color: '#3B82F6', bg: '#FFFFFF', icon: '🔄' },
   growth: { color: '#14B8A6', bg: '#FFFFFF', icon: '🌱' },
-  value: { color: '#14B8A6', bg: '#0B1238', icon: '💎' },
+  value: { color: '#14B8A6', bg: '#D9E2EC', icon: '💎' },
   preference: { color: '#2E2A72', bg: '#FFFFFF', icon: '⚙️' },
 };
 
@@ -628,7 +628,7 @@ export default function MemoryScreen() {
             {summary.relationshipPatterns.length > 0 && (
               <View style={styles.sectionCard} testID="memory-relationship-section">
                 <View style={styles.sectionHeader}>
-                  <View style={[styles.sectionIcon, { backgroundColor: '#0B1238' }]}>
+                  <View style={[styles.sectionIcon, { backgroundColor: '#D9E2EC' }]}>
                     <Users size={16} color={Colors.accent} />
                   </View>
                   <Text style={styles.sectionTitle}>Relationship Patterns</Text>
@@ -676,7 +676,7 @@ export default function MemoryScreen() {
             {memoryProfile.topEmotions.length > 0 && (
               <View style={styles.sectionCard} testID="memory-frequency-emotions">
                 <View style={styles.sectionHeader}>
-                  <View style={[styles.sectionIcon, { backgroundColor: '#0B1238' }]}>
+                  <View style={[styles.sectionIcon, { backgroundColor: '#D9E2EC' }]}>
                     <Heart size={16} color={Colors.primary} />
                   </View>
                   <Text style={styles.sectionTitle}>Emotion Frequency</Text>

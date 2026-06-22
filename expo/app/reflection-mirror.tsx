@@ -30,16 +30,16 @@ import { ReflectionTheme, RelationshipPattern, CopingInsight, GrowthSignal } fro
 
 const SECTION_COLORS = {
   themes: '#FFFFFF',
-  themesBorder: '#0B1238',
+  themesBorder: '#D9E2EC',
   themesAccent: '#14B8A6',
-  relationship: '#0B1238',
-  relationshipBorder: '#0B1238',
+  relationship: '#D9E2EC',
+  relationshipBorder: '#D9E2EC',
   relationshipAccent: '#3B82F6',
-  coping: '#0B1238',
-  copingBorder: '#0B1238',
+  coping: '#D9E2EC',
+  copingBorder: '#D9E2EC',
   copingAccent: '#2E2A72',
   growth: '#FFFFFF',
-  growthBorder: '#0B1238',
+  growthBorder: '#D9E2EC',
   growthAccent: '#2E2A72',
 };
 

@@ -8,8 +8,8 @@ import {
   AIOutputSafetyCheck,
   AIOutputViolation,
   AIOutputViolationType,
-  CRISIS_RESOURCES,
 } from '@/types/aiSafety';
+import { getPrimaryCrisisResourceText } from '@/services/safety/crisisResources';
 
 const SUICIDAL_IDEATION_PHRASES = [
   'want to die',
@@ -248,15 +248,14 @@ function buildCrisisResourceText(level: SafetyLevel, signals: SafetySignal[]): s
   if (level !== 'crisis' && !signals.some(s => s.requiresCrisisResource)) return null;
 
   const parts: string[] = [];
+  const primaryCrisisText = getPrimaryCrisisResourceText();
 
   if (signals.some(s => s.type === 'suicidal_ideation')) {
-    parts.push(`If you're having thoughts of ending your life, please reach out to the ${CRISIS_RESOURCES.hotline988.name} — ${CRISIS_RESOURCES.hotline988.action}. ${CRISIS_RESOURCES.hotline988.description}.`);
-    parts.push(`You can also ${CRISIS_RESOURCES.crisisText.action} to reach the ${CRISIS_RESOURCES.crisisText.name}.`);
+    parts.push(`If you're having thoughts of ending your life, please reach out now. ${primaryCrisisText}`);
   } else if (signals.some(s => s.type === 'self_harm')) {
-    parts.push(`If you're thinking about hurting yourself, the ${CRISIS_RESOURCES.hotline988.name} is available 24/7 — ${CRISIS_RESOURCES.hotline988.action}.`);
-    parts.push(`Or ${CRISIS_RESOURCES.crisisText.action} for the ${CRISIS_RESOURCES.crisisText.name}.`);
+    parts.push(`If you're thinking about hurting yourself, support is available now. ${primaryCrisisText}`);
   } else {
-    parts.push(`Support is available 24/7 through the ${CRISIS_RESOURCES.hotline988.name} — ${CRISIS_RESOURCES.hotline988.action}.`);
+    parts.push(`Support is available. ${primaryCrisisText}`);
   }
 
   return parts.join(' ');
@@ -416,7 +415,7 @@ export function checkOutputSafety(
   }
 
   if (inputAssessment.level === 'crisis') {
-    const mentionsCrisisResource = lower.includes('988') || lower.includes('crisis line') || lower.includes('crisis lifeline') || lower.includes('crisis text');
+    const mentionsCrisisResource = lower.includes('988') || lower.includes('crisis line') || lower.includes('crisis lifeline') || lower.includes('crisis text') || lower.includes('local crisis') || lower.includes('local emergency') || lower.includes('samaritans') || lower.includes('lifeline australia') || lower.includes('suicide écoute') || lower.includes('01 45 39 40 00');
     const mentionsSupport = lower.includes('someone you trust') || lower.includes('reach out') || lower.includes('not alone') || lower.includes('support');
 
     if (!mentionsCrisisResource && !mentionsSupport) {
@@ -477,7 +476,7 @@ export function augmentResponseWithSafety(
   const lower = aiResponse.toLowerCase();
 
   if (assessment.level === 'crisis' && assessment.crisisResourceText) {
-    const hasCrisisInfo = lower.includes('988') || lower.includes('crisis line') || lower.includes('crisis lifeline');
+    const hasCrisisInfo = lower.includes('988') || lower.includes('crisis line') || lower.includes('crisis lifeline') || lower.includes('local crisis') || lower.includes('local emergency') || lower.includes('samaritans') || lower.includes('lifeline australia') || lower.includes('suicide écoute') || lower.includes('01 45 39 40 00');
     if (!hasCrisisInfo) {
       return `${aiResponse}\n\n${assessment.crisisResourceText}`;
     }
@@ -496,13 +495,13 @@ export function buildSafetyPromptInjection(assessment: SafetyAssessment): string
     parts.push('1. Acknowledge their pain directly and specifically. Use their words.');
     parts.push('2. Do NOT minimize, redirect, or offer generic advice.');
     parts.push('3. Offer ONE grounding step (breathing or sensory).');
-    parts.push('4. Mention the 988 Suicide & Crisis Lifeline (call or text 988) naturally and compassionately.');
+    parts.push(`4. Mention regional/local crisis support naturally and compassionately. Use this resource text when appropriate: "${getPrimaryCrisisResourceText()}".`);
     parts.push('5. Stay present. Say "I\'m here" or equivalent.');
     parts.push('6. Do NOT ask complex questions.');
     parts.push('7. Do NOT mention premium features, upgrades, or redirects.');
     parts.push('8. Keep response SHORT — 3-5 sentences max.');
     parts.push('9. Do NOT use toxic positivity ("it will get better", "look on the bright side").');
-    parts.push('10. If the user mentions suicidal thoughts, ALWAYS mention 988.');
+    parts.push('10. If the user mentions suicidal thoughts, ALWAYS mention local or region-specific crisis support, not US-only resources unless appropriate.');
   } else if (assessment.level === 'high_risk') {
     parts.push('The user is in HIGH DISTRESS. Follow this protocol:');
     parts.push('1. Validate their pain first. Be specific, not generic.');

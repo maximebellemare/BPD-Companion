@@ -6,5 +6,8 @@ export interface AccountProfile {
   trial_ends_at: string;
   onboarding_completed: boolean;
   onboarding_answers?: Record<string, unknown> | null;
+  username?: string | null;
+  display_name?: string | null;
+  avatar_color?: string | null;
   updated_at: string;
 }

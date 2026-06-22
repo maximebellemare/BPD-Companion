@@ -8,7 +8,7 @@ import {
 export const AI_MODE_CONFIGS: Record<AIMode, AIModeConfig> = {
   calm: {
     id: 'calm',
-    label: 'Calm & Co-regulation',
+    label: 'Calm Support',
     shortLabel: 'Calm me',
     icon: '🌊',
     description: 'Shorter responses, grounding first, soft reassurance',
@@ -96,7 +96,7 @@ export const AI_MODE_CONFIGS: Record<AIMode, AIModeConfig> = {
     label: 'Simplified Support',
     shortLabel: 'I need simple help',
     icon: '🤲',
-    description: 'Very short, one step at a time, grounding-first',
+    description: 'Very short, one step at a time, steadiness before analysis',
     color: '#3B82F6',
     responseStyle: {
       maxLength: 'short',

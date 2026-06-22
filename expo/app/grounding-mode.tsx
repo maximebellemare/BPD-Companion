@@ -1,390 +1,608 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
   Animated,
-  ScrollView,
   Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  X,
-  Wind,
-  Anchor,
-  BookOpen,
-  Sparkles,
-  Eye,
-  Hand,
-  Ear,
-  Heart,
-  Timer,
-  ChevronRight,
+  ArrowRight,
   Check,
+  ChevronRight,
+  Heart,
+  MessageCircle,
+  ShieldCheck,
+  Sparkles,
+  Volume2,
+  VolumeX,
+  Wind,
+  X,
 } from 'lucide-react-native';
+import { setAudioModeAsync, useAudioPlayer } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
-import Colors from '@/constants/colors';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
+import { useApp } from '@/providers/AppProvider';
+import { useAppTheme } from '@/providers/ThemeProvider';
+import {
+  isAnyCalmAudioAvailable,
+  type CalmAudioCueId,
+  type CalmAudioDurationSeconds,
+} from '@/services/calm/calmAudioService';
+import { saveCalmMeDownSession } from '@/services/calm/calmSessionService';
+import type { JournalEntry } from '@/types';
 
-type GroundingPhase = 'welcome' | 'breathing' | 'senses' | 'settled';
+type CalmPhase = 'start' | 'breathe' | 'anchor' | 'pattern' | 'after' | 'complete';
+type BreathPhase = 'inhale' | 'hold' | 'exhale';
 
-const SENSE_STEPS = [
-  { id: 's1', sense: 'sight', instruction: 'Name 5 things you can see right now.', icon: Eye, color: '#14B8A6' },
-  { id: 's2', sense: 'touch', instruction: 'Name 4 things you can touch or feel.', icon: Hand, color: '#67E8F9' },
-  { id: 's3', sense: 'hearing', instruction: 'Name 3 things you can hear.', icon: Ear, color: '#3B82F6' },
-  { id: 's4', sense: 'smell', instruction: 'Name 2 things you can smell.', icon: Wind, color: '#14B8A6' },
-  { id: 's5', sense: 'taste', instruction: 'Name 1 thing you can taste.', icon: Heart, color: '#2E2A72' },
+const BREATH_PHASE_SECONDS: Record<BreathPhase, number> = {
+  inhale: 4,
+  hold: 2,
+  exhale: 8,
+};
+const BREATH_CYCLE_SECONDS = BREATH_PHASE_SECONDS.inhale + BREATH_PHASE_SECONDS.hold + BREATH_PHASE_SECONDS.exhale;
+const CALM_DURATIONS: Array<{ seconds: CalmAudioDurationSeconds; label: string; description: string }> = [
+  { seconds: 60, label: '1 min', description: 'Quick reset' },
+  { seconds: 120, label: '2 min', description: 'Recommended' },
+  { seconds: 300, label: '5 min', description: 'Deeper calm' },
+];
+const CALM_AUDIO_CUE_ASSETS: Record<CalmAudioCueId, number> = {
+  start: require('../assets/audio/calm/start-chime.wav'),
+  inhale: require('../assets/audio/calm/inhale-cue.wav'),
+  hold: require('../assets/audio/calm/hold-cue.wav'),
+  exhale: require('../assets/audio/calm/exhale-cue.wav'),
+};
+
+const ANCHORS = [
+  'Press your feet into the floor and notice what is holding you up.',
+  'Look for one straight line, one soft color, and one object that is not moving.',
+  'Place one hand somewhere steady. Let your body know this is this moment, not every moment.',
 ];
 
-const BREATHE_IN = 4000;
-const BREATHE_HOLD = 2000;
-const BREATHE_OUT = 6000;
-const TOTAL_BREATHS = 4;
+const TRIGGER_SUPPORT: Record<string, string> = {
+  relationship: 'Relationship stress can make urgency feel like danger. Right now, your only job is to slow the body down.',
+  abandonment: 'Fear of being left can feel immediate and convincing. You do not have to solve the relationship in this exact minute.',
+  shame: 'Shame can make your whole self feel like the problem. Right now, we are separating the feeling from who you are.',
+  conflict: 'Conflict can keep your nervous system braced for impact. Let your body come down before you decide what to do.',
+  default: 'This is a wave. It can be intense without being permanent. We will move through the next two minutes together.',
+};
 
-export default function GroundingModeScreen() {
+function getIntensityLabel(value: number): string {
+  if (value <= 3) return 'A little calmer';
+  if (value <= 6) return 'Still activated';
+  if (value <= 8) return 'Very intense';
+  return 'Overwhelming';
+}
+
+function getTopLabel(counts: Record<string, number>): string | null {
+  return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+}
+
+function inferSupportKey(entries: JournalEntry[], triggerCounts: Record<string, number>): keyof typeof TRIGGER_SUPPORT {
+  const top = getTopLabel(triggerCounts)?.toLowerCase() ?? '';
+  const recentText = entries
+    .slice(0, 5)
+    .flatMap((entry) => [
+      ...entry.checkIn.triggers.map((trigger) => trigger.label),
+      ...entry.checkIn.emotions.map((emotion) => emotion.label),
+      entry.checkIn.notes ?? '',
+    ])
+    .join(' ')
+    .toLowerCase();
+  const all = `${top} ${recentText}`;
+
+  if (all.includes('abandon') || all.includes('ignored') || all.includes('delayed reply')) return 'abandonment';
+  if (all.includes('shame') || all.includes('ashamed') || all.includes('criticism')) return 'shame';
+  if (all.includes('conflict') || all.includes('argue')) return 'conflict';
+  if (all.includes('relationship') || all.includes('partner') || all.includes('reply')) return 'relationship';
+  return 'default';
+}
+
+export default function CalmMeDownScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { trackEvent } = useAnalytics();
-  const [phase, setPhase] = useState<GroundingPhase>('welcome');
-  const [breathCount, setBreathCount] = useState(0);
-  const [breathLabel, setBreathLabel] = useState('');
-  const [senseStep, setSenseStep] = useState(0);
-  const [completedSenses, setCompletedSenses] = useState<string[]>([]);
-
+  const { colors } = useAppTheme();
+  const { journalEntries, triggerPatterns } = useApp();
+  const [phase, setPhase] = useState<CalmPhase>('start');
+  const [beforeIntensity, setBeforeIntensity] = useState(8);
+  const [afterIntensity, setAfterIntensity] = useState(5);
+  const [breathLabel, setBreathLabel] = useState('Breathe in');
+  const [breathPhase, setBreathPhase] = useState<BreathPhase>('inhale');
+  const [breathCycle, setBreathCycle] = useState(1);
+  const [calmDuration, setCalmDuration] = useState<CalmAudioDurationSeconds>(120);
+  const [breathSecondsRemaining, setBreathSecondsRemaining] = useState(120);
+  const [audioAvailable, setAudioAvailable] = useState(false);
+  const [audioEnabled, setAudioEnabled] = useState(false);
+  const startCuePlayer = useAudioPlayer(CALM_AUDIO_CUE_ASSETS.start, { updateInterval: 1000 });
+  const inhaleCuePlayer = useAudioPlayer(CALM_AUDIO_CUE_ASSETS.inhale, { updateInterval: 1000 });
+  const holdCuePlayer = useAudioPlayer(CALM_AUDIO_CUE_ASSETS.hold, { updateInterval: 1000 });
+  const exhaleCuePlayer = useAudioPlayer(CALM_AUDIO_CUE_ASSETS.exhale, { updateInterval: 1000 });
+  const breathScale = useRef(new Animated.Value(0.58)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const breatheAnim = useRef(new Animated.Value(0.4)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  const breathTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const startedAtRef = useRef<number | null>(null);
+  const totalBreathCycles = useMemo(
+    () => Math.max(1, Math.ceil(calmDuration / BREATH_CYCLE_SECONDS)),
+    [calmDuration]
+  );
+
+  const supportKey = useMemo(
+    () => inferSupportKey(journalEntries, triggerPatterns.triggerCounts),
+    [journalEntries, triggerPatterns.triggerCounts]
+  );
+  const topTrigger = useMemo(() => getTopLabel(triggerPatterns.triggerCounts), [triggerPatterns.triggerCounts]);
+  const topEmotion = useMemo(() => getTopLabel(triggerPatterns.emotionCounts), [triggerPatterns.emotionCounts]);
+  const patternLine = useMemo(() => {
+    if (topTrigger && topEmotion) return `${topEmotion} often shows up around ${topTrigger}.`;
+    if (topTrigger) return `${topTrigger} has shown up in your recent check-ins.`;
+    if (topEmotion) return `${topEmotion} has shown up in your recent check-ins.`;
+    return 'I will personalize this more as you check in and reflect.';
+  }, [topEmotion, topTrigger]);
 
   useEffect(() => {
-    trackEvent('grounding_mode_opened');
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 600,
-      useNativeDriver: true,
-    }).start();
+    trackEvent('calm_me_down_opened');
+    const available = isAnyCalmAudioAvailable();
+    setAudioAvailable(available);
+    setAudioEnabled(available);
+    if (available) {
+      void setAudioModeAsync({
+        playsInSilentMode: true,
+        shouldPlayInBackground: false,
+        interruptionMode: 'mixWithOthers',
+      }).catch(() => {
+        setAudioAvailable(false);
+        setAudioEnabled(false);
+      });
+    }
+    Animated.timing(fadeAnim, { toValue: 1, duration: 350, useNativeDriver: true }).start();
   }, [fadeAnim, trackEvent]);
 
-  useEffect(() => {
-    return () => {
-      if (breathTimerRef.current) clearTimeout(breathTimerRef.current);
-    };
+  useEffect(() => () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (countdownRef.current) clearInterval(countdownRef.current);
   }, []);
 
-  const startBreathing = useCallback(() => {
-    setPhase('breathing');
-    setBreathCount(0);
-    runBreathCycle(0);
-    if (Platform.OS !== 'web') {
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  const haptic = useCallback((style: Haptics.ImpactFeedbackStyle = Haptics.ImpactFeedbackStyle.Light) => {
+    if (Platform.OS !== 'web') void Haptics.impactAsync(style);
+  }, []);
+
+  const playAudioCue = useCallback(async (cue: CalmAudioCueId) => {
+    if (!audioAvailable || !audioEnabled) return;
+    const player =
+      cue === 'start' ? startCuePlayer :
+      cue === 'inhale' ? inhaleCuePlayer :
+      cue === 'hold' ? holdCuePlayer :
+      exhaleCuePlayer;
+    try {
+      player.pause();
+      await player.seekTo(0);
+      player.play();
+    } catch {
+      setAudioAvailable(false);
+      setAudioEnabled(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [audioAvailable, audioEnabled, exhaleCuePlayer, holdCuePlayer, inhaleCuePlayer, startCuePlayer]);
+
+  const clearBreathingTimers = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+      countdownRef.current = null;
+    }
   }, []);
 
-  const runBreathCycle = useCallback((count: number) => {
-    if (count >= TOTAL_BREATHS) {
-      setPhase('senses');
-      setSenseStep(0);
+  const cuePhase = useCallback((nextPhase: BreathPhase) => {
+    setBreathPhase(nextPhase);
+    if (nextPhase === 'inhale') setBreathLabel('Inhale');
+    if (nextPhase === 'hold') setBreathLabel('Hold');
+    if (nextPhase === 'exhale') setBreathLabel('Exhale');
+    haptic(nextPhase === 'exhale' ? Haptics.ImpactFeedbackStyle.Medium : Haptics.ImpactFeedbackStyle.Light);
+    void playAudioCue(nextPhase);
+  }, [haptic, playAudioCue]);
+
+  const runBreathing = useCallback((cycle: number) => {
+    if (cycle > totalBreathCycles) {
+      clearBreathingTimers();
+      setPhase('anchor');
       return;
     }
 
-    setBreathLabel('Breathe in...');
-    Animated.timing(breatheAnim, {
-      toValue: 1,
-      duration: BREATHE_IN,
-      useNativeDriver: true,
-    }).start();
+    setBreathCycle(cycle);
+    cuePhase('inhale');
+    Animated.timing(breathScale, { toValue: 1, duration: 4000, useNativeDriver: true }).start();
 
-    breathTimerRef.current = setTimeout(() => {
-      setBreathLabel('Hold...');
+    timerRef.current = setTimeout(() => {
+      cuePhase('hold');
+      timerRef.current = setTimeout(() => {
+        cuePhase('exhale');
+        Animated.timing(breathScale, { toValue: 0.58, duration: 8000, useNativeDriver: true }).start();
+        timerRef.current = setTimeout(() => runBreathing(cycle + 1), 8000);
+      }, 2000);
+    }, 4000);
+  }, [breathScale, clearBreathingTimers, cuePhase, totalBreathCycles]);
 
-      breathTimerRef.current = setTimeout(() => {
-        setBreathLabel('Breathe out...');
-        Animated.timing(breatheAnim, {
-          toValue: 0.4,
-          duration: BREATHE_OUT,
-          useNativeDriver: true,
-        }).start();
+  const startFlow = useCallback(() => {
+    haptic(Haptics.ImpactFeedbackStyle.Medium);
+    clearBreathingTimers();
+    setBreathSecondsRemaining(calmDuration);
+    startedAtRef.current = Date.now();
+    void playAudioCue('start');
+    trackEvent('calm_me_down_started', {
+      before_intensity: beforeIntensity,
+      duration_seconds: calmDuration,
+      guided_audio_available: audioAvailable && audioEnabled,
+    });
+    setPhase('breathe');
+    countdownRef.current = setInterval(() => {
+      setBreathSecondsRemaining((remaining) => {
+        if (remaining <= 1) {
+          clearBreathingTimers();
+          setPhase('anchor');
+          return 0;
+        }
+        return remaining - 1;
+      });
+    }, 1000);
+    runBreathing(1);
+  }, [audioAvailable, audioEnabled, beforeIntensity, calmDuration, clearBreathingTimers, haptic, playAudioCue, runBreathing, trackEvent]);
 
-        breathTimerRef.current = setTimeout(() => {
-          const next = count + 1;
-          setBreathCount(next);
-          if (next < TOTAL_BREATHS) {
-            runBreathCycle(next);
-          } else {
-            setPhase('senses');
-            setSenseStep(0);
-            if (Platform.OS !== 'web') {
-              void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            }
-          }
-        }, BREATHE_OUT);
-      }, BREATHE_HOLD);
-    }, BREATHE_IN);
-  }, [breatheAnim]);
+  const goNext = useCallback((next: CalmPhase) => {
+    haptic();
+    if (phase === 'breathe') clearBreathingTimers();
+    setPhase(next);
+  }, [clearBreathingTimers, haptic, phase]);
 
-  const completeSenseStep = useCallback(() => {
-    if (Platform.OS !== 'web') {
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  const finish = useCallback(async () => {
+    const completedAt = Date.now();
+    const durationCompletedSeconds = Math.max(
+      0,
+      Math.round((completedAt - (startedAtRef.current ?? completedAt)) / 1000),
+    );
+    try {
+      await saveCalmMeDownSession({
+        id: `calm_${completedAt}`,
+        timestamp: completedAt,
+        beforeIntensity,
+        afterIntensity,
+        durationCompletedSeconds,
+        triggerLabel: topTrigger,
+        emotionLabel: topEmotion,
+      });
+    } catch (error) {
+      console.log('[CalmMeDown] Failed to save session:', error);
     }
-    const currentSense = SENSE_STEPS[senseStep];
-    setCompletedSenses(prev => [...prev, currentSense.id]);
+    trackEvent('calm_me_down_completed', {
+      before_intensity: beforeIntensity,
+      after_intensity: afterIntensity,
+      shift: beforeIntensity - afterIntensity,
+      duration_completed_seconds: durationCompletedSeconds,
+      trigger: topTrigger ?? 'unknown',
+      emotion: topEmotion ?? 'unknown',
+      support_key: supportKey,
+    });
+    setPhase('complete');
+    if (Platform.OS !== 'web') void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  }, [afterIntensity, beforeIntensity, supportKey, topEmotion, topTrigger, trackEvent]);
 
-    if (senseStep < SENSE_STEPS.length - 1) {
-      setSenseStep(prev => prev + 1);
-    } else {
-      setPhase('settled');
-      if (Platform.OS !== 'web') {
-        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }
-    }
-  }, [senseStep]);
-
-  const handleClose = useCallback(() => {
-    trackEvent('grounding_mode_completed', { phase });
+  const close = useCallback(() => {
+    clearBreathingTimers();
     router.back();
-  }, [phase, router, trackEvent]);
+  }, [clearBreathingTimers, router]);
 
-  const handleNavigate = useCallback((route: string) => {
-    trackEvent('grounding_mode_action', { route });
-    router.back();
-    setTimeout(() => {
-      router.push(route as never);
-    }, 300);
-  }, [trackEvent, router]);
+  const formatRemaining = useCallback((seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const rest = seconds % 60;
+    return `${minutes}:${rest.toString().padStart(2, '0')}`;
+  }, []);
 
-  const startPulse = useCallback(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.05,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-  }, [pulseAnim]);
+  const IntensitySelector = ({ value, onChange }: { value: number; onChange: (value: number) => void }) => (
+    <View style={styles.scaleGrid}>
+      {Array.from({ length: 10 }).map((_, index) => {
+        const score = index + 1;
+        const selected = score === value;
+        return (
+          <TouchableOpacity
+            key={score}
+            style={[
+              styles.scaleButton,
+              {
+                backgroundColor: selected ? colors.primary : colors.card,
+                borderColor: selected ? colors.primary : colors.borderLight,
+              },
+            ]}
+            onPress={() => {
+              haptic();
+              onChange(score);
+            }}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.scaleText, { color: selected ? colors.white : colors.text }]}>{score}</Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
 
-  useEffect(() => {
-    if (phase === 'welcome') {
-      startPulse();
-    }
-  }, [phase, startPulse]);
-
-  const renderWelcome = () => (
-    <Animated.View style={[styles.centerContent, { opacity: fadeAnim }]}>
-      <Animated.View style={[styles.welcomeCircle, { transform: [{ scale: pulseAnim }] }]}>
-        <Anchor size={48} color={Colors.white} />
-      </Animated.View>
-
-      <Text style={styles.welcomeTitle}>Grounding Mode</Text>
-      <Text style={styles.welcomeSubtitle}>
-        Let's slow things down together.{'\n'}You're safe here.
+  const renderStart = () => (
+    <Animated.View style={[styles.card, { opacity: fadeAnim, backgroundColor: colors.card, borderColor: colors.borderLight, shadowColor: colors.shadow }]}>
+      <View style={[styles.iconBubble, { backgroundColor: colors.brandTealSoft }]}>
+        <Heart size={28} color={colors.brandTeal} />
+      </View>
+      <Text style={[styles.kicker, { color: colors.brandTeal }]}>1, 2, or 5 minute reset</Text>
+      <Text style={[styles.title, { color: colors.text }]}>Calm Me Down</Text>
+      <Text style={[styles.bodyText, { color: colors.textSecondary }]}>
+        We will slow your breathing, anchor your senses, and name what may be driving the urgency.
       </Text>
 
-      <TouchableOpacity
-        style={styles.primaryButton}
-        onPress={startBreathing}
-        activeOpacity={0.8}
-        testID="start-breathing-btn"
-      >
-        <Wind size={20} color={Colors.white} />
-        <Text style={styles.primaryButtonText}>Start with breathing</Text>
-      </TouchableOpacity>
+      <View style={styles.supportList}>
+        {[
+          'Guided breathing',
+          'Guided grounding',
+          'Calm Me Down flow',
+        ].map(item => (
+          <View key={item} style={[styles.supportItem, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
+            <Check size={14} color={colors.brandTeal} />
+            <Text style={[styles.supportItemText, { color: colors.text }]}>{item}</Text>
+          </View>
+        ))}
+      </View>
 
-      <TouchableOpacity
-        style={styles.secondaryButton}
-        onPress={() => { setPhase('senses'); setSenseStep(0); }}
-        activeOpacity={0.7}
-        testID="skip-to-grounding-btn"
-      >
-        <Text style={styles.secondaryButtonText}>Skip to grounding</Text>
+      <View style={[styles.miniCard, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Choose your length</Text>
+        <View style={styles.durationGrid}>
+          {CALM_DURATIONS.map((duration) => {
+            const selected = calmDuration === duration.seconds;
+            return (
+              <TouchableOpacity
+                key={duration.seconds}
+                style={[
+                  styles.durationButton,
+                  {
+                    backgroundColor: selected ? colors.primary : colors.card,
+                    borderColor: selected ? colors.primary : colors.borderLight,
+                  },
+                ]}
+                onPress={() => {
+                  haptic();
+                  setCalmDuration(duration.seconds);
+                  setBreathSecondsRemaining(duration.seconds);
+                }}
+                activeOpacity={0.82}
+                accessibilityRole="button"
+                accessibilityLabel={`Choose ${duration.label} Calm Me Down session, ${duration.description}`}
+                accessibilityState={{ selected }}
+              >
+                <Text style={[styles.durationLabel, { color: selected ? colors.white : colors.text }]}>
+                  {duration.label}
+                </Text>
+                <Text style={[styles.durationDescription, { color: selected ? colors.white : colors.textSecondary }]}>
+                  {duration.description}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+        {audioAvailable && (
+          <TouchableOpacity
+            style={[
+              styles.audioToggle,
+              {
+                backgroundColor: audioEnabled ? colors.primaryLight : colors.card,
+                borderColor: audioEnabled ? colors.primary : colors.borderLight,
+              },
+            ]}
+            onPress={() => {
+              haptic();
+              setAudioEnabled((enabled) => !enabled);
+            }}
+            activeOpacity={0.82}
+            testID="calm-audio-toggle"
+            accessibilityRole="button"
+            accessibilityLabel={`Audio cues are ${audioEnabled ? 'on' : 'off'}`}
+            accessibilityState={{ selected: audioEnabled }}
+          >
+            {audioEnabled ? (
+              <Volume2 size={18} color={colors.primary} />
+            ) : (
+              <VolumeX size={18} color={colors.textMuted} />
+            )}
+            <View style={styles.audioToggleTextBlock}>
+              <Text style={[styles.audioToggleTitle, { color: audioEnabled ? colors.primary : colors.text }]}>
+                Audio cues {audioEnabled ? 'on' : 'off'}
+              </Text>
+              <Text style={[styles.audioNote, { color: colors.textSecondary }]}>
+                Chimes guide inhale, hold, and exhale so you can close your eyes.
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      <View style={[styles.miniCard, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>How intense is it right now?</Text>
+        <Text style={[styles.intensityLabel, { color: colors.textSecondary }]}>{beforeIntensity}/10 · {getIntensityLabel(beforeIntensity)}</Text>
+        <IntensitySelector value={beforeIntensity} onChange={setBeforeIntensity} />
+      </View>
+
+      <TouchableOpacity style={[styles.primaryButton, { backgroundColor: colors.primary }]} onPress={startFlow} activeOpacity={0.85}>
+        <Text style={[styles.primaryButtonText, { color: colors.white }]}>Start Calm Me Down</Text>
+        <ArrowRight size={18} color={colors.white} />
       </TouchableOpacity>
     </Animated.View>
   );
 
   const renderBreathing = () => (
-    <View style={styles.centerContent}>
-      <Text style={styles.breathCountLabel}>
-        Breath {Math.min(breathCount + 1, TOTAL_BREATHS)} of {TOTAL_BREATHS}
-      </Text>
-
+    <View style={styles.centerStage}>
+      <Text style={[styles.kicker, { color: colors.brandTeal }]}>Step 1 of 4 · breathe</Text>
       <Animated.View
         style={[
           styles.breathCircle,
           {
-            transform: [{ scale: breatheAnim }],
-            opacity: Animated.add(0.5, Animated.multiply(breatheAnim, 0.5)),
+            backgroundColor: colors.primary,
+            shadowColor: colors.primary,
+            transform: [{ scale: breathScale }],
           },
         ]}
       >
-        <Wind size={40} color={Colors.white} />
+        <Wind size={44} color={colors.white} />
       </Animated.View>
-
-      <Text style={styles.breathLabel}>{breathLabel}</Text>
-
-      <View style={styles.breathDots}>
-        {Array.from({ length: TOTAL_BREATHS }).map((_, i) => (
+      <Text style={[styles.breathLabel, { color: colors.text }]}>{breathLabel}</Text>
+      <Text style={[styles.breathTimer, { color: colors.primary }]}>
+        {formatRemaining(breathSecondsRemaining)}
+      </Text>
+      <Text style={[styles.bodyText, { color: colors.textSecondary }]}>
+        Cycle {Math.min(breathCycle, totalBreathCycles)} of {totalBreathCycles}. {breathPhase === 'exhale' ? 'Let the exhale be slow and complete.' : 'Follow the cue and keep it gentle.'}
+      </Text>
+      <View style={styles.progressRow}>
+        {Array.from({ length: totalBreathCycles }).map((_, index) => (
           <View
-            key={i}
+            key={index}
             style={[
-              styles.breathDot,
-              i < breathCount && styles.breathDotComplete,
-              i === breathCount && styles.breathDotActive,
+              styles.progressDot,
+              {
+                backgroundColor: index + 1 <= breathCycle ? colors.brandTeal : colors.borderLight,
+              },
             ]}
           />
         ))}
       </View>
-    </View>
-  );
-
-  const renderSenses = () => {
-    const current = SENSE_STEPS[senseStep];
-    const IconComponent = current.icon;
-
-    return (
-      <View style={styles.centerContent}>
-        <Text style={styles.senseProgress}>
-          Step {senseStep + 1} of {SENSE_STEPS.length}
-        </Text>
-
-        <View style={[styles.senseIconContainer, { backgroundColor: current.color + '20' }]}>
-          <IconComponent size={40} color={current.color} />
-        </View>
-
-        <Text style={styles.senseInstruction}>{current.instruction}</Text>
-
-        <Text style={styles.senseHint}>
-          Take your time. There's no rush.
-        </Text>
-
-        <TouchableOpacity
-          style={[styles.senseButton, { backgroundColor: current.color }]}
-          onPress={completeSenseStep}
-          activeOpacity={0.8}
-          testID={`sense-done-${senseStep}`}
-        >
-          <Check size={20} color={Colors.white} />
-          <Text style={styles.senseButtonText}>Done</Text>
-        </TouchableOpacity>
-
-        <View style={styles.senseStepDots}>
-          {SENSE_STEPS.map((step) => (
-            <View
-              key={step.id}
-              style={[
-                styles.senseStepDot,
-                { backgroundColor: step.color + (completedSenses.includes(step.id) ? '' : '40') },
-              ]}
-            />
-          ))}
-        </View>
-      </View>
-    );
-  };
-
-  const renderSettled = () => (
-    <View style={styles.centerContent}>
-      <View style={styles.settledCircle}>
-        <Check size={48} color={Colors.success} />
-      </View>
-
-      <Text style={styles.settledTitle}>You did it.</Text>
-      <Text style={styles.settledSubtitle}>
-        Take a moment to notice how you feel now.{'\n'}Even small shifts matter.
-      </Text>
-
-      <View style={styles.nextActions}>
-        <Text style={styles.nextActionsLabel}>What would help next?</Text>
-
-        <TouchableOpacity
-          style={styles.nextActionCard}
-          onPress={() => handleNavigate('/journal-write')}
-          activeOpacity={0.7}
-          testID="next-journal"
-        >
-          <View style={[styles.nextActionIcon, { backgroundColor: Colors.primaryLight }]}>
-            <BookOpen size={20} color={Colors.primary} />
-          </View>
-          <View style={styles.nextActionText}>
-            <Text style={styles.nextActionTitle}>Quick journal</Text>
-            <Text style={styles.nextActionDesc}>Write about what you're feeling</Text>
-          </View>
-          <ChevronRight size={18} color={Colors.textMuted} />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.nextActionCard}
-          onPress={() => handleNavigate('/(tabs)/companion')}
-          activeOpacity={0.7}
-          testID="next-companion"
-        >
-          <View style={[styles.nextActionIcon, { backgroundColor: Colors.brandLilacSoft }]}>
-            <Sparkles size={20} color={Colors.brandLilac} />
-          </View>
-          <View style={styles.nextActionText}>
-            <Text style={styles.nextActionTitle}>AI Companion</Text>
-            <Text style={styles.nextActionDesc}>Process what happened in a safe space</Text>
-          </View>
-          <ChevronRight size={18} color={Colors.textMuted} />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.nextActionCard}
-          onPress={() => handleNavigate('/message-guard')}
-          activeOpacity={0.7}
-          testID="next-pause"
-        >
-          <View style={[styles.nextActionIcon, { backgroundColor: Colors.accentLight }]}>
-            <Timer size={20} color={Colors.accent} />
-          </View>
-          <View style={styles.nextActionText}>
-            <Text style={styles.nextActionTitle}>Pause before messaging</Text>
-            <Text style={styles.nextActionDesc}>Give yourself space before responding</Text>
-          </View>
-          <ChevronRight size={18} color={Colors.textMuted} />
-        </TouchableOpacity>
-      </View>
-
-      <TouchableOpacity
-        style={styles.doneButton}
-        onPress={handleClose}
-        activeOpacity={0.7}
-        testID="grounding-done"
-      >
-        <Text style={styles.doneButtonText}>I'm okay for now</Text>
+      <TouchableOpacity style={styles.textButton} onPress={() => goNext('anchor')}>
+        <Text style={[styles.textButtonText, { color: colors.primary }]}>Skip breathing</Text>
       </TouchableOpacity>
     </View>
   );
 
+  const renderAnchor = () => (
+    <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.borderLight, shadowColor: colors.shadow }]}>
+      <View style={[styles.iconBubble, { backgroundColor: colors.primaryLight }]}>
+        <ShieldCheck size={28} color={colors.primary} />
+      </View>
+      <Text style={[styles.kicker, { color: colors.brandTeal }]}>Step 2 of 4 · anchor</Text>
+      <Text style={[styles.title, { color: colors.text }]}>Come back to right now</Text>
+      {ANCHORS.map((anchor, index) => (
+        <View key={anchor} style={[styles.anchorRow, { borderColor: colors.borderLight }]}>
+          <Text style={[styles.anchorNumber, { color: colors.brandTeal }]}>{index + 1}</Text>
+          <Text style={[styles.anchorText, { color: colors.text }]}>{anchor}</Text>
+        </View>
+      ))}
+      <TouchableOpacity style={[styles.primaryButton, { backgroundColor: colors.primary }]} onPress={() => goNext('pattern')}>
+        <Text style={[styles.primaryButtonText, { color: colors.white }]}>I did this</Text>
+        <ChevronRight size={18} color={colors.white} />
+      </TouchableOpacity>
+    </View>
+  );
+
+  const renderPattern = () => (
+    <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.borderLight, shadowColor: colors.shadow }]}>
+      <View style={[styles.iconBubble, { backgroundColor: colors.brandTealSoft }]}>
+        <Sparkles size={28} color={colors.brandTeal} />
+      </View>
+      <Text style={[styles.kicker, { color: colors.brandTeal }]}>Step 3 of 4 · personalize</Text>
+      <Text style={[styles.title, { color: colors.text }]}>Name the wave without obeying it</Text>
+      <Text style={[styles.bodyText, { color: colors.textSecondary }]}>
+        {TRIGGER_SUPPORT[supportKey]}
+      </Text>
+      <View style={[styles.patternCard, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
+        <Text style={[styles.patternLabel, { color: colors.textSecondary }]}>Based on your entries</Text>
+        <Text style={[styles.patternText, { color: colors.text }]}>{patternLine}</Text>
+      </View>
+      <View style={[styles.statementCard, { backgroundColor: colors.primaryLight, borderColor: colors.borderLight }]}>
+        <Text style={[styles.statementText, { color: colors.primary }]}>
+          “I can feel this strongly and still wait before I act.”
+        </Text>
+      </View>
+      <TouchableOpacity style={[styles.primaryButton, { backgroundColor: colors.primary }]} onPress={() => goNext('after')}>
+        <Text style={[styles.primaryButtonText, { color: colors.white }]}>Check my intensity</Text>
+        <ChevronRight size={18} color={colors.white} />
+      </TouchableOpacity>
+    </View>
+  );
+
+  const renderAfter = () => (
+    <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.borderLight, shadowColor: colors.shadow }]}>
+      <View style={[styles.iconBubble, { backgroundColor: colors.successLight }]}>
+        <Check size={28} color={colors.success} />
+      </View>
+      <Text style={[styles.kicker, { color: colors.brandTeal }]}>Step 4 of 4 · after</Text>
+      <Text style={[styles.title, { color: colors.text }]}>Where is your intensity now?</Text>
+      <Text style={[styles.bodyText, { color: colors.textSecondary }]}>
+        You do not need to be perfectly calm. A one-point shift still counts.
+      </Text>
+      <Text style={[styles.intensityLabel, { color: colors.textSecondary }]}>{afterIntensity}/10 · {getIntensityLabel(afterIntensity)}</Text>
+      <IntensitySelector value={afterIntensity} onChange={setAfterIntensity} />
+      <TouchableOpacity style={[styles.primaryButton, { backgroundColor: colors.primary }]} onPress={finish}>
+        <Text style={[styles.primaryButtonText, { color: colors.white }]}>Finish</Text>
+        <Check size={18} color={colors.white} />
+      </TouchableOpacity>
+    </View>
+  );
+
+  const renderComplete = () => {
+    const shift = beforeIntensity - afterIntensity;
+    return (
+      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.borderLight, shadowColor: colors.shadow }]}>
+        <View style={[styles.iconBubble, { backgroundColor: colors.successLight }]}>
+          <Heart size={28} color={colors.success} />
+        </View>
+        <Text style={[styles.title, { color: colors.text }]}>
+          {shift > 0 ? `You came down ${shift} point${shift === 1 ? '' : 's'}.` : 'You stayed with the moment.'}
+        </Text>
+        <Text style={[styles.bodyText, { color: colors.textSecondary }]}>
+          That is the practice: slow the body, name the wave, choose the next step from a steadier place.
+        </Text>
+        <View style={styles.nextActions}>
+          <TouchableOpacity style={[styles.nextCard, { backgroundColor: colors.surface, borderColor: colors.borderLight }]} onPress={() => router.push('/(tabs)/companion' as never)}>
+            <MessageCircle size={20} color={colors.primary} />
+            <View style={styles.nextText}>
+              <Text style={[styles.nextTitle, { color: colors.text }]}>Talk it through</Text>
+              <Text style={[styles.nextBody, { color: colors.textSecondary }]}>Let Companion help you decide what to do next.</Text>
+            </View>
+            <ChevronRight size={18} color={colors.textMuted} />
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.nextCard, { backgroundColor: colors.surface, borderColor: colors.borderLight }]} onPress={() => router.push('/dont-send-it' as never)}>
+            <ShieldCheck size={20} color={colors.brandTeal} />
+            <View style={styles.nextText}>
+              <Text style={[styles.nextTitle, { color: colors.text }]}>Do not send it yet</Text>
+              <Text style={[styles.nextBody, { color: colors.textSecondary }]}>Check a message before reacting.</Text>
+            </View>
+            <ChevronRight size={18} color={colors.textMuted} />
+          </TouchableOpacity>
+        </View>
+        <TouchableOpacity style={[styles.secondaryButton, { borderColor: colors.borderLight }]} onPress={close}>
+          <Text style={[styles.secondaryButtonText, { color: colors.text }]}>I’m okay for now</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   return (
-    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom, backgroundColor: colors.background }]}>
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.closeButton}
-          onPress={handleClose}
-          activeOpacity={0.7}
-          testID="grounding-close"
-        >
-          <X size={24} color={Colors.textSecondary} />
+        <View>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Calm Me Down</Text>
+          <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Choose a short reset</Text>
+        </View>
+        <TouchableOpacity style={[styles.closeButton, { backgroundColor: colors.card, borderColor: colors.borderLight }]} onPress={close}>
+          <X size={20} color={colors.textSecondary} />
         </TouchableOpacity>
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {phase === 'welcome' && renderWelcome()}
-        {phase === 'breathing' && renderBreathing()}
-        {phase === 'senses' && renderSenses()}
-        {phase === 'settled' && renderSettled()}
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {phase === 'start' && renderStart()}
+        {phase === 'breathe' && renderBreathing()}
+        {phase === 'anchor' && renderAnchor()}
+        {phase === 'pattern' && renderPattern()}
+        {phase === 'after' && renderAfter()}
+        {phase === 'complete' && renderComplete()}
       </ScrollView>
     </View>
   );
@@ -393,248 +611,311 @@ export default function GroundingModeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#020617',
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 4,
+    paddingVertical: 12,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '800' as const,
+  },
+  headerSubtitle: {
+    fontSize: 13,
+    marginTop: 2,
   },
   closeButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: 32,
-    paddingBottom: 40,
+    paddingHorizontal: 20,
+    paddingBottom: 28,
   },
-  centerContent: {
-    alignItems: 'center',
+  card: {
+    borderWidth: 1,
+    borderRadius: 24,
+    padding: 20,
+    shadowOpacity: 1,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 5,
   },
-  welcomeCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: 'rgba(74,139,141,0.3)',
+  centerStage: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 32,
-    borderWidth: 2,
-    borderColor: 'rgba(74,139,141,0.5)',
+    paddingVertical: 36,
   },
-  welcomeTitle: {
-    fontSize: 28,
+  iconBubble: {
+    width: 58,
+    height: 58,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  kicker: {
+    fontSize: 12,
+    fontWeight: '800' as const,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0,
+    marginBottom: 8,
+  },
+  title: {
+    fontSize: 27,
+    lineHeight: 33,
+    fontWeight: '900' as const,
+    letterSpacing: 0,
+    marginBottom: 10,
+  },
+  bodyText: {
+    fontSize: 16,
+    lineHeight: 23,
+    marginBottom: 18,
+  },
+  miniCard: {
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 15,
+    marginBottom: 14,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '800' as const,
+    marginBottom: 4,
+  },
+  intensityLabel: {
+    fontSize: 14,
     fontWeight: '700' as const,
-    color: '#FFFFFF',
-    textAlign: 'center',
     marginBottom: 12,
   },
-  welcomeSubtitle: {
-    fontSize: 16,
-    color: 'rgba(255,255,255,0.65)',
-    textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 40,
-  },
-  primaryButton: {
+  scaleGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  scaleButton: {
+    width: 43,
+    height: 43,
+    borderRadius: 14,
+    borderWidth: 1,
     alignItems: 'center',
-    gap: 10,
-    backgroundColor: Colors.primary,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 16,
-    marginBottom: 16,
-    width: '100%',
     justifyContent: 'center',
   },
+  scaleText: {
+    fontSize: 15,
+    fontWeight: '800' as const,
+  },
+  durationGrid: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  durationButton: {
+    flex: 1,
+    minHeight: 68,
+    borderRadius: 16,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+  },
+  durationLabel: {
+    fontSize: 16,
+    fontWeight: '900' as const,
+    marginBottom: 3,
+  },
+  durationDescription: {
+    fontSize: 11,
+    fontWeight: '700' as const,
+    textAlign: 'center',
+  },
+  audioToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    minHeight: 58,
+    borderRadius: 16,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+    marginTop: 12,
+  },
+  audioToggleTextBlock: {
+    flex: 1,
+  },
+  audioToggleTitle: {
+    fontSize: 14,
+    fontWeight: '900' as const,
+    marginBottom: 2,
+  },
+  audioNote: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '700' as const,
+  },
+  supportList: {
+    gap: 8,
+    marginBottom: 14,
+  },
+  supportItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+    gap: 9,
+  },
+  supportItemText: {
+    fontSize: 14,
+    fontWeight: '800' as const,
+  },
+  primaryButton: {
+    minHeight: 54,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 18,
+  },
   primaryButtonText: {
-    fontSize: 17,
-    fontWeight: '600' as const,
-    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '900' as const,
   },
   secondaryButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
+    minHeight: 52,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    marginTop: 12,
   },
   secondaryButtonText: {
     fontSize: 15,
-    color: 'rgba(255,255,255,0.5)',
-    fontWeight: '500' as const,
-  },
-  breathCountLabel: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.5)',
-    fontWeight: '500' as const,
-    marginBottom: 40,
-    letterSpacing: 1,
-    textTransform: 'uppercase' as const,
+    fontWeight: '800' as const,
   },
   breathCircle: {
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: Colors.primary,
+    width: 176,
+    height: 176,
+    borderRadius: 88,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 40,
+    marginVertical: 34,
+    shadowOpacity: 0.24,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 6,
   },
   breathLabel: {
-    fontSize: 24,
-    fontWeight: '600' as const,
-    color: '#FFFFFF',
-    marginBottom: 32,
+    fontSize: 29,
+    fontWeight: '900' as const,
+    marginBottom: 10,
   },
-  breathDots: {
+  breathTimer: {
+    fontSize: 18,
+    fontWeight: '900' as const,
+    marginBottom: 10,
+  },
+  progressRow: {
     flexDirection: 'row',
-    gap: 8,
-  },
-  breathDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-  },
-  breathDotComplete: {
-    backgroundColor: Colors.success,
-  },
-  breathDotActive: {
-    backgroundColor: Colors.primary,
-  },
-  senseProgress: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.5)',
-    fontWeight: '500' as const,
-    marginBottom: 32,
-    letterSpacing: 1,
-    textTransform: 'uppercase' as const,
-  },
-  senseIconContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    alignItems: 'center',
+    flexWrap: 'wrap',
     justifyContent: 'center',
-    marginBottom: 28,
-  },
-  senseInstruction: {
-    fontSize: 22,
-    fontWeight: '600' as const,
-    color: '#FFFFFF',
-    textAlign: 'center',
-    marginBottom: 12,
-    lineHeight: 30,
-  },
-  senseHint: {
-    fontSize: 15,
-    color: 'rgba(255,255,255,0.45)',
-    marginBottom: 36,
-  },
-  senseButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
     gap: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 40,
-    borderRadius: 14,
-    marginBottom: 32,
-  },
-  senseButtonText: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-    color: '#FFFFFF',
-  },
-  senseStepDots: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  senseStepDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  settledCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: Colors.successLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 24,
-  },
-  settledTitle: {
-    fontSize: 28,
-    fontWeight: '700' as const,
-    color: '#FFFFFF',
+    marginTop: 4,
     marginBottom: 12,
+    maxWidth: 240,
   },
-  settledSubtitle: {
-    fontSize: 15,
-    color: 'rgba(255,255,255,0.6)',
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 36,
+  progressDot: {
+    width: 26,
+    height: 6,
+    borderRadius: 3,
   },
-  nextActions: {
-    width: '100%',
-    marginBottom: 24,
+  textButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
   },
-  nextActionsLabel: {
+  textButtonText: {
     fontSize: 14,
-    color: 'rgba(255,255,255,0.45)',
-    fontWeight: '500' as const,
-    marginBottom: 12,
-    textTransform: 'uppercase' as const,
-    letterSpacing: 0.5,
+    fontWeight: '800' as const,
   },
-  nextActionCard: {
+  anchorRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 14,
+    gap: 12,
+    borderWidth: 1,
+    borderRadius: 16,
     padding: 14,
     marginBottom: 10,
-    gap: 12,
   },
-  nextActionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+  anchorNumber: {
+    fontSize: 17,
+    fontWeight: '900' as const,
+  },
+  anchorText: {
+    flex: 1,
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: '600' as const,
+  },
+  patternCard: {
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 15,
+    marginBottom: 12,
+  },
+  patternLabel: {
+    fontSize: 12,
+    fontWeight: '800' as const,
+    marginBottom: 6,
+    textTransform: 'uppercase' as const,
+  },
+  patternText: {
+    fontSize: 16,
+    lineHeight: 23,
+    fontWeight: '700' as const,
+  },
+  statementCard: {
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 15,
+    marginBottom: 18,
+  },
+  statementText: {
+    fontSize: 17,
+    lineHeight: 24,
+    fontWeight: '900' as const,
+  },
+  nextActions: {
+    gap: 10,
+    marginTop: 4,
+  },
+  nextCard: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 12,
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 14,
   },
-  nextActionText: {
+  nextText: {
     flex: 1,
   },
-  nextActionTitle: {
+  nextTitle: {
     fontSize: 15,
-    fontWeight: '600' as const,
-    color: '#FFFFFF',
+    fontWeight: '800' as const,
     marginBottom: 2,
   },
-  nextActionDesc: {
+  nextBody: {
     fontSize: 13,
-    color: 'rgba(255,255,255,0.5)',
-  },
-  doneButton: {
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    width: '100%',
-    alignItems: 'center',
-  },
-  doneButtonText: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-    color: 'rgba(255,255,255,0.7)',
+    lineHeight: 18,
   },
 });

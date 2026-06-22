@@ -1,4 +1,4 @@
-export type AppointmentType = 'therapist' | 'psychiatrist' | 'support_group' | 'coach' | 'other';
+export type AppointmentType = 'therapist' | 'psychiatrist' | 'doctor' | 'group' | 'support_group' | 'coach' | 'other';
 export type AppointmentLocation = 'in_person' | 'telehealth' | 'phone';
 
 export interface Appointment {
@@ -31,6 +31,10 @@ export interface PreSessionNotes {
 }
 
 export interface PostSessionNotes {
+  whatStoodOut?: string;
+  remember?: string;
+  actionItems?: string;
+  followUpQuestions?: string;
   mainTakeaways: string;
   newCopingTools: string;
   thingsToPractice: string;
@@ -48,16 +52,20 @@ export const DEFAULT_APPOINTMENT_STATE: AppointmentState = {
 };
 
 export const APPOINTMENT_TYPE_LABELS: Record<AppointmentType, string> = {
-  therapist: 'Therapist',
+  therapist: 'Therapy',
   psychiatrist: 'Psychiatrist',
-  support_group: 'Support Group',
-  coach: 'Coach',
+  doctor: 'Doctor',
+  group: 'Group',
+  support_group: 'Group',
+  coach: 'Other',
   other: 'Other',
 };
 
 export const APPOINTMENT_TYPE_COLORS: Record<AppointmentType, string> = {
   therapist: '#14B8A6',
   psychiatrist: '#3B82F6',
+  doctor: '#2E2A72',
+  group: '#67E8F9',
   support_group: '#67E8F9',
   coach: '#3B82F6',
   other: '#3B82F6',

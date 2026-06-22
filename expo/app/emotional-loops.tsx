@@ -34,11 +34,11 @@ import { useLoopInterruptPlans } from '@/hooks/useLoopInterruptPlans';
 import { EmotionalLoop, InterruptPoint, LoopNodeType } from '@/types/emotionalLoop';
 
 const NODE_COLORS: Record<LoopNodeType, { bg: string; text: string; border: string }> = {
-  trigger: { bg: '#FFFFFF', text: '#3B82F6', border: '#0B1238' },
+  trigger: { bg: '#FFFFFF', text: '#3B82F6', border: '#D9E2EC' },
   emotion: { bg: '#FFFFFF', text: '#3B82F6', border: '#2E2A72' },
-  urge: { bg: '#FFFFFF', text: '#3B82F6', border: '#0B1238' },
+  urge: { bg: '#FFFFFF', text: '#3B82F6', border: '#D9E2EC' },
   behavior: { bg: '#FFFFFF', text: '#3B82F6', border: '#3B82F6' },
-  outcome: { bg: Colors.successLight, text: '#14B8A6', border: '#0B1238' },
+  outcome: { bg: Colors.successLight, text: '#14B8A6', border: '#D9E2EC' },
   coping: { bg: Colors.primaryLight, text: Colors.primaryDark, border: '#14B8A6' },
 };
 

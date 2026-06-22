@@ -16,9 +16,11 @@ import * as Haptics from 'expo-haptics';
 import { ArrowLeft, Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
+import { useAppTheme } from '@/providers/ThemeProvider';
 
 export default function SignInScreen() {
   const router = useRouter();
+  const { colors } = useAppTheme();
   const { signIn } = useAuth();
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
@@ -58,7 +60,7 @@ export default function SignInScreen() {
   }, [email, router]);
 
   return (
-    <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -72,8 +74,10 @@ export default function SignInScreen() {
             <ArrowLeft size={22} color={Colors.brandNavy} />
           </TouchableOpacity>
 
-          <Text style={styles.title}>Welcome back</Text>
-          <Text style={styles.subtitle}>Sign in to sync your journey across devices.</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Welcome back</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+            Continue with your Companion, tools, and saved emotional map.
+          </Text>
 
           <View style={styles.field}>
             <Text style={styles.label}>Email</Text>

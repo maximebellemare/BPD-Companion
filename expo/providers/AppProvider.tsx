@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import createContextHook from '@nkzw/create-context-hook';
 import { JournalEntry, MessageDraft, DistressLevel } from '@/types';
@@ -10,6 +10,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
   const [safetyModeActive, setSafetyModeActive] = useState<boolean>(false);
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
   const [messageDrafts, setMessageDrafts] = useState<MessageDraft[]>([]);
+  const journalEntriesRef = useRef<JournalEntry[]>([]);
 
   const journalQuery = useQuery({
     queryKey: ['journal'],
@@ -23,7 +24,17 @@ export const [AppProvider, useApp] = createContextHook(() => {
 
   useEffect(() => {
     if (journalQuery.data) {
-      setJournalEntries(journalQuery.data);
+      const incoming = journalQuery.data;
+      const local = journalEntriesRef.current;
+      const incomingLatest = Math.max(0, ...incoming.map(entry => entry.timestamp));
+      const localLatest = Math.max(0, ...local.map(entry => entry.timestamp));
+
+      if (local.length > 0 && localLatest > incomingLatest) {
+        return;
+      }
+
+      journalEntriesRef.current = incoming;
+      setJournalEntries(incoming);
     }
   }, [journalQuery.data]);
 
@@ -48,16 +59,18 @@ export const [AppProvider, useApp] = createContextHook(() => {
   });
 
   const addJournalEntry = useCallback((entry: JournalEntry) => {
-    const updated = [entry, ...journalEntries];
+    const updated = [entry, ...journalEntriesRef.current];
+    journalEntriesRef.current = updated;
     setJournalEntries(updated);
     saveJournalMutation.mutate(updated);
-  }, [journalEntries, saveJournalMutation]);
+  }, [saveJournalMutation]);
 
   const updateJournalEntry = useCallback((id: string, updates: Partial<JournalEntry>) => {
-    const updated = journalEntries.map(e => e.id === id ? { ...e, ...updates } : e);
+    const updated = journalEntriesRef.current.map(e => e.id === id ? { ...e, ...updates } : e);
+    journalEntriesRef.current = updated;
     setJournalEntries(updated);
     saveJournalMutation.mutate(updated);
-  }, [journalEntries, saveJournalMutation]);
+  }, [saveJournalMutation]);
 
   const addMessageDraft = useCallback((draft: MessageDraft) => {
     const updated = [draft, ...messageDrafts];

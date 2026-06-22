@@ -28,12 +28,11 @@ import {
 const AppointmentHomeCard = React.memo(() => {
   const router = useRouter();
   const { trackEvent } = useAnalytics();
-  const {
-    nextAppointment,
-    upcomingAppointments,
-    needsPostSession,
-    needsPreSession,
-  } = useAppointments();
+  const appointmentContext = useAppointments();
+  const nextAppointment = appointmentContext?.nextAppointment ?? null;
+  const upcomingAppointments = appointmentContext?.upcomingAppointments ?? [];
+  const needsPostSession = appointmentContext?.needsPostSession ?? [];
+  const needsPreSession = appointmentContext?.needsPreSession ?? [];
 
   const handlePress = useCallback(() => {
     if (Platform.OS !== 'web') {

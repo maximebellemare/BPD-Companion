@@ -7,43 +7,17 @@ import {
   TouchableOpacity,
   Animated,
   Linking,
-  Platform,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { X, Heart, AlertTriangle, Phone, Shield, Stethoscope, HandHeart } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { BRAND } from '@/constants/branding';
-
-const CRISIS_RESOURCES = [
-  {
-    name: '988 Suicide & Crisis Lifeline',
-    description: 'Call or text 988 for free, 24/7 support',
-    phone: '988',
-    color: Colors.danger,
-  },
-  {
-    name: 'Crisis Text Line',
-    description: 'Text HOME to 741741',
-    phone: '741741',
-    color: '#3B82F6',
-  },
-  {
-    name: 'NAMI Helpline',
-    description: '1-800-950-NAMI (6264)',
-    phone: '18009506264',
-    color: Colors.success,
-  },
-  {
-    name: 'International Association for Suicide Prevention',
-    description: 'Find resources in your country',
-    url: 'https://www.iasp.info/resources/Crisis_Centres/',
-    color: Colors.brandLilac,
-  },
-];
+import { getCrisisResources, getResourceContactText, getResourceUrl } from '@/services/safety/crisisResources';
 
 export default function MentalHealthDisclaimerScreen() {
   const router = useRouter();
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const crisisResources = getCrisisResources();
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -53,15 +27,8 @@ export default function MentalHealthDisclaimerScreen() {
     }).start();
   }, [fadeAnim]);
 
-  const handleCall = (phone: string) => {
-    if (Platform.OS === 'web') {
-      void Linking.openURL(`tel:${phone}`);
-    } else {
-      void Linking.openURL(`tel:${phone}`);
-    }
-  };
-
-  const handleOpenURL = (url: string) => {
+  const handleOpenURL = (url: string | null) => {
+    if (!url) return;
     void Linking.openURL(url);
   };
 
@@ -166,27 +133,26 @@ export default function MentalHealthDisclaimerScreen() {
             If you or someone you know is in immediate danger or experiencing a mental health crisis, please contact one of these resources:
           </Text>
           <View style={styles.resourcesList}>
-            {CRISIS_RESOURCES.map((resource, index) => (
+            {crisisResources.map((resource, index) => (
               <TouchableOpacity
-                key={index}
+                key={resource.id}
                 style={styles.resourceCard}
-                onPress={() => {
-                  if (resource.phone) {
-                    handleCall(resource.phone);
-                  } else if (resource.url) {
-                    handleOpenURL(resource.url);
-                  }
-                }}
+                onPress={() => handleOpenURL(getResourceUrl(resource))}
+                disabled={!getResourceUrl(resource)}
                 activeOpacity={0.7}
               >
-                <View style={[styles.resourceDot, { backgroundColor: resource.color }]} />
+                <View style={[styles.resourceDot, { backgroundColor: index === 0 ? Colors.danger : Colors.primary }]} />
                 <View style={styles.resourceInfo}>
-                  <Text style={styles.resourceName}>{resource.name}</Text>
+                  <Text style={styles.resourceName}>{resource.label}</Text>
+                  <Text style={styles.resourceNumber}>{getResourceContactText(resource)}</Text>
                   <Text style={styles.resourceDesc}>{resource.description}</Text>
                 </View>
               </TouchableOpacity>
             ))}
           </View>
+          <Text style={styles.immediateDangerText}>
+            If you are in immediate danger, call your local emergency number now.
+          </Text>
         </Animated.View>
 
         <View style={styles.footerCard}>
@@ -392,9 +358,23 @@ const styles = StyleSheet.create({
     color: Colors.white,
     marginBottom: 2,
   },
+  resourceNumber: {
+    fontSize: 14,
+    fontWeight: '800' as const,
+    color: Colors.white,
+    marginBottom: 2,
+  },
   resourceDesc: {
     fontSize: 12,
     color: 'rgba(255,255,255,0.6)',
+  },
+  immediateDangerText: {
+    color: Colors.white,
+    fontSize: 13,
+    fontWeight: '700' as const,
+    lineHeight: 19,
+    textAlign: 'center' as const,
+    marginTop: 14,
   },
   footerCard: {
     padding: 18,

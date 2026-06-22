@@ -16,19 +16,22 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   X,
   Check,
+  Calendar,
+  Clock,
   MapPin,
   Video,
   Phone,
   User,
   Stethoscope,
+  HeartPulse,
   Users,
-  Sparkles,
   MoreHorizontal,
   Bell,
   Plus,
   Trash2,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import Colors from '@/constants/colors';
 import { useAppointments } from '@/providers/AppointmentProvider';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
@@ -39,10 +42,10 @@ import {
 } from '@/types/appointment';
 
 const APPOINTMENT_TYPES: { value: AppointmentType; label: string; icon: any }[] = [
-  { value: 'therapist', label: 'Therapist', icon: User },
+  { value: 'therapist', label: 'Therapy', icon: User },
   { value: 'psychiatrist', label: 'Psychiatrist', icon: Stethoscope },
-  { value: 'support_group', label: 'Support Group', icon: Users },
-  { value: 'coach', label: 'Coach', icon: Sparkles },
+  { value: 'doctor', label: 'Doctor', icon: HeartPulse },
+  { value: 'group', label: 'Group', icon: Users },
   { value: 'other', label: 'Other', icon: MoreHorizontal },
 ];
 
@@ -60,12 +63,53 @@ const REMINDER_OPTIONS = [
   { value: 1440, label: '1 day before' },
 ];
 
+const TIME_PRESETS = ['8:00 AM', '9:00 AM', '10:00 AM', '12:00 PM', '2:30 PM', '5:00 PM', '7:00 PM'];
+
+function formatAppointmentInputTime(date: Date): string {
+  return date.toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+function formatAppointmentInputDate(date: Date): string {
+  return date.toLocaleDateString(undefined, {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+function parseAppointmentInputTime(value: string): { hours: number; minutes: number } | null {
+  const trimmed = value.trim().toUpperCase().replace(/\s+/g, ' ');
+  const match = trimmed.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)$/);
+  if (!match) return null;
+
+  const hourInput = Number(match[1]);
+  const minuteInput = Number(match[2] ?? '0');
+  const meridiem = match[3];
+
+  if (!Number.isInteger(hourInput) || !Number.isInteger(minuteInput)) return null;
+  if (hourInput < 1 || hourInput > 12 || minuteInput < 0 || minuteInput > 59) return null;
+
+  let hours = hourInput % 12;
+  if (meridiem === 'PM') hours += 12;
+  return { hours, minutes: minuteInput };
+}
+
 export default function AppointmentAddScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ editId?: string }>();
   const insets = useSafeAreaInsets();
   const { trackEvent } = useAnalytics();
-  const { addAppointment, updateAppointment, getAppointmentById, isAdding } = useAppointments();
+  const appointmentContext = useAppointments();
+  const addAppointment = appointmentContext?.addAppointment ?? (async () => {
+    throw new Error('Appointment tracking is still loading. Please try again.');
+  });
+  const updateAppointment = appointmentContext?.updateAppointment ?? (async () => null);
+  const getAppointmentById = appointmentContext?.getAppointmentById ?? (() => null);
+  const isAdding = appointmentContext?.isAdding ?? false;
 
   const existingAppt = params.editId ? getAppointmentById(params.editId) : null;
   const isEditing = !!existingAppt;
@@ -80,14 +124,10 @@ export default function AppointmentAddScreen() {
   const [topics, setTopics] = useState<string[]>(existingAppt?.topicsToDiscuss ?? []);
   const [newTopic, setNewTopic] = useState<string>('');
   const [duration, setDuration] = useState<number>(existingAppt?.duration ?? 50);
-
   const defaultDate = existingAppt ? new Date(existingAppt.dateTime) : new Date(Date.now() + 24 * 60 * 60 * 1000);
-  const [dateStr, setDateStr] = useState<string>(
-    `${defaultDate.getFullYear()}-${String(defaultDate.getMonth() + 1).padStart(2, '0')}-${String(defaultDate.getDate()).padStart(2, '0')}`
-  );
-  const [timeStr, setTimeStr] = useState<string>(
-    `${String(defaultDate.getHours()).padStart(2, '0')}:${String(defaultDate.getMinutes()).padStart(2, '0')}`
-  );
+  const [appointmentDate, setAppointmentDate] = useState<Date>(defaultDate);
+  const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
+  const [showTimePicker, setShowTimePicker] = useState<boolean>(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -119,18 +159,46 @@ export default function AppointmentAddScreen() {
     setTopics(prev => prev.filter((_, i) => i !== index));
   }, []);
 
+  const handleDateChange = useCallback((event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (Platform.OS === 'android') setShowDatePicker(false);
+    if (event.type === 'dismissed' || !selectedDate) return;
+    setAppointmentDate((current) => {
+      const next = new Date(current);
+      next.setFullYear(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+      return next;
+    });
+  }, []);
+
+  const handleTimeChange = useCallback((event: DateTimePickerEvent, selectedTime?: Date) => {
+    if (Platform.OS === 'android') setShowTimePicker(false);
+    if (event.type === 'dismissed' || !selectedTime) return;
+    setAppointmentDate((current) => {
+      const next = new Date(current);
+      next.setHours(selectedTime.getHours(), selectedTime.getMinutes(), 0, 0);
+      return next;
+    });
+  }, []);
+
+  const applyTimePreset = useCallback((preset: string) => {
+    const parsed = parseAppointmentInputTime(preset);
+    if (!parsed) return;
+    setAppointmentDate((current) => {
+      const next = new Date(current);
+      next.setHours(parsed.hours, parsed.minutes, 0, 0);
+      return next;
+    });
+  }, []);
+
   const handleSave = useCallback(async () => {
     if (!providerName.trim()) {
       Alert.alert('Missing info', 'Please enter a provider name.');
       return;
     }
 
-    const [year, month, day] = dateStr.split('-').map(Number);
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    const dateTime = new Date(year, month - 1, day, hours, minutes).getTime();
+    const dateTime = appointmentDate.getTime();
 
     if (isNaN(dateTime)) {
-      Alert.alert('Invalid date', 'Please enter a valid date and time.');
+      Alert.alert('Invalid date', 'Please choose a valid date and time.');
       return;
     }
 
@@ -174,7 +242,7 @@ export default function AppointmentAddScreen() {
       Alert.alert('Error', 'Could not save appointment. Please try again.');
     }
   }, [
-    providerName, appointmentType, dateStr, timeStr, duration,
+    providerName, appointmentType, appointmentDate, duration,
     locationType, locationDetail, reminderEnabled, reminderMinutes,
     notes, topics, isEditing, existingAppt, addAppointment,
     updateAppointment, trackEvent, router,
@@ -211,12 +279,12 @@ export default function AppointmentAddScreen() {
         >
           <Animated.View style={{ opacity: fadeAnim }}>
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>Provider Name</Text>
-              <TextInput
+            <Text style={styles.fieldLabel}>Appointment Title</Text>
+            <TextInput
                 style={styles.textInput}
                 value={providerName}
                 onChangeText={setProviderName}
-                placeholder="Dr. Smith, Group Therapy, etc."
+                placeholder="Therapy with Dr. Smith, Psychiatry follow-up..."
                 placeholderTextColor={Colors.textMuted}
                 testID="provider-name-input"
               />
@@ -252,26 +320,94 @@ export default function AppointmentAddScreen() {
 
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>Date</Text>
-              <TextInput
-                style={styles.textInput}
-                value={dateStr}
-                onChangeText={setDateStr}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={Colors.textMuted}
-                keyboardType="numbers-and-punctuation"
-              />
+              <TouchableOpacity
+                style={styles.pickerRow}
+                onPress={() => {
+                  setShowDatePicker((visible) => !visible);
+                  setShowTimePicker(false);
+                }}
+                activeOpacity={0.75}
+                testID="appointment-date-picker-button"
+                accessibilityRole="button"
+                accessibilityLabel={`Choose appointment date, currently ${formatAppointmentInputDate(appointmentDate)}`}
+              >
+                <View style={styles.pickerIcon}>
+                  <Calendar size={18} color={Colors.primary} />
+                </View>
+                <View style={styles.pickerTextBlock}>
+                  <Text style={styles.pickerValue}>{formatAppointmentInputDate(appointmentDate)}</Text>
+                  <Text style={styles.pickerHint}>Tap to choose from calendar</Text>
+                </View>
+              </TouchableOpacity>
+              {showDatePicker && (
+                <View style={styles.nativePickerWrap}>
+                  <DateTimePicker
+                    value={appointmentDate}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={handleDateChange}
+                    minimumDate={new Date(2000, 0, 1)}
+                    themeVariant="light"
+                    textColor={Colors.text}
+                    accentColor={Colors.primary}
+                    testID="appointment-date-picker"
+                  />
+                </View>
+              )}
             </View>
 
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>Time</Text>
-              <TextInput
-                style={styles.textInput}
-                value={timeStr}
-                onChangeText={setTimeStr}
-                placeholder="HH:MM (24h)"
-                placeholderTextColor={Colors.textMuted}
-                keyboardType="numbers-and-punctuation"
-              />
+              <TouchableOpacity
+                style={styles.pickerRow}
+                onPress={() => {
+                  setShowTimePicker((visible) => !visible);
+                  setShowDatePicker(false);
+                }}
+                activeOpacity={0.75}
+                testID="appointment-time-picker-button"
+                accessibilityRole="button"
+                accessibilityLabel={`Choose appointment time, currently ${formatAppointmentInputTime(appointmentDate)}`}
+              >
+                <View style={styles.pickerIcon}>
+                  <Clock size={18} color={Colors.primary} />
+                </View>
+                <View style={styles.pickerTextBlock}>
+                  <Text style={styles.pickerValue}>{formatAppointmentInputTime(appointmentDate)}</Text>
+                  <Text style={styles.pickerHint}>Tap to choose time</Text>
+                </View>
+              </TouchableOpacity>
+              {showTimePicker && (
+                <View style={styles.nativePickerWrap}>
+                  <DateTimePicker
+                    value={appointmentDate}
+                    mode="time"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={handleTimeChange}
+                    minuteInterval={5}
+                    themeVariant="light"
+                    textColor={Colors.text}
+                    accentColor={Colors.primary}
+                    testID="appointment-time-picker"
+                  />
+                </View>
+              )}
+              <View style={styles.timePresetRow}>
+                {TIME_PRESETS.map((preset) => {
+                  const selected = formatAppointmentInputTime(appointmentDate) === preset;
+                  return (
+                    <TouchableOpacity
+                      key={preset}
+                      style={[styles.timePresetChip, selected && styles.timePresetChipActive]}
+                      onPress={() => applyTimePreset(preset)}
+                      activeOpacity={0.75}
+                      testID={`appointment-time-${preset.replace(/[^a-z0-9]/gi, '-').toLowerCase()}`}
+                    >
+                      <Text style={[styles.timePresetText, selected && styles.timePresetTextActive]}>{preset}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
 
             <View style={styles.fieldGroup}>
@@ -466,6 +602,78 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textTransform: 'uppercase' as const,
     letterSpacing: 0.5,
+  },
+  fieldHint: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    marginTop: 8,
+    fontWeight: '500' as const,
+  },
+  pickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.card,
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    gap: 12,
+  },
+  pickerIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 14,
+    backgroundColor: Colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pickerTextBlock: {
+    flex: 1,
+  },
+  pickerValue: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: Colors.text,
+    marginBottom: 2,
+  },
+  pickerHint: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: Colors.textMuted,
+  },
+  nativePickerWrap: {
+    marginTop: 10,
+    backgroundColor: Colors.card,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    overflow: 'hidden',
+  },
+  timePresetRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 10,
+  },
+  timePresetChip: {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    backgroundColor: Colors.surface,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  timePresetChipActive: {
+    borderColor: Colors.primary,
+    backgroundColor: Colors.primaryLight,
+  },
+  timePresetText: {
+    fontSize: 12,
+    fontWeight: '700' as const,
+    color: Colors.textSecondary,
+  },
+  timePresetTextActive: {
+    color: Colors.primary,
   },
   textInput: {
     backgroundColor: Colors.card,

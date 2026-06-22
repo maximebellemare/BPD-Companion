@@ -20,7 +20,7 @@ import { IDENTITY_JOURNAL_PROMPTS } from '@/services/identity/valuesService';
 import type { IdentityJournalPrompt } from '@/types/identity';
 
 const CATEGORY_LABELS: Record<string, { label: string; color: string; bg: string }> = {
-  'calm-self': { label: 'Calm Self', color: '#14B8A6', bg: '#0B1238' },
+  'calm-self': { label: 'Calm Self', color: '#14B8A6', bg: '#D9E2EC' },
   'conflict-self': { label: 'In Conflict', color: '#67E8F9', bg: '#FFFFFF' },
   'relationship-self': { label: 'Relationships', color: '#3B82F6', bg: '#FFFFFF' },
   'core-self': { label: 'Core Self', color: '#3B82F6', bg: '#FFFFFF' },
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 12,
     borderWidth: 1,
-    borderColor: '#0B1238',
+    borderColor: '#D9E2EC',
     marginBottom: 20,
   },
   introEmoji: {
@@ -471,7 +471,7 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#0B1238',
+    borderColor: '#D9E2EC',
   },
   journalPromptText: {
     flex: 1,

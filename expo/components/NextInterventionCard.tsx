@@ -27,11 +27,11 @@ const CATEGORY_STYLE: Record<Intervention['category'], {
   border: string;
   accent: string;
 }> = {
-  crisis: { icon: Shield, bg: '#FFFFFF', border: '#0B1238', accent: '#3B82F6' },
-  relationship: { icon: Heart, bg: '#FFFFFF', border: '#0B1238', accent: '#3B82F6' },
-  regulation: { icon: Wind, bg: '#FFFFFF', border: '#0B1238', accent: '#14B8A6' },
-  reflection: { icon: BookOpen, bg: '#FFFFFF', border: '#0B1238', accent: '#3B82F6' },
-  growth: { icon: Sparkles, bg: '#FFFFFF', border: '#0B1238', accent: '#67E8F9' },
+  crisis: { icon: Shield, bg: '#FFFFFF', border: '#D9E2EC', accent: '#3B82F6' },
+  relationship: { icon: Heart, bg: '#FFFFFF', border: '#D9E2EC', accent: '#3B82F6' },
+  regulation: { icon: Wind, bg: '#FFFFFF', border: '#D9E2EC', accent: '#14B8A6' },
+  reflection: { icon: BookOpen, bg: '#FFFFFF', border: '#D9E2EC', accent: '#3B82F6' },
+  growth: { icon: Sparkles, bg: '#FFFFFF', border: '#D9E2EC', accent: '#67E8F9' },
 };
 
 export default React.memo(function NextInterventionCard() {

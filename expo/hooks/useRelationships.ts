@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useApp } from '@/providers/AppProvider';
+import { useAICompanion } from '@/providers/AICompanionProvider';
 import {
   RelationshipProfile,
   RelationshipEvent,
@@ -20,6 +21,7 @@ import { analyzeRelationshipProfile } from '@/services/relationships/relationshi
 export function useRelationships() {
   const queryClient = useQueryClient();
   const { journalEntries, messageDrafts } = useApp();
+  const { conversations } = useAICompanion();
 
   const profilesQuery = useQuery({
     queryKey: ['relationship_profiles'],
@@ -68,10 +70,10 @@ export function useRelationships() {
   const analyses = useMemo<RelationshipProfileAnalysis[]>(() => {
     if (profiles.length === 0) return [];
     return profiles.map(profile =>
-      analyzeRelationshipProfile(profile, journalEntries, messageDrafts, storedEvents)
+      analyzeRelationshipProfile(profile, journalEntries, messageDrafts, storedEvents, conversations)
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profiles, storedEvents, journalEntries, messageDrafts]);
+  }, [profiles, storedEvents, journalEntries, messageDrafts, conversations]);
 
   return {
     profiles,

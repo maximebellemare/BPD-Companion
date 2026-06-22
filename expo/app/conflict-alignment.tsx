@@ -293,11 +293,11 @@ export default function ConflictAlignmentScreen() {
                 <Text style={styles.summaryCardLabel}>What you actually need</Text>
                 <Text style={styles.summaryCardValue}>{need}</Text>
               </View>
-              <View style={[styles.summaryCard, { backgroundColor: Colors.primaryLight, borderColor: '#0B1238' }]}>
+              <View style={[styles.summaryCard, { backgroundColor: Colors.primaryLight, borderColor: '#D9E2EC' }]}>
                 <Text style={[styles.summaryCardLabel, { color: Colors.primaryDark }]}>Values-aligned response</Text>
                 <Text style={[styles.summaryCardValue, { color: Colors.primaryDark }]}>{valuesResponse}</Text>
               </View>
-              <View style={[styles.summaryCard, { backgroundColor: '#FFFFFF', borderColor: '#0B1238' }]}>
+              <View style={[styles.summaryCard, { backgroundColor: '#FFFFFF', borderColor: '#D9E2EC' }]}>
                 <Text style={[styles.summaryCardLabel, { color: '#3B82F6' }]}>Protects connection + self-respect</Text>
                 <Text style={[styles.summaryCardValue, { color: '#2E2A72' }]}>{protectsBoth}</Text>
               </View>

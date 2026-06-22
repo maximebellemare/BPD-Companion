@@ -168,8 +168,6 @@ export default function WeeklyInsightsScreen() {
   const {
     weeklyInsights,
     startNewConversation,
-    setActiveConversationId,
-    sendMessage,
   } = useAICompanion();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -186,13 +184,15 @@ export default function WeeklyInsightsScreen() {
     if (Platform.OS !== 'web') {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    const id = startNewConversation();
-    setActiveConversationId(id);
-    router.push('/companion/chat' as never);
-    setTimeout(() => {
-      void sendMessage('I want to talk about my weekly emotional patterns and what you have noticed.');
-    }, 300);
-  }, [startNewConversation, setActiveConversationId, router, sendMessage]);
+    const id = startNewConversation(false);
+    router.push({
+      pathname: '/companion/chat',
+      params: {
+        conversationId: id,
+        initialMessage: 'I want to talk about my weekly emotional patterns and what you have noticed.',
+      },
+    } as never);
+  }, [startNewConversation, router]);
 
   return (
     <View style={styles.container}>

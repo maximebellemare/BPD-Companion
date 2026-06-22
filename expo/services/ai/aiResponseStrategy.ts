@@ -10,61 +10,49 @@ export interface ModeResponseTemplate {
 const MODE_RESPONSES: Record<AIMode, ModeResponseTemplate> = {
   calm: {
     responses: [
-      "Let's slow everything down right now.\n\nPlace one hand on your chest. Feel it rise and fall.\n\nYou're here. You're breathing. That's all that matters in this moment.",
-      "I'm right here with you. Nothing needs to be solved right now.\n\nTry this: breathe in for 4... hold for 4... out for 6.\n\nLet's do that together before anything else.",
-      "Let's make this very simple.\n\nFeel your feet on the ground. Press them down gently.\n\nOne breath in... and one breath out.\n\nYou're doing this. I'm not going anywhere.",
-      "Everything can wait for a moment.\n\nClose your eyes if you can. Take three slow breaths.\n\nWhen you're ready, we can talk about what's happening. No rush.",
-      "You reached out — that's the right move.\n\nRight now, just notice one thing you can see. One thing you can hear.\n\nLet your senses bring you back to the present. I'm here.",
+      "🧭 Let’s slow this down.\n\nThis feels loud in your body right now, so the first goal is steadiness, not analysis. Put one hand on your chest and notice one slow breath.\n\nDo you want to steady the moment, or tell me what happened?",
+      "Your system is asking for relief before answers.\n\nBreathe in for 4, hold for 2, breathe out for 6. Let the exhale give the urgency somewhere to go.\n\nWhat feels strongest in your body right now?",
+      "This is a body-first moment.\n\nPress both feet into the floor and name one thing you can see. Then we can look at the story your mind is telling.\n\nIs this more fear, anger, shame, or overwhelm?",
     ],
     quickActions: ['Ground me', 'Safety mode'],
   },
   reflection: {
     responses: [
-      "There's a layer underneath what you're describing that might be worth looking at.\n\nThe surface feeling is one thing — but what's the quieter feeling beneath it? The one that's harder to name?",
-      "Something about this keeps pulling at you, which usually means it's connected to something that matters deeply.\n\nWhen this feeling shows up, does it feel familiar? Like you've been here before in a different situation?",
-      "Your body often knows before your mind does.\n\nRight now, where do you feel this most — chest, stomach, throat, shoulders? That location sometimes tells us whether it's grief, anxiety, or something else.",
-      "There's a pattern trying to get your attention here.\n\nIf you look back at the last few times you felt this way, is there a common thread — a type of situation, a specific person, a time of day?",
-      "You're asking yourself an important question right now, even if you haven't said it out loud yet.\n\nIf you could separate what you need from what you think you deserve — what would the honest answer be?",
+      "Let’s start with what happened.\n\nThe clearest first step is usually naming the event before trying to understand the pattern.\n\nWhat happened right before this feeling started?",
+      "I want to keep this concrete.\n\nPick the part you can answer quickly: when did this start, who was involved, or what did you do next?",
+      "We do not need the deep answer yet.\n\nFirst, name the strongest emotion if you can.\n\nDoes this feel more like anxiety, anger, sadness, shame, numbness, or rejection?",
     ],
     quickActions: ['Journal this', 'Show coping tools'],
   },
   clarity: {
     responses: [
-      "When everything feels tangled, it helps to pull one thread at a time.\n\nRight now — what's the loudest thing in your mind? Not the most rational, but the one that keeps interrupting everything else.",
-      "There are usually three things happening at once: what actually occurred, the story your mind built around it, and the emotion reacting to the story.\n\nLet's start with what actually happened — just the facts, no interpretation yet.",
-      "Confusion often means you're feeling two things that seem like they can't both be true. But they usually can.\n\nWhat are the two conflicting feelings? Let's hold them both without choosing sides.",
-      "When your mind is spinning, the fastest way to steady it is to find one thing you know for certain — even something small.\n\nWhat's the one thing in this situation that you're sure about?",
-      "The fog tends to lift when we stop trying to see the whole picture at once.\n\nPick one piece of this. The part that nags at you most. What would it mean if you could understand just that one part?",
+      "Everything feels tangled, and that makes it hard to trust your read of the situation.\n\nLet’s find the first knot: what happened, what your mind says it means, or what you feel pulled to do.\n\nWhich one feels most charged?",
+      "The confusion itself can become stressful.\n\nWhen two feelings are both true, the mind can treat that like a problem to solve. It may just be a real contradiction to hold gently.\n\nWhat are the two feelings that both seem true?",
+      "You need one stable point in the middle of the fog.\n\nFind one thing you know for sure, even if it is small. Build from there.\n\nWhat is one fact you can name without guessing?",
     ],
     quickActions: ['Journal this', 'Slow this down'],
   },
   relationship: {
     responses: [
-      "Relationship moments can feel so loaded. Let's slow this down before any decisions are made.\n\nWhat happened, and what is your mind telling you it means? Those are often two different things.",
-      "When we care about someone, the stakes feel enormous. That intensity is real.\n\nBefore we think about what to say or do — what do you actually need from this person right now? The real need underneath the urgency.",
-      "I hear how activated you are about this. That makes sense.\n\nLet's separate the facts from the fear. What actually happened versus what your mind is predicting will happen?",
-      "Communication when emotions are high can change the whole direction of a situation.\n\nWould it help to think about what you want to express, and then find words that honor your feelings while keeping the door open?",
-      "That's a lot of relationship pressure. Let's protect both you and the connection.\n\nWhat tone do you want this interaction to have? Sometimes choosing the tone first helps the words follow.",
+      "Before reacting, let’s start with facts.\n\nWas it a delay, a tone change, a short reply, no reply, or something they said?",
+      "💙 The urgency makes sense because this person matters to you.\n\nProtect the connection by waiting until your message sounds like your need, not your panic.\n\nWhat do you actually want them to understand?",
+      "Part of you wants relief now, and another part probably wants to avoid making it worse.\n\nStart with the next action, not the whole relationship.\n\nDo you feel pulled to text, argue, withdraw, apologize, or ask for reassurance?",
     ],
     quickActions: ['Help me rewrite a message', 'Slow this down', 'Journal this'],
   },
   action: {
     responses: [
-      "One concrete step right now: put both feet flat on the floor. Press down. Then pick the smallest action that moves things in the right direction — not the biggest, the smallest.",
-      "Here's the framework:\n\nStep 1: What am I feeling?\nStep 2: What do I actually need?\nStep 3: What's the smallest version of that need I can meet right now?\n\nStart with Step 1.",
-      "The urge to do something big right now is your nervous system talking. The most useful move is usually the quietest one — the one that creates stability instead of drama.\n\nWhat would a calm version of you do next?",
-      "Not everything needs to happen right now. Pick one thing — the one that, if handled, would take the most pressure off the rest.\n\nWhat's that one thing?",
-      "The most powerful action you can take right now might be choosing not to act for the next five minutes. Urgency almost always comes from emotion, not from the situation itself.\n\nCan you give yourself that five minutes?",
+      "You need something concrete, not a long analysis.\n\nStart with the action in front of you.\n\nWhat do you feel pulled to do right now?",
+      "⚠️ The urge is pushing for a big action.\n\nBig actions can feel relieving for a few minutes and painful afterward. Choose the quiet action that makes tomorrow easier.\n\nWhat action would you be glad you waited on?",
+      "You are trying to decide while activated.\n\nDelay the decision by five minutes. That is not avoidance; it is giving your wiser self a chance to catch up.\n\nWhat decision can safely wait?",
     ],
     quickActions: ['Ground me', 'Show coping tools', 'Help me rewrite a message'],
   },
   high_distress: {
     responses: [
-      "I'm here.\n\nOne breath. In through your nose. Out through your mouth.\n\nThat's the only thing right now.",
-      "You don't have to do anything right now.\n\nFeel your feet on the floor.\n\nI'm right here with you.",
-      "Just breathe.\n\nIn... and out.\n\nNothing else matters in this moment. You're safe here.",
-      "I hear you.\n\nOne step at a time.\n\nFirst step: place your hand on your chest. Feel it rise and fall.\n\nThat's all.",
-      "You reached out. That matters.\n\nRight now, just be here. One breath.\n\nI'm not going anywhere.",
+      "🧭 Let’s make this smaller.\n\nIn through your nose. Out through your mouth. Nothing else has to happen yet.\n\nDo you want to steady the moment, or tell me what happened?",
+      "Put both feet on the floor.\n\nPress down gently. Stay with that pressure for ten seconds, just enough to remind your body where you are.\n\nWhat number is the intensity right now, 1 to 10?",
+      "This is a body-first moment.\n\nLong exhale. Drop your shoulders. Let the next decision wait.\n\nIs the strongest urge to text, withdraw, argue, or shut down?",
     ],
     quickActions: ['Ground me', 'Safety mode'],
   },
@@ -94,38 +82,38 @@ export function personalizeForMode(
 
   if (mode === 'calm' || mode === 'high_distress') {
     if (memoryProfile.mostEffectiveCoping) {
-      additions.push(`\n\n"${memoryProfile.mostEffectiveCoping.label}" has helped you before — would you like to try that?`);
+      additions.push(`\n\n${memoryProfile.mostEffectiveCoping.label} has helped before. That might be the gentlest next move here.`);
     }
   }
 
   if (mode === 'reflection') {
     if (memoryProfile.topTriggers.length > 0 && memoryProfile.topEmotions.length > 0) {
-      additions.push(`\n\nI've noticed "${memoryProfile.topTriggers[0].label}" often appears alongside "${memoryProfile.topEmotions[0].label}" in your patterns. Does that connect to what you're feeling now?`);
+      additions.push(`\n\nThis sounds close to a pattern you've logged before: ${memoryProfile.topTriggers[0].label} showing up near ${memoryProfile.topEmotions[0].label}.`);
     }
     if (memoryProfile.intensityTrend === 'falling') {
-      additions.push('\n\nYour overall distress has been trending down lately — that\'s something worth acknowledging.');
+      additions.push('\n\nYour recent intensity has been trending down. That does not erase this moment, but it is evidence that things can shift.');
     }
   }
 
   if (mode === 'relationship') {
     if (memoryProfile.messageUsage.totalRewrites > 2) {
-      additions.push('\n\nYou\'ve been using message support wisely — that awareness is a real strength.');
+      additions.push('\n\nYou have used message support before, which tells me part of you already knows pausing can protect the connection.');
     }
     if (memoryProfile.messageUsage.totalPauses > 1) {
-      additions.push('\n\nPausing before sending has worked well for you before. That instinct is getting stronger.');
+      additions.push('\n\nPausing before sending has helped before. This may be another moment where waiting protects what you actually want.');
     }
   }
 
   if (mode === 'clarity') {
     if (memoryProfile.topEmotions.length >= 2) {
       const top2 = memoryProfile.topEmotions.slice(0, 2).map(e => e.label).join(' and ');
-      additions.push(`\n\nYour most frequent emotions lately have been ${top2}. Does either of those feel present right now?`);
+      additions.push(`\n\nLately, ${top2} have shown up often in your entries. One of them may be coloring how this situation feels.`);
     }
   }
 
   if (mode === 'action') {
     if (memoryProfile.mostEffectiveCoping) {
-      additions.push(`\n\nOne proven action for you: "${memoryProfile.mostEffectiveCoping.label}" — it tends to help when things feel intense.`);
+      additions.push(`\n\nA familiar stabilizer for you is ${memoryProfile.mostEffectiveCoping.label}. Use that before choosing the next move.`);
     }
   }
 

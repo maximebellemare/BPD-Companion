@@ -21,11 +21,13 @@ import { useMedications } from '@/providers/MedicationProvider';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
 import {
   formatTime,
+  formatMedicationSchedule,
   getCategoryColor,
   MOOD_AFTER_OPTIONS,
   MoodAfter,
   MedicationTime,
   MEDICATION_CATEGORIES,
+  shouldMedicationOccurOnDay,
 } from '@/types/medication';
 
 export default function MedicationDetailScreen() {
@@ -33,16 +35,17 @@ export default function MedicationDetailScreen() {
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { trackEvent } = useAnalytics();
-  const {
-    getMedicationById,
-    getLogsForMedication,
-    getAdherenceRate,
-    getStreak,
-    logMedication,
-    toggleActive,
-    deleteMedication,
-    isLogging,
-  } = useMedications();
+  const medicationContext = useMedications();
+  const getMedicationById = medicationContext?.getMedicationById ?? (() => null);
+  const getLogsForMedication = medicationContext?.getLogsForMedication ?? (() => []);
+  const getAdherenceRate = medicationContext?.getAdherenceRate ?? (() => 0);
+  const getStreak = medicationContext?.getStreak ?? (() => 0);
+  const logMedication = medicationContext?.logMedication ?? (async () => {
+    if (__DEV__) console.log('[MedicationDetail] Medication context unavailable while logging.');
+  });
+  const toggleActive = medicationContext?.toggleActive ?? (async () => null);
+  const deleteMedication = medicationContext?.deleteMedication ?? (async () => undefined);
+  const isLogging = medicationContext?.isLogging ?? false;
 
   const medication = id ? getMedicationById(id) : null;
   const logs = useMemo(() => id ? getLogsForMedication(id) : [], [id, getLogsForMedication]);
@@ -149,6 +152,8 @@ export default function MedicationDetailScreen() {
   }
 
   const categoryLabel = MEDICATION_CATEGORIES.find(c => c.value === medication.category)?.label ?? medication.category;
+  const medicationTimes = Array.isArray(medication.times) ? medication.times : [];
+  const isScheduledToday = shouldMedicationOccurOnDay(medication);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -188,9 +193,7 @@ export default function MedicationDetailScreen() {
           <View style={styles.heroSchedule}>
             <Clock size={14} color={Colors.textSecondary} />
             <Text style={styles.heroScheduleText}>
-              {medication.schedule === 'as_needed'
-                ? 'As needed'
-                : medication.times.map(t => formatTime(t.hour, t.minute)).join(', ')}
+              {formatMedicationSchedule(medication)}
             </Text>
           </View>
         </View>
@@ -213,10 +216,10 @@ export default function MedicationDetailScreen() {
           </View>
         </View>
 
-        {medication.active && medication.schedule !== 'as_needed' && (
+        {medication.active && medication.schedule !== 'as_needed' && isScheduledToday && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Quick Log</Text>
-            {medication.times.map((time, idx) => (
+            {medicationTimes.map((time, idx) => (
               <View key={idx} style={styles.quickLogRow}>
                 <Text style={styles.quickLogTime}>{time.label} · {formatTime(time.hour, time.minute)}</Text>
                 <View style={styles.quickLogActions}>
@@ -316,7 +319,7 @@ export default function MedicationDetailScreen() {
 
                 <TouchableOpacity
                   style={styles.formSubmit}
-                  onPress={() => handleDetailedLog(medication.times[0] ?? null)}
+                  onPress={() => handleDetailedLog(medicationTimes[0] ?? null)}
                   disabled={isLogging}
                 >
                   <CheckCircle size={18} color={Colors.white} />

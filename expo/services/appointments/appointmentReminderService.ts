@@ -3,6 +3,7 @@ import { Appointment, APPOINTMENT_TYPE_LABELS, formatAppointmentTime } from '@/t
 
 class AppointmentReminderService {
   async syncReminders(appointments: Appointment[]): Promise<void> {
+    const safeAppointments = Array.isArray(appointments) ? appointments : [];
     if (Platform.OS === 'web') {
       console.log('[AppointmentReminderService] Skipping reminders on web');
       return;
@@ -19,7 +20,7 @@ class AppointmentReminderService {
         await Notifications.cancelScheduledNotificationAsync(n.identifier);
       }
 
-      const activeAppointments = appointments.filter(
+      const activeAppointments = safeAppointments.filter(
         a => a.reminderEnabled && !a.completed && a.dateTime > Date.now()
       );
 

@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
     padding: 12,
     marginTop: 12,
     borderWidth: 1,
-    borderColor: '#0B1238',
+    borderColor: '#D9E2EC',
   },
   inlinePromptIconWrap: {
     width: 28,
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#0B1238',
+    borderColor: '#D9E2EC',
   },
   inlineIconWrap: {
     width: 32,
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center' as const,
     marginBottom: 20,
     borderWidth: 2,
-    borderColor: '#0B1238',
+    borderColor: '#D9E2EC',
   },
   fullTitle: {
     fontSize: 22,

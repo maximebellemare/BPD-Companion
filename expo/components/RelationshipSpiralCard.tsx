@@ -24,9 +24,9 @@ interface Props {
 
 const RISK_THEME: Record<SpiralRiskLevel, { bg: string; border: string; accent: string; label: string }> = {
   calm: { bg: Colors.white, border: Colors.border, accent: Colors.primary, label: 'Calm' },
-  watchful: { bg: '#FFFFFF', border: '#0B1238', accent: '#67E8F9', label: 'Watchful' },
-  rising: { bg: '#FFFFFF', border: '#0B1238', accent: '#3B82F6', label: 'Rising' },
-  urgent: { bg: '#FFFFFF', border: '#0B1238', accent: '#3B82F6', label: 'Needs attention' },
+  watchful: { bg: '#FFFFFF', border: '#D9E2EC', accent: '#67E8F9', label: 'Watchful' },
+  rising: { bg: '#FFFFFF', border: '#D9E2EC', accent: '#3B82F6', label: 'Rising' },
+  urgent: { bg: '#FFFFFF', border: '#D9E2EC', accent: '#3B82F6', label: 'Needs attention' },
 };
 
 const ICON_MAP: Record<string, typeof Timer> = {

@@ -1,641 +1,381 @@
-import React, { useCallback, useRef, useEffect, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Animated,
+  KeyboardAvoidingView,
   Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Stack } from 'expo-router';
-import { MessageCircle, BookmarkCheck, BarChart3, ChevronRight, Plus, Zap, Brain, TrendingDown, TrendingUp, Minus, Eye, Compass, HeartCrack, Repeat, Calendar, ArrowRight, X, Lightbulb } from 'lucide-react-native';
-import BrandLogo from '@/components/branding/BrandLogo';
-import { settingsRepository } from '@/services/repositories';
-import AICompanionOnboarding from '@/components/AICompanionOnboarding';
+import { Stack, useRouter } from 'expo-router';
+import { ArrowRight, Brain, ChevronRight, Clock3, MessageCircle, MessageSquareText, Mic, Repeat, Sparkles, Square } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import BrandLogo from '@/components/branding/BrandLogo';
 import Colors from '@/constants/colors';
-import { useAICompanion, SUGGESTED_PROMPTS } from '@/providers/AICompanionProvider';
+import { useAICompanion } from '@/providers/AICompanionProvider';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
-import { useCoaching } from '@/hooks/useCoaching';
-import { useRelationshipSpiral } from '@/hooks/useRelationshipSpiral';
-import { useEmotionalLoops } from '@/hooks/useEmotionalLoops';
+import { useAppTheme } from '@/providers/ThemeProvider';
+import { useAuth } from '@/providers/AuthProvider';
+import { useCompanionSpeechInput } from '@/hooks/useCompanionSpeechInput';
 
-const ONBOARDING_KEY = 'ai_companion_onboarded';
+const QUICK_PROMPTS = [
+  {
+    id: 'overwhelmed',
+    title: 'I feel overwhelmed',
+    prompt: 'I feel overwhelmed. Help me understand what set this off and what my body is asking for.',
+  },
+  {
+    id: 'rejected',
+    title: 'I feel rejected',
+    prompt: 'I feel rejected. Help me separate what happened from what my mind says it means.',
+  },
+  {
+    id: 'react',
+    title: 'I want to text/react',
+    prompt: 'I want to text or react impulsively. Help me name what happened, what I feel, and what I usually do next.',
+  },
+  {
+    id: 'calm',
+    title: 'Help me calm down',
+    prompt: 'Help me calm down first, then help me name what happened right before this got intense.',
+  },
+] as const;
+
+const GREETING_VARIATIONS = [
+  'How are things going today?',
+  'What’s been on your mind lately?',
+  'How are you feeling right now?',
+  'What feels most important to talk through?',
+  'What has your attention today?',
+  'Where should we start?',
+  'What part of today feels loudest?',
+  'What would feel helpful right now?',
+  'Want to talk through what happened?',
+  'What are you carrying today?',
+  'What emotion feels strongest?',
+  'What do you need help slowing down?',
+  'What moment are you still replaying?',
+  'What feels unresolved?',
+  'What would you like to understand better?',
+  'What feels urgent right now?',
+  'What are you trying not to react to?',
+  'What do you wish someone understood?',
+  'What would you like help naming?',
+  'What would make the next five minutes easier?',
+  'What do you want to sort out together?',
+  'When did this start?',
+];
+
+function getDisplayName(name?: string | null, email?: string | null): string {
+  const raw = name?.trim() || email?.split('@')[0] || '';
+  if (!raw) return '';
+  return raw.split(/[._\s-]/)[0];
+}
 
 export default function CompanionScreen() {
   const router = useRouter();
-  const {
-    recentConversations,
-    memoryProfile,
-    supportiveInterpretations,
-    startNewConversation,
-    continueLastConversation,
-    setActiveConversationId,
-    sendMessage,
-    followUps,
-    dismissFollowUp,
-    openFollowUp,
-    weeklyInsights,
-    companionPatternInsights,
-    companionMemoryStore,
-  } = useAICompanion();
-
-  const { dailyCoaching } = useCoaching();
-  const relationshipSpiral = useRelationshipSpiral();
-  const emotionalLoops = useEmotionalLoops();
+  const { colors } = useAppTheme();
   const { trackEvent } = useAnalytics();
-
-  useEffect(() => {
-    trackEvent('ai_companion_opened');
-    trackEvent('screen_view', { screen: 'companion' });
-  }, [trackEvent]);
-
-  const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
-  const [onboardingChecked, setOnboardingChecked] = useState<boolean>(false);
-
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(20)).current;
-
-  useEffect(() => {
-    settingsRepository.get(ONBOARDING_KEY).then((val) => {
-      if (val !== 'true') {
-        setShowOnboarding(true);
-      }
-      setOnboardingChecked(true);
-    }).catch(() => {
-      setOnboardingChecked(true);
-    });
+  const { user } = useAuth();
+  const {
+    startNewConversation,
+    setActiveConversationId,
+    recentConversations,
+    companionMemorySystem,
+    companionContextSummary,
+  } = useAICompanion();
+  const [input, setInput] = useState('');
+  const speechBaseTextRef = useRef('');
+  const firstName = getDisplayName(user?.displayName, user?.email);
+  const safeRecentConversations = Array.isArray(recentConversations) ? recentConversations : [];
+  const safeRecentEmotions = Array.isArray(companionContextSummary?.recentEmotions)
+    ? companionContextSummary.recentEmotions
+    : [];
+  const safeMajorTriggers = Array.isArray(companionMemorySystem?.majorTriggers)
+    ? companionMemorySystem.majorTriggers
+    : [];
+  const safeEmotionalGps = companionMemorySystem?.emotionalGPS ?? null;
+  const applySpeechTranscript = useCallback((transcript: string) => {
+    const base = speechBaseTextRef.current.trim();
+    setInput(base ? `${base} ${transcript}` : transcript);
   }, []);
+  const speechInput = useCompanionSpeechInput({ onTranscript: applySpeechTranscript });
 
-  const handleDismissOnboarding = useCallback(() => {
-    setShowOnboarding(false);
-    settingsRepository.set(ONBOARDING_KEY, 'true').catch(() => {});
-  }, []);
+  const memorySummaries = useMemo(() => {
+    const summaries: string[] = [];
+    const trigger = safeMajorTriggers[0];
+    const emotion = safeRecentEmotions[0];
+    const loop = safeEmotionalGps?.strongestLoop;
 
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [fadeAnim, slideAnim]);
+    if (safeEmotionalGps?.userPatternSummary) {
+      summaries.push(safeEmotionalGps.userPatternSummary);
+    }
 
-  const handleNewConversation = useCallback(() => {
+    if (trigger?.label) {
+      summaries.push(`Common trigger: ${trigger.label}`);
+    }
+    if (emotion) {
+      summaries.push(`Recent emotion: ${emotion}`);
+    }
+    if (loop && !safeEmotionalGps?.userPatternSummary) {
+      summaries.push(`Recurring loop: ${loop.trigger} -> ${loop.emotion}`);
+    }
+
+    return summaries.slice(0, 3);
+  }, [safeEmotionalGps, safeMajorTriggers, safeRecentEmotions]);
+
+  const greeting = useMemo(() => {
+    const recentEmotion = safeRecentEmotions[0];
+    if (companionContextSummary?.currentIntensity !== null && recentEmotion) {
+      return `I remember ${recentEmotion.toLowerCase()} came up recently. Does today feel connected to that, or is this a different feeling?`;
+    }
+    const index = new Date().getDate() % GREETING_VARIATIONS.length;
+    return `${firstName ? `Hi ${firstName}. ` : 'Hi. '}${GREETING_VARIATIONS[index]}`;
+  }, [companionContextSummary?.currentIntensity, safeRecentEmotions, firstName]);
+
+  const beginConversation = useCallback((message: string) => {
+    const trimmed = message.trim();
+    if (!trimmed) return;
+
     if (Platform.OS !== 'web') {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    trackEvent('companion_chat_started', { entry_point: 'new_conversation' });
-    startNewConversation();
-    router.push('/companion/chat' as never);
-  }, [startNewConversation, router, trackEvent]);
 
-  const handleContinue = useCallback(() => {
-    if (Platform.OS !== 'web') {
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const id = startNewConversation(false);
+    setInput('');
+    trackEvent('companion_chat_started', { entry_point: 'memory_home' });
+    router.push({
+      pathname: '/companion/chat',
+      params: { conversationId: id, initialMessage: trimmed },
+    } as never);
+  }, [router, startNewConversation, trackEvent]);
+
+  const handleMicPress = useCallback(() => {
+    if (!speechInput.isListening) {
+      speechBaseTextRef.current = input.trim();
     }
-    trackEvent('companion_chat_started', { entry_point: 'continue_conversation' });
-    continueLastConversation();
-    router.push('/companion/chat' as never);
-  }, [continueLastConversation, router, trackEvent]);
+    speechInput.toggleListening();
+  }, [input, speechInput]);
 
-  const handlePrompt = useCallback(async (prompt: string) => {
-    if (Platform.OS !== 'web') {
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    trackEvent('companion_chat_started', { entry_point: 'suggested_prompt' });
-    const id = startNewConversation();
-    setActiveConversationId(id);
-    router.push('/companion/chat' as never);
-    setTimeout(() => {
-      void sendMessage(prompt);
-    }, 300);
-  }, [startNewConversation, setActiveConversationId, router, sendMessage, trackEvent]);
-
-  const handleRecentConversation = useCallback((conversationId: string) => {
+  const openConversation = useCallback((conversationId: string) => {
     setActiveConversationId(conversationId);
-    router.push('/companion/chat' as never);
-  }, [setActiveConversationId, router]);
+    router.push({
+      pathname: '/companion/chat',
+      params: { conversationId },
+    } as never);
+  }, [router, setActiveConversationId]);
 
-  const formatTime = useCallback((timestamp: number) => {
-    const now = Date.now();
-    const diff = now - timestamp;
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-
-    if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    return `${days}d ago`;
-  }, []);
-
-  const lastConvo = recentConversations.length > 0 ? recentConversations[0] : null;
-  const hasInsightsData = memoryProfile.recentCheckInCount > 0;
-
-  const trendIcon = memoryProfile.intensityTrend === 'falling'
-    ? <TrendingDown size={14} color={Colors.success} />
-    : memoryProfile.intensityTrend === 'rising'
-      ? <TrendingUp size={14} color={Colors.danger} />
-      : <Minus size={14} color={Colors.textMuted} />;
-
-  const trendLabel = memoryProfile.intensityTrend === 'falling'
-    ? 'Decreasing'
-    : memoryProfile.intensityTrend === 'rising'
-      ? 'Increasing'
-      : memoryProfile.intensityTrend === 'stable'
-        ? 'Stable'
-        : '—';
+  const openDontSendIt = useCallback(() => {
+    if (Platform.OS !== 'web') {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    trackEvent('dont_send_it_opened', { entry_point: 'companion_home' });
+    router.push('/dont-send-it' as never);
+  }, [router, trackEvent]);
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
-        <Animated.View style={[styles.header, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
-          <View style={styles.companionHeroBg}>
-            <View style={styles.companionOrbitOuter} />
-            <View style={styles.companionOrbitInner} />
-            <View style={styles.companionHeroContent}>
-              <BrandLogo size={52} variant="light" animated />
-              <Text style={styles.headerTitle}>AI Companion</Text>
-              <Text style={styles.headerSubtitle}>
-                A calm space to reflect, slow down, and get support.
-              </Text>
-              <View style={styles.disclaimerPill}>
-                <Text style={styles.disclaimerPillText}>Supportive tool · Not medical advice</Text>
-              </View>
+        <View style={styles.header}>
+          <BrandLogo size={44} />
+          <View style={styles.headerTextWrap}>
+              <Text style={[styles.headerTitle, { color: colors.text }]}>Companion</Text>
+              <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
+              A calm place to understand what happened, what you feel, and what tends to happen next.
+            </Text>
+          </View>
+        </View>
+
+        <View style={[styles.talkCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
+          <View style={styles.cardHeader}>
+            <View style={[styles.cardIcon, { backgroundColor: colors.primaryLight }]}>
+              <MessageCircle size={20} color={colors.primary} />
+            </View>
+            <View style={styles.cardHeaderText}>
+              <Text style={[styles.cardTitle, { color: colors.text }]}>What’s going on right now?</Text>
+              <Text style={[styles.greetingText, { color: colors.textSecondary }]}>{greeting}</Text>
             </View>
           </View>
-        </Animated.View>
-
-        {onboardingChecked && showOnboarding && (
-          <AICompanionOnboarding onDismiss={handleDismissOnboarding} />
-        )}
-
-        {followUps.length > 0 && (
-          <Animated.View style={{ opacity: fadeAnim }}>
-            {followUps.slice(0, 2).map((fu) => (
+          <View style={styles.inputShell}>
+            <TextInput
+              value={input}
+              onChangeText={setInput}
+              placeholder="Write a few words or use the mic. You can edit before sending."
+              placeholderTextColor={colors.textMuted}
+              style={[
+                styles.largeInput,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.borderLight,
+                  color: colors.text,
+                },
+              ]}
+              multiline
+              textAlignVertical="top"
+              maxLength={1800}
+              testID="companion-home-input"
+            />
+            {speechInput.isAvailable && (
               <TouchableOpacity
-                key={fu.id}
-                style={styles.followUpCard}
-                onPress={() => {
-                  if (Platform.OS !== 'web') void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  openFollowUp(fu);
-                  router.push('/companion/chat' as never);
-                }}
-                activeOpacity={0.7}
-                testID={`follow-up-${fu.id}`}
+                style={[
+                  styles.micButton,
+                  {
+                    backgroundColor: speechInput.isListening ? colors.primary : colors.card,
+                    borderColor: speechInput.isListening ? colors.primary : colors.borderLight,
+                  },
+                ]}
+                onPress={handleMicPress}
+                activeOpacity={0.75}
+                testID="companion-home-mic-button"
+                accessibilityRole="button"
+                accessibilityLabel={speechInput.isListening ? 'Stop voice input' : 'Start voice input'}
+                accessibilityState={{ selected: speechInput.isListening }}
               >
-                <View style={styles.followUpHeader}>
-                  <View style={styles.followUpIconWrap}>
-                    <Lightbulb size={14} color="#67E8F9" />
-                  </View>
-                  <Text style={styles.followUpTitle}>{fu.title}</Text>
-                  <TouchableOpacity
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      void dismissFollowUp(fu.id);
-                    }}
-                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                    style={styles.followUpDismiss}
-                  >
-                    <X size={14} color={Colors.textMuted} />
-                  </TouchableOpacity>
-                </View>
-                <Text style={styles.followUpMessage}>{fu.message}</Text>
-                <View style={styles.followUpAction}>
-                  <Text style={styles.followUpActionText}>Open conversation</Text>
-                  <ArrowRight size={12} color={Colors.primary} />
-                </View>
+                {speechInput.isListening ? (
+                  <Square size={16} color={Colors.white} />
+                ) : (
+                  <Mic size={18} color={colors.primary} />
+                )}
               </TouchableOpacity>
-            ))}
-          </Animated.View>
-        )}
-
-        {lastConvo && lastConvo.messages.length > 0 && (
-          <Animated.View style={{ opacity: fadeAnim }}>
-            <TouchableOpacity
-              style={styles.continueCard}
-              onPress={handleContinue}
-              activeOpacity={0.7}
-              testID="continue-conversation-card"
+            )}
+          </View>
+          {speechInput.message && (
+            <Text
+              style={[
+                styles.speechStatusText,
+                {
+                  color: speechInput.status === 'error' ? colors.danger : colors.textSecondary,
+                },
+              ]}
+              testID="companion-home-speech-status"
             >
-              <View style={styles.continueCardHeader}>
-                <View style={styles.continueCardIconWrap}>
-                  <MessageCircle size={16} color={Colors.primary} />
-                </View>
-                <Text style={styles.continueCardLabel}>Continue Conversation</Text>
-                <Text style={styles.continueCardTime}>{formatTime(lastConvo.updatedAt)}</Text>
-              </View>
-              <Text style={styles.continueCardTitle} numberOfLines={1}>{lastConvo.title}</Text>
-              <Text style={styles.continueCardPreview} numberOfLines={2}>
-                {lastConvo.preview || 'Empty conversation'}
-              </Text>
-              {lastConvo.tags && lastConvo.tags.length > 0 && (
-                <View style={styles.tagRow}>
-                  {lastConvo.tags.slice(0, 3).map((tag) => (
-                    <View key={tag} style={styles.tagChip}>
-                      <Text style={styles.tagText}>{tag}</Text>
-                    </View>
-                  ))}
-                </View>
-              )}
-            </TouchableOpacity>
-          </Animated.View>
-        )}
-
-        <Animated.View style={[styles.actionRow, { opacity: fadeAnim }]}>
-          <TouchableOpacity
-            style={styles.actionButtonPrimary}
-            onPress={handleNewConversation}
-            activeOpacity={0.8}
-            testID="new-conversation-btn"
-          >
-            <Plus size={18} color={Colors.white} />
-            <Text style={styles.actionButtonPrimaryText}>New Chat</Text>
-          </TouchableOpacity>
-          {recentConversations.length > 0 && (
-            <TouchableOpacity
-              style={styles.actionButtonSecondary}
-              onPress={handleContinue}
-              activeOpacity={0.8}
-              testID="continue-conversation-btn"
-            >
-              <MessageCircle size={18} color={Colors.primary} />
-              <Text style={styles.actionButtonSecondaryText}>Continue</Text>
-            </TouchableOpacity>
+              {speechInput.message}
+            </Text>
           )}
-        </Animated.View>
+          <TouchableOpacity
+            style={[
+              styles.primaryButton,
+              { backgroundColor: input.trim() ? colors.primary : colors.border },
+            ]}
+            onPress={() => beginConversation(input)}
+            disabled={!input.trim()}
+            activeOpacity={0.86}
+            testID="talk-it-through-button"
+          >
+            <Text style={styles.primaryButtonText}>Talk it through</Text>
+            <ArrowRight size={18} color={Colors.white} />
+          </TouchableOpacity>
+        </View>
 
-        <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-          <Text style={styles.sectionTitle}>What's on your mind?</Text>
-          <View style={styles.promptsGrid}>
-            {SUGGESTED_PROMPTS.map((prompt) => (
+        <View style={[styles.memoryCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
+          <View style={styles.cardHeader}>
+            <View style={[styles.cardIcon, { backgroundColor: colors.surface }]}>
+              <Brain size={19} color={colors.brandTeal} />
+            </View>
+            <View style={styles.cardHeaderText}>
+              <Text style={[styles.cardKicker, { color: colors.brandTeal }]}>Emotional GPS</Text>
+              <Text style={[styles.cardTitle, { color: colors.text }]}>What I’m learning about you</Text>
+            </View>
+          </View>
+          {memorySummaries.length > 0 ? (
+            <View style={styles.memoryList}>
+              {memorySummaries.map((summary) => (
+                <View key={summary} style={[styles.memoryRow, { backgroundColor: colors.surface }]}>
+                  <Repeat size={14} color={colors.primary} />
+                  <Text style={[styles.memoryText, { color: colors.textSecondary }]}>{summary}</Text>
+                </View>
+              ))}
+            </View>
+          ) : (
+            <Text style={[styles.emptyMemoryText, { color: colors.textSecondary }]}>
+              I’ll learn your patterns as you check in and reflect.
+            </Text>
+          )}
+        </View>
+
+        <TouchableOpacity
+          style={[styles.dontSendCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}
+          onPress={openDontSendIt}
+          activeOpacity={0.78}
+          testID="companion-dont-send-it-card"
+        >
+          <View style={[styles.cardIcon, { backgroundColor: colors.accentLight }]}>
+            <MessageSquareText size={19} color={colors.accent} />
+          </View>
+          <View style={styles.dontSendTextWrap}>
+            <Text style={[styles.cardKicker, { color: colors.accent }]}>Pause before sending</Text>
+            <Text style={[styles.cardTitle, { color: colors.text }]}>Don’t Send It</Text>
+            <Text style={[styles.dontSendBody, { color: colors.textSecondary }]}>
+              Paste the message first. Companion will help check tone, patterns, and a calmer version.
+            </Text>
+          </View>
+          <ChevronRight size={18} color={colors.textMuted} />
+        </TouchableOpacity>
+
+        {safeRecentConversations.length > 0 && (
+          <View style={styles.recentSection}>
+            <Text style={[styles.sectionTitle, { color: colors.brandNavy }]}>Recent conversations</Text>
+            <View style={styles.recentList}>
+              {safeRecentConversations.slice(0, 3).map((conversation) => {
+                const safeMessages = Array.isArray(conversation.messages) ? conversation.messages : [];
+                const latestMessage = safeMessages[safeMessages.length - 1];
+                return (
+                <TouchableOpacity
+                  key={conversation.id}
+                  style={[styles.recentCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}
+                  onPress={() => openConversation(conversation.id)}
+                  activeOpacity={0.78}
+                  testID={`recent-conversation-${conversation.id}`}
+                >
+                  <View style={[styles.recentIcon, { backgroundColor: colors.primaryLight }]}>
+                    <Clock3 size={15} color={colors.primary} />
+                  </View>
+                  <View style={styles.recentTextWrap}>
+                    <Text style={[styles.recentTitle, { color: colors.text }]} numberOfLines={1}>
+                      {conversation.title || 'Conversation'}
+                    </Text>
+                    <Text style={[styles.recentPreview, { color: colors.textSecondary }]} numberOfLines={1}>
+                      {conversation.preview || latestMessage?.content || 'Continue where you left off'}
+                    </Text>
+                  </View>
+                  <ChevronRight size={17} color={colors.textMuted} />
+                </TouchableOpacity>
+              );})}
+            </View>
+          </View>
+        )}
+
+        <View style={styles.promptSection}>
+          <Text style={[styles.sectionTitle, { color: colors.brandNavy }]}>Quick prompts</Text>
+          <View style={styles.promptList}>
+            {QUICK_PROMPTS.map((prompt) => (
               <TouchableOpacity
                 key={prompt.id}
-                style={styles.promptCard}
-                onPress={() => handlePrompt(prompt.prompt)}
-                activeOpacity={0.7}
-                testID={`prompt-${prompt.id}`}
+                style={[styles.promptCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}
+                onPress={() => beginConversation(prompt.prompt)}
+                activeOpacity={0.76}
+                testID={`companion-prompt-${prompt.id}`}
               >
-                <Text style={styles.promptIcon}>{prompt.icon}</Text>
-                <Text style={styles.promptLabel}>{prompt.label}</Text>
+                <Sparkles size={15} color={colors.brandTeal} />
+                <Text style={[styles.promptTitle, { color: colors.text }]}>{prompt.title}</Text>
+                <ChevronRight size={17} color={colors.textMuted} />
               </TouchableOpacity>
             ))}
           </View>
-        </Animated.View>
-
-        {hasInsightsData && (
-          <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>Quick Insights</Text>
-              <TouchableOpacity
-                onPress={() => router.push('/companion/insights' as never)}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <Text style={styles.seeAllText}>See all</Text>
-              </TouchableOpacity>
-            </View>
-
-            {memoryProfile.supportiveSummary ? (
-              <View style={styles.summaryBanner}>
-                <Text style={styles.summaryBannerText}>{memoryProfile.supportiveSummary}</Text>
-              </View>
-            ) : null}
-
-            <View style={styles.insightsGrid}>
-              <View style={styles.insightMiniCard}>
-                <Text style={styles.insightMiniEmoji}>⚡</Text>
-                <Text style={styles.insightMiniLabel}>Top Trigger</Text>
-                <Text style={styles.insightMiniValue} numberOfLines={1}>
-                  {memoryProfile.topTriggers[0]?.label ?? '—'}
-                </Text>
-              </View>
-              <View style={styles.insightMiniCard}>
-                <Text style={styles.insightMiniEmoji}>💜</Text>
-                <Text style={styles.insightMiniLabel}>Top Emotion</Text>
-                <Text style={styles.insightMiniValue} numberOfLines={1}>
-                  {memoryProfile.topEmotions[0]?.label ?? '—'}
-                </Text>
-              </View>
-              <View style={styles.insightMiniCard}>
-                <Text style={styles.insightMiniEmoji}>🌊</Text>
-                <Text style={styles.insightMiniLabel}>Top Urge</Text>
-                <Text style={styles.insightMiniValue} numberOfLines={1}>
-                  {memoryProfile.topUrges[0]?.label ?? '—'}
-                </Text>
-              </View>
-              <View style={styles.insightMiniCard}>
-                <View style={styles.insightMiniTrendRow}>
-                  {trendIcon}
-                </View>
-                <Text style={styles.insightMiniLabel}>Distress Trend</Text>
-                <Text style={styles.insightMiniValue}>{trendLabel}</Text>
-              </View>
-            </View>
-          </Animated.View>
-        )}
-
-        {supportiveInterpretations.length > 0 && (
-          <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>What I notice</Text>
-              <Eye size={16} color={Colors.textMuted} />
-            </View>
-            {supportiveInterpretations.slice(0, 2).map((interp) => (
-              <View key={interp.id} style={styles.interpretationCard}>
-                <View style={[
-                  styles.interpretationAccent,
-                  interp.sentiment === 'encouraging' && styles.interpretationAccentEncouraging,
-                  interp.sentiment === 'observational' && styles.interpretationAccentObservational,
-                ]} />
-                <Text style={styles.interpretationText}>{interp.text}</Text>
-              </View>
-            ))}
-          </Animated.View>
-        )}
-
-        {dailyCoaching && dailyCoaching.insights.length > 0 && (
-          <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>Coaching Insights</Text>
-              <Compass size={16} color={Colors.textMuted} />
-            </View>
-            {dailyCoaching.insights.slice(0, 2).map((insight) => (
-              <View key={insight.id} style={styles.interpretationCard}>
-                <View style={[
-                  styles.interpretationAccent,
-                  insight.confidence === 'high' && styles.interpretationAccentEncouraging,
-                  insight.confidence === 'medium' && styles.interpretationAccentObservational,
-                ]} />
-                <View>
-                  <Text style={[styles.insightMiniLabel, { marginBottom: 4 }]}>{insight.pattern}</Text>
-                  <Text style={styles.interpretationText}>{insight.suggestion}</Text>
-                </View>
-              </View>
-            ))}
-          </Animated.View>
-        )}
-
-        {weeklyInsights.length > 0 && (
-          <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-            <TouchableOpacity
-              style={styles.weeklyInsightCard}
-              onPress={() => router.push('/companion/weekly-insights' as never)}
-              activeOpacity={0.7}
-              testID="weekly-insight-card"
-            >
-              <View style={styles.weeklyInsightHeader}>
-                <View style={styles.weeklyInsightIconWrap}>
-                  <Calendar size={16} color="#3B82F6" />
-                </View>
-                <Text style={styles.weeklyInsightLabel}>This Week</Text>
-                <ChevronRight size={16} color={Colors.textMuted} />
-              </View>
-              <Text style={styles.weeklyInsightSummary} numberOfLines={3}>
-                {weeklyInsights[0].summary}
-              </Text>
-              {weeklyInsights[0].growthSignals.length > 0 && (
-                <View style={styles.weeklyGrowthRow}>
-                  <TrendingUp size={12} color={Colors.success} />
-                  <Text style={styles.weeklyGrowthText} numberOfLines={1}>
-                    {weeklyInsights[0].growthSignals[0]}
-                  </Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          </Animated.View>
-        )}
-
-        {companionPatternInsights.length > 0 && (
-          <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>Pattern Signals</Text>
-              <TouchableOpacity
-                onPress={() => router.push('/companion/emotional-patterns' as never)}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <Text style={styles.seeAllText}>See all</Text>
-              </TouchableOpacity>
-            </View>
-            {companionPatternInsights.slice(0, 2).map((insight) => (
-              <View
-                key={insight.id}
-                style={[
-                  styles.patternCard,
-                  insight.importance === 'high' && styles.patternCardHigh,
-                ]}
-              >
-                <View style={[
-                  styles.patternAccent,
-                  insight.category === 'growth' && { backgroundColor: Colors.success },
-                  insight.category === 'relationship' && { backgroundColor: '#67E8F9' },
-                  insight.category === 'trigger' && { backgroundColor: Colors.danger },
-                  insight.category === 'coping' && { backgroundColor: Colors.primary },
-                ]} />
-                <Text style={styles.patternTitle}>{insight.title}</Text>
-                <Text style={styles.patternNarrative} numberOfLines={3}>{insight.narrative}</Text>
-              </View>
-            ))}
-          </Animated.View>
-        )}
-
-        <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Explore</Text>
-          </View>
-          <TouchableOpacity
-            style={styles.exploreCard}
-            onPress={() => router.push('/companion/insights' as never)}
-            activeOpacity={0.7}
-            testID="insights-btn"
-          >
-            <View style={styles.exploreCardIcon}>
-              <BarChart3 size={20} color={Colors.primary} />
-            </View>
-            <View style={styles.exploreCardContent}>
-              <Text style={styles.exploreCardTitle}>Your Insights</Text>
-              <Text style={styles.exploreCardDesc}>Patterns, triggers & emotional trends</Text>
-            </View>
-            <ChevronRight size={18} color={Colors.textMuted} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.exploreCard}
-            onPress={() => router.push('/scenario-simulator' as never)}
-            activeOpacity={0.7}
-            testID="simulator-btn"
-          >
-            <View style={[styles.exploreCardIcon, { backgroundColor: Colors.accentLight }]}>
-              <Zap size={20} color={Colors.accent} />
-            </View>
-            <View style={styles.exploreCardContent}>
-              <Text style={styles.exploreCardTitle}>Emotional Simulator</Text>
-              <Text style={styles.exploreCardDesc}>Explore responses before you react</Text>
-            </View>
-            <ChevronRight size={18} color={Colors.textMuted} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.exploreCard}
-            onPress={() => router.push('/companion/weekly-insights' as never)}
-            activeOpacity={0.7}
-            testID="weekly-insights-btn"
-          >
-            <View style={[styles.exploreCardIcon, { backgroundColor: '#FFFFFF' }]}>
-              <Calendar size={20} color="#3B82F6" />
-            </View>
-            <View style={styles.exploreCardContent}>
-              <Text style={styles.exploreCardTitle}>Weekly Insights</Text>
-              <Text style={styles.exploreCardDesc}>Your emotional week at a glance</Text>
-            </View>
-            <ChevronRight size={18} color={Colors.textMuted} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.exploreCard}
-            onPress={() => router.push('/companion/memory' as never)}
-            activeOpacity={0.7}
-            testID="memory-btn"
-          >
-            <View style={[styles.exploreCardIcon, { backgroundColor: '#FFFFFF' }]}>
-              <Brain size={20} color="#3B82F6" />
-            </View>
-            <View style={styles.exploreCardContent}>
-              <Text style={styles.exploreCardTitle}>Emotional Memory</Text>
-              <Text style={styles.exploreCardDesc}>
-                {companionMemoryStore
-                  ? `${companionMemoryStore.episodicMemories.length} memories stored`
-                  : 'What your companion remembers about you'}
-              </Text>
-            </View>
-            <ChevronRight size={18} color={Colors.textMuted} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.exploreCard}
-            onPress={() => router.push('/companion/emotional-patterns' as never)}
-            activeOpacity={0.7}
-            testID="patterns-btn"
-          >
-            <View style={[styles.exploreCardIcon, { backgroundColor: '#0B1238' }]}>
-              <Brain size={20} color="#3B82F6" />
-            </View>
-            <View style={styles.exploreCardContent}>
-              <Text style={styles.exploreCardTitle}>Emotional Patterns</Text>
-              <Text style={styles.exploreCardDesc}>Trigger chains, emotion clusters & growth signals</Text>
-            </View>
-            <ChevronRight size={18} color={Colors.textMuted} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.exploreCard}
-            onPress={() => router.push('/relationship-spiral' as never)}
-            activeOpacity={0.7}
-            testID="spiral-btn"
-          >
-            <View style={[styles.exploreCardIcon, { backgroundColor: '#FFFFFF' }]}>
-              <HeartCrack size={20} color="#3B82F6" />
-            </View>
-            <View style={styles.exploreCardContent}>
-              <Text style={styles.exploreCardTitle}>Relationship Signals</Text>
-              <Text style={styles.exploreCardDesc}>
-                {relationshipSpiral.isActive
-                  ? `${relationshipSpiral.signals.length} active signal${relationshipSpiral.signals.length !== 1 ? 's' : ''} detected`
-                  : 'Monitor spiral patterns early'}
-              </Text>
-            </View>
-            <ChevronRight size={18} color={Colors.textMuted} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.exploreCard}
-            onPress={() => router.push('/emotional-loops' as never)}
-            activeOpacity={0.7}
-            testID="loops-btn"
-          >
-            <View style={[styles.exploreCardIcon, { backgroundColor: '#FFFFFF' }]}>
-              <Repeat size={20} color="#3B82F6" />
-            </View>
-            <View style={styles.exploreCardContent}>
-              <Text style={styles.exploreCardTitle}>Emotional Loops</Text>
-              <Text style={styles.exploreCardDesc}>
-                {emotionalLoops.totalPatternsDetected > 0
-                  ? `${emotionalLoops.totalPatternsDetected} pattern${emotionalLoops.totalPatternsDetected !== 1 ? 's' : ''} detected`
-                  : 'Discover recurring patterns you can interrupt'}
-              </Text>
-            </View>
-            <ChevronRight size={18} color={Colors.textMuted} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.exploreCard}
-            onPress={() => router.push('/companion/saved' as never)}
-            activeOpacity={0.7}
-            testID="saved-btn"
-          >
-            <View style={[styles.exploreCardIcon, { backgroundColor: Colors.accentLight }]}>
-              <BookmarkCheck size={20} color={Colors.accent} />
-            </View>
-            <View style={styles.exploreCardContent}>
-              <Text style={styles.exploreCardTitle}>Saved Conversations</Text>
-              <Text style={styles.exploreCardDesc}>Revisit past moments of support</Text>
-            </View>
-            <ChevronRight size={18} color={Colors.textMuted} />
-          </TouchableOpacity>
-        </Animated.View>
-
-        {recentConversations.length > 0 && (
-          <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>Recent</Text>
-              <TouchableOpacity
-                onPress={() => router.push('/companion/saved' as never)}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <Text style={styles.seeAllText}>See all</Text>
-              </TouchableOpacity>
-            </View>
-            {recentConversations.slice(0, 3).map((convo) => (
-              <TouchableOpacity
-                key={convo.id}
-                style={styles.recentCard}
-                onPress={() => handleRecentConversation(convo.id)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.recentCardLeft}>
-                  <Text style={styles.recentCardTitle} numberOfLines={1}>
-                    {convo.title}
-                  </Text>
-                  <Text style={styles.recentCardPreview} numberOfLines={1}>
-                    {convo.preview || 'Empty conversation'}
-                  </Text>
-                  {convo.tags && convo.tags.length > 0 && (
-                    <View style={styles.recentTagRow}>
-                      {convo.tags.slice(0, 2).map((tag) => (
-                        <View key={tag} style={styles.recentTagChip}>
-                          <Text style={styles.recentTagText}>{tag}</Text>
-                        </View>
-                      ))}
-                    </View>
-                  )}
-                </View>
-                <Text style={styles.recentCardTime}>
-                  {formatTime(convo.updatedAt)}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </Animated.View>
-        )}
-
-        <View style={styles.bottomSpacer} />
+        </View>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -648,533 +388,237 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingTop: 60,
+    paddingTop: 64,
     paddingHorizontal: 20,
+    paddingBottom: 32,
+    gap: 18,
   },
   header: {
-    marginBottom: 24,
-  },
-  companionHeroBg: {
-    backgroundColor: Colors.primary,
-    borderRadius: 24,
-    paddingVertical: 32,
-    paddingHorizontal: 24,
-    overflow: 'hidden' as const,
-    position: 'relative' as const,
-  },
-  companionHeroContent: {
-    alignItems: 'center' as const,
-    zIndex: 2,
-  },
-  companionOrbitOuter: {
-    position: 'absolute' as const,
-    top: -50,
-    right: -50,
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    borderWidth: 1,
-    borderColor: 'rgba(155, 142, 196, 0.12)',
-  },
-  companionOrbitInner: {
-    position: 'absolute' as const,
-    bottom: -30,
-    left: -30,
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    borderWidth: 1,
-    borderColor: 'rgba(74, 139, 141, 0.1)',
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '800' as const,
-    color: '#FFFFFF',
-    marginTop: 14,
-    marginBottom: 8,
-    letterSpacing: -0.5,
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: 'rgba(240, 237, 233, 0.65)',
-    textAlign: 'center' as const,
-    lineHeight: 21,
-    paddingHorizontal: 10,
-  },
-  continueCard: {
-    backgroundColor: Colors.warmGlow,
-    borderRadius: 18,
-    padding: 18,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: Colors.accentLight,
-  },
-  continueCardHeader: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    marginBottom: 10,
-  },
-  continueCardIconWrap: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    backgroundColor: Colors.primaryLight,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    marginRight: 8,
-  },
-  continueCardLabel: {
-    flex: 1,
-    fontSize: 12,
-    fontWeight: '600' as const,
-    color: Colors.accent,
-    textTransform: 'uppercase' as const,
-    letterSpacing: 0.5,
-  },
-  continueCardTime: {
-    fontSize: 12,
-    color: Colors.textMuted,
-  },
-  continueCardTitle: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-    color: Colors.text,
-    marginBottom: 4,
-  },
-  continueCardPreview: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    lineHeight: 20,
-  },
-  tagRow: {
-    flexDirection: 'row' as const,
-    flexWrap: 'wrap' as const,
-    gap: 6,
-    marginTop: 10,
-  },
-  tagChip: {
-    backgroundColor: 'rgba(212, 149, 106, 0.15)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  tagText: {
-    fontSize: 11,
-    fontWeight: '500' as const,
-    color: Colors.accent,
-  },
-  actionRow: {
-    flexDirection: 'row' as const,
-    gap: 12,
-    marginBottom: 32,
-  },
-  actionButtonPrimary: {
-    flex: 1,
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    gap: 8,
-    backgroundColor: Colors.brandTeal,
-    paddingVertical: 15,
-    borderRadius: 16,
-    shadowColor: Colors.primaryDark,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  actionButtonPrimaryText: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-    color: Colors.white,
-  },
-  actionButtonSecondary: {
-    flex: 1,
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    gap: 8,
-    backgroundColor: Colors.brandTealSoft,
-    paddingVertical: 15,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.brandTeal + '20',
-  },
-  actionButtonSecondaryText: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-    color: Colors.brandTeal,
-  },
-  section: {
-    marginBottom: 28,
-  },
-  sectionHeader: {
-    flexDirection: 'row' as const,
-    justifyContent: 'space-between' as const,
-    alignItems: 'center' as const,
-    marginBottom: 14,
-  },
-  sectionHeaderRow: {
-    flexDirection: 'row' as const,
-    justifyContent: 'space-between' as const,
-    alignItems: 'center' as const,
-    marginBottom: 14,
-  },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: '700' as const,
-    color: Colors.brandNavy,
-    letterSpacing: -0.2,
-  },
-  seeAllText: {
-    fontSize: 14,
-    fontWeight: '500' as const,
-    color: Colors.primary,
-  },
-  promptsGrid: {
-    flexDirection: 'row' as const,
-    flexWrap: 'wrap' as const,
-    gap: 10,
-  },
-  promptCard: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 8,
-    backgroundColor: Colors.card,
-    paddingVertical: 11,
-    paddingHorizontal: 14,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    shadowColor: 'rgba(27,40,56,0.03)',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 1,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  promptIcon: {
-    fontSize: 16,
-  },
-  promptLabel: {
-    fontSize: 14,
-    fontWeight: '500' as const,
-    color: Colors.text,
-  },
-  insightsGrid: {
-    flexDirection: 'row' as const,
-    flexWrap: 'wrap' as const,
-    gap: 10,
-  },
-  insightMiniCard: {
-    width: '47%' as const,
-    backgroundColor: Colors.card,
-    borderRadius: 14,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    shadowColor: 'rgba(27,40,56,0.03)',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 1,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  insightMiniEmoji: {
-    fontSize: 18,
-    marginBottom: 6,
-  },
-  insightMiniTrendRow: {
-    marginBottom: 6,
-  },
-  insightMiniLabel: {
-    fontSize: 11,
-    fontWeight: '500' as const,
-    color: Colors.textMuted,
-    textTransform: 'uppercase' as const,
-    letterSpacing: 0.4,
-    marginBottom: 3,
-  },
-  insightMiniValue: {
-    fontSize: 15,
-    fontWeight: '600' as const,
-    color: Colors.text,
-  },
-  interpretationCard: {
-    backgroundColor: Colors.card,
-    borderRadius: 16,
-    padding: 16,
-    paddingLeft: 20,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    position: 'relative' as const,
-    overflow: 'hidden' as const,
-  },
-  interpretationAccent: {
-    position: 'absolute' as const,
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 4,
-    backgroundColor: Colors.primary,
-    borderTopLeftRadius: 16,
-    borderBottomLeftRadius: 16,
-  },
-  interpretationAccentEncouraging: {
-    backgroundColor: Colors.success,
-  },
-  interpretationAccentObservational: {
-    backgroundColor: Colors.accent,
-  },
-  interpretationText: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    lineHeight: 21,
-    fontStyle: 'italic' as const,
-  },
-  exploreCard: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    backgroundColor: Colors.card,
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    marginBottom: 10,
-    shadowColor: 'rgba(27,40,56,0.03)',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 1,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  exploreCardIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: Colors.primaryLight,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    marginRight: 14,
-  },
-  exploreCardContent: {
-    flex: 1,
-  },
-  exploreCardTitle: {
-    fontSize: 15,
-    fontWeight: '600' as const,
-    color: Colors.text,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 13,
     marginBottom: 2,
   },
-  exploreCardDesc: {
-    fontSize: 13,
-    color: Colors.textSecondary,
+  headerTextWrap: {
+    flex: 1,
   },
-  recentCard: {
-    flexDirection: 'row' as const,
-    alignItems: 'flex-start' as const,
+  headerTitle: {
+    color: Colors.text,
+    fontSize: 28,
+    fontWeight: '900',
+    letterSpacing: 0,
+  },
+  headerSubtitle: {
+    color: Colors.textSecondary,
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 3,
+  },
+  greetingText: {
+    marginTop: 3,
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: '700',
+  },
+  talkCard: {
     backgroundColor: Colors.card,
-    padding: 16,
-    borderRadius: 14,
     borderWidth: 1,
     borderColor: Colors.borderLight,
-    marginBottom: 8,
-    shadowColor: 'rgba(27,40,56,0.03)',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 1,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  recentCardLeft: {
-    flex: 1,
-    marginRight: 12,
-  },
-  recentCardTitle: {
-    fontSize: 15,
-    fontWeight: '600' as const,
-    color: Colors.text,
-    marginBottom: 3,
-  },
-  recentCardPreview: {
-    fontSize: 13,
-    color: Colors.textMuted,
-  },
-  recentTagRow: {
-    flexDirection: 'row' as const,
-    gap: 5,
-    marginTop: 8,
-  },
-  recentTagChip: {
-    backgroundColor: Colors.primaryLight,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  recentTagText: {
-    fontSize: 10,
-    fontWeight: '500' as const,
-    color: Colors.primaryDark,
-  },
-  recentCardTime: {
-    fontSize: 12,
-    color: Colors.textMuted,
-    marginTop: 2,
-  },
-  summaryBanner: {
-    backgroundColor: Colors.warmGlow,
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: Colors.accentLight,
-  },
-  summaryBannerText: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    lineHeight: 20,
-    fontStyle: 'italic' as const,
-  },
-  bottomSpacer: {
-    height: 36,
-  },
-  disclaimerPill: {
-    marginTop: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
-    backgroundColor: 'rgba(240, 237, 233, 0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(240, 237, 233, 0.18)',
-  },
-  disclaimerPillText: {
-    fontSize: 11,
-    fontWeight: '500' as const,
-    color: 'rgba(240, 237, 233, 0.75)',
-    letterSpacing: 0.3,
-  },
-  followUpCard: {
-    backgroundColor: Colors.warmGlow,
-    borderRadius: 16,
+    borderRadius: 20,
     padding: 16,
-    marginBottom: 12,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 1,
+    shadowRadius: 18,
+    elevation: 2,
+  },
+  memoryCard: {
+    backgroundColor: Colors.card,
     borderWidth: 1,
-    borderColor: 'rgba(212, 149, 106, 0.2)',
-  },
-  followUpHeader: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    marginBottom: 8,
-  },
-  followUpIconWrap: {
-    width: 26,
-    height: 26,
-    borderRadius: 8,
-    backgroundColor: Colors.accentLight,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    marginRight: 8,
-  },
-  followUpTitle: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: Colors.accent,
-  },
-  followUpDismiss: {
-    padding: 4,
-  },
-  followUpMessage: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    lineHeight: 20,
-    marginBottom: 10,
-  },
-  followUpAction: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 4,
-  },
-  followUpActionText: {
-    fontSize: 13,
-    fontWeight: '600' as const,
-    color: Colors.primary,
-  },
-  weeklyInsightCard: {
-    backgroundColor: '#FFFFFF',
+    borderColor: Colors.borderLight,
     borderRadius: 18,
-    padding: 18,
+    padding: 16,
+  },
+  dontSendCard: {
+    backgroundColor: Colors.card,
     borderWidth: 1,
-    borderColor: 'rgba(91, 143, 185, 0.15)',
+    borderColor: Colors.borderLight,
+    borderRadius: 18,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
-  weeklyInsightHeader: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    marginBottom: 10,
-  },
-  weeklyInsightIconWrap: {
-    width: 30,
-    height: 30,
-    borderRadius: 10,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    marginRight: 8,
-  },
-  weeklyInsightLabel: {
+  dontSendTextWrap: {
     flex: 1,
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: '#3B82F6',
   },
-  weeklyInsightSummary: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    lineHeight: 21,
-    marginBottom: 8,
-  },
-  weeklyGrowthRow: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 5,
+  dontSendBody: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '700',
     marginTop: 4,
   },
-  weeklyGrowthText: {
-    fontSize: 12,
-    fontWeight: '500' as const,
-    color: Colors.success,
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 11,
+    marginBottom: 13,
+  },
+  cardIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardHeaderText: {
     flex: 1,
   },
-  patternCard: {
-    backgroundColor: Colors.card,
+  cardKicker: {
+    fontSize: 11,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 2,
+  },
+  cardTitle: {
+    flex: 1,
+    color: Colors.text,
+    fontSize: 17,
+    fontWeight: '900',
+    lineHeight: 22,
+  },
+  inputShell: {
+    position: 'relative',
+    marginBottom: 12,
+  },
+  largeInput: {
+    minHeight: 150,
+    borderRadius: 16,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingRight: 58,
+    paddingVertical: 13,
+    fontSize: 16,
+    lineHeight: 23,
+  },
+  micButton: {
+    position: 'absolute',
+    right: 10,
+    bottom: 10,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  speechStatusText: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '700',
+    marginBottom: 10,
+  },
+  primaryButton: {
+    minHeight: 54,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+  },
+  primaryButtonText: {
+    color: Colors.white,
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  memoryList: {
+    gap: 8,
+  },
+  memoryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 9,
     borderRadius: 14,
-    padding: 14,
-    paddingLeft: 18,
-    marginBottom: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  memoryText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '800',
+  },
+  emptyMemoryText: {
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: '700',
+  },
+  promptSection: {
+    gap: 10,
+  },
+  recentSection: {
+    gap: 10,
+  },
+  sectionTitle: {
+    color: Colors.primary,
+    fontSize: 15,
+    fontWeight: '900',
+  },
+  recentList: {
+    gap: 8,
+  },
+  recentCard: {
+    minHeight: 62,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: Colors.borderLight,
-    position: 'relative' as const,
-    overflow: 'hidden' as const,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 11,
+    paddingHorizontal: 13,
+    paddingVertical: 10,
   },
-  patternCardHigh: {
-    borderColor: 'rgba(212, 149, 106, 0.3)',
+  recentIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  patternAccent: {
-    position: 'absolute' as const,
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 4,
-    backgroundColor: Colors.primary,
-    borderTopLeftRadius: 14,
-    borderBottomLeftRadius: 14,
+  recentTextWrap: {
+    flex: 1,
+    minWidth: 0,
   },
-  patternTitle: {
-    fontSize: 13,
-    fontWeight: '600' as const,
+  recentTitle: {
     color: Colors.text,
-    marginBottom: 4,
+    fontSize: 14,
+    fontWeight: '900',
+    marginBottom: 3,
   },
-  patternNarrative: {
-    fontSize: 13,
+  recentPreview: {
     color: Colors.textSecondary,
-    lineHeight: 19,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '700',
+  },
+  promptList: {
+    gap: 8,
+  },
+  promptCard: {
+    minHeight: 52,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 14,
+  },
+  promptTitle: {
+    flex: 1,
+    color: Colors.text,
+    fontSize: 15,
+    fontWeight: '800',
   },
 });

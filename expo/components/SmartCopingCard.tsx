@@ -36,9 +36,9 @@ const ICON_MAP: Record<string, React.ComponentType<{ size: number; color: string
 };
 
 const PRIORITY_COLORS: Record<string, { bg: string; accent: string; border: string }> = {
-  high: { bg: '#FFFFFF', accent: Colors.danger, border: '#0B1238' },
+  high: { bg: '#FFFFFF', accent: Colors.danger, border: '#D9E2EC' },
   medium: { bg: Colors.warmGlow, accent: Colors.accent, border: Colors.accentLight },
-  low: { bg: Colors.primaryLight, accent: Colors.primary, border: '#0B1238' },
+  low: { bg: Colors.primaryLight, accent: Colors.primary, border: '#D9E2EC' },
 };
 
 interface SmartCopingCardProps {

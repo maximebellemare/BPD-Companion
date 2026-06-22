@@ -61,6 +61,8 @@ export interface PostAuthor {
   id: string;
   displayName: string;
   isAnonymous: boolean;
+  username?: string;
+  avatarColor?: string;
   isTrustedHelper?: boolean;
   helpfulReplyCount?: number;
 }
@@ -161,6 +163,26 @@ export interface BlockedUser {
   blockedAt: number;
 }
 
+export interface CommunityPrivateMessage {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  senderName: string;
+  body: string;
+  createdAt: number;
+  reported?: boolean;
+}
+
+export interface CommunityPrivateConversation {
+  id: string;
+  participant: PostAuthor;
+  messages: CommunityPrivateMessage[];
+  createdAt: number;
+  updatedAt: number;
+  blocked?: boolean;
+  reported?: boolean;
+}
+
 export interface SupportCircle {
   id: string;
   name: string;
@@ -242,6 +264,7 @@ export interface CircleReply {
   author: PostAuthor;
   createdAt: number;
   reactions: SupportiveReaction[];
+  supportReactions: SupportReaction[];
 }
 
 export interface CommunityChallenge {

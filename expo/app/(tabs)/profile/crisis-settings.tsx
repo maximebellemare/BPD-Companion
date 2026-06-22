@@ -96,7 +96,7 @@ export default function CrisisSettingsScreen() {
                 style={styles.textInput}
                 value={crisisLine}
                 onChangeText={setCrisisLine}
-                placeholder="e.g., 988"
+                placeholder="e.g., local crisis line"
                 placeholderTextColor={Colors.textMuted}
                 keyboardType="phone-pad"
                 testID="crisis-line-input"
@@ -104,7 +104,7 @@ export default function CrisisSettingsScreen() {
             </View>
           </View>
           <Text style={styles.helperText}>
-            Default: 988 Suicide & Crisis Lifeline
+            Safety Mode can also show regional resources automatically when available.
           </Text>
         </View>
 

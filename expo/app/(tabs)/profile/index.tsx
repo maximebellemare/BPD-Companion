@@ -26,6 +26,7 @@ import {
   RefreshCw,
   Shield,
   Sparkles,
+  Star,
   Sun,
   Trash2,
   User,
@@ -38,6 +39,7 @@ import { useProfile } from '@/providers/ProfileProvider';
 import { useSubscription } from '@/providers/SubscriptionProvider';
 import { useUserProfile } from '@/providers/UserProfileProvider';
 import { useAppTheme } from '@/providers/ThemeProvider';
+import { useReviewPrompt } from '@/providers/ReviewPromptProvider';
 import { updateProfile as updateAccountProfile } from '@/lib/supabase/profiles';
 import { storageService } from '@/services/storage/storageService';
 import { PURCHASES_UNAVAILABLE_MESSAGE } from '@/services/subscription/purchasesService';
@@ -76,6 +78,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { profile, updateNotifications, updatePrivacy } = useProfile();
   const { theme, colors: palette, setTheme } = useAppTheme();
+  const { openManualReviewPrompt } = useReviewPrompt();
   const {
     isPremium,
     isEntitlementActive,
@@ -716,6 +719,14 @@ export default function ProfileScreen() {
               description: 'Get help, report a problem, or send feedback.',
               onPress: () => router.push('/support-feedback' as never),
               testID: 'contact-support-btn',
+            })}
+            <View style={[styles.divider, { backgroundColor: palette.borderLight }]} />
+            {renderSettingsRow({
+              icon: <Star size={17} color={Colors.brandTeal} />,
+              title: 'Rate BPD Companion',
+              description: 'Share an honest review if the app has been helpful.',
+              onPress: openManualReviewPrompt,
+              testID: 'rate-app-btn',
             })}
           </View>
         </Animated.View>

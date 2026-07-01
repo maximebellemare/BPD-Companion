@@ -32,6 +32,7 @@ import { useAnalytics } from '@/providers/AnalyticsProvider';
 import { useOnboarding } from '@/providers/OnboardingProvider';
 import { useUserProfile } from '@/providers/UserProfileProvider';
 import { useAppTheme } from '@/providers/ThemeProvider';
+import { useReviewPrompt } from '@/providers/ReviewPromptProvider';
 import {
   DEFAULT_ONBOARDING_PROFILE,
   OnboardingProfile,
@@ -190,6 +191,7 @@ export default function OnboardingScreen() {
   const { completeOnboarding } = useOnboarding();
   const { refreshProfile } = useUserProfile();
   const { trackEvent } = useAnalytics();
+  const { maybeShowReviewPrompt } = useReviewPrompt();
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [isCompleting, setIsCompleting] = useState<boolean>(false);
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -247,12 +249,13 @@ export default function OnboardingScreen() {
         step: skipped ? 'skipped' : 'feature_tour_complete',
         version: 'feature_tour_v2',
       });
+      void maybeShowReviewPrompt('after_onboarding');
       router.replace('/(tabs)/(home)' as never);
     } catch (error) {
       console.log('[Onboarding] completion failed:', error);
       setIsCompleting(false);
     }
-  }, [completeOnboarding, isCompleting, refreshProfile, router, trackEvent]);
+  }, [completeOnboarding, isCompleting, maybeShowReviewPrompt, refreshProfile, router, trackEvent]);
 
   const goBack = useCallback(() => {
     if (currentStep === 0 || isCompleting) return;

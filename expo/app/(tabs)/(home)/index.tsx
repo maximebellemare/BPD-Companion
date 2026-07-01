@@ -39,6 +39,7 @@ import { useMedications } from '@/providers/MedicationProvider';
 import { formatTime, MedicationTime } from '@/types/medication';
 import { useAppointments } from '@/providers/AppointmentProvider';
 import { APPOINTMENT_TYPE_LABELS, formatAppointmentDate, formatAppointmentTime } from '@/types/appointment';
+import { useReviewPrompt } from '@/providers/ReviewPromptProvider';
 import { loadSavedCompanionInsights } from '@/services/companion/companionInsightService';
 import {
   getNextHabitAchievement,
@@ -225,6 +226,7 @@ export default function HomeScreen() {
   const todayAppointments = appointmentContext?.todayAppointments ?? [];
   const nextAppointment = appointmentContext?.nextAppointment ?? null;
   const { trackEvent } = useAnalytics();
+  const { maybeShowReviewPrompt } = useReviewPrompt();
   const {
     detection: spiralDetection,
     shouldShowBanner: shouldShowSpiralBanner,
@@ -326,6 +328,19 @@ export default function HomeScreen() {
   const emotionTone = hasCompletedToday
     ? getEmotionToneFromLabels(displayEmotionLabels)
     : getEmotionTone(selectedEmotionIds);
+
+  useEffect(() => {
+    if (!hasCompletedToday || !todaysCheckIn) return;
+    void maybeShowReviewPrompt('weekly_positive_mood', {
+      moodLabels: todaysCheckIn.checkIn.emotions.map(emotion => emotion.label),
+      intensity: todaysCheckIn.checkIn.intensityLevel,
+      text: [
+        todaysCheckIn.checkIn.notes,
+        ...todaysCheckIn.checkIn.triggers.map(trigger => trigger.label),
+      ].filter(Boolean).join(' '),
+    });
+  }, [hasCompletedToday, maybeShowReviewPrompt, todaysCheckIn]);
+
   const availableInfluenceOptions = useMemo(
     () => TRIGGER_OPTIONS.filter(option => option.id === 'other' || option.tone === emotionTone),
     [emotionTone],
@@ -523,7 +538,9 @@ export default function HomeScreen() {
       relationshipTags: selectedRelationshipTags,
     };
 
-    if (isEditingCheckIn && todaysCheckIn) {
+    const wasEditing = isEditingCheckIn && !!todaysCheckIn;
+
+    if (wasEditing) {
       updateJournalEntry(todaysCheckIn.id, entry);
     } else {
       addJournalEntry(entry);
@@ -537,7 +554,19 @@ export default function HomeScreen() {
     });
     setSavedNotice(isEditingCheckIn ? 'Today’s check-in updated.' : 'Today’s check-in saved.');
     setIsEditingCheckIn(false);
-  }, [addJournalEntry, customContext, customEmotion, customTrigger, emotionTone, intensity, isEditingCheckIn, selectedContextId, selectedEmotionIds, selectedRelationshipTags, selectedTriggerIds, setDistressLevel, todaysCheckIn, trackEvent, updateJournalEntry]);
+    if (!wasEditing) {
+      void maybeShowReviewPrompt('after_first_tracking', {
+        moodLabels: selectedEmotions.map(emotion => emotion.label),
+        intensity,
+        text: [
+          selectedContextLabel,
+          customEmotion,
+          customTrigger,
+          ...selectedTriggers.map(trigger => trigger.label),
+        ].filter(Boolean).join(' '),
+      });
+    }
+  }, [addJournalEntry, customContext, customEmotion, customTrigger, emotionTone, intensity, isEditingCheckIn, maybeShowReviewPrompt, selectedContextId, selectedEmotionIds, selectedRelationshipTags, selectedTriggerIds, setDistressLevel, todaysCheckIn, trackEvent, updateJournalEntry]);
 
   const handleEditCheckIn = useCallback(() => {
     if (!todaysCheckIn) return;

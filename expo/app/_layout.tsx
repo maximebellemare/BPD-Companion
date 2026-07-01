@@ -22,6 +22,7 @@ import { RewardsProvider } from "@/providers/RewardsProvider";
 import { MovementProvider } from "@/providers/MovementProvider";
 import { JournalProvider } from "@/providers/JournalProvider";
 import { SpiralPreventionProvider } from "@/providers/SpiralPreventionProvider";
+import { ReviewPromptProvider } from "@/providers/ReviewPromptProvider";
 import Colors from "@/constants/colors";
 import DeferredProviders from "@/components/DeferredProviders";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -641,6 +642,7 @@ export default function RootLayout() {
               <SubscriptionProvider>
                 <ProfileProvider>
                   <ThemeProvider>
+                  <ReviewPromptProvider>
                   <DeferredProviders>
                     <MedicationProvider>
                     <AppointmentProvider>
@@ -668,6 +670,7 @@ export default function RootLayout() {
                     </AppointmentProvider>
                     </MedicationProvider>
                   </DeferredProviders>
+                  </ReviewPromptProvider>
                   </ThemeProvider>
                 </ProfileProvider>
               </SubscriptionProvider>

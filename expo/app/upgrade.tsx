@@ -11,6 +11,7 @@ import {
   Linking,
 } from 'react-native';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
+import Constants from 'expo-constants';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   X,
@@ -102,6 +103,7 @@ const PAYWALL_VALUE_ITEMS = [
 
 export default function UpgradeScreen() {
   const router = useRouter();
+  const isExpoGo = Constants.appOwnership === 'expo';
   const { anchor } = useLocalSearchParams<{ anchor?: string }>();
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
@@ -237,9 +239,22 @@ export default function UpgradeScreen() {
     subscribe(selected);
   }, [isPremium, selectedPlanId, subscribe, trackEvent, plans, offeringStatus, offeringsError, isNativePurchases]);
 
+  const handleClose = useCallback(() => {
+    if (isExpoGo) {
+      router.replace('/');
+      return;
+    }
+    router.back();
+  }, [isExpoGo, router]);
+
   const handleRestore = useCallback(() => {
     handleHaptic();
     setRestoreNotice(null);
+    if (isExpoGo) {
+      console.log('[DevAccess] Expo Go restore bypass');
+      router.replace('/');
+      return;
+    }
     restore()
       .then((active) => {
         setRestoreNotice(
@@ -251,7 +266,7 @@ export default function UpgradeScreen() {
       .catch(() => {
         setRestoreNotice(null);
       });
-  }, [handleHaptic, restore]);
+  }, [handleHaptic, isExpoGo, restore, router]);
 
   const selectedPlan = plans.find(p => p.id === selectedPlanId);
   const canSubscribe = isNativePurchases && offeringStatus === 'ready' && !!selectedPlan && !selectedPlan.isFallbackPrice;
@@ -332,7 +347,7 @@ export default function UpgradeScreen() {
       <Stack.Screen options={{ headerShown: false }} />
 
       <View style={styles.closeRow}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.closeBtn} testID="close-btn">
+        <TouchableOpacity onPress={handleClose} style={styles.closeBtn} testID="close-btn">
           <X size={22} color={Colors.text} />
         </TouchableOpacity>
       </View>

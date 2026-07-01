@@ -31,6 +31,7 @@ import {
   fetchCustomerInfo,
   fetchOfferings,
   fetchRevenueCatDiagnostics,
+  isExpoGoPurchases,
   logInPurchases,
   logOutPurchases,
   purchasePackage as rcPurchasePackage,
@@ -79,12 +80,19 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   const queryClient = useQueryClient();
   const { user, isAuthenticated } = useAuth();
   const { profile } = useUserProfile();
+  const isExpoGo = isExpoGoPurchases();
   const [dailyAIUsage, setDailyAIUsage] = useState<number>(0);
   const [dailyRewriteUsage, setDailyRewriteUsage] = useState<number>(0);
   const [isRevenueCatIdentified, setIsRevenueCatIdentified] = useState<boolean>(false);
+  const shouldUseRevenueCat = !isExpoGo && isAuthenticated && !!user?.id && isRevenueCatIdentified;
   const identifiedUserIdRef = useRef<string | null>(null);
 
   useEffect(() => {
+    if (isExpoGo) {
+      setIsRevenueCatIdentified(true);
+      return;
+    }
+
     let cancelled = false;
 
     const syncRevenueCatIdentity = async () => {
@@ -122,33 +130,34 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     return () => {
       cancelled = true;
     };
-  }, [isAuthenticated, isRevenueCatIdentified, queryClient, user?.id]);
+  }, [isAuthenticated, isExpoGo, isRevenueCatIdentified, queryClient, user?.id]);
 
   useEffect(() => {
+    if (isExpoGo) return;
     if (isAuthenticated && user?.id && !isRevenueCatIdentified) {
       void configurePurchases(user.id);
     }
-  }, [isAuthenticated, isRevenueCatIdentified, user?.id]);
+  }, [isAuthenticated, isExpoGo, isRevenueCatIdentified, user?.id]);
 
   const customerInfoQuery = useQuery({
     queryKey: ['rc-customer-info'],
     queryFn: fetchCustomerInfo,
     staleTime: 60_000,
-    enabled: isAuthenticated && !!user?.id && isRevenueCatIdentified,
+    enabled: shouldUseRevenueCat,
   });
 
   const offeringsQuery = useQuery({
     queryKey: ['rc-offerings'],
     queryFn: fetchOfferings,
     staleTime: 5 * 60_000,
-    enabled: isAuthenticated && !!user?.id && isRevenueCatIdentified,
+    enabled: shouldUseRevenueCat,
   });
 
   const revenueCatDiagnosticsQuery = useQuery({
     queryKey: ['rc-diagnostics'],
     queryFn: fetchRevenueCatDiagnostics,
     staleTime: 30_000,
-    enabled: __DEV__ && isAuthenticated && !!user?.id && isRevenueCatIdentified,
+    enabled: __DEV__ && shouldUseRevenueCat,
   });
 
   const aiUsageQuery = useQuery({
@@ -174,6 +183,17 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   }, [rewriteUsageQuery.data]);
 
   const state: SubscriptionState = useMemo(() => {
+    if (isExpoGo) {
+      return {
+        tier: 'premium',
+        plan: null,
+        expiresAt: null,
+        startedAt: null,
+        trialEndsAt: null,
+        isTrialActive: false,
+      };
+    }
+
     const info = customerInfoQuery.data ?? null;
     const isEntitlementActive = hasActiveEntitlement(info);
     const accountTrialActive = isProfileTrialActive(profile);
@@ -208,14 +228,15 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
       trialEndsAt: trial ? expiresAt : null,
       isTrialActive: trial,
     };
-  }, [customerInfoQuery.data, profile]);
+  }, [customerInfoQuery.data, isExpoGo, profile]);
 
   const tier: SubscriptionTier = state.tier;
-  const isEntitlementActive = hasActiveEntitlement(customerInfoQuery.data ?? null);
-  const isPremium = isEntitlementActive;
-  const hasPremiumAccess = state.isTrialActive || isEntitlementActive;
+  const isEntitlementActive = isExpoGo || hasActiveEntitlement(customerInfoQuery.data ?? null);
+  const isPremium = isExpoGo || isEntitlementActive;
+  const hasPremiumAccess = isExpoGo || state.isTrialActive || isEntitlementActive;
 
   const offeringStatus: OfferingStatus = useMemo(() => {
+    if (isExpoGo) return 'preview';
     if (isAuthenticated && !!user?.id && !isRevenueCatIdentified) return 'loading';
     if (offeringsQuery.isLoading || customerInfoQuery.isLoading) return 'loading';
     if (offeringsQuery.isError) return 'error';
@@ -223,7 +244,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     if (offeringsQuery.data) return 'empty';
     if (__DEV__) return 'preview';
     return 'empty';
-  }, [customerInfoQuery.isLoading, isAuthenticated, isRevenueCatIdentified, offeringsQuery.data, offeringsQuery.isError, offeringsQuery.isLoading, user?.id]);
+  }, [customerInfoQuery.isLoading, isAuthenticated, isExpoGo, isRevenueCatIdentified, offeringsQuery.data, offeringsQuery.isError, offeringsQuery.isLoading, user?.id]);
 
   const plans = useMemo<SubscriptionPlan[]>(() => {
     const offering = offeringsQuery.data;
@@ -270,14 +291,14 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   }, [offeringStatus, offeringsQuery.error]);
 
   const purchaseMutation = useMutation({
-    mutationFn: (pkg: PurchasesPackage) => rcPurchasePackage(pkg),
+    mutationFn: (pkg: PurchasesPackage) => (isExpoGo ? Promise.resolve(null) : rcPurchasePackage(pkg)),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['rc-customer-info'] });
     },
   });
 
   const restoreMutation = useMutation({
-    mutationFn: () => rcRestorePurchases(),
+    mutationFn: () => (isExpoGo ? Promise.resolve(null) : rcRestorePurchases()),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['rc-customer-info'] });
     },
@@ -337,15 +358,18 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   }, [state.expiresAt]);
 
   const purchase = useCallback((pkg: PurchasesPackage) => {
+    if (isExpoGo) return;
     purchaseMutation.mutate(pkg);
-  }, [purchaseMutation]);
+  }, [isExpoGo, purchaseMutation]);
 
   const restore = useCallback(async () => {
+    if (isExpoGo) return true;
     const info = await restoreMutation.mutateAsync();
     return hasActiveEntitlement(info ?? null);
-  }, [restoreMutation]);
+  }, [isExpoGo, restoreMutation]);
 
   const subscribe = useCallback((_plan: SubscriptionPlan) => {
+    if (isExpoGo) return;
     const current = offeringsQuery.data;
     if (!current) {
       throw new Error(PURCHASES_UNAVAILABLE_MESSAGE);
@@ -355,7 +379,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
       throw new Error(PURCHASES_UNAVAILABLE_MESSAGE);
     }
     purchaseMutation.mutate(pkg);
-  }, [offeringsQuery.data, purchaseMutation]);
+  }, [isExpoGo, offeringsQuery.data, purchaseMutation]);
 
   return useMemo(() => ({
     tier,
@@ -379,7 +403,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     remainingRewrites,
     daysRemaining,
     expirationLabel,
-    isLoading: (isAuthenticated && !!user?.id && !isRevenueCatIdentified) || customerInfoQuery.isLoading || offeringsQuery.isLoading,
+    isLoading: !isExpoGo && ((isAuthenticated && !!user?.id && !isRevenueCatIdentified) || customerInfoQuery.isLoading || offeringsQuery.isLoading),
     isSubscribing: purchaseMutation.isPending,
     isRestoring: restoreMutation.isPending,
     purchaseError: purchaseMutation.error instanceof Error ? purchaseMutation.error.message : null,
@@ -387,6 +411,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     purchase,
     subscribe,
     startTrial: () => {
+      if (isExpoGo) return;
       const current = offeringsQuery.data;
       const pkg = current?.annual ?? current?.monthly ?? null;
       if (pkg) purchaseMutation.mutate(pkg);
@@ -420,6 +445,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     remainingRewrites,
     daysRemaining,
     expirationLabel,
+    isExpoGo,
     isRevenueCatIdentified,
     isAuthenticated,
     user?.id,

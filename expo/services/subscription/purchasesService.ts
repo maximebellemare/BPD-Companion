@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 import {
   REVENUECAT_ANDROID_API_KEY_ENV,
   REVENUECAT_ENTITLEMENT_ID,
@@ -64,12 +65,25 @@ let configured = false;
 let configurePromise: Promise<boolean> | null = null;
 let initializationCompleted = false;
 let configureExceptionMessage: string | null = null;
+let expoGoDisabledLogged = false;
 
 export const PURCHASES_UNAVAILABLE_MESSAGE =
   'Purchases are only available in the installed iOS/Android app.';
 
 export function isNativePurchasesPlatform(): boolean {
-  return Platform.OS === 'ios' || Platform.OS === 'android';
+  return !isExpoGoPurchases() && (Platform.OS === 'ios' || Platform.OS === 'android');
+}
+
+export function isExpoGoPurchases(): boolean {
+  const isExpoGo = Constants.appOwnership === 'expo';
+  if (isExpoGo) logExpoGoRevenueCatDisabled();
+  return isExpoGo;
+}
+
+function logExpoGoRevenueCatDisabled(): void {
+  if (expoGoDisabledLogged) return;
+  expoGoDisabledLogged = true;
+  console.log('[Purchases] Expo Go detected — RevenueCat disabled for local testing');
 }
 
 function getPurchaseErrorMessage(error: unknown): string {
@@ -79,6 +93,7 @@ function getPurchaseErrorMessage(error: unknown): string {
 }
 
 function getRCToken(): string | undefined {
+  if (isExpoGoPurchases()) return undefined;
   if (Platform.OS === 'web') {
     return process.env.EXPO_PUBLIC_REVENUECAT_TEST_API_KEY;
   }
@@ -100,6 +115,12 @@ function getApiKeyPrefix(apiKey: string | undefined): string | null {
 }
 
 export async function configurePurchases(appUserId?: string): Promise<boolean> {
+  if (isExpoGoPurchases()) {
+    initializationCompleted = true;
+    configureExceptionMessage = 'RevenueCat disabled in Expo Go.';
+    logExpoGoRevenueCatDisabled();
+    return false;
+  }
   if (configured) return true;
   if (configurePromise) return configurePromise;
 
@@ -145,6 +166,10 @@ export async function ensureConfigured(): Promise<void> {
 }
 
 export async function logInPurchases(appUserId: string): Promise<CustomerInfo | null> {
+  if (isExpoGoPurchases()) {
+    logExpoGoRevenueCatDisabled();
+    return null;
+  }
   const success = await configurePurchases(appUserId);
   if (!success || !isNativePurchasesPlatform()) return null;
   try {
@@ -158,6 +183,10 @@ export async function logInPurchases(appUserId: string): Promise<CustomerInfo | 
 }
 
 export async function logOutPurchases(): Promise<CustomerInfo | null> {
+  if (isExpoGoPurchases()) {
+    logExpoGoRevenueCatDisabled();
+    return null;
+  }
   if (!configured || !isNativePurchasesPlatform()) return null;
   try {
     const Purchases = (await import('react-native-purchases')).default;
@@ -169,10 +198,14 @@ export async function logOutPurchases(): Promise<CustomerInfo | null> {
 }
 
 export function arePurchasesAvailable(): boolean {
-  return configured && isNativePurchasesPlatform();
+  return !isExpoGoPurchases() && configured && isNativePurchasesPlatform();
 }
 
 export async function fetchOfferings(): Promise<PurchasesOffering | null> {
+  if (isExpoGoPurchases()) {
+    logExpoGoRevenueCatDisabled();
+    return null;
+  }
   await ensureConfigured();
   if (!isNativePurchasesPlatform()) return null;
   try {
@@ -216,6 +249,16 @@ export async function fetchRevenueCatDiagnostics(): Promise<RevenueCatDiagnostic
   };
 
   try {
+    if (isExpoGoPurchases()) {
+      logExpoGoRevenueCatDisabled();
+      return {
+        ...base,
+        initializationCompleted: true,
+        configureExceptionMessage: 'RevenueCat disabled in Expo Go.',
+        error: 'RevenueCat disabled in Expo Go.',
+      };
+    }
+
     await configurePurchases();
     base.configured = configured;
     base.configureSucceeded = configured;
@@ -268,6 +311,10 @@ export async function fetchRevenueCatDiagnostics(): Promise<RevenueCatDiagnostic
 }
 
 export async function fetchCustomerInfo(): Promise<CustomerInfo | null> {
+  if (isExpoGoPurchases()) {
+    logExpoGoRevenueCatDisabled();
+    return null;
+  }
   await ensureConfigured();
   if (!isNativePurchasesPlatform()) return null;
   try {
@@ -280,6 +327,10 @@ export async function fetchCustomerInfo(): Promise<CustomerInfo | null> {
 }
 
 export async function purchasePackage(pkg: PurchasesPackage): Promise<CustomerInfo | null> {
+  if (isExpoGoPurchases()) {
+    logExpoGoRevenueCatDisabled();
+    return null;
+  }
   await ensureConfigured();
   if (!arePurchasesAvailable()) throw new Error(PURCHASES_UNAVAILABLE_MESSAGE);
   try {
@@ -294,6 +345,10 @@ export async function purchasePackage(pkg: PurchasesPackage): Promise<CustomerIn
 }
 
 export async function restorePurchases(): Promise<CustomerInfo | null> {
+  if (isExpoGoPurchases()) {
+    logExpoGoRevenueCatDisabled();
+    return null;
+  }
   await ensureConfigured();
   if (!arePurchasesAvailable()) throw new Error(PURCHASES_UNAVAILABLE_MESSAGE);
   try {

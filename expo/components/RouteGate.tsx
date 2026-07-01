@@ -1,15 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import Constants from 'expo-constants';
 import { ActivityIndicator, Platform, StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '@/providers/AuthProvider';
 import { useSubscription } from '@/providers/SubscriptionProvider';
 import { useUserProfile } from '@/providers/UserProfileProvider';
 import { useProfile } from '@/providers/ProfileProvider';
 import { useAppTheme } from '@/providers/ThemeProvider';
-import { isProfileTrialActive } from '@/lib/supabase/profiles';
-import { supabaseConfig } from '@/lib/supabase/client';
-import Colors from '@/constants/colors';
 import BrandLogo from '@/components/branding/BrandLogo';
 
 function getTopRoute(segments: string[]): string {
@@ -31,7 +29,6 @@ export default function RouteGate() {
   const { colors } = useAppTheme();
   const {
     hasPremiumAccess,
-    isEntitlementActive,
     isLoading: subscriptionLoading,
   } = useSubscription();
   const router = useRouter();
@@ -39,6 +36,8 @@ export default function RouteGate() {
   const lastTarget = useRef<string | null>(null);
   const [nativeSplashHidden, setNativeSplashHidden] = useState<boolean>(Platform.OS === 'web');
   const [pendingTarget, setPendingTarget] = useState<string | null>(null);
+  const isExpoGo = Constants.appOwnership === 'expo';
+  const effectiveHasPremiumAccess = isExpoGo || hasPremiumAccess;
 
   const gateState = useMemo(() => {
     const topRoute = getTopRoute(segments as string[]);
@@ -63,7 +62,7 @@ export default function RouteGate() {
     } else if (subscriptionLoading) {
       target = null;
       decision = 'loading-access';
-    } else if (!hasPremiumAccess) {
+    } else if (!effectiveHasPremiumAccess) {
       target = inPaywall ? null : '/upgrade';
       decision = inPaywall ? 'show-paywall' : 'redirect-paywall';
     } else if (inAuth) {
@@ -82,7 +81,7 @@ export default function RouteGate() {
     return { topRoute, target, decision };
   }, [
     authLoading,
-    hasPremiumAccess,
+    effectiveHasPremiumAccess,
     isAuthenticated,
     isInitialized,
     profile,
@@ -144,8 +143,6 @@ export default function RouteGate() {
     gateState.decision.startsWith('loading') ||
     gateState.decision.startsWith('redirect');
 
-  const trialActive = isProfileTrialActive(profile);
-
   return (
     <>
       {shouldBlockRender ? (
@@ -166,29 +163,6 @@ export default function RouteGate() {
         </View>
       ) : null}
 
-      {__DEV__ ? (
-        <View pointerEvents="none" style={styles.debugPanel}>
-          <Text style={styles.debugTitle}>Access Flow Debug</Text>
-          {supabaseConfig.error ? (
-            <Text style={styles.configError}>Missing Supabase configuration</Text>
-          ) : null}
-          <Text style={styles.debugText}>session: {isAuthenticated ? 'signed in' : 'signed out'}</Text>
-          <Text style={styles.debugText}>supabase url: {supabaseConfig.url ? 'set' : 'missing'}</Text>
-          <Text style={styles.debugText}>supabase anon key: {supabaseConfig.hasAnonKey ? 'set' : 'missing'}</Text>
-          <Text style={styles.debugText}>
-            onboarding_completed: {profile?.onboarding_completed === true ? 'true' : 'false'}
-          </Text>
-          <Text style={styles.debugText}>
-            trial_ends_at: {profile?.trial_ends_at ?? 'none'}
-          </Text>
-          <Text style={styles.debugText}>trial active: {trialActive ? 'true' : 'false'}</Text>
-          <Text style={styles.debugText}>
-            premium active: {isEntitlementActive ? 'true' : 'false'}
-          </Text>
-          <Text style={styles.debugText}>route: /{gateState.topRoute || '(root)'}</Text>
-          <Text style={styles.debugText}>decision: {gateState.decision}</Text>
-        </View>
-      ) : null}
     </>
   );
 }
@@ -215,34 +189,5 @@ const styles = StyleSheet.create({
   },
   loadingSpinner: {
     marginTop: 24,
-  },
-  debugPanel: {
-    position: 'absolute',
-    left: 10,
-    right: 10,
-    bottom: 10,
-    zIndex: 9999,
-    backgroundColor: 'rgba(2, 6, 23, 0.88)',
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 10,
-    padding: 10,
-  },
-  debugTitle: {
-    color: Colors.brandCyan,
-    fontSize: 11,
-    fontWeight: '800' as const,
-    marginBottom: 4,
-  },
-  configError: {
-    color: Colors.danger,
-    fontSize: 11,
-    fontWeight: '800' as const,
-    marginBottom: 4,
-  },
-  debugText: {
-    color: Colors.text,
-    fontSize: 10,
-    lineHeight: 14,
   },
 });

@@ -11,7 +11,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Award, Flame, Heart } from 'lucide-react-native';
 import Colors from '@/constants/colors';
-import { MOCK_TRUSTED_CONTRIBUTORS } from '@/constants/community';
+import { DEV_SEEDED_TRUSTED_CONTRIBUTORS } from '@/constants/community';
 import { identifyTrustedContributors } from '@/services/community/supportMatchingService';
 
 export default function TrustedHelpersScreen() {
@@ -23,7 +23,7 @@ export default function TrustedHelpersScreen() {
   }, [fadeAnim]);
 
   const trusted = useMemo(
-    () => identifyTrustedContributors(MOCK_TRUSTED_CONTRIBUTORS),
+    () => identifyTrustedContributors(DEV_SEEDED_TRUSTED_CONTRIBUTORS),
     []
   );
 

@@ -15,7 +15,6 @@ import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import {
   Send,
   Bookmark,
-  BookmarkCheck,
   Plus,
   ArrowLeft,
   Shield,
@@ -27,6 +26,11 @@ import {
   MoreVertical,
   Trash2,
   Brain,
+  ThumbsUp,
+  ThumbsDown,
+  Check,
+  Mic,
+  Square,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
@@ -36,26 +40,65 @@ import { Crown } from 'lucide-react-native';
 import { AIMessage } from '@/types/ai';
 import { AIMode } from '@/types/aiModes';
 import { getManualModeOptions, getModeConfig } from '@/services/ai/aiModeService';
+import {
+  CompanionResponseFeedback,
+  loadCompanionResponseFeedback,
+  loadSavedCompanionInsights,
+  rateCompanionResponse,
+  saveCompanionInsight,
+} from '@/services/companion/companionInsightService';
+import { useCompanionSpeechInput } from '@/hooks/useCompanionSpeechInput';
 
 const STARTER_CHIPS = [
-  { id: 's1', label: 'I feel abandoned right now', icon: '💔', prompt: 'I feel abandoned right now and I need support' },
-  { id: 's2', label: 'Help me slow down', icon: '🌊', prompt: 'Help me slow down, everything feels overwhelming right now' },
-  { id: 's3', label: 'I want to text and I\'m not calm', icon: '📱', prompt: 'I want to send a message and I\'m not calm right now. Help me pause.' },
-  { id: 's4', label: 'Am I overreacting?', icon: '🤔', prompt: 'I can\'t tell if I\'m overreacting to something that happened. Help me figure out what\'s real.' },
-  { id: 's5', label: 'What pattern do you see?', icon: '🔄', prompt: 'Based on what you know about me, what patterns do you notice in my emotions lately?' },
-  { id: 's6', label: 'I need to understand what I need', icon: '🔍', prompt: 'Help me figure out what I actually need right now — I\'m not sure if it\'s reassurance, space, or something else' },
-  { id: 's7', label: 'After a conflict', icon: '🩹', prompt: 'I just had a conflict and I feel terrible about how I handled it' },
-  { id: 's8', label: 'Help me write a response', icon: '✍️', prompt: 'I need to respond to someone but I want to do it from a calm place, not from reactivity' },
+  { id: 's1', label: 'I feel abandoned', icon: '💔', prompt: 'I feel abandoned. Help me slow down and understand what this is touching in me.' },
+  { id: 's2', label: 'I want to text them again', icon: '📱', prompt: 'I want to text them again. Help me name what happened, what I feel, and what I usually do next.' },
+  { id: 's3', label: 'I feel empty', icon: '🌫️', prompt: 'I feel empty and disconnected. Sit with me and help me name what might be happening.' },
+  { id: 's4', label: 'I might say something I regret', icon: '🔥', prompt: 'I am angry and might say something I regret. Help me identify what happened right before the anger.' },
+  { id: 's5', label: 'Help me understand this trigger', icon: '🔍', prompt: 'Help me trace this trigger: what happened, what it meant to me, what fear showed up, and what urge came next.' },
 ];
 
-const CONTEXT_SUGGESTION_CHIPS = [
-  { id: 'cs1', label: 'What exactly happened?', prompt: 'Let me tell you exactly what happened...' },
-  { id: 'cs2', label: 'Could I be misreading this?', prompt: 'Could I be misinterpreting this situation? Help me see it differently.' },
-  { id: 'cs3', label: 'How should I respond?', prompt: 'What would be a secure, thoughtful way to respond to this?' },
-  { id: 'cs4', label: 'Help me calm down first', prompt: 'Before anything else, I need help calming down.' },
-  { id: 'cs5', label: 'What\'s the pattern here?', prompt: 'Do you see a pattern in what I\'m describing? Help me see it.' },
-  { id: 'cs6', label: 'Help me write a secure reply', prompt: 'Help me craft a response that comes from a place of security, not fear.' },
-];
+type ContextSuggestionChip = {
+  id: string;
+  label: string;
+  prompt: string;
+};
+
+function buildContextSuggestions(messages: AIMessage[]): ContextSuggestionChip[] {
+  const safeMessages = Array.isArray(messages) ? messages : [];
+  const lastUserMessage = [...safeMessages].reverse().find(message => message?.role === 'user')?.content ?? '';
+  const lower = lastUserMessage.toLowerCase();
+  const suggestions: ContextSuggestionChip[] = [];
+
+  const add = (id: string, label: string, prompt: string) => {
+    if (!suggestions.some(item => item.id === id)) suggestions.push({ id, label, prompt });
+  };
+
+  if (/(girlfriend|boyfriend|partner|wife|husband|date|relationship|reply|answered|text|message|ignored|left on read)/.test(lower)) {
+    add('facts', 'What happened?', 'Help me start with the facts of what happened.');
+    add('emotion', 'Name the emotion', 'Help me name the strongest emotion right now.');
+    add('urge', 'What do I want to do?', 'Help me name what I feel pulled to do next.');
+  }
+  if (/(angry|mad|rage|furious|snap|yell|fight|argument|conflict)/.test(lower)) {
+    add('body-first', 'Calm my body first', 'Help me calm my body before I decide what to say or do.');
+    add('before-anger', 'What happened first?', 'Help me identify what happened right before the anger.');
+  }
+  if (/(abandon|rejected|ignored|not answer|no reply|pulling away|leave me|doesn.t care)/.test(lower)) {
+    add('emotion', 'Name the emotion', 'Help me name the strongest emotion right now.');
+    add('wait', 'What did I notice?', 'Help me name the concrete thing I noticed before the feeling got stronger.');
+  }
+  if (/(empty|numb|alone|lonely|disconnected|nothing)/.test(lower)) {
+    add('empty-type', 'What kind of empty?', 'Help me tell whether this feels like numb, lonely, disconnected, bored, or hopeless.');
+    add('when-started', 'When did it start?', 'Help me identify when this feeling started.');
+  }
+  if (/(send|text|reply|email|message|whatsapp|dm|react)/.test(lower)) {
+    add('rewrite', 'Help me rewrite it', 'Help me rewrite what I want to say in a calmer, clearer way.');
+  }
+  if (/(pattern|again|always|keeps happening|same thing)/.test(lower)) {
+    add('pattern', 'What usually happens?', 'Help me name what usually happens when this starts.');
+  }
+
+  return suggestions.slice(0, 4);
+}
 
 interface QuickActionConfig {
   icon: React.ReactNode;
@@ -64,16 +107,80 @@ interface QuickActionConfig {
 }
 
 const QUICK_ACTION_CONFIG: Record<string, QuickActionConfig> = {
-  'Ground me': { icon: <Wind size={13} color={Colors.primary} />, route: '/exercise?id=c1' },
+  'Ground me': { icon: <Wind size={13} color={Colors.primary} />, route: '/grounding-mode' },
   'Show coping tools': { icon: <Compass size={13} color={Colors.primary} />, route: '/(tabs)/tools' },
   'Journal this': { icon: <PenLine size={13} color={Colors.primary} />, route: '/check-in' },
-  'Help me rewrite a message': { icon: <MessageSquareText size={13} color={Colors.primary} />, route: '/(tabs)/messages' },
+  'Help me rewrite a message': { icon: <MessageSquareText size={13} color={Colors.primary} />, route: '/dont-send-it' },
+  "Don't Send It": { icon: <MessageSquareText size={13} color={Colors.primary} />, route: '/dont-send-it' },
   'Slow this down': { icon: <Wind size={13} color={Colors.primary} />, message: 'I need to slow this down. Can we take it one small step at a time?' },
   'Safety mode': { icon: <Shield size={13} color={Colors.danger} />, route: '/safety-mode' },
   'Reflection': { icon: <PenLine size={13} color={Colors.primary} />, message: 'I want to reflect on what I\'m feeling right now. Can you help me explore this?' },
   'What pattern do you see?': { icon: <Brain size={13} color={Colors.primary} />, message: 'Based on what you know about me, what patterns do you notice here?' },
   'Help me respond securely': { icon: <MessageSquareText size={13} color={Colors.primary} />, message: 'Help me craft a response that comes from security, not reactivity.' },
 };
+
+const SECTION_LABELS: Record<string, string> = {
+  'one next step': '➡️ One thing to try',
+  'one thing to try': '➡️ One thing to try',
+  'what might help': '➡️ One thing to try',
+  'next step': '➡️ One thing to try',
+};
+
+function normalizeMarkdownForDisplay(content: string): string {
+  return content
+    .replace(/\r\n/g, '\n')
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/__(.*?)__/g, '$1')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/^\s*💙?\s*What I(?:'|’)m hearing\s*:?\s*$/gim, '')
+    .replace(/^\s*[-*]\s+/gm, '• ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function normalizeSectionLabel(line: string): string | null {
+  const clean = line
+    .replace(/^[💙🔍➡️❤️🧭]\s*/, '')
+    .replace(/[:\-–—]\s*$/, '')
+    .trim()
+    .toLowerCase();
+
+  return SECTION_LABELS[clean] ?? null;
+}
+
+function FormattedAssistantMessage({ content }: { content: string }) {
+  const normalized = normalizeMarkdownForDisplay(content);
+  const blocks = normalized.split(/\n{2,}/).map(block => block.trim()).filter(Boolean);
+
+  return (
+    <View style={styles.formattedMessage}>
+      {blocks.map((block, blockIndex) => {
+        const lines = block.split('\n').map(line => line.trim()).filter(Boolean);
+        const sectionLabel = lines.length > 0 ? normalizeSectionLabel(lines[0]) : null;
+        const bodyLines = sectionLabel ? lines.slice(1) : lines;
+
+        return (
+          <View key={`${blockIndex}-${block.slice(0, 20)}`} style={styles.formattedBlock}>
+            {sectionLabel && (
+              <Text style={styles.formattedSectionTitle}>{sectionLabel}</Text>
+            )}
+            {bodyLines.map((line, lineIndex) => {
+              const isBullet = line.startsWith('• ');
+              return (
+                <Text
+                  key={`${lineIndex}-${line.slice(0, 16)}`}
+                  style={[styles.messageText, styles.assistantText, isBullet && styles.formattedBullet]}
+                >
+                  {line}
+                </Text>
+              );
+            })}
+          </View>
+        );
+      })}
+    </View>
+  );
+}
 
 function TypingIndicator() {
   const dot1 = useRef(new Animated.Value(0.3)).current;
@@ -153,9 +260,23 @@ interface MessageBubbleProps {
   message: AIMessage;
   isLastAssistant: boolean;
   onQuickAction: (action: string) => void;
+  conversationId: string | null;
+  isSavedInsight: boolean;
+  feedback?: CompanionResponseFeedback;
+  onSaveInsight: (message: AIMessage) => void;
+  onRateResponse: (message: AIMessage, rating: CompanionResponseFeedback) => void;
 }
 
-const MessageBubble = React.memo(({ message, isLastAssistant, onQuickAction }: MessageBubbleProps) => {
+const MessageBubble = React.memo(({
+  message,
+  isLastAssistant,
+  onQuickAction,
+  conversationId,
+  isSavedInsight,
+  feedback,
+  onSaveInsight,
+  onRateResponse,
+}: MessageBubbleProps) => {
   const isUser = message.role === 'user';
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(isUser ? 10 : -10)).current;
@@ -198,12 +319,50 @@ const MessageBubble = React.memo(({ message, isLastAssistant, onQuickAction }: M
         </View>
       )}
       <View style={[styles.messageBubble, isUser ? styles.userBubble : styles.assistantBubble]}>
-        <Text style={[styles.messageText, isUser ? styles.userText : styles.assistantText]}>
-          {message.content}
-        </Text>
+        {isUser ? (
+          <Text style={[styles.messageText, styles.userText]}>{message.content}</Text>
+        ) : (
+          <FormattedAssistantMessage content={message.content} />
+        )}
       </View>
       {isUser && (
         <Text style={[styles.messageTime, styles.userTime]}>{timeStr}</Text>
+      )}
+      {!isUser && conversationId && (
+        <View style={styles.responseLearningRow}>
+          <TouchableOpacity
+            style={[styles.responseLearningButton, isSavedInsight && styles.responseLearningButtonActive]}
+            onPress={() => onSaveInsight(message)}
+            activeOpacity={0.75}
+            disabled={isSavedInsight}
+            testID={`save-insight-${message.id}`}
+          >
+            {isSavedInsight ? <Check size={13} color={Colors.success} /> : <Bookmark size={13} color={Colors.primary} />}
+            <Text style={[styles.responseLearningText, isSavedInsight && styles.responseLearningTextActive]}>
+              {isSavedInsight ? 'Insight saved to Insights' : '⭐ Save Insight'}
+            </Text>
+          </TouchableOpacity>
+          {!isSavedInsight ? (
+            <Text style={styles.responseLearningHint}>Save this conversation insight so it appears in Insights later.</Text>
+          ) : null}
+          <Text style={styles.responseFeedbackLabel}>Was this useful?</Text>
+          <TouchableOpacity
+            style={[styles.feedbackIconButton, feedback === 'useful' && styles.feedbackIconButtonActive]}
+            onPress={() => onRateResponse(message, 'useful')}
+            activeOpacity={0.75}
+            testID={`rate-useful-${message.id}`}
+          >
+            <ThumbsUp size={13} color={feedback === 'useful' ? Colors.success : Colors.textMuted} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.feedbackIconButton, feedback === 'not_useful' && styles.feedbackIconButtonMuted]}
+            onPress={() => onRateResponse(message, 'not_useful')}
+            activeOpacity={0.75}
+            testID={`rate-not-useful-${message.id}`}
+          >
+            <ThumbsDown size={13} color={feedback === 'not_useful' ? Colors.danger : Colors.textMuted} />
+          </TouchableOpacity>
+        </View>
       )}
       {showQuickActions && (
         <QuickActions actions={message.quickActions!} onAction={onQuickAction} />
@@ -240,9 +399,9 @@ function EmptyState({ onPrompt }: { onPrompt: (prompt: string) => void }) {
           </View>
         </View>
       </View>
-      <Text style={styles.emptyTitle}>This is your safe space</Text>
+      <Text style={styles.emptyTitle}>Start with what feels urgent</Text>
       <Text style={styles.emptySubtitle}>
-        Share what's on your mind. I'm here to listen{'\n'}without judgment, and everything stays private.
+        I can use your recent check-ins, triggers, and goals to help you slow down, reflect, or pause before reacting.
       </Text>
       <View style={styles.emptyDivider}>
         <View style={styles.emptyDividerLine} />
@@ -270,16 +429,12 @@ function ChatMenu({
   visible,
   onClose,
   onNewChat,
-  onSave,
   onDelete,
-  isSaved,
 }: {
   visible: boolean;
   onClose: () => void;
   onNewChat: () => void;
-  onSave: () => void;
   onDelete: () => void;
-  isSaved: boolean;
 }) {
   if (!visible) return null;
 
@@ -294,11 +449,6 @@ function ChatMenu({
           <Plus size={16} color={Colors.text} />
           <Text style={styles.menuItemText}>New conversation</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem} onPress={() => { onSave(); onClose(); }}>
-          {isSaved ? <BookmarkCheck size={16} color={Colors.primary} /> : <Bookmark size={16} color={Colors.text} />}
-          <Text style={styles.menuItemText}>{isSaved ? 'Saved' : 'Save conversation'}</Text>
-        </TouchableOpacity>
-        <View style={styles.menuDivider} />
         <TouchableOpacity style={styles.menuItem} onPress={() => { onDelete(); onClose(); }}>
           <Trash2 size={16} color={Colors.danger} />
           <Text style={[styles.menuItemText, { color: Colors.danger }]}>Delete conversation</Text>
@@ -414,38 +564,100 @@ const ModeSelector = React.memo(({ activeMode, manualMode, onSelectMode, visible
 
 export default function ChatScreen() {
   const router = useRouter();
-  const searchParams = useLocalSearchParams<{ prefill?: string }>();
+  const searchParams = useLocalSearchParams<{
+    prefill?: string;
+    initialMessage?: string;
+    conversationId?: string;
+  }>();
   const {
     activeConversation,
+    activeConversationId,
     isGenerating,
     memoryProfile,
     sendMessage,
-    toggleSaveConversation,
     startNewConversation,
     deleteConversation,
+    setActiveConversationId,
     manualMode,
     currentActiveMode,
     currentModeConfig,
-    setMode,
+    latestSafetyAssessment,
   } = useAICompanion();
 
   const { aiLimitReached, remainingAIMessages, trackAIUsage, isPremium } = useEntitlements();
   const [inputText, setInputText] = useState<string>('');
   const [menuVisible, setMenuVisible] = useState<boolean>(false);
-  const [prefillHandled, setPrefillHandled] = useState<boolean>(false);
+  const [initialMessageHandled, setInitialMessageHandled] = useState<boolean>(false);
+  const [savedInsightMessageIds, setSavedInsightMessageIds] = useState<Set<string>>(new Set());
+  const [responseFeedback, setResponseFeedback] = useState<Record<string, CompanionResponseFeedback>>({});
   const flatListRef = useRef<FlatList>(null);
   const inputRef = useRef<TextInput>(null);
+  const speechBaseTextRef = useRef('');
+  const applySpeechTranscript = useCallback((transcript: string) => {
+    const base = speechBaseTextRef.current.trim();
+    setInputText(base ? `${base} ${transcript}` : transcript);
+  }, []);
+  const speechInput = useCompanionSpeechInput({ onTranscript: applySpeechTranscript });
 
   useEffect(() => {
-    if (searchParams.prefill && !prefillHandled && !isGenerating) {
-      setPrefillHandled(true);
-      const prefillText = searchParams.prefill;
-      console.log('[CompanionChat] Prefill from cross-loop:', prefillText.substring(0, 50));
-      setTimeout(() => {
-        void sendMessage(prefillText);
-      }, 400);
+    let mounted = true;
+    Promise.all([loadSavedCompanionInsights(), loadCompanionResponseFeedback()])
+      .then(([saved, feedback]) => {
+        if (!mounted) return;
+        setSavedInsightMessageIds(new Set(saved.map(item => item.messageId)));
+        setResponseFeedback(
+          Object.fromEntries(Object.entries(feedback).map(([messageId, record]) => [messageId, record.rating])),
+        );
+      })
+      .catch((error) => {
+        console.log('[CompanionChat] Failed to load response learning state:', error);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const routeConversationId = typeof searchParams.conversationId === 'string'
+      ? searchParams.conversationId
+      : undefined;
+
+    if (routeConversationId && activeConversationId !== routeConversationId) {
+      setActiveConversationId(routeConversationId);
     }
-  }, [searchParams.prefill, prefillHandled, isGenerating, sendMessage]);
+  }, [activeConversationId, searchParams.conversationId, setActiveConversationId]);
+
+  useEffect(() => {
+    const routeConversationId = typeof searchParams.conversationId === 'string'
+      ? searchParams.conversationId
+      : undefined;
+    const initialMessage = typeof searchParams.initialMessage === 'string'
+      ? searchParams.initialMessage
+      : undefined;
+    const prefillMessage = typeof searchParams.prefill === 'string'
+      ? searchParams.prefill
+      : undefined;
+    const messageToSend = initialMessage ?? prefillMessage;
+
+    if (!messageToSend || initialMessageHandled || isGenerating) return;
+
+    setInitialMessageHandled(true);
+    const targetConversationId = routeConversationId ?? activeConversationId ?? startNewConversation(false);
+    if (targetConversationId !== activeConversationId) {
+      setActiveConversationId(targetConversationId);
+    }
+    void sendMessage(messageToSend, targetConversationId);
+  }, [
+    activeConversationId,
+    initialMessageHandled,
+    isGenerating,
+    searchParams.conversationId,
+    searchParams.initialMessage,
+    searchParams.prefill,
+    sendMessage,
+    setActiveConversationId,
+    startNewConversation,
+  ]);
 
   const handleSend = useCallback(async () => {
     const text = inputText.trim();
@@ -455,7 +667,6 @@ export default function ChatScreen() {
       if (Platform.OS !== 'web') {
         void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
       }
-      router.push('/upgrade' as never);
       return;
     }
 
@@ -465,8 +676,29 @@ export default function ChatScreen() {
 
     setInputText('');
     await trackAIUsage();
-    await sendMessage(text);
-  }, [inputText, isGenerating, sendMessage, aiLimitReached, trackAIUsage, router]);
+    const targetConversationId = activeConversationId ?? startNewConversation(false);
+    if (targetConversationId !== activeConversationId) {
+      setActiveConversationId(targetConversationId);
+    }
+    await sendMessage(text, targetConversationId);
+  }, [
+    activeConversationId,
+    inputText,
+    isGenerating,
+    sendMessage,
+    aiLimitReached,
+    trackAIUsage,
+    router,
+    startNewConversation,
+    setActiveConversationId,
+  ]);
+
+  const handleMicPress = useCallback(() => {
+    if (!speechInput.isListening) {
+      speechBaseTextRef.current = inputText.trim();
+    }
+    speechInput.toggleListening();
+  }, [inputText, speechInput]);
 
   const handleNewChat = useCallback(() => {
     if (Platform.OS !== 'web') {
@@ -474,14 +706,6 @@ export default function ChatScreen() {
     }
     startNewConversation();
   }, [startNewConversation]);
-
-  const handleSave = useCallback(() => {
-    if (!activeConversation) return;
-    if (Platform.OS !== 'web') {
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    toggleSaveConversation(activeConversation.id);
-  }, [activeConversation, toggleSaveConversation]);
 
   const handleDelete = useCallback(() => {
     if (!activeConversation) return;
@@ -493,18 +717,24 @@ export default function ChatScreen() {
     if (Platform.OS !== 'web') {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    await sendMessage(prompt);
-  }, [sendMessage]);
+    const targetConversationId = activeConversationId ?? startNewConversation(false);
+    if (targetConversationId !== activeConversationId) {
+      setActiveConversationId(targetConversationId);
+    }
+    await sendMessage(prompt, targetConversationId);
+  }, [activeConversationId, sendMessage, setActiveConversationId, startNewConversation]);
 
   const getConversationContext = useCallback((): string => {
-    if (!activeConversation?.messages.length) return '';
-    const recent = activeConversation.messages.slice(-6);
-    const userMessages = recent.filter(m => m.role === 'user').map(m => m.content);
-    const lastAssistant = recent.filter(m => m.role === 'assistant').pop();
+    const safeMessages = Array.isArray(activeConversation?.messages) ? activeConversation.messages : [];
+    if (!safeMessages.length) return '';
+    const recent = safeMessages.slice(-6);
+    const userMessages = recent.filter(m => m?.role === 'user').map(m => m.content);
+    const lastAssistant = recent.filter(m => m?.role === 'assistant').pop();
 
     const parts: string[] = [];
-    if (activeConversation.title && activeConversation.title !== 'New Chat') {
-      parts.push(`Topic: ${activeConversation.title}`);
+    const activeTitle = activeConversation?.title;
+    if (activeTitle && activeTitle !== 'New Chat') {
+      parts.push(`Topic: ${activeTitle}`);
     }
     if (userMessages.length > 0) {
       const summary = userMessages.slice(-2).join(' ').slice(0, 300);
@@ -525,7 +755,11 @@ export default function ChatScreen() {
     const config = QUICK_ACTION_CONFIG[action];
 
     if (config?.message) {
-      void sendMessage(config.message);
+      const targetConversationId = activeConversationId ?? startNewConversation(false);
+      if (targetConversationId !== activeConversationId) {
+        setActiveConversationId(targetConversationId);
+      }
+      void sendMessage(config.message, targetConversationId);
       return;
     }
 
@@ -546,25 +780,71 @@ export default function ChatScreen() {
       return;
     }
 
-    void sendMessage(action);
-  }, [sendMessage, router, getConversationContext]);
+    const targetConversationId = activeConversationId ?? startNewConversation(false);
+    if (targetConversationId !== activeConversationId) {
+      setActiveConversationId(targetConversationId);
+    }
+    void sendMessage(action, targetConversationId);
+  }, [activeConversationId, sendMessage, router, getConversationContext, setActiveConversationId, startNewConversation]);
+
+  const handleSaveInsight = useCallback((message: AIMessage) => {
+    if (!activeConversation) return;
+    const safeMessages = Array.isArray(activeConversation.messages) ? activeConversation.messages : [];
+    const messageIndex = safeMessages.findIndex(item => item.id === message.id);
+    const userMessage = messageIndex >= 0
+      ? [...safeMessages.slice(0, messageIndex)].reverse().find(item => item.role === 'user')?.content
+      : undefined;
+    setSavedInsightMessageIds(prev => new Set(prev).add(message.id));
+    void saveCompanionInsight({
+      conversationId: activeConversation.id,
+      messageId: message.id,
+      content: message.content,
+      userMessage,
+      tags: activeConversation.tags,
+    }).catch((error) => {
+      console.log('[CompanionChat] Failed to save insight:', error);
+      setSavedInsightMessageIds(prev => {
+        const next = new Set(prev);
+        next.delete(message.id);
+        return next;
+      });
+    });
+  }, [activeConversation]);
+
+  const handleRateResponse = useCallback((message: AIMessage, rating: CompanionResponseFeedback) => {
+    if (!activeConversation) return;
+    setResponseFeedback(prev => ({ ...prev, [message.id]: rating }));
+    void rateCompanionResponse({
+      conversationId: activeConversation.id,
+      messageId: message.id,
+      rating,
+    }).catch((error) => {
+      console.log('[CompanionChat] Failed to save response feedback:', error);
+      setResponseFeedback(prev => {
+        const next = { ...prev };
+        delete next[message.id];
+        return next;
+      });
+    });
+  }, [activeConversation]);
 
   useEffect(() => {
-    if (activeConversation?.messages.length) {
+    const safeMessages = Array.isArray(activeConversation?.messages) ? activeConversation.messages : [];
+    if (safeMessages.length) {
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 150);
     }
-  }, [activeConversation?.messages.length]);
+  }, [activeConversation?.messages]);
 
-  const messages = activeConversation?.messages ?? [];
-  const isSaved = activeConversation?.saved ?? false;
+  const messages = Array.isArray(activeConversation?.messages) ? activeConversation.messages : [];
   const hasMessages = messages.length > 0;
-  const hasMemoryData = memoryProfile.recentCheckInCount > 0;
+  const hasMemoryData = (memoryProfile?.recentCheckInCount ?? 0) > 0;
+  const contextSuggestions = useMemo(() => buildContextSuggestions(messages), [messages]);
 
   const lastAssistantId = useMemo(() => {
     for (let i = messages.length - 1; i >= 0; i--) {
-      if (messages[i].role === 'assistant') return messages[i].id;
+      if (messages[i]?.role === 'assistant') return messages[i].id;
     }
     return null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -576,9 +856,14 @@ export default function ChatScreen() {
         message={item}
         isLastAssistant={item.id === lastAssistantId}
         onQuickAction={handleQuickAction}
+        conversationId={activeConversation?.id ?? null}
+        isSavedInsight={savedInsightMessageIds.has(item.id)}
+        feedback={responseFeedback[item.id]}
+        onSaveInsight={handleSaveInsight}
+        onRateResponse={handleRateResponse}
       />
     );
-  }, [lastAssistantId, handleQuickAction]);
+  }, [lastAssistantId, handleQuickAction, activeConversation?.id, savedInsightMessageIds, responseFeedback, handleSaveInsight, handleRateResponse]);
 
   const renderEmpty = useCallback(() => {
     return <EmptyState onPrompt={handlePrompt} />;
@@ -627,9 +912,7 @@ export default function ChatScreen() {
         visible={menuVisible}
         onClose={() => setMenuVisible(false)}
         onNewChat={handleNewChat}
-        onSave={handleSave}
         onDelete={handleDelete}
-        isSaved={isSaved}
       />
 
       <KeyboardAvoidingView
@@ -637,6 +920,18 @@ export default function ChatScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
+        {latestSafetyAssessment?.level === 'crisis' && (
+          <View style={styles.safetyContextBanner}>
+            <Shield size={16} color={Colors.danger} />
+            <View style={styles.safetyContextTextWrap}>
+              <Text style={styles.safetyContextTitle}>Immediate support may help</Text>
+              <Text style={styles.safetyContextText}>
+                If you may hurt yourself or someone else, contact local emergency services or a crisis line now.
+              </Text>
+            </View>
+          </View>
+        )}
+
         <FlatList
           ref={flatListRef}
           data={messages}
@@ -658,11 +953,11 @@ export default function ChatScreen() {
 
         {isGenerating && <TypingIndicator />}
 
-        {hasMessages && !isGenerating && messages.length >= 2 && (
+        {hasMessages && !isGenerating && contextSuggestions.length > 0 && (
           <View style={styles.contextChipsContainer}>
             <FlatList
               horizontal
-              data={CONTEXT_SUGGESTION_CHIPS.slice(0, 4)}
+              data={contextSuggestions}
               keyExtractor={(item) => item.id}
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.contextChipsContent}
@@ -679,24 +974,33 @@ export default function ChatScreen() {
           </View>
         )}
 
-        <ModeSelector
-          activeMode={currentActiveMode}
-          manualMode={manualMode}
-          onSelectMode={setMode}
-          visible={hasMessages}
-        />
-
         <View style={styles.inputBar}>
           {aiLimitReached && (
-            <TouchableOpacity
-              style={styles.aiLimitBanner}
-              onPress={() => router.push('/upgrade' as never)}
-              activeOpacity={0.8}
-              testID="ai-limit-banner"
-            >
-              <Crown size={14} color="#67E8F9" />
-              <Text style={styles.aiLimitText}>Daily AI limit reached. Upgrade for unlimited conversations.</Text>
-            </TouchableOpacity>
+            <View style={styles.aiLimitCard} testID="companion-limit-card">
+              <View style={styles.aiLimitHeader}>
+                <Crown size={18} color={Colors.primary} />
+                <Text style={styles.aiLimitTitle}>You’ve used today’s 5 free Companion messages.</Text>
+              </View>
+              <Text style={styles.aiLimitBody}>Upgrade to Premium for unlimited Companion support.</Text>
+              <View style={styles.aiLimitActions}>
+                <TouchableOpacity
+                  style={styles.aiLimitUpgradeButton}
+                  onPress={() => router.push({ pathname: '/upgrade', params: { anchor: 'unlimited_ai' } } as never)}
+                  activeOpacity={0.82}
+                  testID="companion-limit-upgrade"
+                >
+                  <Text style={styles.aiLimitUpgradeText}>Upgrade to Premium</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.aiLimitTomorrowButton}
+                  onPress={() => router.back()}
+                  activeOpacity={0.76}
+                  testID="companion-limit-tomorrow"
+                >
+                  <Text style={styles.aiLimitTomorrowText}>Come back tomorrow</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           )}
           {!isPremium && !aiLimitReached && remainingAIMessages !== null && remainingAIMessages <= 2 && (
             <View style={styles.aiRemainingBanner}>
@@ -718,15 +1022,37 @@ export default function ChatScreen() {
               testID="chat-input"
               onSubmitEditing={handleSend}
               blurOnSubmit={false}
-              editable={!isGenerating}
+              editable={!isGenerating && !aiLimitReached}
             />
+            {speechInput.isAvailable && (
+              <TouchableOpacity
+                style={[
+                  styles.micButton,
+                  speechInput.isListening && styles.micButtonListening,
+                  isGenerating && styles.micButtonDisabled,
+                ]}
+                onPress={handleMicPress}
+                disabled={isGenerating}
+                activeOpacity={0.74}
+                testID="companion-mic-button"
+                accessibilityRole="button"
+                accessibilityLabel={speechInput.isListening ? 'Stop voice input' : 'Start voice input'}
+                accessibilityState={{ selected: speechInput.isListening, disabled: isGenerating }}
+              >
+                {speechInput.isListening ? (
+                  <Square size={15} color={Colors.white} />
+                ) : (
+                  <Mic size={17} color={Colors.primary} />
+                )}
+              </TouchableOpacity>
+            )}
             <TouchableOpacity
               style={[
                 styles.sendButton,
-                (!inputText.trim() || isGenerating) && styles.sendButtonDisabled,
+                (!inputText.trim() || isGenerating || aiLimitReached) && styles.sendButtonDisabled,
               ]}
               onPress={handleSend}
-              disabled={!inputText.trim() || isGenerating}
+              disabled={!inputText.trim() || isGenerating || aiLimitReached}
               activeOpacity={0.7}
               testID="send-btn"
             >
@@ -740,6 +1066,17 @@ export default function ChatScreen() {
           {!hasMessages && (
             <Text style={styles.inputHelperText}>
               Everything here is private and supportive
+            </Text>
+          )}
+          {speechInput.message && (
+            <Text
+              style={[
+                styles.speechStatusText,
+                speechInput.status === 'error' && styles.speechStatusError,
+              ]}
+              testID="companion-speech-status"
+            >
+              {speechInput.message}
             </Text>
           )}
         </View>
@@ -778,6 +1115,52 @@ const styles = StyleSheet.create({
   },
   keyboardView: {
     flex: 1,
+  },
+  safetyContextBanner: {
+    flexDirection: 'row' as const,
+    alignItems: 'flex-start' as const,
+    gap: 10,
+    marginHorizontal: 16,
+    marginTop: 10,
+    marginBottom: 8,
+    padding: 12,
+    borderRadius: 14,
+    backgroundColor: Colors.dangerLight,
+    borderWidth: 1,
+    borderColor: 'rgba(220, 38, 38, 0.18)',
+  },
+  safetyContextTextWrap: {
+    flex: 1,
+  },
+  safetyContextTitle: {
+    color: Colors.text,
+    fontSize: 13,
+    fontWeight: '900' as const,
+    marginBottom: 3,
+  },
+  safetyContextText: {
+    color: Colors.textSecondary,
+    fontSize: 12,
+    lineHeight: 17,
+  },
+  personalContextStrip: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 8,
+    marginHorizontal: 16,
+    marginTop: 10,
+    marginBottom: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 14,
+    backgroundColor: Colors.primaryLight,
+  },
+  personalContextStripText: {
+    flex: 1,
+    color: Colors.text,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '700' as const,
   },
   messagesList: {
     paddingHorizontal: 16,
@@ -852,6 +1235,22 @@ const styles = StyleSheet.create({
   assistantText: {
     color: Colors.text,
   },
+  formattedMessage: {
+    gap: 10,
+  },
+  formattedBlock: {
+    gap: 5,
+  },
+  formattedSectionTitle: {
+    color: Colors.primary,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '900' as const,
+    marginBottom: 1,
+  },
+  formattedBullet: {
+    paddingLeft: 2,
+  },
   messageTime: {
     fontSize: 10,
     marginTop: 4,
@@ -882,6 +1281,68 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500' as const,
     color: Colors.primaryDark,
+  },
+  responseLearningRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    flexWrap: 'wrap' as const,
+    gap: 6,
+    marginTop: 8,
+    paddingLeft: 2,
+  },
+  responseLearningButton: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 5,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    borderRadius: 18,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  responseLearningButtonActive: {
+    backgroundColor: '#ECFDF5',
+    borderColor: 'rgba(5, 150, 105, 0.28)',
+  },
+  responseLearningText: {
+    color: Colors.primary,
+    fontSize: 11,
+    fontWeight: '800' as const,
+  },
+  responseLearningTextActive: {
+    color: Colors.success,
+  },
+  responseLearningHint: {
+    color: Colors.textMuted,
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: '700' as const,
+    maxWidth: 220,
+  },
+  responseFeedbackLabel: {
+    color: Colors.textMuted,
+    fontSize: 11,
+    fontWeight: '700' as const,
+    marginLeft: 2,
+  },
+  feedbackIconButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+  },
+  feedbackIconButtonActive: {
+    backgroundColor: '#ECFDF5',
+    borderColor: 'rgba(5, 150, 105, 0.28)',
+  },
+  feedbackIconButtonMuted: {
+    backgroundColor: '#FEF2F2',
+    borderColor: 'rgba(220, 38, 38, 0.22)',
   },
   typingContainer: {
     paddingHorizontal: 16,
@@ -955,12 +1416,38 @@ const styles = StyleSheet.create({
   sendButtonDisabled: {
     backgroundColor: Colors.border,
   },
+  micButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  micButtonListening: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  micButtonDisabled: {
+    opacity: 0.45,
+  },
   inputHelperText: {
     fontSize: 11,
     color: Colors.textMuted,
     textAlign: 'center' as const,
     marginTop: 8,
     marginBottom: 2,
+  },
+  speechStatusText: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    textAlign: 'center' as const,
+    marginTop: 7,
+  },
+  speechStatusError: {
+    color: Colors.danger,
   },
   emptyState: {
     alignItems: 'center' as const,
@@ -1181,25 +1668,66 @@ const styles = StyleSheet.create({
     fontWeight: '500' as const,
     color: Colors.primary,
   },
-  aiLimitBanner: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 8,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    paddingVertical: 10,
+  aiLimitCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    paddingVertical: 12,
     paddingHorizontal: 14,
     marginHorizontal: 14,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#0B1238',
+    borderColor: Colors.borderLight,
   },
-  aiLimitText: {
+  aiLimitHeader: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 8,
+  },
+  aiLimitTitle: {
     flex: 1,
-    fontSize: 12,
-    fontWeight: '500' as const,
-    color: '#3B82F6',
-    lineHeight: 17,
+    fontSize: 14,
+    fontWeight: '900' as const,
+    color: Colors.text,
+    lineHeight: 19,
+  },
+  aiLimitBody: {
+    marginTop: 5,
+    fontSize: 13,
+    fontWeight: '700' as const,
+    color: Colors.textSecondary,
+    lineHeight: 18,
+  },
+  aiLimitActions: {
+    flexDirection: 'row' as const,
+    gap: 8,
+    marginTop: 10,
+  },
+  aiLimitUpgradeButton: {
+    flex: 1,
+    minHeight: 42,
+    borderRadius: 13,
+    backgroundColor: Colors.primary,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    paddingHorizontal: 10,
+  },
+  aiLimitUpgradeText: {
+    color: Colors.white,
+    fontSize: 13,
+    fontWeight: '900' as const,
+  },
+  aiLimitTomorrowButton: {
+    minHeight: 42,
+    borderRadius: 13,
+    backgroundColor: Colors.surface,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    paddingHorizontal: 12,
+  },
+  aiLimitTomorrowText: {
+    color: Colors.textSecondary,
+    fontSize: 13,
+    fontWeight: '800' as const,
   },
   aiRemainingBanner: {
     alignItems: 'center' as const,

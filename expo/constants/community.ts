@@ -106,7 +106,7 @@ const now = Date.now();
 const hour = 3600000;
 const day = 86400000;
 
-export const MOCK_CIRCLES: SupportCircle[] = [
+export const DEV_SEEDED_CIRCLES: SupportCircle[] = [
   {
     id: 'circle-relationship',
     name: 'Relationship Triggers',
@@ -164,7 +164,7 @@ export const MOCK_CIRCLES: SupportCircle[] = [
   },
 ];
 
-export const MOCK_POSTS: CommunityPost[] = [
+export const DEV_SEEDED_POSTS: CommunityPost[] = [
   {
     id: 'p1',
     title: 'Learning to pause before I text back changed everything',
@@ -342,7 +342,7 @@ export const MOCK_POSTS: CommunityPost[] = [
   },
 ];
 
-export const MOCK_REPLIES: Record<string, PostReply[]> = {
+export const DEV_SEEDED_REPLIES: Record<string, PostReply[]> = {
   p1: [
     {
       id: 'r1',
@@ -491,7 +491,7 @@ export const CIRCLE_POST_TYPES: { id: CirclePostType; label: string; emoji: stri
 const challengeNow = Date.now();
 const challengeDay = 86400000;
 
-export const MOCK_CHALLENGES: CommunityChallenge[] = [
+export const DEV_SEEDED_CHALLENGES: CommunityChallenge[] = [
   {
     id: 'challenge-pause',
     title: 'Pause Before Reacting',
@@ -559,7 +559,7 @@ export const MOCK_CHALLENGES: CommunityChallenge[] = [
   },
 ];
 
-export const MOCK_CHALLENGE_PROGRESS: Record<string, ChallengeProgress[]> = {
+export const DEV_SEEDED_CHALLENGE_PROGRESS: Record<string, ChallengeProgress[]> = {
   'challenge-checkin': [
     { challengeId: 'challenge-checkin', userId: 'current_user', displayName: 'You', completedDays: 3, totalDays: 7, lastCheckedIn: challengeNow - 4 * 3600000, isCurrentUser: true },
     { challengeId: 'challenge-checkin', userId: 'u1', displayName: 'healing_slowly', completedDays: 5, totalDays: 7, lastCheckedIn: challengeNow - 2 * 3600000, isCurrentUser: false },
@@ -568,7 +568,7 @@ export const MOCK_CHALLENGE_PROGRESS: Record<string, ChallengeProgress[]> = {
   ],
 };
 
-export const MOCK_CIRCLE_POSTS: Record<string, CirclePost[]> = {
+export const DEV_SEEDED_CIRCLE_POSTS: Record<string, CirclePost[]> = {
   'circle-shame': [
     {
       id: 'cp1',
@@ -611,7 +611,7 @@ export const MOCK_CIRCLE_POSTS: Record<string, CirclePost[]> = {
   ],
 };
 
-export const MOCK_TRUSTED_CONTRIBUTORS = [
+export const DEV_SEEDED_TRUSTED_CONTRIBUTORS = [
   { userId: 'u1', displayName: 'healing_slowly', helpfulCount: 47, positiveFeedback: 38, activityStreak: 14 },
   { userId: 'u10', displayName: 'recovery_road', helpfulCount: 51, positiveFeedback: 42, activityStreak: 21 },
   { userId: 'u6', displayName: 'open_heart', helpfulCount: 63, positiveFeedback: 55, activityStreak: 30 },

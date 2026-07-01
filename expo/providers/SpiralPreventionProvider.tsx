@@ -4,6 +4,7 @@ import createContextHook from '@nkzw/create-context-hook';
 import { useApp } from '@/providers/AppProvider';
 import { useJournal } from '@/providers/JournalProvider';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
+import { useAICompanion } from '@/providers/AICompanionProvider';
 import {
   detectSpiralFromSmartEntries,
   generateWeeklySpiralInsight,
@@ -25,6 +26,7 @@ import {
 export const [SpiralPreventionProvider, useSpiralPrevention] = createContextHook(() => {
   const queryClient = useQueryClient();
   const { journalEntries, messageDrafts } = useApp();
+  const { conversations } = useAICompanion();
   const { smartEntries } = useJournal();
   const { trackEvent } = useAnalytics();
   const [history, setHistory] = useState<SpiralHistoryEntry[]>([]);
@@ -51,8 +53,8 @@ export const [SpiralPreventionProvider, useSpiralPrevention] = createContextHook
   });
 
   const detection = useMemo<SpiralDetectionResult>(
-    () => detectSpiralFromSmartEntries(smartEntries, journalEntries, messageDrafts),
-    [smartEntries, journalEntries, messageDrafts],
+    () => detectSpiralFromSmartEntries(smartEntries, journalEntries, messageDrafts, conversations),
+    [smartEntries, journalEntries, messageDrafts, conversations],
   );
 
   const weeklyInsight = useMemo<SpiralWeeklyInsight | null>(

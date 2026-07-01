@@ -5,6 +5,7 @@ import {
   MemoryRetrievalContext,
   RetrievedMemoryContext,
   EnhancedCompanionMemoryStore,
+  CompanionMemorySystem,
 } from '@/types/companionMemory';
 import { MemoryProfile } from '@/types/memory';
 import { retrieveRankedMemories } from './memoryRankingService';
@@ -19,6 +20,8 @@ export interface AssembledContext {
   profileNarrative: string;
   patternNarrative: string;
   weeklyNarrative: string;
+  personalSummaryNarrative: string;
+  companionMemorySystemNarrative: string;
   fullContext: string;
   liveContextNarrative: string;
   retrievedMemories: RetrievedMemoryContext | null;
@@ -35,6 +38,8 @@ export function assembleCompanionContext(params: {
   memoryProfile: MemoryProfile;
   patternInsights: CompanionPatternInsight[];
   weeklyInsights: WeeklyCompanionInsight[];
+  companionMemorySystem?: CompanionMemorySystem | null;
+  personalSummary?: string;
   conversationHistory?: Array<{ role: string; content: string }>;
   conversationId?: string;
 }): AssembledContext {
@@ -46,6 +51,8 @@ export function assembleCompanionContext(params: {
     memoryProfile,
     patternInsights,
     weeklyInsights,
+    companionMemorySystem,
+    personalSummary,
     conversationHistory,
     conversationId,
   } = params;
@@ -78,6 +85,10 @@ export function assembleCompanionContext(params: {
   const patternNarrative = buildPatternNarrative(relevantInsights);
 
   const weeklyNarrative = buildWeeklyNarrative(weeklyInsights);
+  const personalSummaryNarrative = personalSummary
+    ? `[Current Personal Context]\n${personalSummary}`
+    : '';
+  const companionMemorySystemNarrative = companionMemorySystem?.narrative ?? '';
 
   const suggestedApproach = determineSuggestedApproach(
     emotionalState,
@@ -90,7 +101,9 @@ export function assembleCompanionContext(params: {
     memoryNarrative,
     profileNarrative,
     patternNarrative,
+    companionMemorySystemNarrative,
     weeklyNarrative,
+    personalSummaryNarrative,
     suggestedApproach ? `[Suggested approach: ${suggestedApproach}]` : '',
   ].filter(Boolean);
 
@@ -104,6 +117,8 @@ export function assembleCompanionContext(params: {
     profileNarrative,
     patternNarrative,
     weeklyNarrative,
+    personalSummaryNarrative,
+    companionMemorySystemNarrative,
     fullContext,
     liveContextNarrative: '',
     retrievedMemories,

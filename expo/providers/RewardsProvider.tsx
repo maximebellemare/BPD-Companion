@@ -12,6 +12,9 @@ import { useApp } from '@/providers/AppProvider';
 import { useMedications } from '@/providers/MedicationProvider';
 import { useAppointments } from '@/providers/AppointmentProvider';
 import { computeConsistencyMetrics } from '@/services/rewards/consistencyService';
+import { loadCalmMeDownSessions } from '@/services/calm/calmSessionService';
+import { loadSavedCompanionInsights } from '@/services/companion/companionInsightService';
+import { getDBTAcademyProgress } from '@/services/dbt/dbtAcademyService';
 import {
   evaluateMilestones,
   getUnseenMilestones,
@@ -19,14 +22,17 @@ import {
   getUnlockedDefinitions,
   getNextMilestones,
 } from '@/services/rewards/rewardService';
-import { conversationRepository } from '@/services/repositories';
+import { communityRepository, conversationRepository } from '@/services/repositories';
 import { trackEvent } from '@/services/analytics/analyticsService';
 
 export const [RewardsProvider, useRewards] = createContextHook(() => {
   const queryClient = useQueryClient();
   const { journalEntries, messageDrafts } = useApp();
-  const { medications, logs: medicationLogs } = useMedications();
-  const { appointments } = useAppointments();
+  const medicationContext = useMedications();
+  const appointmentContext = useAppointments();
+  const medications = medicationContext?.medications ?? [];
+  const medicationLogs = medicationContext?.logs ?? [];
+  const appointments = appointmentContext?.appointments ?? [];
 
   const [rewardState, setRewardState] = useState<RewardState>(DEFAULT_REWARD_STATE);
 
@@ -39,6 +45,20 @@ export const [RewardsProvider, useRewards] = createContextHook(() => {
     queryKey: ['conversations_for_rewards'],
     queryFn: () => conversationRepository.getAll(),
     staleTime: 60 * 1000,
+  });
+
+  const progressInputsQuery = useQuery({
+    queryKey: ['healthy_progress_inputs'],
+    queryFn: async () => {
+      const [calmSessions, savedInsights, communityPosts, dbtProgress] = await Promise.all([
+        loadCalmMeDownSessions().catch(() => []),
+        loadSavedCompanionInsights().catch(() => []),
+        communityRepository.getPosts(null, undefined).catch(() => []),
+        getDBTAcademyProgress().catch(() => null),
+      ]);
+      return { calmSessions, savedInsights, communityPosts, dbtProgress };
+    },
+    staleTime: 30 * 1000,
   });
 
   useEffect(() => {
@@ -55,6 +75,7 @@ export const [RewardsProvider, useRewards] = createContextHook(() => {
   });
 
   const conversations = useMemo(() => conversationsQuery.data ?? [], [conversationsQuery.data]);
+  const progressInputs = progressInputsQuery.data;
 
   const metrics = useMemo<ConsistencyMetrics>(() => {
     return computeConsistencyMetrics(
@@ -64,8 +85,12 @@ export const [RewardsProvider, useRewards] = createContextHook(() => {
       medicationLogs,
       appointments,
       conversations,
+      progressInputs?.calmSessions ?? [],
+      progressInputs?.savedInsights ?? [],
+      progressInputs?.communityPosts ?? [],
+      progressInputs?.dbtProgress ?? null,
     );
-  }, [journalEntries, messageDrafts, medications, medicationLogs, appointments, conversations]);
+  }, [journalEntries, messageDrafts, medications, medicationLogs, appointments, conversations, progressInputs]);
 
   useEffect(() => {
     const updated = evaluateMilestones(metrics, rewardState.unlockedMilestones);

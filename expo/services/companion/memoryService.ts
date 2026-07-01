@@ -65,6 +65,13 @@ export function createEmptyEnhancedStore(): EnhancedCompanionMemoryStore {
     copingPreferences: [],
     strugglesAndWins: [],
     referenceLog: [],
+    coreFears: [],
+    coreBeliefs: [],
+    majorTriggers: [],
+    longTermGoals: [],
+    recurringPatterns: [],
+    emotionalTimeline: [],
+    recurringLoops: [],
   };
 }
 
@@ -79,6 +86,13 @@ export async function loadEnhancedMemoryStore(): Promise<EnhancedCompanionMemory
         copingPreferences: stored.copingPreferences ?? [],
         strugglesAndWins: stored.strugglesAndWins ?? [],
         referenceLog: stored.referenceLog ?? [],
+        coreFears: stored.coreFears ?? [],
+        coreBeliefs: stored.coreBeliefs ?? [],
+        majorTriggers: stored.majorTriggers ?? [],
+        longTermGoals: stored.longTermGoals ?? [],
+        recurringPatterns: stored.recurringPatterns ?? [],
+        emotionalTimeline: stored.emotionalTimeline ?? [],
+        recurringLoops: stored.recurringLoops ?? [],
       };
     }
     return createEmptyEnhancedStore();
@@ -146,6 +160,13 @@ export function mergeBaseIntoEnhanced(
     copingPreferences: enhanced.copingPreferences,
     strugglesAndWins: enhanced.strugglesAndWins,
     referenceLog: enhanced.referenceLog,
+    coreFears: enhanced.coreFears,
+    coreBeliefs: enhanced.coreBeliefs,
+    majorTriggers: enhanced.majorTriggers,
+    longTermGoals: enhanced.longTermGoals,
+    recurringPatterns: enhanced.recurringPatterns,
+    emotionalTimeline: enhanced.emotionalTimeline,
+    recurringLoops: enhanced.recurringLoops,
   };
 }
 

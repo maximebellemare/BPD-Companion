@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Animated,
   Platform,
   ScrollView,
@@ -11,401 +12,367 @@ import {
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  Activity,
   BarChart3,
   BookOpen,
-  Check,
   ChevronLeft,
   ChevronRight,
-  CloudLightning,
-  Compass,
-  Heart,
-  Moon,
+  HeartHandshake,
+  MessageCircle,
+  MessageSquareWarning,
   Shield,
   Sparkles,
-  Timer,
-  TrendingUp,
-  UserX,
   Users,
   Wind,
-  Wrench,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import BrandLogo from '@/components/branding/BrandLogo';
+import OnboardingIllustration, { OnboardingTheme } from '@/components/branding/illustrations/OnboardingIllustration';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
 import { useOnboarding } from '@/providers/OnboardingProvider';
+import { useUserProfile } from '@/providers/UserProfileProvider';
+import { useAppTheme } from '@/providers/ThemeProvider';
 import {
-  DAILY_CHECK_IN_OPTIONS,
-  DailyCheckInTrack,
   DEFAULT_ONBOARDING_PROFILE,
-  ONBOARDING_STEPS,
   OnboardingProfile,
-  PRIMARY_REASON_OPTIONS,
-  PrimaryReason,
-  PreferredTool,
-  SUPPORT_GOAL_OPTIONS,
 } from '@/types/onboarding';
 
-const ICON_MAP: Record<string, React.ComponentType<{ size: number; color: string }>> = {
-  Activity,
-  BarChart3,
-  BookOpen,
-  Check,
-  CloudLightning,
-  Compass,
-  Heart,
-  Moon,
-  Shield,
-  Sparkles,
-  Timer,
-  TrendingUp,
-  UserX,
-  Users,
-  Wind,
-  Wrench,
-};
+type FeatureIcon = React.ComponentType<{ size: number; color: string }>;
 
-const TOTAL_STEPS = ONBOARDING_STEPS.length;
+interface FeatureItem {
+  title: string;
+  what: string;
+  why: string;
+  icon: FeatureIcon;
+}
+
+interface TourStep {
+  id: string;
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  theme: OnboardingTheme;
+  features: FeatureItem[];
+}
+
+const TOUR_STEPS: TourStep[] = [
+  {
+    id: 'welcome',
+    eyebrow: 'BPD Companion',
+    title: 'Understand patterns. Pause reactions. Build skills.',
+    subtitle: 'A private support app for emotional awareness, regulation practice, and steadier choices in hard moments.',
+    theme: 'welcome',
+    features: [
+      {
+        title: 'Private daily support',
+        what: 'A simple place to check in, reflect, and get help when emotions feel intense.',
+        why: 'Small daily signals help the app understand what tends to happen before spirals.',
+        icon: Sparkles,
+      },
+    ],
+  },
+  {
+    id: 'daily',
+    eyebrow: 'Daily rhythm',
+    title: 'Check in once. Learn what repeats.',
+    subtitle: 'Use BPD Companion for a quick daily signal, then let Insights turn those signals into plain-language patterns.',
+    theme: 'awareness',
+    features: [
+      {
+        title: 'Daily Check-Ins',
+        what: 'Log emotion, intensity, triggers, relationships, and notes in under a minute.',
+        why: 'You start seeing what shows up most often instead of guessing from memory.',
+        icon: MessageCircle,
+      },
+      {
+        title: 'Insights',
+        what: 'Simple cards explain what appears in your check-ins, conversations, and reflections.',
+        why: 'Patterns become easier to catch before they become reactions.',
+        icon: BarChart3,
+      },
+    ],
+  },
+  {
+    id: 'moment',
+    eyebrow: 'In the moment',
+    title: 'Get help before the reaction takes over.',
+    subtitle: 'When emotions spike, the app points you toward calming, talking it through, or pausing before a message.',
+    theme: 'pause',
+    features: [
+      {
+        title: 'Companion',
+        what: 'Talk through what happened with context from your recent check-ins and patterns.',
+        why: 'It can help you slow down, understand the emotional chain, and choose one next step.',
+        icon: HeartHandshake,
+      },
+      {
+        title: 'Calm Me Down',
+        what: 'A short guided flow for intense moments, with before-and-after intensity tracking.',
+        why: 'It helps your body settle before you analyze or respond.',
+        icon: Wind,
+      },
+      {
+        title: "Don't Send It",
+        what: 'Paste a message and clarify who it is for, what you want, and how to say it more effectively.',
+        why: 'You can pause impulsive texting without shaming yourself or blocking your choice.',
+        icon: MessageSquareWarning,
+      },
+    ],
+  },
+  {
+    id: 'practice',
+    eyebrow: 'Practice and support',
+    title: 'Build skills between hard moments.',
+    subtitle: 'Use short practice, peer support, and real-life scenarios so the skills are easier to reach when you need them.',
+    theme: 'growth',
+    features: [
+      {
+        title: 'DBT Academy',
+        what: 'Practice real scenarios across abandonment, rejection, anger, shame, relationships, and more.',
+        why: 'You learn application, not theory, so skills become more natural.',
+        icon: BookOpen,
+      },
+      {
+        title: 'Community',
+        what: 'A peer-support space for feeling less alone.',
+        why: 'Community can support connection, while crisis and medical needs still belong with urgent or professional care.',
+        icon: Users,
+      },
+    ],
+  },
+  {
+    id: 'safety',
+    eyebrow: 'Safety',
+    title: 'Supportive, not medical care.',
+    subtitle: 'BPD Companion can help you reflect, practice, and organize care. It is not a replacement for therapy, medical advice, or emergency support.',
+    theme: 'safety',
+    features: [
+      {
+        title: 'Use crisis support when needed',
+        what: 'If someone is in immediate danger, contact local emergency services or a crisis line.',
+        why: 'The app is not a crisis service and should not be used as emergency care.',
+        icon: Shield,
+      },
+    ],
+  },
+];
+
+const TOTAL_STEPS = TOUR_STEPS.length;
+
+function buildCompletedProfile(skipped: boolean): OnboardingProfile {
+  return {
+    ...DEFAULT_ONBOARDING_PROFILE,
+    primaryReasons: ['understanding_patterns', 'impulsive_messaging', 'emotional_overwhelm'],
+    preferredTools: [
+      'ai_companion',
+      'calm_emotional_spikes',
+      'understand_patterns',
+      'pause_before_messaging',
+      'dbt_coping_skills',
+      'feel_less_alone',
+    ],
+    dailyCheckInTracks: ['emotions', 'triggers', 'urges', 'relationships', 'notes'],
+    desiredOutcomes: [
+      'better_understanding_triggers',
+      'more_pause_before_reacting',
+      'better_emotional_control',
+    ],
+    safetyAcknowledged: !skipped,
+    completedAt: Date.now(),
+    skippedAt: skipped ? Date.now() : null,
+  };
+}
 
 export default function OnboardingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { onboardingProfile, completeOnboarding } = useOnboarding();
+  const { colors, theme } = useAppTheme();
+  const { completeOnboarding } = useOnboarding();
+  const { refreshProfile } = useUserProfile();
   const { trackEvent } = useAnalytics();
   const [currentStep, setCurrentStep] = useState<number>(0);
-  const [profile, setProfile] = useState<OnboardingProfile>({
-    ...DEFAULT_ONBOARDING_PROFILE,
-    ...onboardingProfile,
-  });
-
+  const [isCompleting, setIsCompleting] = useState<boolean>(false);
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const slideAnim = useRef(new Animated.Value(0)).current;
   const progressAnim = useRef(new Animated.Value(1 / TOTAL_STEPS)).current;
 
+  const step = TOUR_STEPS[currentStep];
+  const isLastStep = currentStep === TOTAL_STEPS - 1;
+  const illustrationVariant = theme === 'dark' ? 'dark' : 'light';
+
+  useEffect(() => {
+    void trackEvent('onboarding_started', { version: 'feature_tour_v2' });
+  }, [trackEvent]);
+
   useEffect(() => {
     Animated.timing(progressAnim, {
       toValue: (currentStep + 1) / TOTAL_STEPS,
-      duration: 350,
+      duration: 280,
       useNativeDriver: false,
     }).start();
   }, [currentStep, progressAnim]);
-
-  const animateStep = useCallback((direction: 'forward' | 'back', callback: () => void) => {
-    const exitX = direction === 'forward' ? -24 : 24;
-    const enterX = direction === 'forward' ? 24 : -24;
-
-    Animated.parallel([
-      Animated.timing(fadeAnim, { toValue: 0, duration: 130, useNativeDriver: true }),
-      Animated.timing(slideAnim, { toValue: exitX, duration: 130, useNativeDriver: true }),
-    ]).start(() => {
-      callback();
-      slideAnim.setValue(enterX);
-      Animated.parallel([
-        Animated.timing(fadeAnim, { toValue: 1, duration: 180, useNativeDriver: true }),
-        Animated.timing(slideAnim, { toValue: 0, duration: 180, useNativeDriver: true }),
-      ]).start();
-    });
-  }, [fadeAnim, slideAnim]);
-
-  const toggleArrayValue = useCallback(<T extends string>(
-    key: 'primaryReasons' | 'preferredTools' | 'dailyCheckInTracks',
-    value: T,
-  ) => {
-    if (Platform.OS !== 'web') {
-      void Haptics.selectionAsync();
-    }
-    setProfile(prev => {
-      const current = prev[key] as T[];
-      const exists = current.includes(value);
-      return {
-        ...prev,
-        [key]: exists ? current.filter(item => item !== value) : [...current, value],
-      };
-    });
-  }, []);
-
-  const canProceed = useMemo(() => {
-    switch (currentStep) {
-      case 1:
-        return profile.primaryReasons.length > 0;
-      case 2:
-        return profile.preferredTools.length > 0;
-      case 3:
-        return profile.dailyCheckInTracks.length > 0;
-      case 4:
-        return profile.safetyAcknowledged;
-      default:
-        return true;
-    }
-  }, [currentStep, profile]);
-
-  const goBack = useCallback(() => {
-    if (currentStep === 0) return;
-    animateStep('back', () => setCurrentStep(prev => prev - 1));
-  }, [animateStep, currentStep]);
-
-  const goNext = useCallback(() => {
-    if (!canProceed) return;
-    if (Platform.OS !== 'web') {
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-
-    const stepId = ONBOARDING_STEPS[currentStep]?.id ?? 'unknown';
-    trackEvent('onboarding_step_completed', { step: stepId, step_index: currentStep });
-
-    if (currentStep < TOTAL_STEPS - 1) {
-      animateStep('forward', () => setCurrentStep(prev => prev + 1));
-      return;
-    }
-
-    const completed: OnboardingProfile = {
-      ...profile,
-      completedAt: Date.now(),
-      skippedAt: null,
-    };
-    completeOnboarding(completed);
-    trackEvent('onboarding_completed', {
-      reasons_count: completed.primaryReasons.length,
-      support_count: completed.preferredTools.length,
-      check_in_count: completed.dailyCheckInTracks.length,
-    });
-    router.replace('/');
-  }, [animateStep, canProceed, completeOnboarding, currentStep, profile, router, trackEvent]);
 
   const progressWidth = progressAnim.interpolate({
     inputRange: [0, 1],
     outputRange: ['0%', '100%'],
   });
 
-  const step = ONBOARDING_STEPS[currentStep];
-  const isLastStep = currentStep === TOTAL_STEPS - 1;
+  const animateStep = useCallback((direction: 'forward' | 'back', callback: () => void) => {
+    const exitX = direction === 'forward' ? -22 : 22;
+    const enterX = direction === 'forward' ? 22 : -22;
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 0, duration: 120, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: exitX, duration: 120, useNativeDriver: true }),
+    ]).start(() => {
+      callback();
+      slideAnim.setValue(enterX);
+      Animated.parallel([
+        Animated.timing(fadeAnim, { toValue: 1, duration: 170, useNativeDriver: true }),
+        Animated.timing(slideAnim, { toValue: 0, duration: 170, useNativeDriver: true }),
+      ]).start();
+    });
+  }, [fadeAnim, slideAnim]);
 
-  const renderOption = (
-    value: string,
-    label: string,
-    icon: string,
-    selected: boolean,
-    onPress: () => void,
-    testID: string,
-  ) => {
-    const Icon = ICON_MAP[icon] ?? Sparkles;
-    return (
-      <TouchableOpacity
-        key={value}
-        style={[styles.optionCard, selected && styles.optionCardSelected]}
-        onPress={onPress}
-        activeOpacity={0.75}
-        testID={testID}
-      >
-        <View style={[styles.optionIcon, selected && styles.optionIconSelected]}>
-          <Icon size={19} color={selected ? Colors.white : Colors.logoCyan} />
-        </View>
-        <Text style={[styles.optionText, selected && styles.optionTextSelected]}>{label}</Text>
-        <View style={[styles.checkCircle, selected && styles.checkCircleSelected]}>
-          {selected ? <Check size={13} color={Colors.white} /> : null}
-        </View>
-      </TouchableOpacity>
-    );
-  };
-
-  const renderWelcome = () => (
-    <View style={styles.centerContent}>
-      <View style={styles.logoHalo}>
-        <BrandLogo size={106} animated />
-      </View>
-      <Text style={styles.heroTitle}>BPD Companion</Text>
-      <Text style={styles.heroSubtitle}>
-        A calm, private companion for emotional regulation, reflection, and coping support.
-      </Text>
-      <View style={styles.featureStack}>
-        {[
-          ['Regulate emotional spikes', Wind],
-          ['Reflect without judgment', BookOpen],
-          ['Practice coping before reacting', Shield],
-        ].map(([label, Icon]) => {
-          const FeatureIcon = Icon as React.ComponentType<{ size: number; color: string }>;
-          return (
-            <View key={label as string} style={styles.featureRow}>
-              <FeatureIcon size={18} color={Colors.logoCyan} />
-              <Text style={styles.featureText}>{label as string}</Text>
-            </View>
-          );
-        })}
-      </View>
-    </View>
-  );
-
-  const renderReasons = () => (
-    <View style={styles.optionStack}>
-      <Text style={styles.multiHint}>Choose one or more</Text>
-      {PRIMARY_REASON_OPTIONS.map(option => renderOption(
-        option.value,
-        option.label,
-        option.icon,
-        profile.primaryReasons.includes(option.value),
-        () => toggleArrayValue<PrimaryReason>('primaryReasons', option.value),
-        `reason-${option.value}`,
-      ))}
-    </View>
-  );
-
-  const renderSupport = () => (
-    <View style={styles.optionStack}>
-      <Text style={styles.multiHint}>Choose one or more</Text>
-      {SUPPORT_GOAL_OPTIONS.map(option => renderOption(
-        option.value,
-        option.label,
-        option.icon,
-        profile.preferredTools.includes(option.value),
-        () => toggleArrayValue<PreferredTool>('preferredTools', option.value),
-        `support-${option.value}`,
-      ))}
-    </View>
-  );
-
-  const renderCheckIn = () => (
-    <View style={styles.optionStack}>
-      <Text style={styles.multiHint}>Choose what your daily check-in should include</Text>
-      {DAILY_CHECK_IN_OPTIONS.map(option => renderOption(
-        option.value,
-        option.label,
-        option.icon,
-        profile.dailyCheckInTracks.includes(option.value),
-        () => toggleArrayValue<DailyCheckInTrack>('dailyCheckInTracks', option.value),
-        `track-${option.value}`,
-      ))}
-    </View>
-  );
-
-  const renderSafety = () => (
-    <View style={styles.safetyCard}>
-      <View style={styles.safetyIconWrap}>
-        <Shield size={28} color={Colors.logoCyan} />
-      </View>
-      <Text style={styles.safetyTitle}>Supportive, not clinical care</Text>
-      {[
-        'This app is not medical advice.',
-        'It is not a crisis service.',
-        'It does not replace therapy or emergency care.',
-        'If someone is in immediate danger, contact local emergency services.',
-      ].map(item => (
-        <View key={item} style={styles.safetyLine}>
-          <View style={styles.safetyDot} />
-          <Text style={styles.safetyText}>{item}</Text>
-        </View>
-      ))}
-      <TouchableOpacity
-        style={[styles.ackButton, profile.safetyAcknowledged && styles.ackButtonSelected]}
-        onPress={() => {
-          if (Platform.OS !== 'web') void Haptics.selectionAsync();
-          setProfile(prev => ({ ...prev, safetyAcknowledged: !prev.safetyAcknowledged }));
-        }}
-        activeOpacity={0.75}
-        testID="acknowledge-safety"
-      >
-        <View style={[styles.ackCheck, profile.safetyAcknowledged && styles.ackCheckSelected]}>
-          {profile.safetyAcknowledged ? <Check size={13} color={Colors.white} /> : null}
-        </View>
-        <Text style={[styles.ackText, profile.safetyAcknowledged && styles.ackTextSelected]}>
-          I understand
-        </Text>
-      </TouchableOpacity>
-    </View>
-  );
-
-  const renderFinish = () => (
-    <View style={styles.centerContent}>
-      <View style={styles.logoHaloSmall}>
-        <BrandLogo size={84} />
-      </View>
-      <Text style={styles.finishTitle}>Your space is ready</Text>
-      <Text style={styles.finishText}>
-        BPD Companion will prioritize regulation tools, reflection prompts, and check-ins based on what you selected.
-      </Text>
-      <View style={styles.summaryCard}>
-        <Text style={styles.summaryLabel}>Selected focus areas</Text>
-        <Text style={styles.summaryValue}>{profile.primaryReasons.length} reasons</Text>
-        <View style={styles.summaryDivider} />
-        <Text style={styles.summaryLabel}>Support goals</Text>
-        <Text style={styles.summaryValue}>{profile.preferredTools.length} priorities</Text>
-        <View style={styles.summaryDivider} />
-        <Text style={styles.summaryLabel}>Daily check-in</Text>
-        <Text style={styles.summaryValue}>{profile.dailyCheckInTracks.length} trackers</Text>
-      </View>
-    </View>
-  );
-
-  const renderStep = () => {
-    switch (currentStep) {
-      case 0:
-        return renderWelcome();
-      case 1:
-        return renderReasons();
-      case 2:
-        return renderSupport();
-      case 3:
-        return renderCheckIn();
-      case 4:
-        return renderSafety();
-      case 5:
-        return renderFinish();
-      default:
-        return null;
+  const finishOnboarding = useCallback(async (skipped: boolean) => {
+    if (isCompleting) return;
+    if (Platform.OS !== 'web') {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-  };
+    setIsCompleting(true);
+    const completed = buildCompletedProfile(skipped);
+    try {
+      await completeOnboarding(completed);
+      await refreshProfile();
+      trackEvent(skipped ? 'onboarding_step_completed' : 'onboarding_completed', {
+        step: skipped ? 'skipped' : 'feature_tour_complete',
+        version: 'feature_tour_v2',
+      });
+      router.replace('/(tabs)/(home)' as never);
+    } catch (error) {
+      console.log('[Onboarding] completion failed:', error);
+      setIsCompleting(false);
+    }
+  }, [completeOnboarding, isCompleting, refreshProfile, router, trackEvent]);
+
+  const goBack = useCallback(() => {
+    if (currentStep === 0 || isCompleting) return;
+    animateStep('back', () => setCurrentStep(prev => prev - 1));
+  }, [animateStep, currentStep, isCompleting]);
+
+  const goNext = useCallback(() => {
+    if (isCompleting) return;
+    if (Platform.OS !== 'web') {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    trackEvent('onboarding_step_completed', { step: step.id, step_index: currentStep });
+    if (isLastStep) {
+      void finishOnboarding(false);
+      return;
+    }
+    animateStep('forward', () => setCurrentStep(prev => prev + 1));
+  }, [animateStep, currentStep, finishOnboarding, isCompleting, isLastStep, step.id, trackEvent]);
+
+  const featureRows = useMemo(() => step.features, [step.features]);
+
+  if (isCompleting) {
+    return (
+      <View style={[styles.transitionContainer, { paddingTop: insets.top, backgroundColor: colors.background }]}>
+        <BrandLogo size={74} />
+        <ActivityIndicator size="small" color={colors.brandTeal} style={styles.transitionSpinner} />
+        <Text style={[styles.transitionTitle, { color: colors.text }]}>Setting up your space</Text>
+        <Text style={[styles.transitionText, { color: colors.textSecondary }]}>BPD Companion is saving your tutorial.</Text>
+      </View>
+    );
+  }
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}>
       <View style={styles.topBar}>
         <View style={styles.progressRow}>
-          <View style={styles.progressTrack}>
-            <Animated.View style={[styles.progressFill, { width: progressWidth }]} />
+          <View style={[styles.progressTrack, { backgroundColor: colors.borderLight }]}>
+            <Animated.View style={[styles.progressFill, { width: progressWidth, backgroundColor: colors.brandTeal }]} />
           </View>
-          <Text style={styles.progressText}>{currentStep + 1} / {TOTAL_STEPS}</Text>
+          <Text style={[styles.progressText, { color: colors.primary }]}>{currentStep + 1} / {TOTAL_STEPS}</Text>
         </View>
+        <TouchableOpacity
+          onPress={() => void finishOnboarding(true)}
+          activeOpacity={0.75}
+          style={styles.skipButton}
+          testID="onboarding-skip"
+        >
+          <Text style={[styles.skipText, { color: colors.textSecondary }]}>Skip</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 116 }]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 122 }]}
         showsVerticalScrollIndicator={false}
       >
-        <Animated.View style={[styles.stepHeader, { opacity: fadeAnim, transform: [{ translateX: slideAnim }] }]}>
-          {currentStep > 0 ? (
-            <>
-              <Text style={styles.stepKicker}>BPD Companion</Text>
-              <Text style={styles.stepTitle}>{step.title}</Text>
-              <Text style={styles.stepSubtitle}>{step.subtitle}</Text>
-            </>
-          ) : null}
-        </Animated.View>
         <Animated.View style={{ opacity: fadeAnim, transform: [{ translateX: slideAnim }] }}>
-          {renderStep()}
+          <View style={[styles.visualCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
+            {currentStep === 0 ? (
+              <BrandLogo size={118} animated />
+            ) : (
+              <OnboardingIllustration theme={step.theme} size={150} variant={illustrationVariant} />
+            )}
+          </View>
+
+          <Text style={[styles.eyebrow, { color: colors.brandTeal }]}>{step.eyebrow}</Text>
+          <Text style={[styles.title, { color: colors.text }]}>{step.title}</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{step.subtitle}</Text>
+
+          <View style={styles.featureStack}>
+            {featureRows.map((feature) => {
+              const Icon = feature.icon;
+              return (
+                <View
+                  key={feature.title}
+                  style={[styles.featureCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}
+                >
+                  <View style={[styles.featureIcon, { backgroundColor: colors.primaryLight }]}>
+                    <Icon size={20} color={colors.primary} />
+                  </View>
+                  <View style={styles.featureCopy}>
+                    <Text style={[styles.featureTitle, { color: colors.text }]}>{feature.title}</Text>
+                    <Text style={[styles.featureText, { color: colors.textSecondary }]}>
+                      <Text style={[styles.featureLead, { color: colors.text }]}>What it is: </Text>
+                      {feature.what}
+                    </Text>
+                    <Text style={[styles.featureText, { color: colors.textSecondary }]}>
+                      <Text style={[styles.featureLead, { color: colors.text }]}>How it helps: </Text>
+                      {feature.why}
+                    </Text>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+
+          <Text style={[styles.replayNote, { color: colors.textMuted }]}>
+            You can replay this tutorial later from Profile.
+          </Text>
         </Animated.View>
       </ScrollView>
 
-      <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+      <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 16), backgroundColor: colors.card, borderTopColor: colors.borderLight }]}>
         {currentStep > 0 ? (
-          <TouchableOpacity onPress={goBack} style={styles.backButton} activeOpacity={0.75} testID="back-button">
-            <ChevronLeft size={18} color={Colors.logoCyan} />
-            <Text style={styles.backText}>Back</Text>
+          <TouchableOpacity onPress={goBack} style={styles.backButton} activeOpacity={0.75} testID="onboarding-back">
+            <ChevronLeft size={18} color={colors.primary} />
+            <Text style={[styles.backText, { color: colors.primary }]}>Back</Text>
           </TouchableOpacity>
         ) : (
           <View style={styles.backPlaceholder} />
         )}
 
         <TouchableOpacity
-          style={[styles.nextButton, !canProceed && styles.nextButtonDisabled]}
+          style={[styles.nextButton, { backgroundColor: colors.primary }]}
           onPress={goNext}
           activeOpacity={0.75}
-          disabled={!canProceed}
-          testID="continue-button"
+          testID="onboarding-continue"
         >
-          <Text style={[styles.nextText, !canProceed && styles.nextTextDisabled]}>
-            {isLastStep ? 'Enter app' : currentStep === 0 ? 'Begin' : 'Continue'}
-          </Text>
-          <ChevronRight size={18} color={canProceed ? Colors.white : Colors.textMuted} />
+          <Text style={styles.nextText}>{isLastStep ? 'Enter app' : currentStep === 0 ? 'Start tour' : 'Continue'}</Text>
+          <ChevronRight size={18} color={Colors.white} />
         </TouchableOpacity>
       </View>
     </View>
@@ -413,16 +380,40 @@ export default function OnboardingScreen() {
 }
 
 const styles = StyleSheet.create({
+  transitionContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 28,
+  },
+  transitionSpinner: {
+    marginTop: 22,
+    marginBottom: 14,
+  },
+  transitionTitle: {
+    fontSize: 22,
+    fontWeight: '900',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  transitionText: {
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'center',
+  },
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
     paddingHorizontal: 22,
     paddingTop: 14,
     paddingBottom: 10,
   },
   progressRow: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
@@ -431,292 +422,101 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 5,
     borderRadius: 3,
-    backgroundColor: 'rgba(255,255,255,0.12)',
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
     borderRadius: 3,
-    backgroundColor: Colors.logoCyan,
   },
   progressText: {
     minWidth: 38,
     textAlign: 'right',
     fontSize: 12,
-    color: Colors.logoCyan,
-    fontWeight: '700',
+    fontWeight: '800',
+  },
+  skipButton: {
+    paddingHorizontal: 4,
+    paddingVertical: 8,
+  },
+  skipText: {
+    fontSize: 14,
+    fontWeight: '800',
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     paddingHorizontal: 22,
+    paddingTop: 18,
   },
-  stepHeader: {
-    minHeight: 100,
-    justifyContent: 'flex-end',
-    paddingTop: 14,
-    paddingBottom: 20,
-  },
-  stepKicker: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: Colors.logoCyan,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 8,
-  },
-  stepTitle: {
-    fontSize: 28,
-    lineHeight: 34,
-    fontWeight: '800',
-    color: Colors.white,
-    marginBottom: 8,
-  },
-  stepSubtitle: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: 'rgba(255,255,255,0.72)',
-  },
-  centerContent: {
-    alignItems: 'center',
-    paddingTop: 34,
-  },
-  logoHalo: {
-    width: 142,
-    height: 142,
-    borderRadius: 38,
+  visualCard: {
+    minHeight: 188,
+    borderRadius: 26,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.primaryLight,
-    borderWidth: 1,
-    borderColor: Colors.border,
     marginBottom: 24,
+    overflow: 'hidden',
   },
-  logoHaloSmall: {
-    width: 116,
-    height: 116,
-    borderRadius: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.primaryLight,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    marginBottom: 22,
-  },
-  heroTitle: {
-    fontSize: 36,
-    lineHeight: 42,
+  eyebrow: {
+    fontSize: 12,
     fontWeight: '900',
-    color: Colors.white,
-    textAlign: 'center',
-    marginBottom: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 8,
   },
-  heroSubtitle: {
-    maxWidth: 330,
-    fontSize: 16,
-    lineHeight: 24,
-    color: 'rgba(255,255,255,0.76)',
-    textAlign: 'center',
-    marginBottom: 28,
-  },
-  featureStack: {
-    width: '100%',
-    gap: 10,
-  },
-  featureRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    padding: 15,
-    borderRadius: 16,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-  },
-  featureText: {
-    color: Colors.white,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  optionStack: {
-    gap: 10,
-  },
-  multiHint: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: Colors.logoCyan,
-    marginBottom: 2,
-  },
-  optionCard: {
-    minHeight: 62,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    padding: 14,
-    borderRadius: 16,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-  },
-  optionCardSelected: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.logoCyan,
-  },
-  optionIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(103,232,249,0.12)',
-  },
-  optionIconSelected: {
-    backgroundColor: Colors.brandTeal,
-  },
-  optionText: {
-    flex: 1,
-    color: Colors.white,
-    fontSize: 15,
-    lineHeight: 20,
-    fontWeight: '600',
-  },
-  optionTextSelected: {
-    color: Colors.white,
-  },
-  checkCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkCircleSelected: {
-    backgroundColor: Colors.brandTeal,
-    borderColor: Colors.brandTeal,
-  },
-  safetyCard: {
-    padding: 20,
-    borderRadius: 22,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-  },
-  safetyIconWrap: {
-    width: 58,
-    height: 58,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.primaryLight,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    marginBottom: 18,
-  },
-  safetyTitle: {
-    fontSize: 21,
-    lineHeight: 27,
-    fontWeight: '800',
-    color: Colors.white,
-    marginBottom: 16,
-  },
-  safetyLine: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-    marginBottom: 13,
-  },
-  safetyDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: Colors.logoCyan,
-    marginTop: 7,
-  },
-  safetyText: {
-    flex: 1,
-    fontSize: 14,
-    lineHeight: 21,
-    color: 'rgba(255,255,255,0.76)',
-  },
-  ackButton: {
-    marginTop: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    padding: 14,
-    borderRadius: 15,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-  },
-  ackButtonSelected: {
-    borderColor: Colors.logoCyan,
-    backgroundColor: Colors.primary,
-  },
-  ackCheck: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ackCheckSelected: {
-    borderColor: Colors.brandTeal,
-    backgroundColor: Colors.brandTeal,
-  },
-  ackText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: Colors.white,
-  },
-  ackTextSelected: {
-    color: Colors.white,
-  },
-  finishTitle: {
+  title: {
     fontSize: 30,
     lineHeight: 36,
     fontWeight: '900',
-    color: Colors.white,
-    textAlign: 'center',
     marginBottom: 10,
   },
-  finishText: {
+  subtitle: {
     fontSize: 15,
-    lineHeight: 23,
-    color: 'rgba(255,255,255,0.76)',
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  summaryCard: {
-    width: '100%',
-    borderRadius: 20,
-    padding: 18,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-  },
-  summaryLabel: {
-    fontSize: 12,
+    lineHeight: 22,
     fontWeight: '700',
-    color: Colors.logoCyan,
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
+    marginBottom: 18,
   },
-  summaryValue: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: Colors.white,
-    marginTop: 4,
+  featureStack: {
+    gap: 10,
   },
-  summaryDivider: {
-    height: 1,
-    backgroundColor: Colors.borderLight,
-    marginVertical: 14,
+  featureCard: {
+    flexDirection: 'row',
+    gap: 12,
+    borderRadius: 18,
+    borderWidth: 1,
+    padding: 14,
+  },
+  featureIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  featureCopy: {
+    flex: 1,
+    gap: 5,
+  },
+  featureTitle: {
+    fontSize: 16,
+    lineHeight: 21,
+    fontWeight: '900',
+  },
+  featureText: {
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: '700',
+  },
+  featureLead: {
+    fontWeight: '900',
+  },
+  replayNote: {
+    marginTop: 16,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '700',
+    textAlign: 'center',
   },
   bottomBar: {
     position: 'absolute',
@@ -729,9 +529,7 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingHorizontal: 22,
     paddingTop: 14,
-    backgroundColor: 'rgba(2,6,23,0.96)',
     borderTopWidth: 1,
-    borderTopColor: Colors.borderLight,
   },
   backButton: {
     flexDirection: 'row',
@@ -741,9 +539,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
   backText: {
-    color: Colors.logoCyan,
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   backPlaceholder: {
     width: 74,
@@ -757,17 +554,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     borderRadius: 18,
-    backgroundColor: Colors.brandTeal,
-  },
-  nextButtonDisabled: {
-    backgroundColor: 'rgba(255,255,255,0.12)',
   },
   nextText: {
     color: Colors.white,
     fontSize: 16,
-    fontWeight: '800',
-  },
-  nextTextDisabled: {
-    color: Colors.textMuted,
+    fontWeight: '900',
   },
 });

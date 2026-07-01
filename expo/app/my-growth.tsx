@@ -38,7 +38,7 @@ import { useIdentityValues } from '@/hooks/useIdentity';
 import type { GrowthSignal } from '@/types/identity';
 
 const SIGNAL_TYPE_META: Record<GrowthSignal['type'], { label: string; color: string; bg: string; icon: string }> = {
-  value_alignment: { label: 'Value Alignment', color: '#14B8A6', bg: '#0B1238', icon: 'compass' },
+  value_alignment: { label: 'Value Alignment', color: '#14B8A6', bg: '#D9E2EC', icon: 'compass' },
   regulation_win: { label: 'Regulation Win', color: '#14B8A6', bg: '#FFFFFF', icon: 'shield' },
   boundary_set: { label: 'Boundary Set', color: '#3B82F6', bg: '#FFFFFF', icon: 'shield' },
   self_awareness: { label: 'Self-Awareness', color: '#3B82F6', bg: '#FFFFFF', icon: 'eye' },
@@ -466,7 +466,7 @@ export default function MyGrowthScreen() {
                 onPress={() => router.push('/values-explorer')}
                 activeOpacity={0.7}
               >
-                <View style={[styles.toolIcon, { backgroundColor: '#0B1238' }]}>
+                <View style={[styles.toolIcon, { backgroundColor: '#D9E2EC' }]}>
                   <Compass size={20} color="#14B8A6" />
                 </View>
                 <Text style={styles.toolLabel}>Values Explorer</Text>
@@ -816,7 +816,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     gap: 14,
     borderWidth: 1,
-    borderColor: '#0B1238',
+    borderColor: '#D9E2EC',
   },
   addStrengthPromptContent: {
     flex: 1,

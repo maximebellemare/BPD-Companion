@@ -9,7 +9,10 @@ export type SpiralSignalType =
   | 'shame_cascade'
   | 'urge_intensification'
   | 'coping_abandonment'
-  | 'isolation_pattern';
+  | 'isolation_pattern'
+  | 'poor_sleep_vulnerability'
+  | 'conversation_spiral_language'
+  | 'familiar_spiral_pattern';
 
 export interface SpiralSignal {
   id: string;
@@ -23,7 +26,7 @@ export interface SpiralSignal {
 
 export interface SpiralIntervention {
   id: string;
-  type: 'pause' | 'grounding' | 'breathing' | 'journal' | 'ai_companion' | 'dbt_tool' | 'relationship_copilot';
+  type: 'pause' | 'grounding' | 'breathing' | 'journal' | 'ai_companion' | 'dbt_tool' | 'relationship_copilot' | 'message_guard';
   title: string;
   description: string;
   route: string;

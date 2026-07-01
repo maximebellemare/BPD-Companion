@@ -5,6 +5,8 @@ import { CompanionPatternInsight } from './patternInsightService';
 import { SmartJournalEntry } from '@/types/journalEntry';
 import { EnhancedMessageOutcome } from '@/types/messageOutcome';
 import { buildCompanionContextEnrichment } from '@/services/crossLoop/crossLoopBridgeService';
+import { Appointment, APPOINTMENT_TYPE_LABELS, formatAppointmentDate, formatAppointmentTime } from '@/types/appointment';
+import { Medication, MedicationLog } from '@/types/medication';
 
 export interface LiveEmotionalContext {
   recentDistressLevel: 'low' | 'moderate' | 'high' | 'unknown';
@@ -34,8 +36,11 @@ export function buildLiveEmotionalContext(params: {
   patternInsights: CompanionPatternInsight[];
   smartJournalEntries?: SmartJournalEntry[];
   messageOutcomes?: EnhancedMessageOutcome[];
+  appointments?: Appointment[];
+  medications?: Medication[];
+  medicationLogs?: MedicationLog[];
 }): LiveEmotionalContext {
-  const { journalEntries, messageDrafts, memoryProfile, memoryStore, weeklyInsights, patternInsights, smartJournalEntries, messageOutcomes } = params;
+  const { journalEntries, messageDrafts, memoryProfile, memoryStore, weeklyInsights, patternInsights, smartJournalEntries, messageOutcomes, appointments = [], medications = [], medicationLogs = [] } = params;
 
   console.log('[EmotionalContext] Building live context from', journalEntries.length, 'entries,', messageDrafts.length, 'drafts');
 
@@ -79,8 +84,8 @@ export function buildLiveEmotionalContext(params: {
     m => (m.emotion === 'intense distress' || m.intensity && m.intensity >= 9) && now - m.timestamp < threeDaysMs,
   ) ?? false;
 
-  const appointmentContext = null;
-  const medicationContext = null;
+  const appointmentContext = buildAppointmentContext(appointments, now);
+  const medicationContext = buildMedicationContext(medications, medicationLogs, now);
   const movementContext = null;
 
   const weeklyReflectionAvailable = weeklyInsights.length > 0 && now - weeklyInsights[0].generatedAt < 10 * oneDayMs;
@@ -120,6 +125,8 @@ export function buildLiveEmotionalContext(params: {
     patternInsights,
     memoryProfile,
     crossLoopEnrichment,
+    appointmentContext,
+    medicationContext,
   });
 
   return {
@@ -140,6 +147,75 @@ export function buildLiveEmotionalContext(params: {
     streakContext,
     contextNarrative,
   };
+}
+
+function buildAppointmentContext(appointments: Appointment[], now: number): string | null {
+  const upcoming = appointments
+    .filter(appointment => !appointment.completed && appointment.dateTime >= now)
+    .sort((a, b) => a.dateTime - b.dateTime)
+    .slice(0, 2);
+  const recentCompleted = appointments
+    .filter(appointment => appointment.completed && now - appointment.dateTime < 30 * 24 * 60 * 60 * 1000)
+    .sort((a, b) => b.dateTime - a.dateTime)
+    .slice(0, 2);
+
+  const parts: string[] = [];
+  if (upcoming.length > 0) {
+    parts.push(`Upcoming appointments: ${upcoming.map(appointment => `${APPOINTMENT_TYPE_LABELS[appointment.appointmentType]} "${appointment.providerName}" ${formatAppointmentDate(appointment.dateTime)} at ${formatAppointmentTime(appointment.dateTime)}`).join('; ')}.`);
+  }
+  if (recentCompleted.length > 0) {
+    parts.push(`Recent completed appointments: ${recentCompleted.map(appointment => `${APPOINTMENT_TYPE_LABELS[appointment.appointmentType]} "${appointment.providerName}"`).join('; ')}.`);
+    const reflections = recentCompleted
+      .map(formatAppointmentReflection)
+      .filter(Boolean);
+    if (reflections.length > 0) {
+      parts.push(`Recent appointment reflections: ${reflections.join('; ')}.`);
+    }
+  }
+
+  return parts.length > 0 ? parts.join(' ') : null;
+}
+
+function formatAppointmentReflection(appointment: Appointment): string | null {
+  const notes = appointment.postSessionNotes;
+  if (!notes) return null;
+
+  const details = [
+    notes.whatStoodOut ? `stood out: ${notes.whatStoodOut}` : null,
+    notes.remember ? `remember: ${notes.remember}` : null,
+    notes.actionItems ? `action items: ${notes.actionItems}` : null,
+    notes.followUpQuestions ? `follow-up questions: ${notes.followUpQuestions}` : null,
+    notes.mainTakeaways ? `takeaway: ${notes.mainTakeaways}` : null,
+    notes.thingsToPractice ? `practice: ${notes.thingsToPractice}` : null,
+  ]
+    .filter(Boolean)
+    .slice(0, 3);
+
+  if (details.length === 0) return null;
+
+  return `${APPOINTMENT_TYPE_LABELS[appointment.appointmentType]} "${appointment.providerName}" (${details.join(', ')})`;
+}
+
+function buildMedicationContext(medications: Medication[], logs: MedicationLog[], now: number): string | null {
+  const activeMedicationNames = medications
+    .filter(medication => medication.active)
+    .map(medication => medication.name)
+    .filter(Boolean)
+    .slice(0, 6);
+  if (activeMedicationNames.length === 0) return null;
+
+  const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+  const recentLogs = logs.filter(log => log.timestamp >= sevenDaysAgo);
+  const taken = recentLogs.filter(log => log.status === 'taken').length;
+  const missed = recentLogs.filter(log => log.status === 'missed').length;
+
+  const parts = [`Medication names the user added: ${activeMedicationNames.join(', ')}.`];
+  if (recentLogs.length > 0) {
+    parts.push(`Medication tracking in the last 7 days: user marked ${taken} dose${taken === 1 ? '' : 's'} as taken and ${missed} dose${missed === 1 ? '' : 's'} as missed.`);
+  }
+  parts.push('Medication tracking is for organization only and does not replace medical advice.');
+
+  return parts.join(' ');
 }
 
 function extractJournalTheme(entries: JournalEntry[]): string | null {
@@ -179,6 +255,8 @@ function buildContextNarrative(params: {
   patternInsights: CompanionPatternInsight[];
   memoryProfile: MemoryProfile;
   crossLoopEnrichment: ReturnType<typeof buildCompanionContextEnrichment> | null;
+  appointmentContext: string | null;
+  medicationContext: string | null;
 }): string {
   const parts: string[] = [];
 
@@ -222,6 +300,14 @@ function buildContextNarrative(params: {
 
   if (params.weeklyReflectionAvailable) {
     parts.push('A weekly reflection is available. You can offer to discuss it if the timing feels right.');
+  }
+
+  if (params.appointmentContext) {
+    parts.push(params.appointmentContext);
+  }
+
+  if (params.medicationContext) {
+    parts.push(params.medicationContext);
   }
 
   if (params.memoryProfile.intensityTrend === 'falling') {

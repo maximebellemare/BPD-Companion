@@ -38,14 +38,14 @@ import { useLifeInsights } from '@/hooks/useLifeInsights';
 import { LifeInsight, WeeklySummary } from '@/types/lifeInsight';
 
 const CATEGORY_CONFIG: Record<string, { icon: React.ReactNode; color: string; bgColor: string }> = {
-  trigger: { icon: <Zap size={16} color="#67E8F9" />, color: '#67E8F9', bgColor: '#0B1238' },
+  trigger: { icon: <Zap size={16} color="#67E8F9" />, color: '#67E8F9', bgColor: '#D9E2EC' },
   relationship: { icon: <Heart size={16} color="#3B82F6" />, color: '#3B82F6', bgColor: '#FFFFFF' },
-  coping: { icon: <Shield size={16} color="#14B8A6" />, color: '#14B8A6', bgColor: '#0B1238' },
+  coping: { icon: <Shield size={16} color="#14B8A6" />, color: '#14B8A6', bgColor: '#D9E2EC' },
   distress: { icon: <AlertTriangle size={16} color="#3B82F6" />, color: '#3B82F6', bgColor: '#FFFFFF' },
   growth: { icon: <Leaf size={16} color="#14B8A6" />, color: '#14B8A6', bgColor: '#FFFFFF' },
   communication: { icon: <MessageCircle size={16} color="#3B82F6" />, color: '#3B82F6', bgColor: '#FFFFFF' },
-  time_pattern: { icon: <Clock size={16} color="#3B82F6" />, color: '#3B82F6', bgColor: '#0B1238' },
-  emotional_loop: { icon: <Repeat size={16} color="#67E8F9" />, color: '#67E8F9', bgColor: '#0B1238' },
+  time_pattern: { icon: <Clock size={16} color="#3B82F6" />, color: '#3B82F6', bgColor: '#D9E2EC' },
+  emotional_loop: { icon: <Repeat size={16} color="#67E8F9" />, color: '#67E8F9', bgColor: '#D9E2EC' },
 };
 
 const SEVERITY_ACCENT: Record<string, string> = {
@@ -1002,7 +1002,7 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 9,
-    backgroundColor: '#0B1238',
+    backgroundColor: '#D9E2EC',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },

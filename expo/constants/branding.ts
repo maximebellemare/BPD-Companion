@@ -6,9 +6,9 @@ export const BRAND = {
 } as const;
 
 export const BrandColors = {
-  navy: '#020617',
-  navyLight: '#0B1238',
-  navyMuted: '#15145A',
+  navy: '#2E2A72',
+  navyLight: '#3B82F6',
+  navyMuted: '#486581',
 
   teal: '#14B8A6',
   tealLight: '#67E8F9',
@@ -27,10 +27,10 @@ export const BrandColors = {
 
   white: '#FFFFFF',
   warmWhite: '#FFFFFF',
-  parchment: 'rgba(255, 255, 255, 0.1)',
+  parchment: '#F8FBFF',
 
-  charcoal: '#020617',
-  charcoalLight: '#0B1238',
+  charcoal: '#102A43',
+  charcoalLight: '#486581',
 
   calm: '#14B8A6',
   calmSoft: 'rgba(20, 184, 166, 0.18)',
@@ -41,9 +41,9 @@ export const BrandColors = {
   blue: '#3B82F6',
   blueSoft: 'rgba(59, 130, 246, 0.18)',
 
-  textPrimary: '#FFFFFF',
-  textSecondary: '#0B1238',
-  textMuted: '#2E2A72',
+  textPrimary: '#102A43',
+  textSecondary: '#486581',
+  textMuted: '#627D98',
   textOnDark: '#FFFFFF',
   textOnDarkMuted: 'rgba(255, 255, 255, 0.68)',
 } as const;
@@ -104,14 +104,14 @@ export const BrandSpacing = {
   sectionGap: 24,
   cardPadding: 18,
   cardShadow: {
-    shadowColor: 'rgba(0, 0, 0, 0.36)',
+    shadowColor: 'rgba(16, 42, 67, 0.12)',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 1,
     shadowRadius: 18,
     elevation: 4,
   },
   cardShadowLight: {
-    shadowColor: 'rgba(0, 0, 0, 0.24)',
+    shadowColor: 'rgba(16, 42, 67, 0.1)',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 1,
     shadowRadius: 12,

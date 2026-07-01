@@ -1,5 +1,6 @@
 import { AppointmentState, DEFAULT_APPOINTMENT_STATE, Appointment } from '@/types/appointment';
 import { IStorageService } from '@/services/storage/storageService';
+import { normalizeAppointmentState } from '@/services/care/careDataNormalizer';
 
 const APPOINTMENT_KEY = 'bpd_appointments';
 
@@ -14,17 +15,19 @@ export class LocalAppointmentRepository implements IAppointmentRepository {
 
   async getState(): Promise<AppointmentState> {
     const data = await this.storage.get<AppointmentState>(APPOINTMENT_KEY);
-    console.log('[AppointmentRepository] Loaded state:', data?.appointments?.length ?? 0, 'appointments');
-    return data ?? { ...DEFAULT_APPOINTMENT_STATE };
+    const normalized = normalizeAppointmentState(data ?? DEFAULT_APPOINTMENT_STATE, 'AppointmentRepository.getState');
+    console.log('[AppointmentRepository] Loaded state:', normalized.appointments.length, 'appointments');
+    return normalized;
   }
 
   async saveState(state: AppointmentState): Promise<void> {
-    await this.storage.set(APPOINTMENT_KEY, state);
-    console.log('[AppointmentRepository] Saved state:', state.appointments.length, 'appointments');
+    const normalized = normalizeAppointmentState(state, 'AppointmentRepository.saveState');
+    await this.storage.set(APPOINTMENT_KEY, normalized);
+    console.log('[AppointmentRepository] Saved state:', normalized.appointments.length, 'appointments');
   }
 
   async getAppointments(): Promise<Appointment[]> {
     const state = await this.getState();
-    return state.appointments;
+    return normalizeAppointmentState(state, 'AppointmentRepository.getAppointments').appointments;
   }
 }

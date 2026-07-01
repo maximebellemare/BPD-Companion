@@ -9,7 +9,7 @@ import {
   Platform,
   Alert,
 } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
+import { Redirect, Stack, useRouter } from 'expo-router';
 import {
   Bug,
   Bell,
@@ -42,6 +42,10 @@ import { notificationExperimentService, EXPERIMENT_DEFINITIONS } from '@/service
 import { ExperimentSummary, ExperimentAssignment, ExperimentEvent } from '@/types/notificationExperiment';
 
 export default function NotificationDebugScreen() {
+  if (!__DEV__) {
+    return <Redirect href="/(tabs)/profile" />;
+  }
+
   const router = useRouter();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [permissionStatus, setPermissionStatus] = useState<string>('loading...');

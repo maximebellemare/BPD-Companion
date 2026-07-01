@@ -25,6 +25,8 @@ import { SpiralPreventionProvider } from "@/providers/SpiralPreventionProvider";
 import Colors from "@/constants/colors";
 import DeferredProviders from "@/components/DeferredProviders";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { ThemeProvider, useAppTheme } from "@/providers/ThemeProvider";
+import { runCareDataNormalizerSmokeTest } from "@/services/care/careDataNormalizer.smoke";
 const NotificationManagerLazy = Platform.OS !== 'web' 
   ? lazy(() => import("@/components/NotificationManager"))
   : null;
@@ -36,19 +38,20 @@ if (Platform.OS !== 'web') {
 const queryClient = new QueryClient();
 
 function RootLayoutNav() {
+  const { colors } = useAppTheme();
   return (
     <Stack
       screenOptions={{
         headerBackTitle: "Back",
-        contentStyle: { backgroundColor: Colors.background },
-        headerTintColor: Colors.brandTeal,
+        contentStyle: { backgroundColor: colors.background },
+        headerTintColor: colors.brandTeal,
         headerTitleStyle: {
           fontWeight: '600' as const,
-          color: Colors.brandNavy,
+          color: colors.brandNavy,
           fontSize: 17,
         },
         headerStyle: {
-          backgroundColor: Colors.background,
+          backgroundColor: colors.background,
         },
         headerShadowVisible: false,
       }}
@@ -621,8 +624,8 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   useEffect(() => {
-    if (Platform.OS !== 'web') {
-      void SplashScreen.hideAsync();
+    if (__DEV__) {
+      console.log('[CareDataSmokeTest] normalizer guard passed:', runCareDataNormalizerSmokeTest());
     }
   }, []);
 
@@ -637,11 +640,12 @@ export default function RootLayout() {
             <OnboardingProvider>
               <SubscriptionProvider>
                 <ProfileProvider>
+                  <ThemeProvider>
                   <DeferredProviders>
+                    <MedicationProvider>
+                    <AppointmentProvider>
                     <AICompanionProvider>
                       <EmotionalContextProvider>
-                        <MedicationProvider>
-                        <AppointmentProvider>
                         <RewardsProvider>
                         <MovementProvider>
                         <JournalProvider>
@@ -652,18 +656,19 @@ export default function RootLayout() {
                               <NotificationManagerLazy />
                             </Suspense>
                           )}
-                          <RouteGate />
                           <RootLayoutNav />
+                          <RouteGate />
                         </NotificationEntryProvider>
                         </SpiralPreventionProvider>
                         </JournalProvider>
                         </MovementProvider>
                         </RewardsProvider>
-                        </AppointmentProvider>
-                        </MedicationProvider>
                       </EmotionalContextProvider>
                     </AICompanionProvider>
+                    </AppointmentProvider>
+                    </MedicationProvider>
                   </DeferredProviders>
+                  </ThemeProvider>
                 </ProfileProvider>
               </SubscriptionProvider>
             </OnboardingProvider>

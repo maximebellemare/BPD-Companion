@@ -1,445 +1,372 @@
-import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
+  Platform,
   ScrollView,
+  StyleSheet,
+  Text,
   TouchableOpacity,
-  Animated,
-  TextInput,
+  View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  Shield,
-  Waves,
-  Users,
-  Brain,
-  ChevronLeft,
-  Star,
-  Zap,
-  TrendingUp,
-  TrendingDown,
-  Clock,
-  Search,
-  X,
-  MessageCircle,
-  HeartCrack,
-  ShieldOff,
-  Eye as EyeIcon,
-  Wind,
-  Heart,
-  Flame,
-  ChevronRight,
+  ArrowLeft,
   Award,
+  Brain,
+  CheckCircle2,
+  ChevronRight,
+  Flame,
+  Heart,
+  HeartHandshake,
+  Layers,
+  Shield,
+  Sparkles,
+  Target,
+  Zap,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
-import { DBTModuleInfo, DBTProgress, DBTRecommendation, DEFAULT_DBT_PROGRESS } from '@/types/dbt';
-import { DBT_SITUATIONAL_ENTRIES } from '@/data/dbtSkills';
+import { useAppTheme } from '@/providers/ThemeProvider';
+import { trackEvent } from '@/services/analytics/analyticsService';
 import {
-  getModules,
-  getRecommendedSkills,
-  getSkillById,
-  getModuleProgress,
-  getDBTProgress,
-  searchSkills,
-} from '@/services/dbt/dbtCoachService';
-import { getBestSkillsForUser, getWeeklyStats } from '@/services/dbt/dbtPracticeService';
-import { useApp } from '@/providers/AppProvider';
+  answerDBTAcademyScenario,
+  DBT_ACADEMY_SCENARIOS,
+  DBTAcademyLevel,
+  DBTAcademyProgress,
+  DBTAcademyScenario,
+  DBTAcademyTrack,
+  DEFAULT_DBT_ACADEMY_PROGRESS,
+  getDBTAcademyProgress,
+  getScenarioCountForTrack,
+  LEVEL_LABELS,
+  TRACK_LABELS,
+} from '@/services/dbt/dbtAcademyService';
 
-const MODULE_ICONS: Record<string, React.ComponentType<{ size: number; color: string }>> = {
-  Shield,
-  Waves,
-  Users,
-  Brain,
+const TRACK_ICONS: Record<DBTAcademyTrack, React.ComponentType<{ size: number; color: string }>> = {
+  abandonment: Heart,
+  rejection: Shield,
+  anger: Flame,
+  shame: Brain,
+  relationships: HeartHandshake,
+  impulsivity: Zap,
+  emotional_regulation: Brain,
+  distress_tolerance: Shield,
+  mindfulness: Sparkles,
+  identity_self_image: Target,
 };
 
-const SITUATION_ICONS: Record<string, React.ComponentType<{ size: number; color: string }>> = {
-  MessageCircle,
-  HeartCrack,
-  ShieldOff,
-  Eye: EyeIcon,
-  Zap,
-  Flame,
-  Wind,
-  Heart,
-};
+const LEVEL_ORDER: DBTAcademyLevel[] = ['beginner', 'intermediate', 'advanced'];
+const TRACK_ORDER: DBTAcademyTrack[] = [
+  'abandonment',
+  'rejection',
+  'anger',
+  'shame',
+  'relationships',
+  'impulsivity',
+  'emotional_regulation',
+  'distress_tolerance',
+  'mindfulness',
+  'identity_self_image',
+];
 
-interface BestSkill {
-  skillId: string;
-  score: number;
-  reason: string;
+function levelForIndex(index: number): DBTAcademyLevel {
+  return LEVEL_ORDER[index] ?? 'beginner';
 }
 
-interface WeeklyStatsData {
-  practicesThisWeek: number;
-  skillsTried: number;
-  avgDistressReduction: number;
-  mostUsedSkill: string | null;
-}
-
-export default function DBTCoachScreen() {
+export default function DBTAcademyScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const [progress, setProgress] = useState<DBTProgress>(DEFAULT_DBT_PROGRESS);
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [isSearching, setIsSearching] = useState<boolean>(false);
-  const [bestSkills, setBestSkills] = useState<BestSkill[]>([]);
-  const [weeklyStats, setWeeklyStats] = useState<WeeklyStatsData | null>(null);
-  const { triggerPatterns, journalEntries } = useApp();
+  const { colors } = useAppTheme();
+  const [progress, setProgress] = useState<DBTAcademyProgress>(DEFAULT_DBT_ACADEMY_PROGRESS);
+  const [selectedTrack, setSelectedTrack] = useState<DBTAcademyTrack>('abandonment');
+  const [selectedLevel, setSelectedLevel] = useState<DBTAcademyLevel>('beginner');
+  const [activeScenario, setActiveScenario] = useState<DBTAcademyScenario | null>(null);
+  const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null);
+  const [answerResult, setAnswerResult] = useState<{ isCorrect: boolean; scenario: DBTAcademyScenario } | null>(null);
 
   useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 400,
-      useNativeDriver: true,
-    }).start();
-  }, [fadeAnim]);
-
-  useEffect(() => {
-    getDBTProgress().then(setProgress).catch(e => console.log('[DBTCoach] Error loading progress:', e));
-    getBestSkillsForUser().then(setBestSkills).catch(e => console.log('[DBTCoach] Error loading best skills:', e));
-    getWeeklyStats().then(setWeeklyStats).catch(e => console.log('[DBTCoach] Error loading weekly stats:', e));
+    getDBTAcademyProgress()
+      .then(setProgress)
+      .catch((error) => console.log('[DBTAcademy] Failed to load progress:', error));
+    void trackEvent('screen_view', { screen: 'dbt_skills_academy' });
   }, []);
 
-  const modules = useMemo(() => getModules(), []);
+  const scenariosForTrack = useMemo(
+    () => DBT_ACADEMY_SCENARIOS.filter(scenario => scenario.track === selectedTrack),
+    [selectedTrack],
+  );
 
-  const recommendations = useMemo<DBTRecommendation[]>(() => {
-    const recentTriggers = Object.keys(triggerPatterns.triggerCounts);
-    const recentEmotions = Object.keys(triggerPatterns.emotionCounts);
-    const recentUrges = Object.keys(triggerPatterns.urgeCounts);
-    const lastEntry = journalEntries[0];
-    const distress = lastEntry?.checkIn?.intensityLevel ?? 3;
-    return getRecommendedSkills(recentTriggers, recentEmotions, recentUrges, distress);
-  }, [triggerPatterns, journalEntries]);
+  const visibleScenarios = useMemo(
+    () => scenariosForTrack.filter(scenario => scenario.level === selectedLevel),
+    [scenariosForTrack, selectedLevel],
+  );
 
-  const searchResults = useMemo(() => {
-    if (!searchQuery.trim()) return [];
-    return searchSkills(searchQuery);
-  }, [searchQuery]);
+  const completionPercent = useMemo(() => {
+    if (DBT_ACADEMY_SCENARIOS.length === 0) return 0;
+    return Math.round((progress.completedScenarioIds.length / DBT_ACADEMY_SCENARIOS.length) * 100);
+  }, [progress.completedScenarioIds.length]);
 
-  const handleModulePress = useCallback((moduleId: string) => {
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.push(`/tools/dbt-module?moduleId=${moduleId}` as never);
-  }, [router]);
-
-  const handleSkillPress = useCallback((skillId: string) => {
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.push(`/tools/dbt-skill?skillId=${skillId}` as never);
-  }, [router]);
-
-  const handleSituationPress = useCallback((situationId: string) => {
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    const entry = DBT_SITUATIONAL_ENTRIES.find(e => e.id === situationId);
-    if (entry && entry.skillIds.length > 0) {
-      router.push(`/tools/dbt-skill?skillId=${entry.skillIds[0]}` as never);
+  const startScenario = useCallback((scenario: DBTAcademyScenario) => {
+    if (Platform.OS !== 'web') {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-  }, [router]);
+    setActiveScenario(scenario);
+    setSelectedChoiceId(null);
+    setAnswerResult(null);
+    void trackEvent('dbt_academy_scenario_started', {
+      track: scenario.track,
+      level: scenario.level,
+      scenario_id: scenario.id,
+    });
+  }, []);
 
-  const renderModuleCard = useCallback((module: DBTModuleInfo) => {
-    const IconComponent = MODULE_ICONS[module.iconName];
-    const { practiced, total } = getModuleProgress(module.id, progress);
-    const progressPercent = total > 0 ? (practiced / total) * 100 : 0;
+  const handleAnswer = useCallback(async () => {
+    if (!activeScenario || !selectedChoiceId) return;
+    if (Platform.OS !== 'web') {
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+    const result = await answerDBTAcademyScenario(activeScenario, selectedChoiceId, progress);
+    setProgress(result.progress);
+    setAnswerResult({ isCorrect: result.isCorrect, scenario: activeScenario });
+    void trackEvent('dbt_academy_scenario_answered', {
+      track: activeScenario.track,
+      level: activeScenario.level,
+      scenario_id: activeScenario.id,
+      correct: result.isCorrect,
+    });
+  }, [activeScenario, progress, selectedChoiceId]);
 
-    return (
-      <TouchableOpacity
-        key={module.id}
-        style={styles.moduleCard}
-        onPress={() => handleModulePress(module.id)}
-        activeOpacity={0.7}
-        testID={`module-${module.id}`}
-      >
-        <View style={styles.moduleCardInner}>
-          <View style={[styles.moduleIconWrap, { backgroundColor: module.bgColor }]}>
-            {IconComponent && <IconComponent size={22} color={module.color} />}
-          </View>
-          <View style={styles.moduleInfo}>
-            <Text style={styles.moduleTitle}>{module.title}</Text>
-            <Text style={styles.moduleDesc} numberOfLines={1}>{module.description}</Text>
-          </View>
-          <ChevronRight size={16} color={Colors.textMuted} />
-        </View>
-        <View style={styles.moduleFooter}>
-          <View style={styles.progressBarBg}>
-            <View
-              style={[
-                styles.progressBarFill,
-                { width: `${progressPercent}%`, backgroundColor: module.color },
-              ]}
-            />
-          </View>
-          <Text style={styles.progressLabel}>
-            {practiced}/{total} practiced
-          </Text>
-        </View>
-      </TouchableOpacity>
-    );
-  }, [progress, handleModulePress]);
+  const handleNextScenario = useCallback(() => {
+    if (!activeScenario) return;
+    const currentIndex = visibleScenarios.findIndex(scenario => scenario.id === activeScenario.id);
+    const next = visibleScenarios[currentIndex + 1] ??
+      scenariosForTrack.find(scenario => !progress.completedScenarioIds.includes(scenario.id)) ??
+      null;
+    if (next) {
+      startScenario(next);
+    } else {
+      setActiveScenario(null);
+      setAnswerResult(null);
+      setSelectedChoiceId(null);
+    }
+  }, [activeScenario, progress.completedScenarioIds, scenariosForTrack, startScenario, visibleScenarios]);
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <TouchableOpacity
+            style={[styles.backButton, { backgroundColor: colors.card, borderColor: colors.borderLight }]}
             onPress={() => router.back()}
-            style={styles.backBtn}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            activeOpacity={0.76}
+            testID="dbt-academy-back"
           >
-            <ChevronLeft size={24} color={Colors.text} />
+            <ArrowLeft size={20} color={colors.text} />
           </TouchableOpacity>
-          <View style={styles.headerText}>
-            <Text style={styles.title}>DBT Coach</Text>
-            <Text style={styles.subtitle}>{progress.totalPractices > 0 ? `${progress.totalPractices} practices completed` : 'Guided skill training'}</Text>
+          <View style={styles.headerTextWrap}>
+            <Text style={[styles.eyebrow, { color: colors.brandTeal }]}>DBT Skills Academy</Text>
+            <Text style={[styles.title, { color: colors.text }]}>Practice real moments</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+              Learn application, not theory. Choose what you would do, then see the skill that fits.
+            </Text>
           </View>
         </View>
 
-        <View style={styles.searchContainer}>
-          <View style={styles.searchBar}>
-            <Search size={16} color={Colors.textMuted} />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search skills..."
-              placeholderTextColor={Colors.textMuted}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              onFocus={() => setIsSearching(true)}
-              testID="dbt-search"
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => { setSearchQuery(''); setIsSearching(false); }}>
-                <X size={16} color={Colors.textMuted} />
+        <View style={[styles.progressCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
+          <View style={styles.progressTop}>
+            <View style={[styles.progressIcon, { backgroundColor: colors.primaryLight }]}>
+              <Award size={22} color={colors.primary} />
+            </View>
+            <View style={styles.progressCopy}>
+              <Text style={[styles.progressTitle, { color: colors.text }]}>Emotional mastery progress</Text>
+              <Text style={[styles.progressBody, { color: colors.textSecondary }]}>
+                {progress.completedScenarioIds.length} scenarios completed · {progress.currentStreak} day streak
+              </Text>
+            </View>
+            <Text style={[styles.progressPercent, { color: colors.primary }]}>{completionPercent}%</Text>
+          </View>
+          <View style={[styles.progressBarBg, { backgroundColor: colors.surface }]}>
+            <View style={[styles.progressBarFill, { backgroundColor: colors.brandTeal, width: `${completionPercent}%` }]} />
+          </View>
+          <Text style={[styles.progressHint, { color: colors.textMuted }]}>
+            Best streak: {progress.longestStreak} day{progress.longestStreak === 1 ? '' : 's'}
+          </Text>
+        </View>
+
+        {activeScenario ? (
+          <View style={[styles.scenarioPanel, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
+            <View style={styles.scenarioMetaRow}>
+              <View style={[styles.levelPill, { backgroundColor: colors.primaryLight }]}>
+                <Text style={[styles.levelPillText, { color: colors.primary }]}>{LEVEL_LABELS[activeScenario.level]}</Text>
+              </View>
+              <Text style={[styles.scenarioTrack, { color: colors.textMuted }]}>{TRACK_LABELS[activeScenario.track]}</Text>
+            </View>
+
+            <Text style={[styles.scenarioLabel, { color: colors.brandTeal }]}>Scenario</Text>
+            <Text style={[styles.scenarioText, { color: colors.text }]}>{activeScenario.scenario}</Text>
+            <Text style={[styles.questionText, { color: colors.text }]}>{activeScenario.question}</Text>
+
+            <View style={styles.choiceList}>
+              {activeScenario.choices.map((choice) => {
+                const selected = selectedChoiceId === choice.id;
+                const isCorrectChoice = answerResult && choice.id === activeScenario.correctChoiceId;
+                const isWrongSelected = answerResult && selected && choice.id !== activeScenario.correctChoiceId;
+                return (
+                  <TouchableOpacity
+                    key={choice.id}
+                    style={[
+                      styles.choiceButton,
+                      { backgroundColor: colors.surface, borderColor: colors.borderLight },
+                      selected && { borderColor: colors.primary },
+                      isCorrectChoice && { borderColor: colors.success, backgroundColor: colors.successLight },
+                      isWrongSelected && { borderColor: colors.danger, backgroundColor: colors.dangerLight },
+                    ]}
+                    onPress={() => !answerResult && setSelectedChoiceId(choice.id)}
+                    activeOpacity={0.82}
+                    disabled={!!answerResult}
+                    testID={`dbt-choice-${choice.id}`}
+                  >
+                    <Text style={[styles.choiceText, { color: colors.text }]}>{choice.text}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {answerResult ? (
+              <View style={[styles.feedbackCard, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
+                <View style={styles.feedbackHeader}>
+                  <CheckCircle2 size={18} color={answerResult.isCorrect ? colors.success : colors.primary} />
+                  <Text style={[styles.feedbackTitle, { color: colors.text }]}>
+                    {answerResult.isCorrect ? 'Skillful choice' : 'Useful learning moment'}
+                  </Text>
+                </View>
+                <Text style={[styles.feedbackSkill, { color: colors.primary }]}>Skill: {activeScenario.skill}</Text>
+                <Text style={[styles.feedbackText, { color: colors.textSecondary }]}>Why: {activeScenario.why}</Text>
+                <Text style={[styles.feedbackText, { color: colors.textSecondary }]}>
+                  What usually happens: {activeScenario.whatUsuallyHappens}
+                </Text>
+                <TouchableOpacity
+                  style={[styles.primaryButton, { backgroundColor: colors.primary }]}
+                  onPress={handleNextScenario}
+                  activeOpacity={0.84}
+                  testID="dbt-next-scenario"
+                >
+                  <Text style={styles.primaryButtonText}>Continue training</Text>
+                  <ChevronRight size={17} color={Colors.white} />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={[styles.primaryButton, { backgroundColor: selectedChoiceId ? colors.primary : colors.border }]}
+                onPress={handleAnswer}
+                disabled={!selectedChoiceId}
+                activeOpacity={0.84}
+                testID="dbt-submit-answer"
+              >
+                <Text style={styles.primaryButtonText}>Check answer</Text>
+                <ChevronRight size={17} color={Colors.white} />
               </TouchableOpacity>
             )}
           </View>
-        </View>
-
-        {isSearching && searchQuery.trim().length > 0 ? (
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            {searchResults.length === 0 ? (
-              <View style={styles.emptySearch}>
-                <Text style={styles.emptySearchText}>No skills found for "{searchQuery}"</Text>
-              </View>
-            ) : (
-              searchResults.map(skill => {
-                const mod = modules.find(m => m.id === skill.moduleId);
-                return (
-                  <TouchableOpacity
-                    key={skill.id}
-                    style={styles.searchResultCard}
-                    onPress={() => handleSkillPress(skill.id)}
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.searchResultLeft}>
-                      <View style={[styles.searchResultDot, { backgroundColor: mod?.color ?? Colors.primary }]} />
-                      <View style={styles.searchResultInfo}>
-                        <Text style={styles.searchResultTitle}>{skill.title}</Text>
-                        <Text style={styles.searchResultModule}>{mod?.title ?? ''}</Text>
-                      </View>
-                    </View>
-                    <View style={styles.searchResultMeta}>
-                      <Clock size={12} color={Colors.textMuted} />
-                      <Text style={styles.searchResultDuration}>{skill.duration}</Text>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })
-            )}
-          </ScrollView>
         ) : (
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-          >
+          <>
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>What's happening?</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.situationScroll}>
-                {DBT_SITUATIONAL_ENTRIES.map(entry => {
-                  const IconComp = SITUATION_ICONS[entry.iconName];
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Choose a track</Text>
+              <View style={styles.trackGrid}>
+                {TRACK_ORDER.map((track) => {
+                  const Icon = TRACK_ICONS[track];
+                  const selected = selectedTrack === track;
+                  const total = getScenarioCountForTrack(track);
+                  const completed = progress.trackCompletions[track] ?? 0;
                   return (
                     <TouchableOpacity
-                      key={entry.id}
-                      style={[styles.situationCard, { backgroundColor: entry.bgColor }]}
-                      onPress={() => handleSituationPress(entry.id)}
-                      activeOpacity={0.7}
-                      testID={`situation-${entry.id}`}
+                      key={track}
+                      style={[
+                        styles.trackCard,
+                        { backgroundColor: colors.card, borderColor: selected ? colors.primary : colors.borderLight },
+                      ]}
+                      onPress={() => setSelectedTrack(track)}
+                      activeOpacity={0.82}
+                      testID={`dbt-track-${track}`}
                     >
-                      <View style={[styles.situationIconWrap, { backgroundColor: entry.color + '20' }]}>
-                        {IconComp && <IconComp size={16} color={entry.color} />}
+                      <View style={[styles.trackIcon, { backgroundColor: selected ? colors.primaryLight : colors.surface }]}>
+                        <Icon size={19} color={selected ? colors.primary : colors.textSecondary} />
                       </View>
-                      <Text style={[styles.situationLabel, { color: entry.color }]} numberOfLines={1}>{entry.label}</Text>
-                      <Text style={styles.situationSublabel} numberOfLines={1}>{entry.sublabel}</Text>
+                      <Text style={[styles.trackTitle, { color: colors.text }]}>{TRACK_LABELS[track]}</Text>
+                      <Text style={[styles.trackProgress, { color: colors.textMuted }]}>{completed}/{total}</Text>
                     </TouchableOpacity>
                   );
                 })}
-              </ScrollView>
+              </View>
             </View>
 
-            {weeklyStats && weeklyStats.practicesThisWeek > 0 && (
-              <View style={styles.weeklyCard}>
-                <View style={styles.weeklyHeader}>
-                  <TrendingUp size={16} color={Colors.primary} />
-                  <Text style={styles.weeklyTitle}>This Week</Text>
-                </View>
-                <View style={styles.weeklyStatsRow}>
-                  <View style={styles.weeklyStat}>
-                    <Text style={styles.weeklyStatValue}>{weeklyStats.practicesThisWeek}</Text>
-                    <Text style={styles.weeklyStatLabel}>Practices</Text>
-                  </View>
-                  <View style={styles.weeklyStatDivider} />
-                  <View style={styles.weeklyStat}>
-                    <Text style={styles.weeklyStatValue}>{weeklyStats.skillsTried}</Text>
-                    <Text style={styles.weeklyStatLabel}>Skills</Text>
-                  </View>
-                  {weeklyStats.avgDistressReduction > 0 && (
-                    <>
-                      <View style={styles.weeklyStatDivider} />
-                      <View style={styles.weeklyStat}>
-                        <View style={styles.weeklyReductionRow}>
-                          <TrendingDown size={12} color={Colors.success} />
-                          <Text style={[styles.weeklyStatValue, { color: Colors.success }]}>{weeklyStats.avgDistressReduction}</Text>
-                        </View>
-                        <Text style={styles.weeklyStatLabel}>Avg Reduction</Text>
-                      </View>
-                    </>
-                  )}
-                </View>
-              </View>
-            )}
-
-            {recommendations.length > 0 && (
-              <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <Zap size={16} color={Colors.accent} />
-                  <Text style={styles.sectionTitle}>Recommended for You</Text>
-                </View>
-                {recommendations.map(rec => {
-                  const skill = getSkillById(rec.skillId);
-                  if (!skill) return null;
-                  const mod = modules.find(m => m.id === skill.moduleId);
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Progression</Text>
+              <View style={styles.levelRow}>
+                {LEVEL_ORDER.map((level, index) => {
+                  const selected = selectedLevel === level;
                   return (
                     <TouchableOpacity
-                      key={rec.skillId}
-                      style={styles.recCard}
-                      onPress={() => handleSkillPress(rec.skillId)}
-                      activeOpacity={0.7}
-                      testID={`rec-${rec.skillId}`}
+                      key={level}
+                      style={[
+                        styles.levelButton,
+                        { backgroundColor: selected ? colors.primary : colors.card, borderColor: selected ? colors.primary : colors.borderLight },
+                      ]}
+                      onPress={() => setSelectedLevel(levelForIndex(index))}
+                      activeOpacity={0.8}
+                      testID={`dbt-level-${level}`}
                     >
-                      <View style={styles.recCardTop}>
-                        <View style={[styles.recDot, { backgroundColor: mod?.color ?? Colors.primary }]} />
-                        <View style={styles.recInfo}>
-                          <Text style={styles.recTitle}>{skill.title}</Text>
-                          <Text style={styles.recSubtitle} numberOfLines={1}>{skill.subtitle}</Text>
-                        </View>
-                        {skill.quickSteps && skill.quickSteps.length > 0 && (
-                          <View style={styles.quickChip}>
-                            <Zap size={10} color={Colors.accent} />
-                          </View>
-                        )}
-                      </View>
-                      <Text style={styles.recReason}>{rec.reason}</Text>
+                      <Layers size={14} color={selected ? Colors.white : colors.primary} />
+                      <Text style={[styles.levelButtonText, { color: selected ? Colors.white : colors.primary }]}>
+                        {LEVEL_LABELS[level]}
+                      </Text>
                     </TouchableOpacity>
                   );
                 })}
               </View>
-            )}
+            </View>
 
-            {bestSkills.length > 0 && (
-              <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <Award size={16} color="#67E8F9" />
-                  <Text style={styles.sectionTitle}>Best Skills for You</Text>
-                </View>
-                {bestSkills.slice(0, 3).map(best => {
-                  const skill = getSkillById(best.skillId);
-                  if (!skill) return null;
-                  const mod = modules.find(m => m.id === skill.moduleId);
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                {TRACK_LABELS[selectedTrack]} · {LEVEL_LABELS[selectedLevel]}
+              </Text>
+              <View style={styles.scenarioList}>
+                {visibleScenarios.length > 0 ? visibleScenarios.map((scenario) => {
+                  const completed = progress.completedScenarioIds.includes(scenario.id);
                   return (
                     <TouchableOpacity
-                      key={best.skillId}
-                      style={styles.bestCard}
-                      onPress={() => handleSkillPress(best.skillId)}
-                      activeOpacity={0.7}
+                      key={scenario.id}
+                      style={[styles.scenarioCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}
+                      onPress={() => startScenario(scenario)}
+                      activeOpacity={0.82}
+                      testID={`dbt-scenario-${scenario.id}`}
                     >
-                      <View style={[styles.bestDot, { backgroundColor: mod?.color ?? Colors.primary }]} />
-                      <View style={styles.bestInfo}>
-                        <Text style={styles.bestTitle}>{skill.title}</Text>
-                        <Text style={styles.bestReason}>{best.reason}</Text>
+                      <View style={[styles.scenarioCardIcon, { backgroundColor: completed ? colors.successLight : colors.primaryLight }]}>
+                        {completed ? <CheckCircle2 size={18} color={colors.success} /> : <Target size={18} color={colors.primary} />}
                       </View>
-                      <ChevronRight size={16} color={Colors.textMuted} />
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            )}
-
-            {progress.favoriteSkills.length > 0 && (
-              <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <Star size={16} color="#67E8F9" />
-                  <Text style={styles.sectionTitle}>Favorites</Text>
-                </View>
-                {progress.favoriteSkills.map(skillId => {
-                  const skill = getSkillById(skillId);
-                  if (!skill) return null;
-                  const mod = modules.find(m => m.id === skill.moduleId);
-                  return (
-                    <TouchableOpacity
-                      key={skillId}
-                      style={styles.favCard}
-                      onPress={() => handleSkillPress(skillId)}
-                      activeOpacity={0.7}
-                    >
-                      <View style={[styles.favDot, { backgroundColor: mod?.color ?? Colors.primary }]} />
-                      <View style={styles.favInfo}>
-                        <Text style={styles.favTitle}>{skill.title}</Text>
-                        <Text style={styles.favMeta}>
-                          Practiced {progress.completedSkills[skillId] || 0} times
+                      <View style={styles.scenarioCardText}>
+                        <Text style={[styles.scenarioCardTitle, { color: colors.text }]} numberOfLines={2}>{scenario.scenario}</Text>
+                        <Text style={[styles.scenarioCardBody, { color: colors.textSecondary }]} numberOfLines={2}>
+                          Practice choosing {scenario.skill} in the moment.
                         </Text>
                       </View>
-                      <ChevronRight size={16} color={Colors.textMuted} />
+                      <ChevronRight size={18} color={colors.textMuted} />
                     </TouchableOpacity>
                   );
-                })}
-              </View>
-            )}
-
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Brain size={16} color={Colors.text} />
-                <Text style={styles.sectionTitle}>Modules</Text>
-              </View>
-              {modules.map(renderModuleCard)}
-            </View>
-
-            <View style={styles.statsSection}>
-              <View style={styles.statsRow}>
-                <View style={styles.statCard}>
-                  <Text style={styles.statValue}>{progress.totalPractices}</Text>
-                  <Text style={styles.statLabel}>Total Practices</Text>
-                </View>
-                <View style={styles.statCard}>
-                  <Text style={styles.statValue}>
-                    {Object.keys(progress.completedSkills).filter(k => progress.completedSkills[k] > 0).length}
-                  </Text>
-                  <Text style={styles.statLabel}>Skills Tried</Text>
-                </View>
-                <View style={styles.statCard}>
-                  <Text style={styles.statValue}>{progress.favoriteSkills.length}</Text>
-                  <Text style={styles.statLabel}>Favorites</Text>
-                </View>
+                }) : (
+                  <View style={[styles.emptyCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
+                    <Sparkles size={18} color={colors.textMuted} />
+                    <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+                      This level is coming next. Try another level in this track.
+                    </Text>
+                  </View>
+                )}
               </View>
             </View>
-
-            <View style={{ height: 24 }} />
-          </ScrollView>
+          </>
         )}
-      </Animated.View>
+      </ScrollView>
     </View>
   );
 }
@@ -447,388 +374,295 @@ export default function DBTCoachScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
-  },
-  header: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 4,
-    gap: 12,
-  },
-  backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: Colors.white,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-  },
-  headerText: {
-    flex: 1,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700' as const,
-    color: Colors.text,
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  searchContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 4,
-  },
-  searchBar: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    gap: 8,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    color: Colors.text,
-    padding: 0,
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 40,
+    paddingTop: 14,
+    paddingBottom: 38,
   },
-  section: {
-    marginBottom: 24,
-  },
-  sectionHeader: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 8,
-    marginBottom: 14,
-  },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: '700' as const,
-    color: Colors.text,
-  },
-  situationScroll: {
-    gap: 10,
-    paddingRight: 20,
-  },
-  situationCard: {
-    width: 120,
-    borderRadius: 14,
-    padding: 12,
-    minHeight: 96,
-  },
-  situationIconWrap: {
-    width: 28,
-    height: 28,
-    borderRadius: 9,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    marginBottom: 8,
-  },
-  situationLabel: {
-    fontSize: 13,
-    fontWeight: '700' as const,
-    marginBottom: 2,
-  },
-  situationSublabel: {
-    fontSize: 10,
-    color: Colors.textSecondary,
-    lineHeight: 14,
-  },
-  weeklyCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-  },
-  weeklyHeader: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 8,
-    marginBottom: 14,
-  },
-  weeklyTitle: {
-    fontSize: 15,
-    fontWeight: '700' as const,
-    color: Colors.text,
-  },
-  weeklyStatsRow: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-  },
-  weeklyStat: {
-    flex: 1,
-    alignItems: 'center' as const,
-  },
-  weeklyStatValue: {
-    fontSize: 22,
-    fontWeight: '700' as const,
-    color: Colors.primary,
-    marginBottom: 2,
-  },
-  weeklyStatLabel: {
-    fontSize: 11,
-    color: Colors.textMuted,
-  },
-  weeklyStatDivider: {
-    width: 1,
-    height: 28,
-    backgroundColor: Colors.borderLight,
-  },
-  weeklyReductionRow: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 4,
-  },
-  recCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-  },
-  recCardTop: {
-    flexDirection: 'row' as const,
-    alignItems: 'flex-start' as const,
+  header: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
     gap: 12,
-    marginBottom: 10,
+    marginBottom: 16,
   },
-  recDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginTop: 5,
-  },
-  recInfo: {
-    flex: 1,
-  },
-  recTitle: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-    color: Colors.text,
-    marginBottom: 2,
-  },
-  recSubtitle: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    lineHeight: 18,
-  },
-  recReason: {
-    fontSize: 13,
-    color: Colors.accent,
-    fontStyle: 'italic' as const,
-    lineHeight: 18,
-    paddingLeft: 22,
-  },
-  quickChip: {
-    backgroundColor: Colors.accentLight,
-    borderRadius: 6,
-    padding: 4,
-  },
-  bestCard: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    backgroundColor: Colors.white,
+  backButton: {
+    width: 42,
+    height: 42,
     borderRadius: 14,
-    padding: 14,
-    marginBottom: 8,
-    gap: 12,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  bestDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  bestInfo: {
+  headerTextWrap: {
     flex: 1,
   },
-  bestTitle: {
-    fontSize: 15,
-    fontWeight: '600' as const,
-    color: Colors.text,
-  },
-  bestReason: {
+  eyebrow: {
     fontSize: 12,
-    color: Colors.success,
-    marginTop: 2,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 5,
   },
-  favCard: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    backgroundColor: Colors.white,
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 8,
-    gap: 12,
+  title: {
+    fontSize: 29,
+    lineHeight: 35,
+    fontWeight: '900',
+    marginBottom: 7,
+  },
+  subtitle: {
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: '600',
+  },
+  progressCard: {
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
-  },
-  favDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  favInfo: {
-    flex: 1,
-  },
-  favTitle: {
-    fontSize: 15,
-    fontWeight: '600' as const,
-    color: Colors.text,
-  },
-  favMeta: {
-    fontSize: 12,
-    color: Colors.textMuted,
-    marginTop: 2,
-  },
-  moduleCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 16,
     padding: 16,
+    marginBottom: 18,
+  },
+  progressTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
   },
-  moduleCardInner: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 14,
-    marginBottom: 14,
+  progressIcon: {
+    width: 46,
+    height: 46,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  moduleIconWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-  },
-  moduleInfo: {
+  progressCopy: {
     flex: 1,
   },
-  moduleTitle: {
-    fontSize: 16,
-    fontWeight: '700' as const,
-    color: Colors.text,
+  progressTitle: {
+    fontSize: 17,
+    fontWeight: '900',
     marginBottom: 3,
   },
-  moduleDesc: {
+  progressBody: {
     fontSize: 13,
-    color: Colors.textSecondary,
     lineHeight: 18,
+    fontWeight: '700',
   },
-  moduleFooter: {
-    gap: 6,
+  progressPercent: {
+    fontSize: 20,
+    fontWeight: '900',
   },
   progressBarBg: {
-    height: 4,
-    backgroundColor: Colors.borderLight,
-    borderRadius: 2,
-    overflow: 'hidden' as const,
+    height: 8,
+    borderRadius: 999,
+    overflow: 'hidden',
+    marginBottom: 8,
   },
   progressBarFill: {
-    height: 4,
-    borderRadius: 2,
+    height: '100%',
+    borderRadius: 999,
   },
-  progressLabel: {
-    fontSize: 11,
-    color: Colors.textMuted,
+  progressHint: {
+    fontSize: 12,
+    fontWeight: '700',
   },
-  statsSection: {
-    marginBottom: 8,
+  section: {
+    marginBottom: 18,
   },
-  statsRow: {
-    flexDirection: 'row' as const,
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    marginBottom: 10,
+  },
+  trackGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 10,
   },
-  statCard: {
-    flex: 1,
-    backgroundColor: Colors.white,
-    borderRadius: 14,
-    padding: 16,
-    alignItems: 'center' as const,
+  trackCard: {
+    width: '48%',
+    minHeight: 118,
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: '700' as const,
-    color: Colors.primary,
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 11,
-    color: Colors.textSecondary,
-    textAlign: 'center' as const,
-  },
-  emptySearch: {
-    paddingTop: 40,
-    alignItems: 'center' as const,
-  },
-  emptySearchText: {
-    fontSize: 15,
-    color: Colors.textSecondary,
-  },
-  searchResultCard: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'space-between' as const,
-    backgroundColor: Colors.white,
-    borderRadius: 14,
     padding: 14,
-    marginBottom: 8,
+  },
+  trackIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  trackTitle: {
+    fontSize: 16,
+    lineHeight: 21,
+    fontWeight: '900',
+    marginBottom: 5,
+  },
+  trackProgress: {
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  levelRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  levelButton: {
+    flex: 1,
+    minHeight: 44,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 5,
   },
-  searchResultLeft: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
+  levelButtonText: {
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  scenarioList: {
+    gap: 10,
+  },
+  scenarioCard: {
+    borderRadius: 18,
+    borderWidth: 1,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 12,
+  },
+  scenarioCardIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scenarioCardText: {
     flex: 1,
   },
-  searchResultDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  searchResultInfo: {
-    flex: 1,
-  },
-  searchResultTitle: {
+  scenarioCardTitle: {
     fontSize: 15,
-    fontWeight: '600' as const,
-    color: Colors.text,
+    lineHeight: 20,
+    fontWeight: '900',
+    marginBottom: 3,
   },
-  searchResultModule: {
+  scenarioCardBody: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '700',
+  },
+  scenarioPanel: {
+    borderRadius: 22,
+    borderWidth: 1,
+    padding: 17,
+    marginBottom: 20,
+  },
+  scenarioMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  levelPill: {
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  levelPillText: {
+    fontSize: 11,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  scenarioTrack: {
     fontSize: 12,
-    color: Colors.textMuted,
-    marginTop: 2,
+    fontWeight: '800',
   },
-  searchResultMeta: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 4,
-    marginLeft: 8,
-  },
-  searchResultDuration: {
+  scenarioLabel: {
     fontSize: 12,
-    color: Colors.textMuted,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 6,
+  },
+  scenarioText: {
+    fontSize: 23,
+    lineHeight: 30,
+    fontWeight: '900',
+    marginBottom: 16,
+  },
+  questionText: {
+    fontSize: 17,
+    lineHeight: 23,
+    fontWeight: '900',
+    marginBottom: 12,
+  },
+  choiceList: {
+    gap: 9,
+    marginBottom: 14,
+  },
+  choiceButton: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 14,
+  },
+  choiceText: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '800',
+  },
+  primaryButton: {
+    minHeight: 50,
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  primaryButtonText: {
+    color: Colors.white,
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  feedbackCard: {
+    borderRadius: 18,
+    borderWidth: 1,
+    padding: 14,
+    gap: 9,
+  },
+  feedbackHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  feedbackTitle: {
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  feedbackSkill: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '900',
+  },
+  feedbackText: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '700',
+  },
+  emptyCard: {
+    borderRadius: 18,
+    borderWidth: 1,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  emptyText: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '700',
   },
 });

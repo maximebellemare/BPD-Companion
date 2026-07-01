@@ -246,7 +246,7 @@ export function generateConversationTitle(firstMessage: string): string {
   if (lower.includes('trigger') || lower.includes('relationship') || lower.includes('partner')) return 'Navigating a relationship moment';
   if (lower.includes('pattern') || lower.includes('cycle') || lower.includes('keep doing')) return 'Noticing a pattern';
   if (lower.includes('angry') || lower.includes('anger') || lower.includes('rage') || lower.includes('furious')) return 'Sitting with anger';
-  if (lower.includes('sad') || lower.includes('crying') || lower.includes('empty')) return 'A heavy moment';
+  if (lower.includes('sad') || lower.includes('crying') || lower.includes('empty')) return 'Feeling low or empty';
   if (lower.includes('scared') || lower.includes('afraid') || lower.includes('anxious') || lower.includes('worried')) return 'When worry takes over';
   if (lower.includes('ashamed') || lower.includes('shame') || lower.includes('worthless')) return 'Carrying something heavy';
   if (lower.includes('confused') || lower.includes('overreacting') || lower.includes('don\'t know')) return 'Untangling the confusion';

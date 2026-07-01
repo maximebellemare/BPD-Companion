@@ -1028,7 +1028,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#0B1238',
+    borderColor: '#D9E2EC',
   },
   relTagText: {
     fontSize: 13,

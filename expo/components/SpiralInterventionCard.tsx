@@ -83,7 +83,7 @@ function SpiralInterventionCardInner({ result, compact = false }: SpiralInterven
   const isHigh = result.riskLevel === 'high';
   const isModerate = result.riskLevel === 'moderate';
 
-  const bgColor = isHigh ? '#020617' : isModerate ? '#2E2A72' : Colors.card;
+  const bgColor = isHigh ? '#F8FBFF' : isModerate ? '#2E2A72' : Colors.card;
   const borderColor = isHigh ? Colors.danger + '40' : isModerate ? Colors.accent + '30' : Colors.border;
   const accentColor = isHigh ? Colors.danger : Colors.accent;
 

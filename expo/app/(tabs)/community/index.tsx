@@ -9,6 +9,7 @@ import {
   RefreshControl,
   Animated,
   Platform,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -28,13 +29,15 @@ import {
   Target,
   Settings,
   Trophy,
+  Trash2,
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { CATEGORIES, SUPPORT_REACTION_LABELS, SITUATION_TAGS } from '@/constants/community';
-import { useCommunityFeed, useSupportCircles } from '@/hooks/useCommunityFeed';
+import { useCommunityFeed, useDeleteCommunityPost, useSupportCircles } from '@/hooks/useCommunityFeed';
 import { CommunityPost, PostCategory, SupportCircle } from '@/types/community';
 import { getRecommendedPosts } from '@/services/community/communityMatchingService';
 import { getDistressLabel, getSupportRequestLabel } from '@/services/community/communityEmotionalContextService';
+import { getPublicAuthorLabel } from '@/services/community/communityProfileService';
 
 function timeAgo(timestamp: number): string {
   const now = Date.now();
@@ -49,7 +52,7 @@ function timeAgo(timestamp: number): string {
   return `${Math.floor(days / 7)}w ago`;
 }
 
-const PostCard = React.memo(function PostCard({ post, onPress }: { post: CommunityPost; onPress: () => void }) {
+const PostCard = React.memo(function PostCard({ post, onPress, onDelete }: { post: CommunityPost; onPress: () => void; onDelete: (postId: string) => void }) {
   const category = CATEGORIES.find((c) => c.id === post.category);
   const situationTag = SITUATION_TAGS.find((t) => t.id === post.situationTag);
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -66,6 +69,7 @@ const PostCard = React.memo(function PostCard({ post, onPress }: { post: Communi
     () => post.supportReactions.reduce((sum, r) => sum + r.count, 0),
     [post.supportReactions]
   );
+  const isOwnPost = post.author.id === 'current_user';
 
   return (
     <Animated.View style={[styles.postCard, { transform: [{ scale: scaleAnim }] }]}>
@@ -95,6 +99,19 @@ const PostCard = React.memo(function PostCard({ post, onPress }: { post: Communi
             <View style={styles.situationChip}>
               <Text style={styles.situationChipText}>{situationTag.emoji} {situationTag.label}</Text>
             </View>
+          )}
+          {isOwnPost && (
+            <TouchableOpacity
+              style={styles.postDeleteBtn}
+              onPress={(event) => {
+                event.stopPropagation();
+                onDelete(post.id);
+              }}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              testID={`delete-post-${post.id}`}
+            >
+              <Trash2 size={14} color={Colors.danger} />
+            </TouchableOpacity>
           )}
         </View>
 
@@ -158,7 +175,7 @@ const PostCard = React.memo(function PostCard({ post, onPress }: { post: Communi
               </View>
             )}
             <Text style={styles.postAuthor}>
-              {post.author.isAnonymous ? '🫧 Anonymous' : post.author.displayName}
+              {getPublicAuthorLabel(post.author)}
             </Text>
           </View>
           <Text style={styles.postDot}>·</Text>
@@ -243,6 +260,7 @@ export default function CommunityFeedScreen() {
     setSearchQuery,
   } = useCommunityFeed();
   const { circles } = useSupportCircles();
+  const { deletePost } = useDeleteCommunityPost();
   const [showSearch, setShowSearch] = useState<boolean>(false);
   const [activeSection, setActiveSection] = useState<'feed' | 'circles'>('feed');
   const searchInputRef = useRef<TextInput>(null);
@@ -282,6 +300,23 @@ export default function CommunityFeedScreen() {
     router.push('/community/new-post' as never);
   }, [router]);
 
+  const handleDeletePost = useCallback((postId: string) => {
+    Alert.alert('Delete this post?', 'This removes your post and its replies from Community.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deletePost(postId);
+          } catch (error) {
+            Alert.alert('Could not delete post', error instanceof Error ? error.message : 'Please try again.');
+          }
+        },
+      },
+    ]);
+  }, [deletePost]);
+
   const handleGuidelines = useCallback(() => {
     router.push('/community/guidelines' as never);
   }, [router]);
@@ -304,6 +339,13 @@ export default function CommunityFeedScreen() {
           <View style={styles.headerActions}>
             <TouchableOpacity style={styles.headerBtn} onPress={handleToggleSearch} testID="search-toggle">
               {showSearch ? <X size={20} color={Colors.text} /> : <Search size={20} color={Colors.text} />}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.headerBtn}
+              onPress={() => router.push('/community/messages' as never)}
+              testID="community-messages-btn"
+            >
+              <MessageCircle size={20} color={Colors.text} />
             </TouchableOpacity>
             <TouchableOpacity style={styles.newPostBtn} onPress={handleNewPost} testID="new-post-btn">
               <Plus size={18} color={Colors.white} />
@@ -372,6 +414,13 @@ export default function CommunityFeedScreen() {
               </View>
               <ChevronRight size={16} color={Colors.textMuted} />
             </TouchableOpacity>
+
+            <View style={styles.safetyNoticeCard}>
+              <Shield size={16} color={Colors.primary} />
+              <Text style={styles.safetyNoticeText}>
+                Community is peer support, not crisis support or medical advice. Use report and block if something feels unsafe.
+              </Text>
+            </View>
 
             {recommendedPosts.length > 0 && !selectedCategory && !searchQuery && (
               <View style={styles.recommendedSection}>
@@ -474,14 +523,19 @@ export default function CommunityFeedScreen() {
                 <Text style={styles.emptyStateText}>
                   {selectedCategory || searchQuery
                     ? 'Try adjusting your filters or search'
-                    : 'Be the first to share something'}
+                    : 'Be the first to start a supportive discussion.'}
                 </Text>
+                {!selectedCategory && !searchQuery && (
+                  <TouchableOpacity style={styles.emptyStateButton} onPress={handleNewPost} activeOpacity={0.85}>
+                    <Text style={styles.emptyStateButtonText}>Start a discussion</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             )}
 
             <Animated.View style={{ opacity: fadeAnim }}>
               {posts.map((post) => (
-                <PostCard key={post.id} post={post} onPress={() => handlePostPress(post.id)} />
+                <PostCard key={post.id} post={post} onPress={() => handlePostPress(post.id)} onDelete={handleDeletePost} />
               ))}
             </Animated.View>
           </>
@@ -682,6 +736,25 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     marginBottom: 12,
   },
+  safetyNoticeCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    backgroundColor: Colors.surface,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+  },
+  safetyNoticeText: {
+    flex: 1,
+    color: Colors.textSecondary,
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: '600' as const,
+  },
   guidelinesLeft: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -809,6 +882,15 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 10,
     flexWrap: 'wrap',
+  },
+  postDeleteBtn: {
+    marginLeft: 'auto',
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: Colors.dangerLight,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   pinnedBadge: {
     flexDirection: 'row',
@@ -1001,6 +1083,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.textMuted,
     textAlign: 'center',
+  },
+  emptyStateButton: {
+    marginTop: 16,
+    backgroundColor: Colors.primary,
+    borderRadius: 14,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+  },
+  emptyStateButtonText: {
+    color: Colors.white,
+    fontSize: 14,
+    fontWeight: '700' as const,
   },
   circlesIntro: {
     alignItems: 'center',

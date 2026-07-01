@@ -90,7 +90,7 @@ const FOLLOW_UP_TEMPLATES: Record<FollowUpPrompt['type'], {
   post_distress: {
     title: 'The intensity has passed',
     message: 'Earlier was rough. Now that some distance exists, would it help to look at what happened with fresh eyes?',
-    suggestedPrompt: 'I want to look back at what happened earlier when things felt overwhelming. What was really going on underneath the intensity?',
+    suggestedPrompt: 'I want to look back at what happened earlier when things felt overwhelming. What happened first, and what did I do next?',
   },
   post_conflict: {
     title: 'Before the next move',

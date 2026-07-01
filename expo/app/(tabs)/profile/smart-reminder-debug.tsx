@@ -9,7 +9,7 @@ import {
   Platform,
   RefreshControl,
 } from 'react-native';
-import { Stack } from 'expo-router';
+import { Redirect, Stack } from 'expo-router';
 import {
   Zap,
   CheckCircle,
@@ -26,6 +26,10 @@ import { useSmartReminders } from '@/hooks/useSmartReminders';
 import { SmartReminderState, ReminderAnalyticsEvent, ReminderDecision } from '@/types/reminderRules';
 
 export default function SmartReminderDebugScreen() {
+  if (!__DEV__) {
+    return <Redirect href="/(tabs)/profile" />;
+  }
+
   const { getState, getReminderAnalytics, runEvaluation, resetEngine } = useSmartReminders();
   const [state, setState] = useState<SmartReminderState | null>(null);
   const [analytics, setAnalytics] = useState<ReminderAnalyticsEvent[]>([]);

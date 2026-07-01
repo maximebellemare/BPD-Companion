@@ -18,13 +18,14 @@ import { formatTime, getCategoryColor } from '@/types/medication';
 const MedicationHomeCard = React.memo(() => {
   const router = useRouter();
   const { trackEvent } = useAnalytics();
-  const {
-    activeMedications,
-    dueMedications,
-    todayLogs,
-    logMedication,
-    isLogging,
-  } = useMedications();
+  const medicationContext = useMedications();
+  const activeMedications = medicationContext?.activeMedications ?? [];
+  const dueMedications = medicationContext?.dueMedications ?? [];
+  const todayLogs = medicationContext?.todayLogs ?? [];
+  const logMedication = medicationContext?.logMedication ?? (async () => {
+    if (__DEV__) console.log('[MedicationHomeCard] Medication context unavailable while logging.');
+  });
+  const isLogging = medicationContext?.isLogging ?? false;
 
   const handleQuickLog = useCallback(async (medicationId: string, time: any) => {
     if (Platform.OS !== 'web') {

@@ -15,22 +15,25 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useMedications } from '@/providers/MedicationProvider';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
-import { formatTime, getCategoryColor, Medication, MedicationTime } from '@/types/medication';
+import { formatMedicationSchedule, formatTime, getCategoryColor, Medication, MedicationTime } from '@/types/medication';
+import { useAppTheme } from '@/providers/ThemeProvider';
 
 export default function MedicationsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors } = useAppTheme();
   const { trackEvent } = useAnalytics();
-  const {
-    activeMedications,
-    inactiveMedications,
-    dueMedications,
-    todayLogs,
-    overallAdherence,
-    isLoading,
-    logMedication,
-    isLogging,
-  } = useMedications();
+  const medicationContext = useMedications();
+  const activeMedications = medicationContext?.activeMedications ?? [];
+  const inactiveMedications = medicationContext?.inactiveMedications ?? [];
+  const dueMedications = medicationContext?.dueMedications ?? [];
+  const todayLogs = medicationContext?.todayLogs ?? [];
+  const overallAdherence = medicationContext?.overallAdherence ?? 0;
+  const isLoading = medicationContext?.isLoading ?? false;
+  const logMedication = medicationContext?.logMedication ?? (async () => {
+    if (__DEV__) console.log('[Medications] Medication context unavailable while logging.');
+  });
+  const isLogging = medicationContext?.isLogging ?? false;
 
   const [loggingId, setLoggingId] = useState<string | null>(null);
 
@@ -75,27 +78,27 @@ export default function MedicationsScreen() {
   const takenToday = useMemo(() => todayLogs.filter(l => l.status === 'taken').length, [todayLogs]);
   if (isLoading) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </View>
     );
   }
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <TouchableOpacity
-          style={styles.closeButton}
+          style={[styles.closeButton, { backgroundColor: colors.surface }]}
           onPress={() => router.back()}
           testID="medications-close"
         >
-          <X size={24} color={Colors.text} />
+          <X size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Medications</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Medications</Text>
         <TouchableOpacity
-          style={styles.addButton}
+          style={[styles.addButton, { backgroundColor: colors.primary }]}
           onPress={() => router.push('/medication-add')}
           testID="add-medication"
         >
@@ -108,23 +111,23 @@ export default function MedicationsScreen() {
         showsVerticalScrollIndicator={false}
       >
         {activeMedications.length > 0 && (
-          <View style={styles.summaryCard}>
+          <View style={[styles.summaryCard, { backgroundColor: colors.card, shadowColor: colors.shadow }]}>
             <View style={styles.summaryRow}>
               <View style={styles.summaryItem}>
                 <Text style={styles.summaryValue}>{takenToday}</Text>
-                <Text style={styles.summaryLabel}>Taken today</Text>
+                <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>Taken today</Text>
               </View>
               <View style={styles.summaryDivider} />
               <View style={styles.summaryItem}>
                 <Text style={styles.summaryValue}>{activeMedications.length}</Text>
-                <Text style={styles.summaryLabel}>Active</Text>
+                <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>Active</Text>
               </View>
               <View style={styles.summaryDivider} />
               <View style={styles.summaryItem}>
                 <Text style={[styles.summaryValue, { color: overallAdherence >= 70 ? Colors.success : Colors.accent }]}>
                   {overallAdherence}%
                 </Text>
-                <Text style={styles.summaryLabel}>7-day rate</Text>
+                <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>7-day rate</Text>
               </View>
             </View>
           </View>
@@ -132,13 +135,13 @@ export default function MedicationsScreen() {
 
         {dueMedications.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Due Now</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Due Now</Text>
             {dueMedications.map((item, idx) => (
-              <View key={`due-${item.medication.id}-${idx}`} style={styles.dueCard}>
+              <View key={`due-${item.medication.id}-${idx}`} style={[styles.dueCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
                 <View style={[styles.dueDot, { backgroundColor: getCategoryColor(item.medication.category) }]} />
                 <View style={styles.dueInfo}>
-                  <Text style={styles.dueName}>{item.medication.name}</Text>
-                  <Text style={styles.dueDosage}>
+                  <Text style={[styles.dueName, { color: colors.text }]}>{item.medication.name}</Text>
+                  <Text style={[styles.dueDosage, { color: colors.textSecondary }]}>
                     {item.medication.dosage} · {item.time.label} · {formatTime(item.time.hour, item.time.minute)}
                   </Text>
                 </View>
@@ -177,12 +180,13 @@ export default function MedicationsScreen() {
 
         {activeMedications.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Active Medications</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Active Medications</Text>
             {activeMedications.map(med => (
               <MedicationRow
                 key={med.id}
                 medication={med}
                 onPress={() => router.push(`/medication-detail?id=${med.id}` as any)}
+                colors={colors}
               />
             ))}
           </View>
@@ -190,13 +194,14 @@ export default function MedicationsScreen() {
 
         {inactiveMedications.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Inactive</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Inactive</Text>
             {inactiveMedications.map(med => (
               <MedicationRow
                 key={med.id}
                 medication={med}
                 onPress={() => router.push(`/medication-detail?id=${med.id}` as any)}
                 inactive
+                colors={colors}
               />
             ))}
           </View>
@@ -204,15 +209,15 @@ export default function MedicationsScreen() {
 
         {activeMedications.length === 0 && inactiveMedications.length === 0 && (
           <View style={styles.emptyState}>
-            <View style={styles.emptyIconWrap}>
-              <Pill size={40} color={Colors.primary} />
+              <View style={[styles.emptyIconWrap, { backgroundColor: colors.primaryLight }]}>
+              <Pill size={40} color={colors.primary} />
             </View>
-            <Text style={styles.emptyTitle}>No medications yet</Text>
-            <Text style={styles.emptyDesc}>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>No medications yet</Text>
+            <Text style={[styles.emptyDesc, { color: colors.textSecondary }]}>
               Add your medications to track adherence, side effects, and how they affect your mood.
             </Text>
             <TouchableOpacity
-              style={styles.emptyButton}
+              style={[styles.emptyButton, { backgroundColor: colors.primary }]}
               onPress={() => router.push('/medication-add')}
             >
               <Plus size={18} color={Colors.white} />
@@ -244,31 +249,30 @@ export default function MedicationsScreen() {
   );
 }
 
-const MedicationRow = React.memo(({ medication, onPress, inactive }: {
+const MedicationRow = React.memo(({ medication, onPress, inactive, colors }: {
   medication: Medication;
   onPress: () => void;
   inactive?: boolean;
+  colors: ReturnType<typeof useAppTheme>['colors'];
 }) => {
-  const scheduleLabel = medication.schedule === 'as_needed'
-    ? 'As needed'
-    : medication.times.map(t => formatTime(t.hour, t.minute)).join(', ');
+  const scheduleLabel = formatMedicationSchedule(medication);
 
   return (
     <TouchableOpacity
-      style={[styles.medRow, inactive && styles.medRowInactive]}
+      style={[styles.medRow, { backgroundColor: colors.card, shadowColor: colors.shadow }, inactive && styles.medRowInactive]}
       onPress={onPress}
       activeOpacity={0.7}
     >
       <View style={[styles.medDot, { backgroundColor: getCategoryColor(medication.category) }]} />
       <View style={styles.medInfo}>
-        <Text style={[styles.medName, inactive && styles.medNameInactive]}>{medication.name}</Text>
-        <Text style={styles.medDosage}>{medication.dosage}</Text>
+        <Text style={[styles.medName, { color: inactive ? colors.textMuted : colors.text }]}>{medication.name}</Text>
+        <Text style={[styles.medDosage, { color: colors.textSecondary }]}>{medication.dosage}</Text>
         <View style={styles.medScheduleRow}>
-          <Clock size={12} color={Colors.textMuted} />
-          <Text style={styles.medSchedule}>{scheduleLabel}</Text>
+          <Clock size={12} color={colors.textMuted} />
+          <Text style={[styles.medSchedule, { color: colors.textMuted }]}>{scheduleLabel}</Text>
         </View>
       </View>
-      <ChevronRight size={16} color={Colors.textMuted} />
+      <ChevronRight size={16} color={colors.textMuted} />
     </TouchableOpacity>
   );
 });

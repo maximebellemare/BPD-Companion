@@ -48,7 +48,7 @@ const CATEGORY_CONFIG: Record<CorrelationCategory, {
   medication_mood: {
     icon: <Pill size={16} color="#2E2A72" />,
     color: '#2E2A72',
-    bgColor: '#0B1238',
+    bgColor: '#D9E2EC',
     label: 'Medication & Mood',
   },
   appointment_intensity: {
@@ -60,7 +60,7 @@ const CATEGORY_CONFIG: Record<CorrelationCategory, {
   checkin_routine: {
     icon: <CheckSquare size={16} color="#14B8A6" />,
     color: '#14B8A6',
-    bgColor: '#0B1238',
+    bgColor: '#D9E2EC',
     label: 'Check-in Routine',
   },
   coping_distress: {
@@ -72,7 +72,7 @@ const CATEGORY_CONFIG: Record<CorrelationCategory, {
   pause_regret: {
     icon: <MessageCircle size={16} color="#67E8F9" />,
     color: '#67E8F9',
-    bgColor: '#0B1238',
+    bgColor: '#D9E2EC',
     label: 'Pausing & Regret',
   },
   movement_mood: {
@@ -90,13 +90,13 @@ const CATEGORY_CONFIG: Record<CorrelationCategory, {
   time_pattern: {
     icon: <Clock size={16} color="#3B82F6" />,
     color: '#3B82F6',
-    bgColor: '#0B1238',
+    bgColor: '#D9E2EC',
     label: 'Time Patterns',
   },
   routine_stability: {
     icon: <Sprout size={16} color="#14B8A6" />,
     color: '#14B8A6',
-    bgColor: '#0B1238',
+    bgColor: '#D9E2EC',
     label: 'Routine & Stability',
   },
 };
@@ -107,8 +107,8 @@ const STRENGTH_CONFIG: Record<CorrelationStrength, {
   bgColor: string;
 }> = {
   strong: { label: 'Strong', color: '#14B8A6', bgColor: '#FFFFFF' },
-  moderate: { label: 'Moderate', color: '#67E8F9', bgColor: '#0B1238' },
-  weak: { label: 'Emerging', color: '#3B82F6', bgColor: '#15145A' },
+  moderate: { label: 'Moderate', color: '#67E8F9', bgColor: '#D9E2EC' },
+  weak: { label: 'Emerging', color: '#3B82F6', bgColor: '#F7FAFC' },
 };
 
 function CorrelationCard({
@@ -332,7 +332,7 @@ function SummaryCards({ total, strong }: { total: number; strong: number }) {
   return (
     <Animated.View style={[styles.summaryRow, { opacity: fadeAnim }]}>
       <View style={styles.summaryItem}>
-        <View style={[styles.summaryIconWrap, { backgroundColor: '#0B1238' }]}>
+        <View style={[styles.summaryIconWrap, { backgroundColor: '#D9E2EC' }]}>
           <Link2 size={16} color="#3B82F6" />
         </View>
         <Text style={styles.summaryValue}>{total}</Text>

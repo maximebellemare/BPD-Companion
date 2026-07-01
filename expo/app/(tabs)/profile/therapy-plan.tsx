@@ -553,7 +553,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#0B1238',
+    borderColor: '#D9E2EC',
   },
   insightIconWrap: {
     width: 36,

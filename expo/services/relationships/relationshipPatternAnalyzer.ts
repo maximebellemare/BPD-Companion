@@ -1,4 +1,5 @@
 import { JournalEntry, MessageDraft } from '@/types';
+import { AIConversation } from '@/types/ai';
 import {
   RelationshipProfile,
   RelationshipEvent,
@@ -31,14 +32,25 @@ function matchesProfile(text: string, profile: RelationshipProfile): boolean {
   return keywords.some(kw => lower.includes(kw));
 }
 
+function conversationText(conversation: AIConversation): string {
+  return [
+    conversation.title,
+    conversation.preview,
+    ...conversation.tags,
+    ...conversation.messages.filter(message => message.role === 'user').map(message => message.content),
+  ].join(' ');
+}
+
 export function buildEventsFromAppData(
   profile: RelationshipProfile,
   journalEntries: JournalEntry[],
   messageDrafts: MessageDraft[],
+  conversations: AIConversation[] = [],
 ): RelationshipEvent[] {
   const events: RelationshipEvent[] = [];
   const recentEntries = journalEntries.filter(e => withinDays(e.timestamp, 30));
   const recentDrafts = messageDrafts.filter(d => withinDays(d.timestamp, 30));
+  const recentConversations = conversations.filter(c => withinDays(c.updatedAt, 30));
 
   recentEntries.forEach(entry => {
     const entryText = [
@@ -61,6 +73,8 @@ export function buildEventsFromAppData(
           detail: `From check-in on ${new Date(entry.timestamp).toLocaleDateString()}`,
           intensity: entry.checkIn.intensityLevel,
           timestamp: entry.timestamp,
+          sourceType: 'check_in',
+          sourceId: entry.id,
         });
       });
 
@@ -73,6 +87,8 @@ export function buildEventsFromAppData(
         detail: emotion.emoji,
         intensity: emotion.intensity ?? entry.checkIn.intensityLevel,
         timestamp: entry.timestamp,
+        sourceType: 'check_in',
+        sourceId: entry.id,
       });
     });
 
@@ -85,6 +101,8 @@ export function buildEventsFromAppData(
         detail: entry.checkIn.notes || 'Elevated distress during check-in',
         intensity: entry.checkIn.intensityLevel,
         timestamp: entry.timestamp,
+        sourceType: 'check_in',
+        sourceId: entry.id,
       });
     }
 
@@ -98,6 +116,8 @@ export function buildEventsFromAppData(
           detail: 'Used during check-in',
           intensity: 0,
           timestamp: entry.timestamp,
+          sourceType: 'check_in',
+          sourceId: entry.id,
         });
       });
     }
@@ -114,6 +134,24 @@ export function buildEventsFromAppData(
       detail: draft.paused ? 'Paused before sending' : (draft.sent ? 'Sent' : 'Not sent'),
       intensity: 0,
       timestamp: draft.timestamp,
+      sourceType: 'message',
+      sourceId: draft.id,
+    });
+  });
+
+  recentConversations.forEach(conversation => {
+    if (!matchesProfile(conversationText(conversation), profile)) return;
+
+    events.push({
+      id: `auto_conversation_${conversation.id}`,
+      profileId: profile.id,
+      type: 'conversation',
+      label: 'Companion conversation',
+      detail: conversation.preview || conversation.title,
+      intensity: 0,
+      timestamp: conversation.updatedAt,
+      sourceType: 'conversation',
+      sourceId: conversation.id,
     });
   });
 
@@ -309,8 +347,9 @@ export function analyzeRelationshipProfile(
   journalEntries: JournalEntry[],
   messageDrafts: MessageDraft[],
   storedEvents: RelationshipEvent[],
+  conversations: AIConversation[] = [],
 ): RelationshipProfileAnalysis {
-  const autoEvents = buildEventsFromAppData(profile, journalEntries, messageDrafts);
+  const autoEvents = buildEventsFromAppData(profile, journalEntries, messageDrafts, conversations);
   const profileStoredEvents = storedEvents.filter(e => e.profileId === profile.id);
   const allEvents = [...profileStoredEvents, ...autoEvents];
 

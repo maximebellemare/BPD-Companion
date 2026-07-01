@@ -1,14 +1,13 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import createContextHook from '@nkzw/create-context-hook';
-import { AIConversation, AIMessage, SuggestedPrompt, SupportiveInterpretation } from '@/types/ai';
+import { AIConversation, AIMessage, CompanionContextSummary, SuggestedPrompt, SupportiveInterpretation } from '@/types/ai';
 import { SafetyAssessment } from '@/types/aiSafety';
 import { AIMode } from '@/types/aiModes';
 import { MemoryProfile, InsightCard } from '@/types/memory';
 import { MemorySnapshot } from '@/types/userMemory';
-import { CompanionMemoryStore, UserPsychProfile, WeeklyCompanionInsight, EnhancedCompanionMemoryStore } from '@/types/companionMemory';
+import { CompanionMemoryStore, UserPsychProfile, WeeklyCompanionInsight, EnhancedCompanionMemoryStore, CompanionMemorySystem } from '@/types/companionMemory';
 import { useApp } from '@/providers/AppProvider';
-import { generateConversationTitle } from '@/services/ai/mockAIService';
 import { generateCompanionResponse } from '@/services/companion/companionAIService';
 import { buildMemoryProfile, buildInsightCards, buildContextSummary } from '@/services/memory/memoryProfileService';
 import { buildConversationTags } from '@/services/ai/aiPromptBuilder';
@@ -76,21 +75,69 @@ import {
   shouldRunLifecycle,
 } from '@/services/companion/memoryLifecycleService';
 import { contextCache } from '@/services/companion/contextCacheService';
+import { useOnboarding } from '@/providers/OnboardingProvider';
+import { useMedications } from '@/providers/MedicationProvider';
+import { useAppointments } from '@/providers/AppointmentProvider';
+import { buildCompanionContextSummary } from '@/services/companion/companionContextSummaryService';
+import {
+  buildCompanionMemorySystem,
+  mergeMemorySystemIntoEnhancedStore,
+} from '@/services/companion/companionMemorySystem';
+import {
+  loadSavedCompanionInsights,
+  SavedCompanionInsight,
+} from '@/services/companion/companionInsightService';
+import { inferRelationshipTagsFromMessage } from '@/services/relationships/relationshipTaggingService';
 
 export const SUGGESTED_PROMPTS: SuggestedPrompt[] = [
-  { id: 'sp1', label: 'I feel abandoned right now', icon: '💔', prompt: 'I feel abandoned right now and I need support' },
-  { id: 'sp2', label: 'Help me calm down', icon: '🌊', prompt: 'Help me slow down, everything feels overwhelming right now' },
-  { id: 'sp3', label: 'Am I overreacting?', icon: '🤔', prompt: 'I can\'t tell if I\'m overreacting to something. Help me figure out what\'s real.' },
-  { id: 'sp4', label: 'Help me before I text', icon: '📱', prompt: 'I want to send a message and I\'m not calm right now. Help me pause and think clearly.' },
-  { id: 'sp5', label: 'After a conflict', icon: '🩹', prompt: 'I just had a conflict and I feel terrible about how I handled it. Help me process what happened.' },
-  { id: 'sp6', label: 'My patterns lately', icon: '🔄', prompt: 'Based on what you know about me, what patterns do you notice in my emotions and triggers lately?' },
-  { id: 'sp7', label: 'What do I actually need?', icon: '🔍', prompt: 'Help me figure out what I actually need right now — I\'m not sure if it\'s reassurance, space, or something else.' },
-  { id: 'sp8', label: 'Late night spiral', icon: '🌙', prompt: 'It\'s late and my thoughts are spiraling. Help me get through tonight.' },
+  { id: 'sp1', label: 'I feel abandoned', icon: '💔', prompt: 'I feel abandoned. Help me slow down and understand what this is touching in me.' },
+  { id: 'sp2', label: 'I want to text them again', icon: '📱', prompt: 'I want to text them again. Help me name what happened, what I feel, and what I usually do next.' },
+  { id: 'sp3', label: 'I feel empty', icon: '🌫️', prompt: 'I feel empty and disconnected. Sit with me and help me name what might be happening.' },
+  { id: 'sp4', label: 'I might say something I regret', icon: '🔥', prompt: 'I am angry and might say something I regret. Help me identify what happened right before the anger.' },
+  { id: 'sp5', label: 'Help me understand this trigger', icon: '🔍', prompt: 'Help me trace this trigger: what happened, what it meant to me, what fear showed up, and what urge came next.' },
+  { id: 'sp6', label: 'Relationship conflict support', icon: '🩹', prompt: 'I am in relationship conflict. Help me understand what this moment seemed to say about the relationship before I respond.' },
+  { id: 'sp7', label: 'Choose a DBT skill', icon: '🧭', prompt: 'Based on what you know about me, choose one DBT-style skill for this moment.' },
+  { id: 'sp8', label: 'Journal with me', icon: '✍️', prompt: 'Journal with me about what happened and help me find the pattern without judgment.' },
 ];
+
+function generateConversationTitle(firstMessage: string): string {
+  const compact = firstMessage.replace(/\s+/g, ' ').trim();
+  if (!compact) return 'New conversation';
+  return compact.length > 42 ? `${compact.slice(0, 42).trim()}…` : compact;
+}
+
+function normalizeConversation(conversation: Partial<AIConversation> | null | undefined): AIConversation | null {
+  if (!conversation?.id) return null;
+  const now = Date.now();
+  return {
+    id: String(conversation.id),
+    title: conversation.title || 'Conversation',
+    messages: Array.isArray(conversation.messages) ? conversation.messages.filter(Boolean) : [],
+    createdAt: typeof conversation.createdAt === 'number' ? conversation.createdAt : now,
+    updatedAt: typeof conversation.updatedAt === 'number' ? conversation.updatedAt : now,
+    saved: Boolean(conversation.saved),
+    preview: conversation.preview ?? '',
+    tags: Array.isArray(conversation.tags) ? conversation.tags : [],
+    relationshipTags: Array.isArray(conversation.relationshipTags) ? conversation.relationshipTags : [],
+  };
+}
+
+function normalizeConversations(value: unknown): AIConversation[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map(item => normalizeConversation(item as Partial<AIConversation>))
+    .filter((item): item is AIConversation => Boolean(item));
+}
 
 export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
   const queryClient = useQueryClient();
   const { journalEntries, triggerPatterns, messageDrafts } = useApp();
+  const { onboardingProfile } = useOnboarding();
+  const medicationContext = useMedications();
+  const appointmentContext = useAppointments();
+  const medications = medicationContext?.medications ?? [];
+  const medicationLogs = medicationContext?.logs ?? [];
+  const appointments = appointmentContext?.appointments ?? [];
 
   const [conversations, setConversations] = useState<AIConversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
@@ -107,9 +154,12 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
   const [sessionCount, setSessionCount] = useState<number>(0);
   const [latestSafetyAssessment, setLatestSafetyAssessment] = useState<SafetyAssessment | null>(null);
   const processedConversationsRef = useRef<Set<string>>(new Set());
+  const conversationsRef = useRef<AIConversation[]>([]);
   const [smartJournalEntries, setSmartJournalEntries] = useState<SmartJournalEntry[]>([]);
   const [messageOutcomes, setMessageOutcomes] = useState<EnhancedMessageOutcome[]>([]);
   const [enhancedMemoryStore, setEnhancedMemoryStore] = useState<EnhancedCompanionMemoryStore | null>(null);
+  const memorySystemPersistSignatureRef = useRef<string>('');
+  const [savedCompanionInsights, setSavedCompanionInsights] = useState<SavedCompanionInsight[]>([]);
 
   const smartJournalQuery = useQuery({
     queryKey: ['companion-smart-journal'],
@@ -119,7 +169,7 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
 
   useEffect(() => {
     if (smartJournalQuery.data) {
-      setSmartJournalEntries(smartJournalQuery.data);
+      setSmartJournalEntries(Array.isArray(smartJournalQuery.data) ? smartJournalQuery.data : []);
     }
   }, [smartJournalQuery.data]);
 
@@ -131,9 +181,21 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
 
   useEffect(() => {
     if (messageOutcomesQuery.data) {
-      setMessageOutcomes(messageOutcomesQuery.data);
+      setMessageOutcomes(Array.isArray(messageOutcomesQuery.data) ? messageOutcomesQuery.data : []);
     }
   }, [messageOutcomesQuery.data]);
+
+  const savedCompanionInsightsQuery = useQuery({
+    queryKey: ['companion-saved-insights'],
+    queryFn: loadSavedCompanionInsights,
+    staleTime: 60000,
+  });
+
+  useEffect(() => {
+    if (savedCompanionInsightsQuery.data) {
+      setSavedCompanionInsights(Array.isArray(savedCompanionInsightsQuery.data) ? savedCompanionInsightsQuery.data : []);
+    }
+  }, [savedCompanionInsightsQuery.data]);
 
   const memorySnapshotQuery = useQuery({
     queryKey: ['user-memory-snapshot'],
@@ -227,7 +289,7 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
 
   useEffect(() => {
     if (followUpsQuery.data) {
-      setFollowUps(followUpsQuery.data);
+      setFollowUps(Array.isArray(followUpsQuery.data) ? followUpsQuery.data : []);
     }
   }, [followUpsQuery.data]);
 
@@ -238,7 +300,17 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
 
   useEffect(() => {
     if (conversationsQuery.data) {
-      setConversations(conversationsQuery.data);
+      const incoming = normalizeConversations(conversationsQuery.data);
+      const local = conversationsRef.current;
+      const incomingLatest = Math.max(0, ...incoming.map(c => c.updatedAt));
+      const localLatest = Math.max(0, ...local.map(c => c.updatedAt));
+
+      if (local.length > 0 && localLatest > incomingLatest) {
+        return;
+      }
+
+      setConversations(incoming);
+      conversationsRef.current = incoming;
     }
   }, [conversationsQuery.data]);
 
@@ -267,35 +339,78 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
     return buildContextSummary(memoryProfile);
   }, [memoryProfile]);
 
+  const companionContextSummary = useMemo<CompanionContextSummary>(() => {
+    return buildCompanionContextSummary({
+      journalEntries,
+      onboardingProfile,
+      memoryProfile,
+    });
+  }, [journalEntries, onboardingProfile, memoryProfile]);
+
+  const companionMemorySystem = useMemo<CompanionMemorySystem>(() => {
+    return buildCompanionMemorySystem({
+      journalEntries,
+      smartJournalEntries,
+      conversations: normalizeConversations(conversations),
+      savedInsights: savedCompanionInsights,
+      onboardingProfile,
+      enhancedMemoryStore,
+    });
+  }, [journalEntries, smartJournalEntries, conversations, savedCompanionInsights, onboardingProfile, enhancedMemoryStore]);
+
+  const companionMemorySystemSignature = useMemo(() => {
+    return [
+      companionMemorySystem.coreFears.map(item => `${item.id}:${item.evidenceCount}`).join(','),
+      companionMemorySystem.coreBeliefs.map(item => `${item.id}:${item.evidenceCount}`).join(','),
+      companionMemorySystem.majorTriggers.map(item => `${item.id}:${item.evidenceCount}`).join(','),
+      companionMemorySystem.longTermGoals.map(item => item.id).join(','),
+      companionMemorySystem.recurringLoops.map(item => `${item.id}:${item.count}`).join(','),
+      companionMemorySystem.emotionalTimeline.slice(0, 5).map(item => item.id).join(','),
+    ].join('|');
+  }, [companionMemorySystem]);
+
+  useEffect(() => {
+    if (!enhancedMemoryStore) return;
+    if (memorySystemPersistSignatureRef.current === companionMemorySystemSignature) return;
+    memorySystemPersistSignatureRef.current = companionMemorySystemSignature;
+    const merged = mergeMemorySystemIntoEnhancedStore(enhancedMemoryStore, companionMemorySystem);
+    setEnhancedMemoryStore(merged);
+    void saveEnhancedMemoryStore(merged);
+  }, [enhancedMemoryStore, companionMemorySystem, companionMemorySystemSignature]);
+
   const activeConversation = useMemo(() => {
     return conversations.find(c => c.id === activeConversationId) ?? null;
   }, [conversations, activeConversationId]);
 
   const savedConversations = useMemo(() => {
-    return conversations.filter(c => c.saved);
+    return normalizeConversations(conversations).filter(c => c.saved);
   }, [conversations]);
 
   const recentConversations = useMemo(() => {
-    return [...conversations].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 5);
+    return normalizeConversations(conversations).sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 5);
   }, [conversations]);
 
-  const startNewConversation = useCallback(() => {
+  const startNewConversation = useCallback((persist = true) => {
+    const now = Date.now();
     const newConvo: AIConversation = {
-      id: `conv_${Date.now()}`,
+      id: `conv_${now}`,
       title: 'New conversation',
       messages: [],
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
+      createdAt: now,
+      updatedAt: now,
       saved: false,
       preview: '',
       tags: [],
     };
-    const updated = [newConvo, ...conversations];
+    const updated = [newConvo, ...conversationsRef.current];
+    conversationsRef.current = updated;
     setConversations(updated);
     setActiveConversationId(newConvo.id);
-    saveConversationsMutation.mutate(updated);
+    if (persist) {
+      saveConversationsMutation.mutate(updated);
+    }
     return newConvo.id;
-  }, [conversations, saveConversationsMutation]);
+  }, [saveConversationsMutation]);
 
   const continueLastConversation = useCallback(() => {
     if (conversations.length > 0) {
@@ -306,8 +421,9 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
     return startNewConversation();
   }, [conversations, startNewConversation]);
 
-  const sendMessage = useCallback(async (content: string) => {
-    if (!activeConversationId || isGenerating) return;
+  const sendMessage = useCallback(async (content: string, targetConversationId?: string) => {
+    let conversationId = targetConversationId ?? activeConversationId;
+    if (!conversationId || isGenerating) return;
 
     const userMessage: AIMessage = {
       id: `msg_${Date.now()}`,
@@ -316,42 +432,67 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
       timestamp: Date.now(),
     };
 
-    const currentConvo = conversations.find(c => c.id === activeConversationId);
-    const conversationHistory = (currentConvo?.messages ?? []).map(m => ({
+    let sourceConversations = normalizeConversations(conversationsRef.current);
+    let currentConvo = sourceConversations.find(c => c.id === conversationId);
+    if (!currentConvo) {
+      const now = Date.now();
+      currentConvo = {
+        id: conversationId,
+        title: 'New conversation',
+        messages: [],
+        createdAt: now,
+        updatedAt: now,
+        saved: false,
+        preview: '',
+        tags: [],
+      };
+      sourceConversations = [currentConvo, ...sourceConversations];
+      conversationsRef.current = sourceConversations;
+      setConversations(sourceConversations);
+    }
+
+    const safeCurrentMessages = Array.isArray(currentConvo?.messages) ? currentConvo.messages : [];
+    const conversationHistory = safeCurrentMessages.map(m => ({
       role: m.role,
       content: m.content,
     }));
 
-    const updatedConvos = conversations.map(c => {
-      if (c.id === activeConversationId) {
-        const isFirst = c.messages.length === 0;
+    const updatedConvos = sourceConversations.map(c => {
+      if (c.id === conversationId) {
+        const safeMessages = Array.isArray(c.messages) ? c.messages : [];
+        const isFirst = safeMessages.length === 0;
         const newTags = buildConversationTags(content);
         const existingTags = c.tags ?? [];
         const mergedTags = [...new Set([...existingTags, ...newTags])].slice(0, 6);
+        const relationshipTags = [...new Set([...(c.relationshipTags ?? []), ...inferRelationshipTagsFromMessage(content)])];
         return {
           ...c,
-          messages: [...c.messages, userMessage],
+          messages: [...safeMessages, userMessage],
           title: isFirst ? generateConversationTitle(content) : c.title,
           preview: content.substring(0, 80),
           updatedAt: Date.now(),
           tags: mergedTags,
+          relationshipTags,
         };
       }
       return c;
     });
 
+    conversationsRef.current = updatedConvos;
     setConversations(updatedConvos);
+    saveConversationsMutation.mutate(updatedConvos);
     setIsGenerating(true);
+    setActiveConversationId(conversationId);
 
     if (companionMemoryStore) {
       const storeWithShortTerm = addShortTermMemory(
         companionMemoryStore,
         content.substring(0, 200),
         buildConversationTags(content),
-        activeConversationId,
+        conversationId,
       );
       setCompanionMemoryStore(storeWithShortTerm);
-      void trackEvent('companion_session_started', { conversation_id: activeConversationId });
+      void trackEvent('companion_session_started', { conversation_id: conversationId });
     }
 
     const assembled = assembleCompanionContext({
@@ -362,8 +503,10 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
       memoryProfile,
       patternInsights: companionPatternInsights,
       weeklyInsights,
+      companionMemorySystem,
+      personalSummary: companionContextSummary.promptContext,
       conversationHistory,
-      conversationId: activeConversationId,
+      conversationId,
     });
 
     const liveContext = buildLiveEmotionalContext({
@@ -375,6 +518,9 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
       patternInsights: companionPatternInsights,
       smartJournalEntries,
       messageOutcomes,
+      medications,
+      medicationLogs,
+      appointments,
     });
     assembled.liveContextNarrative = liveContext.contextNarrative;
 
@@ -398,10 +544,10 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
       if (enhancedMemoryStore) {
         let updatedEnhanced = enhancedMemoryStore;
         for (const ep of assembled.retrievedMemories.relevantEpisodes) {
-          updatedEnhanced = logMemoryReference(updatedEnhanced, ep.id, 'episodic', activeConversationId);
+          updatedEnhanced = logMemoryReference(updatedEnhanced, ep.id, 'episodic', conversationId);
         }
         for (const rel of (assembled.retrievedMemories.relevantRelationships ?? [])) {
-          updatedEnhanced = logMemoryReference(updatedEnhanced, rel.id, 'relationship', activeConversationId);
+          updatedEnhanced = logMemoryReference(updatedEnhanced, rel.id, 'relationship', conversationId);
         }
         setEnhancedMemoryStore(updatedEnhanced);
       }
@@ -416,6 +562,7 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
         manualMode,
         memoryProfile,
         memorySnapshot,
+        companionContextSummary,
       });
 
       setCurrentActiveMode(response.activeMode);
@@ -432,7 +579,7 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
         console.log('[AICompanion] Cost metrics:', response.costMetrics);
       }
 
-      contextCache.invalidate(activeConversationId);
+      contextCache.invalidate(conversationId);
 
       console.log('[AICompanion] Response mode:', response.activeMode, 'companion mode:', detectedMode, 'manual:', !!manualMode);
 
@@ -446,31 +593,32 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
       };
 
       const finalConvos = updatedConvos.map(c => {
-        if (c.id === activeConversationId) {
+        if (c.id === conversationId) {
           return {
             ...c,
-            messages: [...c.messages, assistantMessage],
+            messages: [...(Array.isArray(c.messages) ? c.messages : []), assistantMessage],
             updatedAt: Date.now(),
           };
         }
         return c;
       });
 
+      conversationsRef.current = finalConvos;
       setConversations(finalConvos);
       saveConversationsMutation.mutate(finalConvos);
 
-      const updatedConvo = finalConvos.find(c => c.id === activeConversationId);
-      if (updatedConvo && companionMemoryStore && !processedConversationsRef.current.has(activeConversationId)) {
-        const allMessages = updatedConvo.messages.map(m => ({ role: m.role, content: m.content }));
+      const updatedConvo = finalConvos.find(c => c.id === conversationId);
+      if (updatedConvo && companionMemoryStore && !processedConversationsRef.current.has(conversationId)) {
+        const allMessages = (Array.isArray(updatedConvo.messages) ? updatedConvo.messages : []).map(m => ({ role: m.role, content: m.content }));
         if (shouldCreateMemory(allMessages)) {
-          const summary = generateSessionSummary(activeConversationId, allMessages);
+          const summary = generateSessionSummary(conversationId, allMessages);
           if (summary) {
             const updatedStore = processSessionIntoMemories(companionMemoryStore, summary);
             setCompanionMemoryStore(updatedStore);
             void saveMemoryStore(updatedStore);
-            processedConversationsRef.current.add(activeConversationId);
+            processedConversationsRef.current.add(conversationId);
             void trackEvent('memory_created', {
-              conversation_id: activeConversationId,
+              conversation_id: conversationId,
               has_trigger: !!summary.trigger,
               has_insight: !!summary.insight,
               skills_practiced: summary.skillsPracticed.length,
@@ -491,7 +639,18 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
 
         if (enhancedMemoryStore) {
           const baseEnhanced = mergeBaseIntoEnhanced(companionMemoryStore, enhancedMemoryStore);
-          const updatedEnhanced = processConversationIntoEnhancedMemory(baseEnhanced, allMessages);
+          const memorySystem = buildCompanionMemorySystem({
+            journalEntries,
+            smartJournalEntries,
+            conversations: normalizeConversations(finalConvos),
+            savedInsights: savedCompanionInsights,
+            onboardingProfile,
+            enhancedMemoryStore: baseEnhanced,
+          });
+          const updatedEnhanced = mergeMemorySystemIntoEnhancedStore(
+            processConversationIntoEnhancedMemory(baseEnhanced, allMessages),
+            memorySystem,
+          );
           setEnhancedMemoryStore(updatedEnhanced);
           void saveEnhancedMemoryStore(updatedEnhanced);
 
@@ -534,27 +693,46 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
       }
     } catch (error) {
       console.log('Error generating AI response:', error);
+      const fallbackMessage: AIMessage = {
+        id: `msg_${Date.now()}_ai_error`,
+        role: 'assistant',
+        content:
+      "💙 Something got interrupted on my side, but you are not stuck here.\n\nLet’s keep it simple: name the strongest feeling in one word if you can.\n\nWhat happened right before this started?",
+        timestamp: Date.now(),
+        quickActions: ['Ground me', 'Slow this down', "Don't Send It"],
+        intent: 'support',
+      };
+      const failedConvos = updatedConvos.map(c => (
+        c.id === conversationId
+          ? { ...c, messages: [...(Array.isArray(c.messages) ? c.messages : []), fallbackMessage], updatedAt: Date.now() }
+          : c
+      ));
+      conversationsRef.current = failedConvos;
+      setConversations(failedConvos);
+      saveConversationsMutation.mutate(failedConvos);
     } finally {
       setIsGenerating(false);
     }
-  }, [activeConversationId, isGenerating, conversations, saveConversationsMutation, memoryProfile, manualMode, memorySnapshot, companionMemoryStore, enhancedMemoryStore, psychProfile, companionPatternInsights, weeklyInsights, journalEntries, messageDrafts, smartJournalEntries, messageOutcomes]);
+  }, [activeConversationId, isGenerating, saveConversationsMutation, memoryProfile, manualMode, memorySnapshot, companionMemoryStore, enhancedMemoryStore, psychProfile, companionPatternInsights, weeklyInsights, companionMemorySystem, companionContextSummary, journalEntries, messageDrafts, smartJournalEntries, savedCompanionInsights, messageOutcomes, onboardingProfile, medications, medicationLogs, appointments]);
 
   const toggleSaveConversation = useCallback((conversationId: string) => {
-    const updated = conversations.map(c =>
+    const updated = conversationsRef.current.map(c =>
       c.id === conversationId ? { ...c, saved: !c.saved } : c
     );
+    conversationsRef.current = updated;
     setConversations(updated);
     saveConversationsMutation.mutate(updated);
-  }, [conversations, saveConversationsMutation]);
+  }, [saveConversationsMutation]);
 
   const deleteConversation = useCallback((conversationId: string) => {
-    const updated = conversations.filter(c => c.id !== conversationId);
+    const updated = conversationsRef.current.filter(c => c.id !== conversationId);
+    conversationsRef.current = updated;
     setConversations(updated);
     if (activeConversationId === conversationId) {
       setActiveConversationId(null);
     }
     saveConversationsMutation.mutate(updated);
-  }, [conversations, activeConversationId, saveConversationsMutation]);
+  }, [activeConversationId, saveConversationsMutation]);
 
   const supportiveInterpretations = useMemo<SupportiveInterpretation[]>(() => {
     return generateSupportiveInterpretations(memoryProfile);
@@ -575,13 +753,11 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
   }, []);
 
   const openFollowUp = useCallback((followUp: FollowUpPrompt) => {
-    const id = startNewConversation();
+    const id = startNewConversation(false);
     setActiveConversationId(id);
     void dismissFollowUpService(followUp.id);
     setFollowUps(prev => prev.filter(f => f.id !== followUp.id));
-    setTimeout(() => {
-      void sendMessage(followUp.suggestedPrompt);
-    }, 300);
+    void sendMessage(followUp.suggestedPrompt, id);
     void trackEvent('companion_followup_opened', {
       type: followUp.type,
       trigger_context: followUp.triggerContext.substring(0, 50),
@@ -641,9 +817,11 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
     currentActiveMode,
     currentModeConfig,
     companionPatternInsights,
+    companionContextSummary,
     weeklyInsights,
     psychProfile,
     companionMemoryStore,
+    companionMemorySystem,
     followUps,
     companionMode,
     sessionCount,
@@ -675,9 +853,11 @@ export const [AICompanionProvider, useAICompanion] = createContextHook(() => {
     currentActiveMode,
     currentModeConfig,
     companionPatternInsights,
+    companionContextSummary,
     weeklyInsights,
     psychProfile,
     companionMemoryStore,
+    companionMemorySystem,
     followUps,
     companionMode,
     sessionCount,

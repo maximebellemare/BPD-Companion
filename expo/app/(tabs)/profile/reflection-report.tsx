@@ -82,8 +82,8 @@ function RelationshipInsightCard({ insight }: { insight: RelationshipPatternInsi
 
 function HighlightCard({ highlight }: { highlight: ProgressHighlight }) {
   const bgColor = highlight.type === 'growth' ? '#FFFFFF'
-    : highlight.type === 'skill' ? '#0B1238'
-    : highlight.type === 'consistency' ? '#0B1238'
+    : highlight.type === 'skill' ? '#D9E2EC'
+    : highlight.type === 'consistency' ? '#D9E2EC'
     : '#FFFFFF';
 
   return (
@@ -438,7 +438,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#0B1238',
+    borderColor: '#D9E2EC',
   },
   emptyBannerText: {
     fontSize: 14,

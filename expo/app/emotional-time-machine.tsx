@@ -63,8 +63,8 @@ const TREND_CONFIG = {
 
 const GROWTH_TYPE_CONFIG = {
   improvement: { color: '#14B8A6', bg: '#FFFFFF', icon: TrendingDown },
-  milestone: { color: '#67E8F9', bg: '#0B1238', icon: Award },
-  awareness: { color: '#14B8A6', bg: '#0B1238', icon: Eye },
+  milestone: { color: '#67E8F9', bg: '#D9E2EC', icon: Award },
+  awareness: { color: '#14B8A6', bg: '#D9E2EC', icon: Eye },
 } as const;
 
 export default function EmotionalTimeMachineScreen() {

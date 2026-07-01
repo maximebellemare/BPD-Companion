@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 18,
     borderWidth: 1.5,
-    borderColor: '#0B1238',
+    borderColor: '#D9E2EC',
   },
   emptyCard: {
     flexDirection: 'row',
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.borderLight,
   },
   contactRowCrisis: {
-    borderBottomColor: '#0B1238',
+    borderBottomColor: '#D9E2EC',
   },
   contactAvatar: {
     width: 38,

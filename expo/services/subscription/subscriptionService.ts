@@ -102,7 +102,6 @@ export async function cancelSubscription(): Promise<SubscriptionState> {
 }
 
 export async function restorePurchase(): Promise<SubscriptionState> {
-  console.log('[SubscriptionService] Restore purchase - mock: no purchase found');
   return loadSubscriptionState();
 }
 

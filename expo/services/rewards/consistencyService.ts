@@ -3,6 +3,10 @@ import { ConsistencyMetrics, DEFAULT_CONSISTENCY_METRICS } from '@/types/reward'
 import { Medication, MedicationLog } from '@/types/medication';
 import { Appointment } from '@/types/appointment';
 import { AIConversation } from '@/types/ai';
+import { CalmMeDownSession } from '@/services/calm/calmSessionService';
+import { DBTAcademyProgress } from '@/services/dbt/dbtAcademyService';
+import { CommunityPost } from '@/types/community';
+import { SavedCompanionInsight } from '@/services/companion/companionInsightService';
 
 function getDateKey(timestamp: number): string {
   const d = new Date(timestamp);
@@ -36,6 +40,10 @@ export function computeConsistencyMetrics(
   medicationLogs: MedicationLog[],
   appointments: Appointment[],
   conversations: AIConversation[],
+  calmSessions: CalmMeDownSession[] = [],
+  savedInsights: SavedCompanionInsight[] = [],
+  communityPosts: CommunityPost[] = [],
+  dbtProgress?: DBTAcademyProgress | null,
 ): ConsistencyMetrics {
   try {
     const checkInDays = new Set(
@@ -82,6 +90,10 @@ export function computeConsistencyMetrics(
 
     const journalDateKeys = journalEntries.map(e => getDateKey(e.timestamp));
     const currentJournalStreak = computeStreak(journalDateKeys);
+    const companionDateKeys = conversations.map(conversation => getDateKey(conversation.updatedAt || conversation.createdAt));
+    const companionReflectionStreak = computeStreak(companionDateKeys);
+    const communityPostCount = communityPosts.filter(post => post.author.id === 'current_user').length;
+    const skillPracticeSessions = dbtProgress?.completedScenarioIds.length ?? 0;
 
     const metrics: ConsistencyMetrics = {
       checkInDays,
@@ -95,6 +107,14 @@ export function computeConsistencyMetrics(
       appointmentsAttended,
       currentCheckInStreak,
       currentJournalStreak,
+      emotionalAwarenessStreak: currentCheckInStreak,
+      companionReflectionStreak,
+      skillPracticeStreak: dbtProgress?.currentStreak ?? 0,
+      firstInsightCount: checkInDays >= 3 ? 1 : 0,
+      savedInsightCount: savedInsights.length,
+      calmMeDownSessions: calmSessions.length,
+      communityPosts: communityPostCount,
+      skillPracticeSessions,
     };
 
     console.log('[ConsistencyService] Computed metrics:', JSON.stringify(metrics));

@@ -19,6 +19,7 @@ import {
   ArrowLeft,
   Shield,
   Send,
+  MessageCircle,
   Pin,
   Eye,
   EyeOff,
@@ -30,6 +31,7 @@ import {
   Award,
   Sparkles,
   Tag,
+  Trash2,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
@@ -47,6 +49,7 @@ import { usePostDetail } from '@/hooks/useCommunityFeed';
 import { PostReply, SupportReaction, ReportReason, ReplyLabel, ResponseType, HelpfulnessRating, ThreadClosure } from '@/types/community';
 import { getSuggestedTool } from '@/services/community/communityMatchingService';
 import { checkContentSafety } from '@/services/community/communitySafetyService';
+import { getPublicAuthorLabel } from '@/services/community/communityProfileService';
 import {
   checkTone,
   getDistressLabel,
@@ -55,6 +58,7 @@ import {
   getClosureTypeLabel,
   trackEmotionalContextEvent,
 } from '@/services/community/communityEmotionalContextService';
+import { startPrivateConversation } from '@/services/community/communityMessagingService';
 
 function timeAgo(timestamp: number): string {
   const now = Date.now();
@@ -108,6 +112,7 @@ function ReplyCard({
   reply,
   onReaction,
   onReport,
+  onDelete,
   helpfulnessRating,
   onRateHelpfulness,
   isOwnPost,
@@ -115,6 +120,7 @@ function ReplyCard({
   reply: PostReply;
   onReaction: (replyId: string, type: string) => void;
   onReport: (replyId: string, authorId: string) => void;
+  onDelete: (replyId: string) => void;
   helpfulnessRating?: HelpfulnessRating;
   onRateHelpfulness?: (replyId: string, rating: HelpfulnessRating) => void;
   isOwnPost: boolean;
@@ -149,7 +155,7 @@ function ReplyCard({
             </View>
           )}
           <Text style={styles.replyAuthor}>
-            {reply.author.isAnonymous ? '🫧 Anonymous' : reply.author.displayName}
+            {getPublicAuthorLabel(reply.author)}
           </Text>
           {reply.author.isTrustedHelper && (
             <Text style={styles.trustedLabel}>Trusted helper</Text>
@@ -157,7 +163,16 @@ function ReplyCard({
         </View>
         <View style={styles.replyHeaderRight}>
           <Text style={styles.replyTime}>{timeAgo(reply.createdAt)}</Text>
-          {reply.author.id !== 'current_user' && (
+          {reply.author.id === 'current_user' ? (
+            <TouchableOpacity
+              style={styles.replyMoreBtn}
+              onPress={() => onDelete(reply.id)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              testID={`delete-reply-${reply.id}`}
+            >
+              <Trash2 size={14} color={Colors.danger} />
+            </TouchableOpacity>
+          ) : (
             <TouchableOpacity
               style={styles.replyMoreBtn}
               onPress={() => onReport(reply.id, reply.author.id)}
@@ -238,6 +253,8 @@ export default function PostDetailScreen() {
     isLoading,
     addReply,
     isAddingReply,
+    deletePost,
+    deleteReply,
     toggleReaction,
     reportContent,
     blockUser,
@@ -318,7 +335,7 @@ export default function PostDetailScreen() {
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 500);
   }, [replyText, id, isAnonymous, replyLabel, responseType, addReply]);
 
-  const handleSendReply = useCallback(() => {
+  const handleSendReply = useCallback(async () => {
     if (!replyText.trim() || !id) return;
 
     const safety = checkContentSafety(replyText);
@@ -340,7 +357,7 @@ export default function PostDetailScreen() {
     }
 
     doSendReply();
-  }, [replyText, id, showPausePrompt, doSendReply]);
+  }, [replyText, id, showPausePrompt, doSendReply, router]);
 
   const handleRateHelpfulness = useCallback((replyId: string, rating: HelpfulnessRating) => {
     rateReplyHelpfulness({ replyId, rating });
@@ -375,6 +392,42 @@ export default function PostDetailScreen() {
     [toggleReaction]
   );
 
+  const handleDeleteReply = useCallback((replyId: string) => {
+    Alert.alert('Delete reply?', 'This removes your reply from the thread.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deleteReply(replyId);
+          } catch (error) {
+            Alert.alert('Could not delete reply', error instanceof Error ? error.message : 'Please try again.');
+          }
+        },
+      },
+    ]);
+  }, [deleteReply]);
+
+  const handleDeletePost = useCallback(() => {
+    if (!post) return;
+    Alert.alert('Delete this post?', 'This removes your post and its replies from Community.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deletePost();
+            router.replace('/community' as never);
+          } catch (error) {
+            Alert.alert('Could not delete post', error instanceof Error ? error.message : 'Please try again.');
+          }
+        },
+      },
+    ]);
+  }, [deletePost, post, router]);
+
   const handleShowActions = useCallback(() => {
     setShowActions(true);
     Animated.spring(actionsAnim, { toValue: 1, useNativeDriver: true, friction: 8 }).start();
@@ -394,6 +447,17 @@ export default function PostDetailScreen() {
     setReportSubmitted(false);
     setTimeout(() => setShowReportModal(true), 250);
   }, [post, handleHideActions]);
+
+  const handleMessageUser = useCallback(async () => {
+    if (!post || post.author.id === 'current_user') return;
+    handleHideActions();
+    try {
+      const conversation = await startPrivateConversation(post.author);
+      router.push(`/community/private-message?id=${conversation.id}` as never);
+    } catch (error) {
+      Alert.alert('Could not start message', error instanceof Error ? error.message : 'Please try again.');
+    }
+  }, [handleHideActions, post, router]);
 
   const handleOpenReportForReply = useCallback((replyId: string, authorId: string) => {
     setReportTargetId(replyId);
@@ -462,7 +526,12 @@ export default function PostDetailScreen() {
         </SafeAreaView>
         <View style={styles.loadingContainer}>
           <ActivityIndicator color={Colors.primary} />
-          <Text style={styles.loadingText}>Loading...</Text>
+          <Text style={styles.loadingText}>{id ? 'Loading thread...' : 'Thread not found.'}</Text>
+          {!isLoading && !post ? (
+            <TouchableOpacity style={styles.emptyThreadButton} onPress={() => router.back()}>
+              <Text style={styles.emptyThreadButtonText}>Back to Community</Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
       </View>
     );
@@ -478,12 +547,14 @@ export default function PostDetailScreen() {
           <Text style={styles.navTitle} numberOfLines={1}>
             {category?.emoji} {category?.label}
           </Text>
-          {post.author.id !== 'current_user' ? (
+          {post.author.id === 'current_user' ? (
+            <TouchableOpacity style={styles.backBtn} onPress={handleDeletePost} testID="delete-post-detail-btn">
+              <Trash2 size={20} color={Colors.danger} />
+            </TouchableOpacity>
+          ) : (
             <TouchableOpacity style={styles.backBtn} onPress={handleShowActions} testID="more-btn">
               <MoreHorizontal size={20} color={Colors.text} />
             </TouchableOpacity>
-          ) : (
-            <View style={styles.backBtn} />
           )}
         </View>
       </SafeAreaView>
@@ -526,7 +597,7 @@ export default function PostDetailScreen() {
                   </View>
                 )}
                 <Text style={styles.postAuthor}>
-                  {post.author.isAnonymous ? '🫧 Anonymous' : post.author.displayName}
+                  {getPublicAuthorLabel(post.author)}
                 </Text>
                 {post.author.isTrustedHelper && (
                   <Text style={styles.trustedLabel}>Trusted helper</Text>
@@ -637,6 +708,7 @@ export default function PostDetailScreen() {
                 reply={reply}
                 onReaction={handleToggleReplyReaction}
                 onReport={handleOpenReportForReply}
+                onDelete={handleDeleteReply}
                 isOwnPost={isOwnPost ?? false}
                 helpfulnessRating={replyHelpfulness[reply.id]}
                 onRateHelpfulness={handleRateHelpfulness}
@@ -826,6 +898,15 @@ export default function PostDetailScreen() {
               <SafeAreaView edges={['bottom']}>
                 <View style={styles.actionSheetHandle} />
                 <Text style={styles.actionSheetTitle}>Options</Text>
+                <TouchableOpacity style={styles.actionItem} onPress={handleMessageUser} testID="message-user-btn">
+                  <View style={[styles.actionIcon, { backgroundColor: Colors.primaryLight }]}>
+                    <MessageCircle size={18} color={Colors.primary} />
+                  </View>
+                  <View style={styles.actionTextGroup}>
+                    <Text style={styles.actionLabel}>Message user</Text>
+                    <Text style={styles.actionDesc}>Start a private peer-support conversation</Text>
+                  </View>
+                </TouchableOpacity>
                 <TouchableOpacity style={styles.actionItem} onPress={handleOpenReportForPost} testID="report-post-btn">
                   <View style={[styles.actionIcon, { backgroundColor: '#FFFFFF' }]}>
                     <Flag size={18} color="#3B82F6" />
@@ -989,6 +1070,8 @@ const styles = StyleSheet.create({
   navTitle: { fontSize: 16, fontWeight: '600' as const, color: Colors.text, flex: 1, textAlign: 'center' },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
   loadingText: { fontSize: 14, color: Colors.textMuted },
+  emptyThreadButton: { backgroundColor: Colors.primary, borderRadius: 14, paddingHorizontal: 18, paddingVertical: 12, marginTop: 8 },
+  emptyThreadButtonText: { color: Colors.white, fontSize: 14, fontWeight: '700' as const },
   scrollView: { flex: 1 },
   scrollContent: { paddingTop: 16, paddingHorizontal: 16 },
   postContainer: { backgroundColor: Colors.white, borderRadius: 18, padding: 20, borderWidth: 1, borderColor: Colors.borderLight },

@@ -8,6 +8,7 @@ import {
   Animated,
   Platform,
   Alert,
+  Linking,
 } from 'react-native';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -38,6 +39,8 @@ import { useAnalytics } from '@/providers/AnalyticsProvider';
 import { PREMIUM_FEATURES } from '@/types/subscription';
 import { usePersonalization } from '@/hooks/usePersonalization';
 import BrandLogo from '@/components/branding/BrandLogo';
+import { isNativePurchasesPlatform, PURCHASES_UNAVAILABLE_MESSAGE } from '@/services/subscription/purchasesService';
+import { useAppTheme } from '@/providers/ThemeProvider';
 
 const ICON_MAP: Record<string, React.ComponentType<{ size: number; color: string }>> = {
   sparkles: Sparkles,
@@ -76,12 +79,34 @@ const TESTIMONIALS = [
   },
 ];
 
+const PAYWALL_VALUE_ITEMS = [
+  {
+    id: 'patterns',
+    title: 'Understand emotional patterns',
+    description: 'Connect triggers, emotions, fears, urges, actions, and outcomes.',
+    icon: Brain,
+  },
+  {
+    id: 'pause',
+    title: 'Pause impulsive reactions',
+    description: "Use Companion and Don't Send It before texts, conflict, or regret.",
+    icon: Shield,
+  },
+  {
+    id: 'skills',
+    title: 'Build regulation skills',
+    description: 'Practice calming tools, DBT-style skills, and short real-life lessons.',
+    icon: Activity,
+  },
+];
+
 export default function UpgradeScreen() {
   const router = useRouter();
   const { anchor } = useLocalSearchParams<{ anchor?: string }>();
   const insets = useSafeAreaInsets();
+  const { colors } = useAppTheme();
   const {
-    isEntitlementActive,
+    isPremium,
     subscribe,
     restore,
     isLoading,
@@ -93,14 +118,16 @@ export default function UpgradeScreen() {
     offeringsError,
     purchaseError,
     restoreError,
+    remainingAIMessages,
+    dailyAIUsage,
+    revenueCatDiagnostics,
+    refreshRevenueCatDiagnostics,
   } = useSubscription();
   const personalization = usePersonalization();
   const { trackEvent } = useAnalytics();
   const [selectedPlanId, setSelectedPlanId] = useState<string>('yearly');
   const [restoreNotice, setRestoreNotice] = useState<string | null>(null);
-
-  const _scrollRef = React.useRef<ScrollView>(null);
-  const featureSectionY = React.useRef<number>(0);
+  const isNativePurchases = isNativePurchasesPlatform();
 
   useEffect(() => {
     if (plans.length > 0 && !plans.some(plan => plan.id === selectedPlanId)) {
@@ -187,15 +214,28 @@ export default function UpgradeScreen() {
     if (Platform.OS !== 'web') {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
+    if (isPremium) {
+      const url = Platform.OS === 'ios'
+        ? 'https://apps.apple.com/account/subscriptions'
+        : 'https://play.google.com/store/account/subscriptions';
+      void Linking.openURL(url).catch(() => {
+        Alert.alert('Manage subscription', 'Open your App Store or Google Play subscription settings to manage Premium.');
+      });
+      return;
+    }
     const selected = plans.find(p => p.id === selectedPlanId);
     if (!selected) return;
+    if (!isNativePurchases) {
+      Alert.alert('Purchases unavailable', PURCHASES_UNAVAILABLE_MESSAGE);
+      return;
+    }
     if (selected.isFallbackPrice || offeringStatus !== 'ready') {
-      Alert.alert('Unavailable', 'This plan is not available right now. Please try again later.');
+      Alert.alert('Subscriptions unavailable', offeringsError ?? 'Subscription plans could not be loaded. Please try again shortly.');
       return;
     }
     trackEvent('upgrade_clicked', { plan_id: selectedPlanId });
     subscribe(selected);
-  }, [selectedPlanId, subscribe, trackEvent, plans, offeringStatus]);
+  }, [isPremium, selectedPlanId, subscribe, trackEvent, plans, offeringStatus, offeringsError, isNativePurchases]);
 
   const handleRestore = useCallback(() => {
     handleHaptic();
@@ -214,14 +254,29 @@ export default function UpgradeScreen() {
   }, [handleHaptic, restore]);
 
   const selectedPlan = plans.find(p => p.id === selectedPlanId);
-  const canSubscribe = offeringStatus === 'ready' && !!selectedPlan && !selectedPlan.isFallbackPrice;
+  const canSubscribe = isNativePurchases && offeringStatus === 'ready' && !!selectedPlan && !selectedPlan.isFallbackPrice;
+  const trialDaysRemaining = state.trialEndsAt
+    ? Math.max(0, Math.ceil((state.trialEndsAt - Date.now()) / (24 * 60 * 60 * 1000)))
+    : 0;
+  const accessStatusTitle = isPremium
+    ? 'Premium active.'
+    : state.isTrialActive
+      ? trialDaysRemaining === 1
+        ? 'Trial active — 1 day left.'
+        : `Trial active — ${trialDaysRemaining} days left.`
+      : 'Premium unlocks continued access.';
+  const accessStatusBody = isPremium
+    ? 'You have unlimited Companion messages and Premium insights.'
+    : state.isTrialActive
+      ? 'Trial active — upgrade anytime to unlock unlimited Companion and Premium insights.'
+      : 'Your 7-day trial controls app access. Premium keeps the app available after trial expiration.';
   const statusMessage = useMemo(() => {
     if (offeringStatus === 'loading') return 'Loading secure App Store and Google Play plans...';
-    if (offeringStatus === 'preview') return 'Preview pricing is shown because RevenueCat offerings are unavailable in this build. Configure RevenueCat before release.';
+    if (offeringStatus === 'preview') return isNativePurchases ? null : PURCHASES_UNAVAILABLE_MESSAGE;
     if (offeringStatus === 'empty') return 'No subscription offering is configured yet. Check the RevenueCat offering and package setup.';
     if (offeringStatus === 'error') return offeringsError ?? 'Subscription plans could not be loaded.';
     return null;
-  }, [offeringStatus, offeringsError]);
+  }, [offeringStatus, offeringsError, isNativePurchases]);
 
   const anchorMessage = useMemo(() => {
     const map: Record<string, string> = {
@@ -244,74 +299,36 @@ export default function UpgradeScreen() {
     inputRange: [0, 1],
     outputRange: [0.7, 1],
   });
-
-  if (isEntitlementActive) {
-    return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        <Stack.Screen options={{ headerShown: false }} />
-        <View style={styles.closeRow}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.closeBtn} testID="close-btn">
-            <X size={22} color={Colors.text} />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.activeContainer}>
-          <View style={styles.activeBadge}>
-            <Crown size={32} color="#67E8F9" />
-          </View>
-          <Text style={styles.activeTitle}>Premium Active</Text>
-          <Text style={styles.activeSubtitle}>
-            {state.isTrialActive ? 'Free trial active' : 'Full access enabled'}
-          </Text>
-          <View style={styles.activeInfoCard}>
-            <View style={styles.activeInfoRow}>
-              <Text style={styles.activeInfoLabel}>Status</Text>
-              <View style={styles.activeStatusBadge}>
-                <View style={styles.activeStatusDot} />
-                <Text style={styles.activeInfoValue}>
-                  {state.isTrialActive ? 'Trial' : 'Active'}
-                </Text>
-              </View>
-            </View>
-            {state.expiresAt && (
-              <>
-                <View style={styles.activeInfoDivider} />
-                <View style={styles.activeInfoRow}>
-                  <Text style={styles.activeInfoLabel}>Renews</Text>
-                  <Text style={styles.activeInfoValue}>
-                    {new Date(state.expiresAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                  </Text>
-                </View>
-              </>
-            )}
-            {state.plan && (
-              <>
-                <View style={styles.activeInfoDivider} />
-                <View style={styles.activeInfoRow}>
-                  <Text style={styles.activeInfoLabel}>Plan</Text>
-                  <Text style={styles.activeInfoValue}>{state.plan.priceLabel}</Text>
-                </View>
-              </>
-            )}
-          </View>
-          <View style={styles.activeFeaturesList}>
-            <Text style={styles.activeFeatureHeader}>What's included</Text>
-            {PREMIUM_FEATURES.slice(0, 5).map((f) => (
-              <View key={f.id} style={styles.activeFeatureRow}>
-                <Check size={14} color={Colors.success} />
-                <Text style={styles.activeFeatureText}>{f.title}</Text>
-              </View>
-            ))}
-          </View>
-          <TouchableOpacity style={styles.doneBtn} onPress={() => router.back()}>
-            <Text style={styles.doneBtnText}>Done</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  }
+  const diagnosticRows = __DEV__ && revenueCatDiagnostics
+    ? [
+        ['RevenueCat configured?', revenueCatDiagnostics.configured ? 'true' : 'false'],
+        ['API key detected?', revenueCatDiagnostics.apiKeyDetected ? 'true' : 'false'],
+        ['API key prefix', revenueCatDiagnostics.apiKeyPrefix ?? '(none)'],
+        ['configure() success?', revenueCatDiagnostics.configureSucceeded ? 'true' : 'false'],
+        ['configure() exception', revenueCatDiagnostics.configureExceptionMessage ?? '(none)'],
+        ['initialization completed?', revenueCatDiagnostics.initializationCompleted ? 'true' : 'false'],
+        ['Current appUserID', revenueCatDiagnostics.currentAppUserId ?? '(none)'],
+        ['Customer original appUserID', revenueCatDiagnostics.customerInfoOriginalAppUserId ?? '(none)'],
+        ['Offerings fetched?', revenueCatDiagnostics.offeringsFetched ? 'true' : 'false'],
+        ['offerings.current exists?', revenueCatDiagnostics.offeringsCurrentExists ? 'true' : 'false'],
+        ['offerings.all keys', revenueCatDiagnostics.offeringsAllKeys.length > 0 ? revenueCatDiagnostics.offeringsAllKeys.join(', ') : '(none)'],
+        ['Package count', String(revenueCatDiagnostics.packageCount)],
+        ['Current offering identifier', revenueCatDiagnostics.currentOfferingIdentifier ?? '(none)'],
+        ['Monthly package found?', revenueCatDiagnostics.monthlyPackageFound ? 'true' : 'false'],
+        ['Annual package found?', revenueCatDiagnostics.annualPackageFound ? 'true' : 'false'],
+        ['Monthly product ID', revenueCatDiagnostics.monthlyProductIdentifier ?? '(none)'],
+        ['Annual product ID', revenueCatDiagnostics.annualProductIdentifier ?? '(none)'],
+        ['Expected offering ID', revenueCatDiagnostics.expectedOfferingId],
+        ['Expected entitlement ID', revenueCatDiagnostics.expectedEntitlementId],
+        ['Expected monthly product ID', revenueCatDiagnostics.expectedMonthlyProductId],
+        ['Expected yearly product ID', revenueCatDiagnostics.expectedYearlyProductId],
+        ['Platform', revenueCatDiagnostics.platform],
+        ['Error', revenueCatDiagnostics.error ?? '(none)'],
+      ]
+    : [];
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
       <View style={styles.closeRow}>
@@ -328,10 +345,67 @@ export default function UpgradeScreen() {
           <Animated.View style={[styles.heroIconWrap, { opacity: shimmerOpacity }]}>
             <BrandLogo size={56} />
           </Animated.View>
-          <Text style={styles.heroTitle}>7 Days Free,{'\n'}Then Premium Support</Text>
-          <Text style={styles.heroSubtitle}>
-            Continue with calm, private tools for emotional regulation, communication, and pattern awareness after your free trial.
+          <Text style={[styles.heroTitle, { color: colors.text }]}>Understand patterns. Pause reactions. Build skills.</Text>
+          <Text style={[styles.heroSubtitle, { color: colors.textSecondary }]}>
+            Premium keeps your Companion, calming tools, Don't Send It, and emotional map available after your trial.
           </Text>
+        </Animated.View>
+
+        <Animated.View style={[styles.accessStatusCard, { opacity: fadeAnim }]}>
+          <View style={styles.accessStatusTopRow}>
+            <View style={styles.accessStatusIcon}>
+              <Crown size={18} color={isPremium ? Colors.brandTeal : Colors.primary} />
+            </View>
+            <View style={styles.accessStatusTextWrap}>
+              <Text style={styles.accessStatusTitle}>{accessStatusTitle}</Text>
+              <Text style={styles.accessStatusBody}>{accessStatusBody}</Text>
+            </View>
+          </View>
+          <View style={styles.accessStatusMetaRow}>
+            <Text style={styles.accessStatusMetaLabel}>Companion today</Text>
+            <Text style={styles.accessStatusMetaValue}>
+              {isPremium
+                ? 'Unlimited'
+                : `${dailyAIUsage}/5 used${remainingAIMessages !== null ? ` · ${remainingAIMessages} left` : ''}`}
+            </Text>
+          </View>
+        </Animated.View>
+
+        <Animated.View
+          style={[styles.featuresSection, { opacity: fadeAnim }]}
+        >
+          <Text style={[styles.comparisonTitle, { color: colors.text }]}>What Premium helps with</Text>
+          {PAYWALL_VALUE_ITEMS.map((item, index) => {
+            const IconComponent = item.icon;
+            return (
+              <Animated.View
+                key={item.id}
+                style={[
+                  styles.insightEngineRow,
+                  {
+                    opacity: featureAnims[index],
+                    transform: [{
+                      translateX: featureAnims[index].interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [-16, 0],
+                      }),
+                    }],
+                  },
+                ]}
+              >
+                <View style={styles.insightEngineIcon}>
+                  <IconComponent size={16} color={Colors.primary} />
+                </View>
+                <View style={styles.insightEngineTextWrap}>
+                  <Text style={styles.insightEngineTitle}>{item.title}</Text>
+                  <Text style={styles.insightEngineDesc}>{item.description}</Text>
+                </View>
+                <View style={styles.featureCheck}>
+                  <Check size={11} color={Colors.brandTeal} />
+                </View>
+              </Animated.View>
+            );
+          })}
         </Animated.View>
 
         {personalization.recentDistressAvg > 0 && (
@@ -339,10 +413,10 @@ export default function UpgradeScreen() {
             <Sparkles size={14} color={Colors.primary} />
             <Text style={styles.personalizationText}>
               {personalization.isRelationshipActivated
-                ? 'Relationship stress seems active lately — premium unlocks deeper relationship support tools.'
+                ? "Relationship stress seems active lately. Premium keeps Companion, Don't Send It, and relationship support available."
                 : personalization.recentDistressAvg >= 6
-                  ? 'It seems like an intense week — premium gives you unlimited AI support and deeper insights.'
-                  : 'Premium can help you understand your patterns and build on your progress.'}
+                  ? 'It seems like an intense week. Premium keeps calming tools and Companion support available when you need them.'
+                  : 'Premium helps you keep practicing: understand the pattern, pause the reaction, choose the next step.'}
             </Text>
           </Animated.View>
         )}
@@ -355,7 +429,7 @@ export default function UpgradeScreen() {
         </Animated.View>
 
         <Animated.View style={[styles.freeVsPremiumSection, { opacity: fadeAnim }]}>
-          <Text style={styles.comparisonTitle}>What stays free</Text>
+          <Text style={[styles.comparisonTitle, { color: colors.text }]}>Included during your trial</Text>
           <View style={styles.freeList}>
             {[
               'Check-ins & basic journaling',
@@ -372,20 +446,22 @@ export default function UpgradeScreen() {
               </View>
             ))}
           </View>
+          <Text style={styles.trialClarifier}>
+            After the 7-day trial, Premium keeps BPD Companion available when emotions feel intense.
+          </Text>
         </Animated.View>
 
         <Animated.View
           style={[styles.featuresSection, { opacity: fadeAnim }]}
-          onLayout={(e) => { featureSectionY.current = e.nativeEvent.layout.y; }}
         >
           {anchor ? (
             <View style={styles.anchorHighlight}>
-              <Sparkles size={14} color="#67E8F9" />
+              <Sparkles size={14} color={Colors.brandTeal} />
               <Text style={styles.anchorHighlightText}>{anchorMessage}</Text>
             </View>
           ) : null}
-          <Text style={styles.comparisonTitle}>What Premium unlocks</Text>
-          {PREMIUM_FEATURES.map((feature, index) => {
+          <Text style={styles.comparisonTitle}>Also included</Text>
+          {PREMIUM_FEATURES.slice(0, 7).map((feature, index) => {
             const IconComponent = ICON_MAP[feature.icon] ?? Sparkles;
             return (
               <Animated.View
@@ -411,7 +487,7 @@ export default function UpgradeScreen() {
                   <Text style={styles.featureDesc}>{feature.description}</Text>
                 </View>
                 <View style={styles.featureCheck}>
-                  <Crown size={11} color="#67E8F9" />
+                  <Crown size={11} color={Colors.brandTeal} />
                 </View>
               </Animated.View>
             );
@@ -420,6 +496,31 @@ export default function UpgradeScreen() {
 
         <Animated.View style={[styles.plansSection, { opacity: fadeAnim }]}>
           <Text style={styles.plansTitle}>Choose your plan</Text>
+          {__DEV__ && (
+            <View style={styles.diagnosticsCard}>
+              <View style={styles.diagnosticsHeader}>
+                <Text style={styles.diagnosticsTitle}>RevenueCat diagnostics</Text>
+                <TouchableOpacity
+                  style={styles.diagnosticsRefresh}
+                  onPress={refreshRevenueCatDiagnostics}
+                  activeOpacity={0.75}
+                  testID="revenuecat-diagnostics-refresh"
+                >
+                  <Text style={styles.diagnosticsRefreshText}>Refresh</Text>
+                </TouchableOpacity>
+              </View>
+              {diagnosticRows.length > 0 ? (
+                diagnosticRows.map(([label, value]) => (
+                  <View key={label} style={styles.diagnosticsRow}>
+                    <Text style={styles.diagnosticsLabel}>{label}</Text>
+                    <Text style={styles.diagnosticsValue}>{value}</Text>
+                  </View>
+                ))
+              ) : (
+                <Text style={styles.diagnosticsEmpty}>Diagnostics loading…</Text>
+              )}
+            </View>
+          )}
           {statusMessage ? (
             <View style={styles.offeringStatusCard}>
               <Shield size={16} color={Colors.brandTeal} />
@@ -484,10 +585,10 @@ export default function UpgradeScreen() {
 
         <Animated.View style={[styles.ctaSection, { opacity: fadeAnim }]}>
           <TouchableOpacity
-            style={[styles.ctaButton, (!canSubscribe || isSubscribing || isLoading) && styles.ctaButtonDisabled]}
+            style={[styles.ctaButton, (!isPremium && (!canSubscribe || isSubscribing || isLoading)) && styles.ctaButtonDisabled]}
             onPress={handleSubscribe}
             activeOpacity={0.8}
-            disabled={!canSubscribe || isSubscribing || isLoading}
+            disabled={!isPremium && (!canSubscribe || isSubscribing || isLoading)}
             testID="subscribe-btn"
           >
             <Crown size={18} color={Colors.white} />
@@ -495,7 +596,9 @@ export default function UpgradeScreen() {
               {isSubscribing
                 ? 'Processing...'
                 : canSubscribe
-                  ? `Start 7-day free trial ${selectedPlan?.priceLabel ?? ''}`
+                  ? isPremium
+                    ? 'Manage existing subscription'
+                    : `Upgrade to Premium ${selectedPlan?.priceLabel ?? ''}`
                   : 'Subscriptions unavailable'}
             </Text>
           </TouchableOpacity>
@@ -591,6 +694,64 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     maxWidth: 300,
   },
+  accessStatusCard: {
+    backgroundColor: Colors.card,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    padding: 16,
+    marginBottom: 20,
+  },
+  accessStatusTopRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'flex-start' as const,
+    gap: 12,
+  },
+  accessStatusIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 13,
+    backgroundColor: Colors.primaryLight,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  accessStatusTextWrap: {
+    flex: 1,
+  },
+  accessStatusTitle: {
+    color: Colors.text,
+    fontSize: 16,
+    lineHeight: 21,
+    fontWeight: '900' as const,
+  },
+  accessStatusBody: {
+    color: Colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: '700' as const,
+    marginTop: 3,
+  },
+  accessStatusMetaRow: {
+    marginTop: 13,
+    paddingTop: 13,
+    borderTopWidth: 1,
+    borderTopColor: Colors.borderLight,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    gap: 12,
+  },
+  accessStatusMetaLabel: {
+    color: Colors.textMuted,
+    fontSize: 12,
+    fontWeight: '800' as const,
+    textTransform: 'uppercase' as const,
+  },
+  accessStatusMetaValue: {
+    color: Colors.primary,
+    fontSize: 13,
+    fontWeight: '900' as const,
+  },
   personalizationCard: {
     flexDirection: 'row' as const,
     alignItems: 'flex-start' as const,
@@ -656,6 +817,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.textSecondary,
   },
+  trialClarifier: {
+    color: Colors.textSecondary,
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 10,
+  },
   anchorHighlight: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
@@ -665,7 +832,7 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#0B1238',
+    borderColor: Colors.border,
   },
   anchorHighlightText: {
     flex: 1,
@@ -676,6 +843,58 @@ const styles = StyleSheet.create({
   },
   featuresSection: {
     marginBottom: 28,
+  },
+  insightEngineRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'flex-start' as const,
+    backgroundColor: Colors.card,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+  },
+  insightEngineIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: Colors.primaryLight,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    marginRight: 12,
+  },
+  insightEngineTextWrap: {
+    flex: 1,
+  },
+  insightEngineTitle: {
+    fontSize: 14,
+    fontWeight: '800' as const,
+    color: Colors.text,
+    marginBottom: 2,
+  },
+  insightEngineValue: {
+    fontSize: 13,
+    fontWeight: '700' as const,
+    color: Colors.primary,
+    marginBottom: 3,
+  },
+  insightEngineDesc: {
+    fontSize: 12,
+    lineHeight: 17,
+    color: Colors.textSecondary,
+  },
+  insightEngineBadge: {
+    borderRadius: 999,
+    backgroundColor: Colors.brandTealSoft,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginLeft: 8,
+  },
+  insightEngineBadgeText: {
+    fontSize: 10,
+    fontWeight: '800' as const,
+    color: Colors.brandTeal,
+    textTransform: 'uppercase' as const,
   },
   featureRow: {
     flexDirection: 'row' as const,
@@ -728,6 +947,63 @@ const styles = StyleSheet.create({
     color: Colors.text,
     marginBottom: 14,
     letterSpacing: -0.2,
+  },
+  diagnosticsCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+  },
+  diagnosticsHeader: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    gap: 12,
+    marginBottom: 10,
+  },
+  diagnosticsTitle: {
+    color: Colors.text,
+    fontSize: 14,
+    fontWeight: '900' as const,
+  },
+  diagnosticsRefresh: {
+    minHeight: 34,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    backgroundColor: Colors.primary,
+  },
+  diagnosticsRefreshText: {
+    color: Colors.white,
+    fontSize: 12,
+    fontWeight: '900' as const,
+  },
+  diagnosticsRow: {
+    paddingVertical: 7,
+    borderTopWidth: 1,
+    borderTopColor: Colors.borderLight,
+  },
+  diagnosticsLabel: {
+    color: Colors.textMuted,
+    fontSize: 11,
+    fontWeight: '800' as const,
+    textTransform: 'uppercase' as const,
+    marginBottom: 2,
+  },
+  diagnosticsValue: {
+    color: Colors.text,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '700' as const,
+  },
+  diagnosticsEmpty: {
+    color: Colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '700' as const,
   },
   offeringStatusCard: {
     flexDirection: 'row' as const,
@@ -785,7 +1061,7 @@ const styles = StyleSheet.create({
   popularBadge: {
     position: 'absolute' as const,
     top: -10,
-    backgroundColor: '#67E8F9',
+    backgroundColor: Colors.brandTealSoft,
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 10,
@@ -793,7 +1069,7 @@ const styles = StyleSheet.create({
   popularBadgeText: {
     fontSize: 11,
     fontWeight: '700' as const,
-    color: Colors.white,
+    color: Colors.primary,
   },
   planName: {
     fontSize: 15,
@@ -883,7 +1159,7 @@ const styles = StyleSheet.create({
   },
   inlineNoticeText: {
     fontSize: 12,
-    color: Colors.logoCyan,
+    color: Colors.success,
     textAlign: 'center' as const,
     lineHeight: 17,
     marginTop: 10,
@@ -973,7 +1249,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center' as const,
     marginBottom: 20,
     borderWidth: 2,
-    borderColor: '#0B1238',
+    borderColor: Colors.border,
   },
   activeTitle: {
     fontSize: 26,

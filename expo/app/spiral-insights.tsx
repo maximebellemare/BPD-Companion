@@ -25,6 +25,9 @@ import {
   Minus,
   CheckCircle,
   BarChart3,
+  Moon,
+  MessageCircle,
+  Repeat2,
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
@@ -42,6 +45,9 @@ const SIGNAL_CONFIG: Record<SpiralSignalType, { label: string; color: string; ic
   urge_intensification: { label: 'Strong urges', color: '#3B82F6', icon: AlertTriangle },
   coping_abandonment: { label: 'Coping dropped off', color: '#2E2A72', icon: TrendingDown },
   isolation_pattern: { label: 'Withdrawal', color: '#3B82F6', icon: Heart },
+  poor_sleep_vulnerability: { label: 'Sleep vulnerability', color: '#2E2A72', icon: Moon },
+  conversation_spiral_language: { label: 'Conversation loop language', color: '#3B82F6', icon: MessageCircle },
+  familiar_spiral_pattern: { label: 'Familiar pattern', color: '#14B8A6', icon: Repeat2 },
 };
 
 export default function SpiralInsightsScreen() {

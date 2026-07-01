@@ -16,9 +16,11 @@ import * as Haptics from 'expo-haptics';
 import { ArrowLeft, Mail, Lock, User, Eye, EyeOff } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
+import { useAppTheme } from '@/providers/ThemeProvider';
 
 export default function SignUpScreen() {
   const router = useRouter();
+  const { colors } = useAppTheme();
   const { signUp } = useAuth();
   const [displayName, setDisplayName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
@@ -57,7 +59,7 @@ export default function SignUpScreen() {
   }, [displayName, email, password, signUp]);
 
   return (
-    <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -73,7 +75,7 @@ export default function SignUpScreen() {
 
           <Text style={styles.title}>Create your account</Text>
           <Text style={styles.subtitle}>
-            Keep your entries safe, synced, and always with you.
+            Start a private space to understand patterns, pause reactions, and build regulation skills.
           </Text>
 
           <View style={styles.field}>

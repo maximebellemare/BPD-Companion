@@ -9,13 +9,15 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { ArrowRight, Shield, Cloud, Lock } from 'lucide-react-native';
+import { ArrowRight, Shield, Brain, PauseCircle } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { BRAND } from '@/constants/branding';
 import BrandLogo from '@/components/branding/BrandLogo';
+import { useAppTheme } from '@/providers/ThemeProvider';
 
 export default function WelcomeScreen() {
   const router = useRouter();
+  const { colors } = useAppTheme();
 
   const handleSignUp = useCallback(() => {
     if (Platform.OS !== 'web') void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -28,14 +30,14 @@ export default function WelcomeScreen() {
   }, [router]);
 
   return (
-    <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       <View style={styles.hero}>
         <View style={styles.badge}>
           <Shield size={14} color={Colors.brandTeal} />
-          <Text style={styles.badgeText} testID="auth-badge">Private & encrypted</Text>
+          <Text style={styles.badgeText} testID="auth-badge">Private account</Text>
         </View>
-        <Text style={styles.title}>{BRAND.name}</Text>
-        <Text style={styles.subtitle}>{BRAND.tagline}</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{BRAND.name}</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{BRAND.tagline}</Text>
 
         <View style={styles.illustration}>
           <BrandLogo size={108} animated />
@@ -43,7 +45,7 @@ export default function WelcomeScreen() {
             <Text style={styles.bpdLetters}>BPD Companion</Text>
           </View>
           <Text style={styles.heroText}>
-            Tools for emotional storms, relationship triggers, reflection, and safer communication.
+            Understand emotional patterns, pause impulsive reactions, and practice regulation skills.
           </Text>
         </View>
       </View>
@@ -51,20 +53,20 @@ export default function WelcomeScreen() {
       <View style={styles.features}>
         <View style={styles.feature}>
           <View style={styles.featureIcon}>
-            <Cloud size={18} color={Colors.brandTeal} />
+            <Brain size={18} color={Colors.brandTeal} />
           </View>
           <View style={styles.featureText}>
-            <Text style={styles.featureTitle}>Synced across devices</Text>
-            <Text style={styles.featureSub}>Your entries, moods, and progress stay with you</Text>
+            <Text style={styles.featureTitle}>Understand your patterns</Text>
+            <Text style={styles.featureSub}>Track emotions, triggers, fears, urges, and outcomes</Text>
           </View>
         </View>
         <View style={styles.feature}>
           <View style={[styles.featureIcon, { backgroundColor: Colors.brandLilacSoft }]}>
-            <Lock size={18} color={Colors.brandLilac} />
+            <PauseCircle size={18} color={Colors.brandLilac} />
           </View>
           <View style={styles.featureText}>
-            <Text style={styles.featureTitle}>Built for privacy</Text>
-            <Text style={styles.featureSub}>Only you see what you write — encrypted in transit</Text>
+            <Text style={styles.featureTitle}>Pause before reacting</Text>
+            <Text style={styles.featureSub}>Use Companion, Don't Send It, and calming tools in hard moments</Text>
           </View>
         </View>
         <View style={styles.disclaimerBox}>

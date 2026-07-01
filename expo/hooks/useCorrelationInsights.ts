@@ -16,8 +16,10 @@ import { trackEvent } from '@/services/analytics/analyticsService';
 
 export function useCorrelationInsights() {
   const { journalEntries, messageDrafts } = useApp();
-  const { logs: medicationLogs } = useMedications();
-  const { appointments } = useAppointments();
+  const medicationContext = useMedications();
+  const appointmentContext = useAppointments();
+  const medicationLogs = medicationContext?.logs ?? [];
+  const appointments = appointmentContext?.appointments ?? [];
   const { entries: movementEntries } = useMovement();
   const queryClient = useQueryClient();
 

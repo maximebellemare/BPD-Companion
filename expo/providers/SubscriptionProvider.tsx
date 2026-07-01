@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useMemo, useState } from 'react';
+import { useEffect, useCallback, useMemo, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import createContextHook from '@nkzw/create-context-hook';
@@ -30,12 +30,16 @@ import {
   configurePurchases,
   fetchCustomerInfo,
   fetchOfferings,
+  fetchRevenueCatDiagnostics,
+  logInPurchases,
+  logOutPurchases,
   purchasePackage as rcPurchasePackage,
   restorePurchases as rcRestorePurchases,
   hasActiveEntitlement,
   getActiveExpiration,
   getActivePeriodType,
   isTrialActive as rcIsTrialActive,
+  PURCHASES_UNAVAILABLE_MESSAGE,
 } from '@/services/subscription/purchasesService';
 import type { PurchasesPackage } from '@/services/subscription/purchasesService';
 import { useAuth } from '@/providers/AuthProvider';
@@ -77,25 +81,74 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   const { profile } = useUserProfile();
   const [dailyAIUsage, setDailyAIUsage] = useState<number>(0);
   const [dailyRewriteUsage, setDailyRewriteUsage] = useState<number>(0);
+  const [isRevenueCatIdentified, setIsRevenueCatIdentified] = useState<boolean>(false);
+  const identifiedUserIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (isAuthenticated && user?.id) {
+    let cancelled = false;
+
+    const syncRevenueCatIdentity = async () => {
+      if (isAuthenticated && user?.id) {
+        if (identifiedUserIdRef.current === user.id && isRevenueCatIdentified) return;
+        setIsRevenueCatIdentified(false);
+        try {
+          await logInPurchases(user.id);
+          if (cancelled) return;
+          identifiedUserIdRef.current = user.id;
+          setIsRevenueCatIdentified(true);
+          await queryClient.invalidateQueries({ queryKey: ['rc-customer-info'] });
+          await queryClient.invalidateQueries({ queryKey: ['rc-offerings'] });
+          await queryClient.invalidateQueries({ queryKey: ['rc-diagnostics'] });
+        } catch (error) {
+          console.log('[Subscription] RevenueCat identity sync failed:', error);
+          if (!cancelled) setIsRevenueCatIdentified(false);
+        }
+        return;
+      }
+
+      if (identifiedUserIdRef.current) {
+        identifiedUserIdRef.current = null;
+        setIsRevenueCatIdentified(false);
+        await logOutPurchases();
+        await queryClient.invalidateQueries({ queryKey: ['rc-customer-info'] });
+        await queryClient.invalidateQueries({ queryKey: ['rc-diagnostics'] });
+      } else {
+        setIsRevenueCatIdentified(false);
+      }
+    };
+
+    void syncRevenueCatIdentity();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, isRevenueCatIdentified, queryClient, user?.id]);
+
+  useEffect(() => {
+    if (isAuthenticated && user?.id && !isRevenueCatIdentified) {
       void configurePurchases(user.id);
     }
-  }, [isAuthenticated, user?.id]);
+  }, [isAuthenticated, isRevenueCatIdentified, user?.id]);
 
   const customerInfoQuery = useQuery({
     queryKey: ['rc-customer-info'],
     queryFn: fetchCustomerInfo,
     staleTime: 60_000,
-    enabled: isAuthenticated && !!user?.id,
+    enabled: isAuthenticated && !!user?.id && isRevenueCatIdentified,
   });
 
   const offeringsQuery = useQuery({
     queryKey: ['rc-offerings'],
     queryFn: fetchOfferings,
     staleTime: 5 * 60_000,
-    enabled: isAuthenticated && !!user?.id,
+    enabled: isAuthenticated && !!user?.id && isRevenueCatIdentified,
+  });
+
+  const revenueCatDiagnosticsQuery = useQuery({
+    queryKey: ['rc-diagnostics'],
+    queryFn: fetchRevenueCatDiagnostics,
+    staleTime: 30_000,
+    enabled: __DEV__ && isAuthenticated && !!user?.id && isRevenueCatIdentified,
   });
 
   const aiUsageQuery = useQuery({
@@ -127,7 +180,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     const profileTrialEndsAt = profile ? new Date(profile.trial_ends_at).getTime() : null;
     if (!isEntitlementActive) {
       return {
-        tier: accountTrialActive ? 'premium' : 'free',
+        tier: 'free',
         plan: null,
         expiresAt: null,
         startedAt: null,
@@ -159,17 +212,18 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
 
   const tier: SubscriptionTier = state.tier;
   const isEntitlementActive = hasActiveEntitlement(customerInfoQuery.data ?? null);
-  const isPremium = tier === 'premium';
+  const isPremium = isEntitlementActive;
   const hasPremiumAccess = state.isTrialActive || isEntitlementActive;
 
   const offeringStatus: OfferingStatus = useMemo(() => {
+    if (isAuthenticated && !!user?.id && !isRevenueCatIdentified) return 'loading';
     if (offeringsQuery.isLoading || customerInfoQuery.isLoading) return 'loading';
     if (offeringsQuery.isError) return 'error';
     if (offeringsQuery.data?.monthly || offeringsQuery.data?.annual) return 'ready';
     if (offeringsQuery.data) return 'empty';
     if (__DEV__) return 'preview';
     return 'empty';
-  }, [customerInfoQuery.isLoading, offeringsQuery.data, offeringsQuery.isError, offeringsQuery.isLoading]);
+  }, [customerInfoQuery.isLoading, isAuthenticated, isRevenueCatIdentified, offeringsQuery.data, offeringsQuery.isError, offeringsQuery.isLoading, user?.id]);
 
   const plans = useMemo<SubscriptionPlan[]>(() => {
     const offering = offeringsQuery.data;
@@ -211,7 +265,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   const offeringsError = useMemo(() => {
     if (offeringsQuery.error instanceof Error) return offeringsQuery.error.message;
     if (offeringStatus === 'empty') return 'No RevenueCat offering was returned for this app.';
-    if (offeringStatus === 'preview') return 'RevenueCat offerings are unavailable in this build preview.';
+    if (offeringStatus === 'preview') return PURCHASES_UNAVAILABLE_MESSAGE;
     return null;
   }, [offeringStatus, offeringsQuery.error]);
 
@@ -294,13 +348,11 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   const subscribe = useCallback((_plan: SubscriptionPlan) => {
     const current = offeringsQuery.data;
     if (!current) {
-      console.log('[Subscription] No offering available for plan:', _plan.id);
-      return;
+      throw new Error(PURCHASES_UNAVAILABLE_MESSAGE);
     }
     const pkg = _plan.period === 'yearly' ? current.annual : current.monthly;
     if (!pkg) {
-      console.log('[Subscription] No package for period:', _plan.period);
-      return;
+      throw new Error(PURCHASES_UNAVAILABLE_MESSAGE);
     }
     purchaseMutation.mutate(pkg);
   }, [offeringsQuery.data, purchaseMutation]);
@@ -314,6 +366,10 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     offering: offeringsQuery.data ?? null,
     offeringStatus,
     offeringsError,
+    revenueCatDiagnostics: revenueCatDiagnosticsQuery.data ?? null,
+    refreshRevenueCatDiagnostics: () => {
+      void queryClient.invalidateQueries({ queryKey: ['rc-diagnostics'] });
+    },
     plans,
     dailyAIUsage,
     aiLimitReached,
@@ -323,7 +379,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     remainingRewrites,
     daysRemaining,
     expirationLabel,
-    isLoading: customerInfoQuery.isLoading || offeringsQuery.isLoading,
+    isLoading: (isAuthenticated && !!user?.id && !isRevenueCatIdentified) || customerInfoQuery.isLoading || offeringsQuery.isLoading,
     isSubscribing: purchaseMutation.isPending,
     isRestoring: restoreMutation.isPending,
     purchaseError: purchaseMutation.error instanceof Error ? purchaseMutation.error.message : null,
@@ -353,6 +409,8 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     offeringsQuery.data,
     offeringStatus,
     offeringsError,
+    revenueCatDiagnosticsQuery.data,
+    queryClient,
     plans,
     dailyAIUsage,
     aiLimitReached,
@@ -362,6 +420,9 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     remainingRewrites,
     daysRemaining,
     expirationLabel,
+    isRevenueCatIdentified,
+    isAuthenticated,
+    user?.id,
     customerInfoQuery.isLoading,
     offeringsQuery.isLoading,
     purchaseMutation.isPending,

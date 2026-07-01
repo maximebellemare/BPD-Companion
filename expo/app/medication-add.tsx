@@ -18,12 +18,16 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useMedications } from '@/providers/MedicationProvider';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
+import { useAppTheme } from '@/providers/ThemeProvider';
 import {
   MedicationCategory,
+  MedicationDayOfWeek,
   MedicationSchedule,
   MedicationTime,
   MEDICATION_CATEGORIES,
   MEDICATION_SCHEDULES,
+  MEDICATION_WEEKDAYS,
+  getDefaultDaysForSchedule,
   getDefaultTimesForSchedule,
   formatTime,
 } from '@/types/medication';
@@ -31,9 +35,16 @@ import {
 export default function MedicationAddScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors } = useAppTheme();
   const params = useLocalSearchParams<{ editId?: string }>();
   const { trackEvent } = useAnalytics();
-  const { addMedication, updateMedication, getMedicationById, isAddingMedication } = useMedications();
+  const medicationContext = useMedications();
+  const addMedication = medicationContext?.addMedication ?? (async () => {
+    throw new Error('Medication tracking is still loading. Please try again.');
+  });
+  const updateMedication = medicationContext?.updateMedication ?? (async () => null);
+  const getMedicationById = medicationContext?.getMedicationById ?? (() => null);
+  const isAddingMedication = medicationContext?.isAddingMedication ?? false;
 
   const editMed = params.editId ? getMedicationById(params.editId) : null;
   const isEditing = !!editMed;
@@ -43,6 +54,9 @@ export default function MedicationAddScreen() {
   const [category, setCategory] = useState<MedicationCategory>(editMed?.category ?? 'other');
   const [schedule, setSchedule] = useState<MedicationSchedule>(editMed?.schedule ?? 'daily');
   const [times, setTimes] = useState<MedicationTime[]>(editMed?.times ?? getDefaultTimesForSchedule('daily'));
+  const [daysOfWeek, setDaysOfWeek] = useState<MedicationDayOfWeek[]>(
+    editMed?.daysOfWeek ?? getDefaultDaysForSchedule(editMed?.schedule ?? 'daily'),
+  );
   const [purpose, setPurpose] = useState<string>(editMed?.purpose ?? '');
   const [reminderEnabled, setReminderEnabled] = useState<boolean>(editMed?.reminderEnabled ?? true);
   const [sideEffectNotes, setSideEffectNotes] = useState<string>(editMed?.sideEffectNotes ?? '');
@@ -53,6 +67,7 @@ export default function MedicationAddScreen() {
   const handleScheduleChange = useCallback((newSchedule: MedicationSchedule) => {
     setSchedule(newSchedule);
     setTimes(getDefaultTimesForSchedule(newSchedule));
+    setDaysOfWeek(getDefaultDaysForSchedule(newSchedule));
     setShowSchedulePicker(false);
   }, []);
 
@@ -84,9 +99,28 @@ export default function MedicationAddScreen() {
     setTimes(prev => prev.filter((_, i) => i !== index));
   }, []);
 
+  const toggleDay = useCallback((day: MedicationDayOfWeek) => {
+    setDaysOfWeek(prev => (
+      prev.includes(day)
+        ? prev.filter(value => value !== day)
+        : [...prev, day].sort((a, b) => {
+          const order = [1, 2, 3, 4, 5, 6, 0];
+          return order.indexOf(a) - order.indexOf(b);
+        })
+    ));
+  }, []);
+
   const handleSave = useCallback(async () => {
     if (!name.trim()) {
       Alert.alert('Name required', 'Please enter the medication name.');
+      return;
+    }
+    if (schedule !== 'as_needed' && times.length === 0) {
+      Alert.alert('Time required', 'Please add at least one time for this medication.');
+      return;
+    }
+    if ((schedule === 'weekly' || schedule === 'custom') && daysOfWeek.length === 0) {
+      Alert.alert('Days required', 'Please choose at least one day for this medication.');
       return;
     }
 
@@ -102,6 +136,7 @@ export default function MedicationAddScreen() {
           category,
           schedule,
           times,
+          daysOfWeek,
           purpose: purpose.trim(),
           reminderEnabled,
           sideEffectNotes: sideEffectNotes.trim(),
@@ -115,6 +150,7 @@ export default function MedicationAddScreen() {
           category,
           schedule,
           times,
+          daysOfWeek,
           purpose: purpose.trim(),
           startDate: Date.now(),
           active: true,
@@ -130,27 +166,28 @@ export default function MedicationAddScreen() {
       Alert.alert('Error', 'Could not save medication. Please try again.');
     }
   }, [
-    name, dosage, category, schedule, times, purpose, reminderEnabled,
+    name, dosage, category, schedule, times, daysOfWeek, purpose, reminderEnabled,
     sideEffectNotes, generalNotes, isEditing, editMed,
     addMedication, updateMedication, trackEvent, router,
   ]);
 
   const selectedCategory = MEDICATION_CATEGORIES.find(c => c.value === category);
   const selectedSchedule = MEDICATION_SCHEDULES.find(s => s.value === schedule);
+  const shouldShowDayPicker = schedule === 'weekly' || schedule === 'custom';
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <TouchableOpacity
-          style={styles.closeButton}
+          style={[styles.closeButton, { backgroundColor: colors.surface }]}
           onPress={() => router.back()}
           testID="medication-add-close"
         >
-          <X size={24} color={Colors.text} />
+          <X size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{isEditing ? 'Edit Medication' : 'Add Medication'}</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>{isEditing ? 'Edit Medication' : 'Add Medication'}</Text>
         <TouchableOpacity
-          style={[styles.saveButton, !name.trim() && styles.saveButtonDisabled]}
+          style={[styles.saveButton, { backgroundColor: colors.primary }, !name.trim() && styles.saveButtonDisabled]}
           onPress={handleSave}
           disabled={!name.trim() || isAddingMedication}
           testID="medication-save"
@@ -169,44 +206,44 @@ export default function MedicationAddScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Medication Name</Text>
+            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Medication Name</Text>
             <TextInput
-              style={styles.textInput}
+              style={[styles.textInput, { backgroundColor: colors.card, borderColor: colors.borderLight, color: colors.text }]}
               value={name}
               onChangeText={setName}
               placeholder="e.g. Lamotrigine, Sertraline..."
-              placeholderTextColor={Colors.textMuted}
+              placeholderTextColor={colors.textMuted}
               testID="medication-name-input"
             />
           </View>
 
           <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Dosage</Text>
+            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Dosage</Text>
             <TextInput
-              style={styles.textInput}
+              style={[styles.textInput, { backgroundColor: colors.card, borderColor: colors.borderLight, color: colors.text }]}
               value={dosage}
               onChangeText={setDosage}
               placeholder="e.g. 50mg, 100mg..."
-              placeholderTextColor={Colors.textMuted}
+              placeholderTextColor={colors.textMuted}
               testID="medication-dosage-input"
             />
           </View>
 
           <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Category</Text>
+            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Category</Text>
             <TouchableOpacity
-              style={styles.pickerButton}
+              style={[styles.pickerButton, { backgroundColor: colors.card, borderColor: colors.borderLight }]}
               onPress={() => setShowCategoryPicker(!showCategoryPicker)}
             >
-              <Text style={styles.pickerValue}>{selectedCategory?.label ?? 'Select'}</Text>
-              <ChevronDown size={16} color={Colors.textMuted} />
+              <Text style={[styles.pickerValue, { color: colors.text }]}>{selectedCategory?.label ?? 'Select'}</Text>
+              <ChevronDown size={16} color={colors.textMuted} />
             </TouchableOpacity>
             {showCategoryPicker && (
-              <View style={styles.pickerOptions}>
+              <View style={[styles.pickerOptions, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
                 {MEDICATION_CATEGORIES.map(cat => (
                   <TouchableOpacity
                     key={cat.value}
-                    style={[styles.pickerOption, category === cat.value && styles.pickerOptionSelected]}
+                    style={[styles.pickerOption, { borderBottomColor: colors.borderLight }, category === cat.value && { backgroundColor: colors.primaryLight }]}
                     onPress={() => {
                       setCategory(cat.value);
                       setShowCategoryPicker(false);
@@ -214,6 +251,7 @@ export default function MedicationAddScreen() {
                   >
                     <Text style={[
                       styles.pickerOptionText,
+                      { color: category === cat.value ? colors.primary : colors.text },
                       category === cat.value && styles.pickerOptionTextSelected,
                     ]}>
                       {cat.label}
@@ -225,72 +263,104 @@ export default function MedicationAddScreen() {
           </View>
 
           <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Schedule</Text>
+            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Schedule</Text>
             <TouchableOpacity
-              style={styles.pickerButton}
+              style={[styles.pickerButton, { backgroundColor: colors.card, borderColor: colors.borderLight }]}
               onPress={() => setShowSchedulePicker(!showSchedulePicker)}
             >
               <View>
-                <Text style={styles.pickerValue}>{selectedSchedule?.label ?? 'Select'}</Text>
-                <Text style={styles.pickerDesc}>{selectedSchedule?.description}</Text>
+                <Text style={[styles.pickerValue, { color: colors.text }]}>{selectedSchedule?.label ?? 'Select'}</Text>
+                <Text style={[styles.pickerDesc, { color: colors.textMuted }]}>{selectedSchedule?.description}</Text>
               </View>
-              <ChevronDown size={16} color={Colors.textMuted} />
+              <ChevronDown size={16} color={colors.textMuted} />
             </TouchableOpacity>
             {showSchedulePicker && (
-              <View style={styles.pickerOptions}>
+              <View style={[styles.pickerOptions, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
                 {MEDICATION_SCHEDULES.map(sch => (
                   <TouchableOpacity
                     key={sch.value}
-                    style={[styles.pickerOption, schedule === sch.value && styles.pickerOptionSelected]}
+                    style={[styles.pickerOption, { borderBottomColor: colors.borderLight }, schedule === sch.value && { backgroundColor: colors.primaryLight }]}
                     onPress={() => handleScheduleChange(sch.value)}
                   >
                     <Text style={[
                       styles.pickerOptionText,
+                      { color: schedule === sch.value ? colors.primary : colors.text },
                       schedule === sch.value && styles.pickerOptionTextSelected,
                     ]}>
                       {sch.label}
                     </Text>
-                    <Text style={styles.pickerOptionDesc}>{sch.description}</Text>
+                    <Text style={[styles.pickerOptionDesc, { color: colors.textMuted }]}>{sch.description}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
             )}
           </View>
 
+          {shouldShowDayPicker ? (
+            <View style={styles.fieldGroup}>
+              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Days</Text>
+              <View style={styles.dayGrid}>
+                {MEDICATION_WEEKDAYS.map(day => {
+                  const active = daysOfWeek.includes(day.value);
+                  return (
+                    <TouchableOpacity
+                      key={day.value}
+                      style={[
+                        styles.dayChip,
+                        { backgroundColor: colors.card, borderColor: colors.borderLight },
+                        active && { backgroundColor: colors.primary, borderColor: colors.primary },
+                      ]}
+                      onPress={() => toggleDay(day.value)}
+                      activeOpacity={0.78}
+                      testID={`medication-day-${day.shortLabel.toLowerCase()}`}
+                    >
+                      <Text style={[styles.dayChipText, { color: active ? Colors.white : colors.textSecondary }]}>
+                        {day.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          ) : null}
+
           {schedule !== 'as_needed' && (
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>Times</Text>
+              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Times</Text>
+              <Text style={[styles.fieldHint, { color: colors.textMuted }]}>
+                Add as many dose times as this medication needs.
+              </Text>
               {times.map((time, idx) => (
-                <View key={idx} style={styles.timeRow}>
-                  <Text style={styles.timeLabel}>{time.label}</Text>
+                <View key={idx} style={[styles.timeRow, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
+                  <Text style={[styles.timeLabel, { color: colors.textSecondary }]}>{time.label}</Text>
                   <View style={styles.timeAdjuster}>
                     <TouchableOpacity
-                      style={styles.timeAdjustBtn}
+                      style={[styles.timeAdjustBtn, { backgroundColor: colors.surface }]}
                       onPress={() => adjustTimeHour(idx, -1)}
                     >
-                      <Minus size={14} color={Colors.textSecondary} />
+                      <Minus size={14} color={colors.textSecondary} />
                     </TouchableOpacity>
-                    <Text style={styles.timeValue}>{formatTime(time.hour, time.minute)}</Text>
+                    <Text style={[styles.timeValue, { color: colors.text }]}>{formatTime(time.hour, time.minute)}</Text>
                     <TouchableOpacity
-                      style={styles.timeAdjustBtn}
+                      style={[styles.timeAdjustBtn, { backgroundColor: colors.surface }]}
                       onPress={() => adjustTimeHour(idx, 1)}
                     >
-                      <Plus size={14} color={Colors.textSecondary} />
+                      <Plus size={14} color={colors.textSecondary} />
                     </TouchableOpacity>
                   </View>
                   <View style={styles.timeAdjuster}>
                     <TouchableOpacity
-                      style={styles.timeAdjustBtn}
+                      style={[styles.timeAdjustBtn, { backgroundColor: colors.surface }]}
                       onPress={() => adjustTimeMinute(idx, -15)}
                     >
-                      <Minus size={14} color={Colors.textSecondary} />
+                      <Minus size={14} color={colors.textSecondary} />
                     </TouchableOpacity>
-                    <Text style={styles.timeMinLabel}>min</Text>
+                    <Text style={[styles.timeMinLabel, { color: colors.textMuted }]}>min</Text>
                     <TouchableOpacity
-                      style={styles.timeAdjustBtn}
+                      style={[styles.timeAdjustBtn, { backgroundColor: colors.surface }]}
                       onPress={() => adjustTimeMinute(idx, 15)}
                     >
-                      <Plus size={14} color={Colors.textSecondary} />
+                      <Plus size={14} color={colors.textSecondary} />
                     </TouchableOpacity>
                   </View>
                   {times.length > 1 && (
@@ -303,60 +373,58 @@ export default function MedicationAddScreen() {
                   )}
                 </View>
               ))}
-              {(schedule === 'custom' || schedule === 'three_times_daily') && (
-                <TouchableOpacity style={styles.addTimeBtn} onPress={addTimeSlot}>
-                  <Plus size={14} color={Colors.primary} />
-                  <Text style={styles.addTimeBtnText}>Add time</Text>
-                </TouchableOpacity>
-              )}
+              <TouchableOpacity style={[styles.addTimeBtn, { borderColor: colors.borderLight }]} onPress={addTimeSlot}>
+                <Plus size={14} color={colors.primary} />
+                <Text style={[styles.addTimeBtnText, { color: colors.primary }]}>Add Time</Text>
+              </TouchableOpacity>
             </View>
           )}
 
           <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Purpose (optional)</Text>
+            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Purpose (optional)</Text>
             <TextInput
-              style={styles.textInput}
+              style={[styles.textInput, { backgroundColor: colors.card, borderColor: colors.borderLight, color: colors.text }]}
               value={purpose}
               onChangeText={setPurpose}
               placeholder="e.g. Mood stability, anxiety..."
-              placeholderTextColor={Colors.textMuted}
+              placeholderTextColor={colors.textMuted}
             />
           </View>
 
-          <View style={styles.switchRow}>
+          <View style={[styles.switchRow, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
             <View style={styles.switchInfo}>
-              <Text style={styles.switchLabel}>Reminders</Text>
-              <Text style={styles.switchDesc}>Get notified when it's time</Text>
+              <Text style={[styles.switchLabel, { color: colors.text }]}>Reminders</Text>
+              <Text style={[styles.switchDesc, { color: colors.textMuted }]}>Get notified when it's time</Text>
             </View>
             <Switch
               value={reminderEnabled}
               onValueChange={setReminderEnabled}
-              trackColor={{ false: Colors.border, true: Colors.primaryLight }}
-              thumbColor={reminderEnabled ? Colors.primary : Colors.textMuted}
+              trackColor={{ false: colors.border, true: colors.primaryLight }}
+              thumbColor={reminderEnabled ? colors.primary : colors.textMuted}
             />
           </View>
 
           <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Side effects to watch (optional)</Text>
+            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Side effects to watch (optional)</Text>
             <TextInput
-              style={[styles.textInput, styles.textArea]}
+              style={[styles.textInput, styles.textArea, { backgroundColor: colors.card, borderColor: colors.borderLight, color: colors.text }]}
               value={sideEffectNotes}
               onChangeText={setSideEffectNotes}
               placeholder="Any side effects you want to track..."
-              placeholderTextColor={Colors.textMuted}
+              placeholderTextColor={colors.textMuted}
               multiline
               numberOfLines={3}
             />
           </View>
 
           <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Notes (optional)</Text>
+            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Notes (optional)</Text>
             <TextInput
-              style={[styles.textInput, styles.textArea]}
+              style={[styles.textInput, styles.textArea, { backgroundColor: colors.card, borderColor: colors.borderLight, color: colors.text }]}
               value={generalNotes}
               onChangeText={setGeneralNotes}
               placeholder="Any other notes..."
-              placeholderTextColor={Colors.textMuted}
+              placeholderTextColor={colors.textMuted}
               multiline
               numberOfLines={3}
             />
@@ -422,6 +490,12 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase' as const,
     letterSpacing: 0.5,
   },
+  fieldHint: {
+    fontSize: 13,
+    color: Colors.textMuted,
+    marginTop: -2,
+    marginBottom: 10,
+  },
   textInput: {
     backgroundColor: Colors.white,
     borderRadius: 12,
@@ -484,6 +558,24 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     marginTop: 2,
   },
+  dayGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  dayChip: {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    backgroundColor: Colors.white,
+    paddingHorizontal: 13,
+    paddingVertical: 10,
+  },
+  dayChipText: {
+    fontSize: 13,
+    fontWeight: '700' as const,
+    color: Colors.textSecondary,
+  },
   timeRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -539,6 +631,9 @@ const styles = StyleSheet.create({
     gap: 6,
     padding: 12,
     justifyContent: 'center',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
   },
   addTimeBtnText: {
     fontSize: 14,

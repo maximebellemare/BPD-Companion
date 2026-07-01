@@ -1,886 +1,484 @@
-import React, { useRef, useEffect, useMemo, useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Animated,
   Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  Wind,
-  MessageCircle,
-  HeartCrack,
-  ShieldOff,
-  Eye as EyeIcon,
-  Zap,
+  ArrowRight,
+  BookOpen,
   Brain,
-  Anchor,
+  Calendar,
   ChevronRight,
-  Sparkles,
-  Shield,
-  Activity,
-  Search,
-  Bookmark,
-  Sprout,
+  GraduationCap,
   HeartHandshake,
-  Clock,
-  Lightbulb,
-  Award,
-  TrendingDown,
-  Pin,
-  History,
+  Eye,
+  MessageSquareText,
+  PauseCircle,
+  PenLine,
+  Pill,
+  Search,
+  Shield,
+  Sparkles,
+  Users,
+  Wind,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
-import { QUICK_ACCESS_TOOLS } from '@/data/quickAccessTools';
-import { usePersonalPlaybook } from '@/hooks/usePersonalPlaybook';
-import { useEmotionalContext } from '@/providers/EmotionalContextProvider';
-import { getSmartRecommendation } from '@/services/playbook/playbookLearningService';
-import type { PersonalToolRecord } from '@/types/personalPlaybook';
 import { trackEvent, trackToolUsage } from '@/services/analytics/analyticsService';
+import { useAppTheme } from '@/providers/ThemeProvider';
 
-const ICON_MAP: Record<string, React.ComponentType<{ size: number; color: string }>> = {
-  Wind,
-  MessageCircle,
-  HeartCrack,
-  ShieldOff,
-  Eye: EyeIcon,
-  Zap,
-  Brain,
-  Anchor,
+type HighlightTarget = 'calm' | 'pause' | 'trigger' | 'reflect';
+
+type MainTool = {
+  id: HighlightTarget;
+  title: string;
+  description: string;
+  route: string;
+  actionLabel: string;
+  icon: React.ReactNode;
 };
+
+type LibraryTool = {
+  id: string;
+  title: string;
+  description: string;
+  route: string;
+  icon: React.ReactNode;
+};
+
+function normalizeHighlight(value: string | string[] | undefined): HighlightTarget | null {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (!raw) return null;
+  if (raw === 'high-intensity' || raw === 'grounding' || raw === 'calm') return 'calm';
+  if (raw === 'texting' || raw === 'reacting' || raw === 'pause') return 'pause';
+  if (raw === 'trigger') return 'trigger';
+  if (raw === 'reflect') return 'reflect';
+  return null;
+}
 
 export default function ToolsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const { activeContext } = useEmotionalContext();
-  const playbook = usePersonalPlaybook();
+  const { colors } = useAppTheme();
+  const params = useLocalSearchParams<{ highlight?: string; source?: string }>();
+  const highlight = normalizeHighlight(params.highlight ?? params.source);
 
-  useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 400,
-      useNativeDriver: true,
-    }).start();
-    void trackEvent('screen_view', { screen: 'tools' });
-  }, [fadeAnim]);
+  const mainTools = useMemo<MainTool[]>(() => [
+    {
+      id: 'calm',
+      title: 'Calm down now',
+      description: 'For intense emotions, panic, or overwhelm. Start Calm Me Down.',
+      route: '/grounding-mode',
+      actionLabel: 'Calm me down',
+      icon: <Wind size={22} color={colors.brandTeal} />,
+    },
+    {
+      id: 'pause',
+      title: 'Pause before reacting',
+      description: 'For texting, arguing, or impulsive urges. Create a small gap before action.',
+      route: '/dont-send-it',
+      actionLabel: 'Pause first',
+      icon: <PauseCircle size={22} color={colors.accent} />,
+    },
+    {
+      id: 'trigger',
+      title: 'Understand a trigger',
+      description: 'Map what happened into trigger, emotion, fear, and urge.',
+      route: '/understand-trigger',
+      actionLabel: 'Uncover the chain',
+      icon: <Brain size={22} color={colors.primary} />,
+    },
+    {
+      id: 'reflect',
+      title: 'Reflect and learn',
+      description: 'After something happened, extract the lesson and what to try next.',
+      route: '/reflect-and-learn',
+      actionLabel: 'Find the lesson',
+      icon: <BookOpen size={22} color={colors.brandTeal} />,
+    },
+  ], [colors]);
 
-  const handleQuickAccess = useCallback((route: string) => {
-    if (Platform.OS !== 'web') {
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
-    void trackToolUsage('used', { tool_name: route, source: 'quick_access' });
-    router.push(route as never);
-  }, [router]);
+  const libraryTools = useMemo<LibraryTool[]>(() => [
+    {
+      id: 'bpd-academy',
+      title: 'BPD Academy',
+      description: 'Tiny 2-5 minute lessons for real moments',
+      route: '/bpd-academy',
+      icon: <GraduationCap size={18} color={colors.primary} />,
+    },
+    {
+      id: 'relationship-simulator',
+      title: 'Relationship Simulator',
+      description: 'Practice difficult conversations safely',
+      route: '/relationship-simulator',
+      icon: <Users size={18} color={colors.primary} />,
+    },
+    {
+      id: 'rewrite-message',
+      title: 'Rewrite The Message',
+      description: 'Practice calm, clear communication',
+      route: '/rewrite-the-message',
+      icon: <MessageSquareText size={18} color={colors.brandTeal} />,
+    },
+    {
+      id: 'spot-distortion',
+      title: 'Spot The Distortion',
+      description: 'Identify mind reading, catastrophizing, and more',
+      route: '/spot-the-distortion',
+      icon: <Eye size={18} color={colors.primary} />,
+    },
+    {
+      id: 'emotional-detective',
+      title: 'Emotional Detective',
+      description: 'Practice finding trigger → outcome chains',
+      route: '/emotional-detective',
+      icon: <Search size={18} color={colors.accent} />,
+    },
+    {
+      id: 'dbt',
+      title: 'DBT Skills Academy',
+      description: 'Real-world practice scenarios',
+      route: '/tools/dbt-coach',
+      icon: <Shield size={18} color={colors.primary} />,
+    },
+    {
+      id: 'grounding',
+      title: 'Calm Me Down',
+      description: '2-minute relief flow',
+      route: '/grounding-mode',
+      icon: <Wind size={18} color={colors.brandTeal} />,
+    },
+    {
+      id: 'cbt-thought-record',
+      title: 'CBT Thought Record',
+      description: 'Challenge a painful automatic thought',
+      route: '/cbt-thought-record',
+      icon: <PenLine size={18} color={colors.accent} />,
+    },
+  ], [colors]);
 
-  const handleNav = useCallback((route: string) => {
+  const handleNav = useCallback((route: string, source: string) => {
     if (Platform.OS !== 'web') {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
+    void trackToolUsage('used', { tool_name: route, source });
     router.push(route as never);
   }, [router]);
 
-  const currentEmotion = activeContext?.latestEmotion ?? null;
-  const currentIntensity = activeContext?.latestIntensity ?? 0;
-
-  const smartRec = useMemo(() => {
-    if (playbook.records.length === 0) return null;
-    return getSmartRecommendation(currentEmotion, currentIntensity, playbook.records, playbook.logs);
-  }, [currentEmotion, currentIntensity, playbook.records, playbook.logs]);
-
-  const getWhatHelped = playbook.getWhatHelped;
-  const whatHelpedLastTime = useMemo(() => {
-    if (!currentEmotion) return null;
-    return getWhatHelped(currentEmotion);
-  }, [currentEmotion, getWhatHelped]);
-
-  const topTool = playbook.stats?.mostEffectiveTool ?? null;
-  const hasPlaybookData = playbook.hasData;
-
-  const recentTools = useMemo(() => {
-    return [...playbook.records]
-      .sort((a, b) => b.lastUsed - a.lastUsed)
-      .slice(0, 3);
-  }, [playbook.records]);
+  React.useEffect(() => {
+    void trackEvent('screen_view', { screen: 'tools' });
+  }, []);
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.header}>
-          <Text style={styles.title}>Tools</Text>
-          <Text style={styles.subtitle}>What do you need right now?</Text>
+          <Text style={[styles.title, { color: colors.text }]}>What do you need right now?</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+            Choose the moment you are in. BPD Companion will take you to one useful action.
+          </Text>
         </View>
 
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {smartRec?.tool && currentIntensity >= 5 && (
-            <TouchableOpacity
-              style={styles.smartRecCard}
-              onPress={() => handleNav('/tools/playbook')}
-              activeOpacity={0.7}
-              testID="smart-recommendation-card"
-            >
-              <View style={styles.smartRecIconWrap}>
-                <Sparkles size={18} color={Colors.white} />
-              </View>
-              <View style={styles.smartRecContent}>
-                <Text style={styles.smartRecLabel}>Recommended for you</Text>
-                <Text style={styles.smartRecToolName}>{smartRec.tool.toolTitle}</Text>
-                <Text style={styles.smartRecReason}>{smartRec.reason}</Text>
-              </View>
-              <ChevronRight size={16} color="rgba(255,255,255,0.6)" />
-            </TouchableOpacity>
-          )}
-
-          {whatHelpedLastTime && whatHelpedLastTime.tools.length > 0 && (
-            <View style={styles.whatHelpedLastTimeCard} testID="what-helped-last-time">
-              <View style={styles.whatHelpedLastTimeHeader}>
-                <History size={14} color={Colors.brandTeal} />
-                <Text style={styles.whatHelpedLastTimeLabel}>
-                  Last time you felt this way, these helped
-                </Text>
-              </View>
-              {whatHelpedLastTime.tools.map((tool) => (
-                <View key={tool.toolId} style={styles.whatHelpedLastTimeTool}>
-                  <View style={styles.whatHelpedLastTimeDot} />
-                  <Text style={styles.whatHelpedLastTimeToolName}>{tool.toolTitle}</Text>
-                  {tool.avgDistressReduction > 0 && (
-                    <View style={styles.reductionBadge}>
-                      <TrendingDown size={10} color={Colors.success} />
-                      <Text style={styles.reductionText}>-{tool.avgDistressReduction}</Text>
+        <View style={styles.mainGrid}>
+          {mainTools.map((tool) => {
+            const isHighlighted = highlight === tool.id;
+            return (
+              <TouchableOpacity
+                key={tool.id}
+                style={[
+                  styles.mainCard,
+                  {
+                    backgroundColor: colors.card,
+                    borderColor: isHighlighted ? colors.brandTeal : colors.borderLight,
+                    shadowColor: colors.shadow,
+                  },
+                  isHighlighted && styles.mainCardHighlighted,
+                ]}
+                onPress={() => handleNav(tool.route, `tools_${tool.id}`)}
+                activeOpacity={0.82}
+                testID={`tools-main-${tool.id}`}
+              >
+                <View style={styles.mainCardTop}>
+                  <View style={[styles.mainIconWrap, { backgroundColor: colors.surface }]}>
+                    {tool.icon}
+                  </View>
+                  {isHighlighted && (
+                    <View style={[styles.recommendedPill, { backgroundColor: colors.brandTealSoft }]}>
+                      <Sparkles size={12} color={colors.brandTeal} />
+                      <Text style={[styles.recommendedText, { color: colors.brandTeal }]}>Suggested</Text>
                     </View>
                   )}
                 </View>
-              ))}
-            </View>
-          )}
+                <Text style={[styles.mainTitle, { color: colors.text }]}>{tool.title}</Text>
+                <Text style={[styles.mainDescription, { color: colors.textSecondary }]}>{tool.description}</Text>
+                <View style={styles.mainActionRow}>
+                  <Text style={[styles.mainActionText, { color: colors.primary }]}>{tool.actionLabel}</Text>
+                  <ArrowRight size={15} color={colors.primary} />
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
 
-          <View style={styles.quickAccessGrid}>
-            {QUICK_ACCESS_TOOLS.map(tool => {
-              const IconComp = ICON_MAP[tool.iconName];
-              return (
-                <TouchableOpacity
-                  key={tool.id}
-                  style={[styles.quickCard, { backgroundColor: tool.bgColor }]}
-                  onPress={() => handleQuickAccess(tool.route)}
-                  activeOpacity={0.7}
-                  testID={`quick-${tool.id}`}
-                >
-                  <View style={[styles.quickIconWrap, { backgroundColor: tool.color + '20' }]}>
-                    {IconComp && <IconComp size={18} color={tool.color} />}
-                  </View>
-                  <Text style={[styles.quickLabel, { color: tool.color }]} numberOfLines={1}>
-                    {tool.label}
-                  </Text>
-                  <Text style={styles.quickSublabel} numberOfLines={1}>
-                    {tool.sublabel}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
+        <View style={styles.moreSupportHeader}>
+          <Text style={[styles.libraryTitle, { color: colors.text }]}>More support</Text>
+        </View>
+
+        <TouchableOpacity
+          style={[styles.communityCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}
+          onPress={() => handleNav('/medications' as never, 'tools_medications')}
+          activeOpacity={0.8}
+          testID="tools-medications-card"
+        >
+          <View style={[styles.communityIconWrap, { backgroundColor: colors.primaryLight }]}>
+            <Pill size={22} color={colors.primary} />
           </View>
-
-          {topTool && (
-            <TouchableOpacity
-              style={styles.whatHelpedCard}
-              onPress={() => handleNav('/tools/playbook')}
-              activeOpacity={0.7}
-              testID="what-helped-card"
-            >
-              <View style={styles.whatHelpedHeader}>
-                <Lightbulb size={14} color={Colors.accent} />
-                <Text style={styles.whatHelpedLabel}>What works for you</Text>
-              </View>
-              <View style={styles.whatHelpedBody}>
-                <View style={styles.whatHelpedToolInfo}>
-                  <Text style={styles.whatHelpedToolName}>{topTool.toolTitle}</Text>
-                  <Text style={styles.whatHelpedToolMeta}>
-                    {topTool.avgDistressReduction > 0 && `Reduces distress by ${topTool.avgDistressReduction} · `}
-                    Used {topTool.totalUses}x
-                  </Text>
-                </View>
-                <View style={styles.whatHelpedBadge}>
-                  <Award size={12} color={Colors.success} />
-                  <Text style={styles.whatHelpedBadgeText}>#1</Text>
-                </View>
-              </View>
-              {playbook.records.length > 1 && (
-                <View style={styles.whatHelpedMore}>
-                  <Text style={styles.whatHelpedMoreText}>
-                    +{playbook.records.length - 1} more tools tracked
-                  </Text>
-                  <ChevronRight size={14} color={Colors.textMuted} />
-                </View>
-              )}
-            </TouchableOpacity>
-          )}
-
-          {playbook.pinnedTools.length > 0 && (
-            <>
-              <View style={styles.sectionHeader}>
-                <View style={styles.sectionHeaderRow}>
-                  <Pin size={15} color={Colors.accent} />
-                  <Text style={styles.sectionTitle}>Pinned Tools</Text>
-                </View>
-              </View>
-              {playbook.pinnedTools.slice(0, 3).map(tool => (
-                <PinnedToolRow key={tool.toolId} tool={tool} onPress={() => handleNav('/tools/playbook')} />
-              ))}
-              <View style={{ height: 12 }} />
-            </>
-          )}
-
-          <TouchableOpacity
-            style={styles.matcherCard}
-            onPress={() => handleNav('/tools/tool-matcher')}
-            activeOpacity={0.7}
-            testID="tool-matcher-card"
-          >
-            <View style={styles.matcherLeft}>
-              <View style={styles.matcherIcon}>
-                <Sparkles size={20} color={Colors.white} />
-              </View>
-              <View style={styles.matcherInfo}>
-                <Text style={styles.matcherTitle}>Find the Right Tool</Text>
-                <Text style={styles.matcherDesc}>Tell us how you feel and we'll match you with what helps</Text>
-              </View>
-            </View>
-            <ChevronRight size={18} color="rgba(255,255,255,0.7)" />
-          </TouchableOpacity>
-
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Skill Libraries</Text>
+          <View style={styles.communityTextWrap}>
+            <Text style={[styles.communityTitle, { color: colors.text }]}>Medications</Text>
+            <Text style={[styles.communityBody, { color: colors.textSecondary }]}>
+              Track medication schedules, doses, notes, and today’s taken doses.
+            </Text>
           </View>
+          <ChevronRight size={18} color={colors.textMuted} />
+        </TouchableOpacity>
 
-          <View style={styles.libraryGrid}>
-            <TouchableOpacity
-              style={styles.libraryCard}
-              onPress={() => handleNav('/tools/dbt-coach')}
-              activeOpacity={0.7}
-              testID="dbt-library-card"
-            >
-              <View style={[styles.libraryIcon, { backgroundColor: '#FFFFFF' }]}>
-                <Shield size={20} color="#3B82F6" />
-              </View>
-              <Text style={styles.libraryTitle}>DBT Skills</Text>
-              <Text style={styles.libraryDesc}>32 guided skills</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.libraryCard}
-              onPress={() => handleNav('/tools/mentalization')}
-              activeOpacity={0.7}
-              testID="mbt-library-card"
-            >
-              <View style={[styles.libraryIcon, { backgroundColor: 'rgba(59, 130, 246, 0.18)' }]}>
-                <Search size={20} color="#3B82F6" />
-              </View>
-              <Text style={styles.libraryTitle}>Perspective</Text>
-              <Text style={styles.libraryDesc}>MBT-style tools</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.libraryCard}
-              onPress={() => handleNav('/tools/relationship-recovery')}
-              activeOpacity={0.7}
-              testID="rr-library-card"
-            >
-              <View style={[styles.libraryIcon, { backgroundColor: 'rgba(59, 130, 246, 0.18)' }]}>
-                <HeartCrack size={20} color="#3B82F6" />
-              </View>
-              <Text style={styles.libraryTitle}>Recovery</Text>
-              <Text style={styles.libraryDesc}>Post-conflict support</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.libraryCard}
-              onPress={() => handleNav('/tools/body-regulation')}
-              activeOpacity={0.7}
-              testID="body-library-card"
-            >
-              <View style={[styles.libraryIcon, { backgroundColor: 'rgba(20, 184, 166, 0.18)' }]}>
-                <Activity size={20} color="#14B8A6" />
-              </View>
-              <Text style={styles.libraryTitle}>Body</Text>
-              <Text style={styles.libraryDesc}>Physical regulation</Text>
-            </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.communityCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}
+          onPress={() => handleNav('/appointments' as never, 'tools_appointments')}
+          activeOpacity={0.8}
+          testID="tools-appointments-card"
+        >
+          <View style={[styles.communityIconWrap, { backgroundColor: colors.brandTealSoft }]}>
+            <Calendar size={22} color={colors.brandTeal} />
           </View>
-
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>More Tools</Text>
+          <View style={styles.communityTextWrap}>
+            <Text style={[styles.communityTitle, { color: colors.text }]}>Appointments</Text>
+            <Text style={[styles.communityBody, { color: colors.textSecondary }]}>
+              Keep therapy, psychiatry, doctor, and group appointments organized.
+            </Text>
           </View>
+          <ChevronRight size={18} color={colors.textMuted} />
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.featureCard, hasPlaybookData && styles.playbookFeatureCard]}
-            onPress={() => handleNav('/tools/playbook')}
-            activeOpacity={0.7}
-            testID="playbook-card"
-          >
-            <View style={styles.featureLeft}>
-              <View style={[styles.featureIcon, { backgroundColor: hasPlaybookData ? Colors.brandTealSoft : Colors.accentLight }]}>
-                <Bookmark size={18} color={hasPlaybookData ? Colors.brandTeal : Colors.accent} />
-              </View>
-              <View style={styles.featureInfo}>
-                <Text style={styles.featureTitle}>My Playbook</Text>
-                <Text style={styles.featureDesc}>
-                  {hasPlaybookData
-                    ? `${playbook.records.length} tools tracked · ${playbook.stats?.toolsThisWeek ?? 0} this week`
-                    : 'Tools that work best for you'}
-                </Text>
-              </View>
-            </View>
-            <ChevronRight size={18} color={Colors.textMuted} />
-          </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.communityCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}
+          onPress={() => handleNav('/community' as never, 'tools_community')}
+          activeOpacity={0.8}
+          testID="tools-community-card"
+        >
+          <View style={[styles.communityIconWrap, { backgroundColor: colors.brandTealSoft }]}>
+            <HeartHandshake size={22} color={colors.brandTeal} />
+          </View>
+          <View style={styles.communityTextWrap}>
+            <Text style={[styles.communityTitle, { color: colors.text }]}>Community</Text>
+            <Text style={[styles.communityBody, { color: colors.textSecondary }]}>
+              Read and share with others who understand. Peer support, not crisis support or medical advice.
+            </Text>
+          </View>
+          <ChevronRight size={18} color={colors.textMuted} />
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.featureCard}
-            onPress={() => handleNav('/companion/simulator' as never)}
-            activeOpacity={0.7}
-            testID="simulator-card"
-          >
-            <View style={styles.featureLeft}>
-              <View style={[styles.featureIcon, { backgroundColor: '#FFFFFF' }]}>
-                <Zap size={18} color="#3B82F6" />
-              </View>
-              <View style={styles.featureInfo}>
-                <Text style={styles.featureTitle}>Response Simulator</Text>
-                <Text style={styles.featureDesc}>Explore how different reactions play out</Text>
-              </View>
-            </View>
-            <ChevronRight size={18} color={Colors.textMuted} />
-          </TouchableOpacity>
+        <View style={styles.libraryHeader}>
+          <Text style={[styles.libraryTitle, { color: colors.text }]}>Skill library</Text>
+        </View>
 
-          <TouchableOpacity
-            style={styles.featureCard}
-            onPress={() => handleNav('/my-growth' as never)}
-            activeOpacity={0.7}
-            testID="growth-card"
-          >
-            <View style={styles.featureLeft}>
-              <View style={[styles.featureIcon, { backgroundColor: '#0B1238' }]}>
-                <Sprout size={18} color="#14B8A6" />
+        <View style={styles.libraryList}>
+          {libraryTools.map((tool) => (
+            <TouchableOpacity
+              key={tool.id}
+              style={[styles.libraryRow, { backgroundColor: colors.card, borderColor: colors.borderLight }]}
+              onPress={() => handleNav(tool.route, `library_${tool.id}`)}
+              activeOpacity={0.76}
+              testID={`tools-library-${tool.id}`}
+            >
+              <View style={[styles.libraryIconWrap, { backgroundColor: colors.surface }]}>
+                {tool.icon}
               </View>
-              <View style={styles.featureInfo}>
-                <Text style={styles.featureTitle}>My Growth</Text>
-                <Text style={styles.featureDesc}>Values, strengths & identity reflections</Text>
+              <View style={styles.libraryTextWrap}>
+                <Text style={[styles.libraryRowTitle, { color: colors.text }]}>{tool.title}</Text>
+                <Text style={[styles.libraryRowDesc, { color: colors.textSecondary }]}>{tool.description}</Text>
               </View>
-            </View>
-            <ChevronRight size={18} color={Colors.textMuted} />
-          </TouchableOpacity>
+              <ChevronRight size={17} color={colors.textMuted} />
+            </TouchableOpacity>
+          ))}
+        </View>
 
-          <TouchableOpacity
-            style={styles.featureCard}
-            onPress={() => handleNav('/relationship-profiles' as never)}
-            activeOpacity={0.7}
-            testID="relationship-card"
-          >
-            <View style={styles.featureLeft}>
-              <View style={[styles.featureIcon, { backgroundColor: '#FFFFFF' }]}>
-                <HeartHandshake size={18} color="#3B82F6" />
-              </View>
-              <View style={styles.featureInfo}>
-                <Text style={styles.featureTitle}>Relationship Support</Text>
-                <Text style={styles.featureDesc}>Profiles, copilot & spiral guard</Text>
-              </View>
-            </View>
-            <ChevronRight size={18} color={Colors.textMuted} />
-          </TouchableOpacity>
-
-          {recentTools.length > 0 && (
-            <>
-              <View style={styles.sectionHeader}>
-                <View style={styles.sectionHeaderRow}>
-                  <Clock size={15} color={Colors.textMuted} />
-                  <Text style={styles.sectionTitle}>Recently Used</Text>
-                </View>
-              </View>
-              {recentTools.map(tool => (
-                <View key={tool.toolId} style={styles.recentChip}>
-                  <Clock size={14} color={Colors.textMuted} />
-                  <View style={styles.recentChipInfo}>
-                    <Text style={styles.recentText}>{tool.toolTitle}</Text>
-                    {tool.avgDistressReduction > 0 && (
-                      <Text style={styles.recentMeta}>-{tool.avgDistressReduction} distress</Text>
-                    )}
-                  </View>
-                </View>
-              ))}
-            </>
-          )}
-
-          <View style={{ height: 24 }} />
-        </ScrollView>
-      </Animated.View>
+      </ScrollView>
     </View>
-  );
-}
-
-function PinnedToolRow({ tool, onPress }: { tool: PersonalToolRecord; onPress: () => void }) {
-  return (
-    <TouchableOpacity
-      style={styles.pinnedToolRow}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
-      <View style={styles.pinnedToolLeft}>
-        <Pin size={14} color={Colors.accent} fill={Colors.accent} />
-        <Text style={styles.pinnedToolName}>{tool.toolTitle}</Text>
-      </View>
-      <View style={styles.pinnedToolRight}>
-        {tool.avgDistressReduction > 0 && (
-          <View style={styles.pinnedToolBadge}>
-            <TrendingDown size={10} color={Colors.success} />
-            <Text style={styles.pinnedToolBadgeText}>-{tool.avgDistressReduction}</Text>
-          </View>
-        )}
-        <Text style={styles.pinnedToolUses}>{tool.totalUses}x</Text>
-      </View>
-    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 14,
-    paddingBottom: 4,
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: '700' as const,
-    color: Colors.brandNavy,
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: Colors.brandTeal,
-    marginTop: 4,
-    fontWeight: '500' as const,
   },
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 18,
     paddingBottom: 36,
   },
-  smartRecCard: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    backgroundColor: '#14B8A6',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    gap: 12,
+  header: {
+    marginBottom: 18,
   },
-  smartRecIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-  },
-  smartRecContent: {
-    flex: 1,
-  },
-  smartRecLabel: {
-    fontSize: 10,
-    fontWeight: '700' as const,
-    color: 'rgba(255,255,255,0.6)',
-    textTransform: 'uppercase' as const,
-    letterSpacing: 0.8,
-    marginBottom: 3,
-  },
-  smartRecToolName: {
-    fontSize: 16,
-    fontWeight: '700' as const,
-    color: Colors.white,
-    marginBottom: 2,
-  },
-  smartRecReason: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.7)',
-    lineHeight: 17,
-  },
-  whatHelpedLastTimeCard: {
-    backgroundColor: Colors.card,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: Colors.brandTeal + '20',
-    shadowColor: 'rgba(27,40,56,0.04)',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 6,
-    elevation: 1,
-  },
-  whatHelpedLastTimeHeader: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 8,
-    marginBottom: 12,
-  },
-  whatHelpedLastTimeLabel: {
-    fontSize: 13,
-    fontWeight: '600' as const,
-    color: Colors.brandTeal,
-  },
-  whatHelpedLastTimeTool: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 10,
-    paddingVertical: 6,
-  },
-  whatHelpedLastTimeDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: Colors.brandTeal,
-  },
-  whatHelpedLastTimeToolName: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: Colors.text,
-    flex: 1,
-  },
-  reductionBadge: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 3,
-    backgroundColor: Colors.successLight,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  reductionText: {
-    fontSize: 11,
-    fontWeight: '700' as const,
-    color: Colors.success,
-  },
-  quickAccessGrid: {
-    flexDirection: 'row' as const,
-    flexWrap: 'wrap' as const,
-    gap: 10,
-    marginBottom: 20,
-  },
-  quickCard: {
-    width: '48%' as unknown as number,
-    flexGrow: 1,
-    flexBasis: '47%' as unknown as number,
-    borderRadius: 16,
-    padding: 14,
-    minHeight: 96,
-    shadowColor: 'rgba(27,40,56,0.05)',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  quickIconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
+  title: {
+    fontSize: 29,
+    lineHeight: 35,
+    fontWeight: '900',
+    letterSpacing: 0,
     marginBottom: 8,
   },
-  quickLabel: {
-    fontSize: 14,
-    fontWeight: '700' as const,
-    marginBottom: 2,
+  subtitle: {
+    fontSize: 15,
+    lineHeight: 22,
   },
-  quickSublabel: {
-    fontSize: 11,
-    color: Colors.textSecondary,
-    lineHeight: 15,
+  mainGrid: {
+    gap: 12,
   },
-  whatHelpedCard: {
-    backgroundColor: Colors.card,
-    borderRadius: 16,
+  mainCard: {
+    borderRadius: 20,
+    borderWidth: 1,
     padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: Colors.brandTeal + '18',
-    shadowColor: 'rgba(27,40,56,0.04)',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 1,
-    shadowRadius: 6,
-    elevation: 1,
+    shadowRadius: 18,
+    elevation: 2,
   },
-  whatHelpedHeader: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 6,
-    marginBottom: 10,
+  mainCardHighlighted: {
+    borderWidth: 2,
   },
-  whatHelpedLabel: {
-    fontSize: 11,
-    fontWeight: '700' as const,
-    color: Colors.accent,
-    textTransform: 'uppercase' as const,
-    letterSpacing: 0.5,
+  mainCardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
   },
-  whatHelpedBody: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'space-between' as const,
-  },
-  whatHelpedToolInfo: {
-    flex: 1,
-  },
-  whatHelpedToolName: {
-    fontSize: 16,
-    fontWeight: '700' as const,
-    color: Colors.text,
-    marginBottom: 3,
-  },
-  whatHelpedToolMeta: {
-    fontSize: 12,
-    color: Colors.textSecondary,
-  },
-  whatHelpedBadge: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 4,
-    backgroundColor: Colors.successLight,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-  },
-  whatHelpedBadgeText: {
-    fontSize: 12,
-    fontWeight: '700' as const,
-    color: Colors.success,
-  },
-  whatHelpedMore: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'space-between' as const,
-    marginTop: 10,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: Colors.borderLight,
-  },
-  whatHelpedMoreText: {
-    fontSize: 13,
-    color: Colors.textMuted,
-    fontWeight: '500' as const,
-  },
-  sectionHeader: {
-    marginBottom: 14,
-  },
-  sectionHeaderRow: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 8,
-  },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: '700' as const,
-    color: Colors.brandNavy,
-    letterSpacing: -0.3,
-  },
-  pinnedToolRow: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'space-between' as const,
-    backgroundColor: Colors.card,
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 6,
-    borderWidth: 1,
-    borderColor: Colors.accentLight,
-  },
-  pinnedToolLeft: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 10,
-    flex: 1,
-  },
-  pinnedToolName: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: Colors.text,
-  },
-  pinnedToolRight: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 8,
-  },
-  pinnedToolBadge: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 3,
-    backgroundColor: Colors.successLight,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  pinnedToolBadgeText: {
-    fontSize: 10,
-    fontWeight: '700' as const,
-    color: Colors.success,
-  },
-  pinnedToolUses: {
-    fontSize: 11,
-    color: Colors.textMuted,
-    fontWeight: '500' as const,
-  },
-  matcherCard: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'space-between' as const,
-    backgroundColor: Colors.primary,
-    borderRadius: 18,
-    padding: 18,
-    marginBottom: 28,
-  },
-  matcherLeft: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 14,
-    flex: 1,
-  },
-  matcherIcon: {
+  mainIconWrap: {
     width: 44,
     height: 44,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  matcherInfo: {
-    flex: 1,
+  recommendedPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    paddingVertical: 6,
   },
-  matcherTitle: {
-    fontSize: 17,
-    fontWeight: '700' as const,
-    color: Colors.white,
-    marginBottom: 3,
+  recommendedText: {
+    fontSize: 11,
+    fontWeight: '900',
   },
-  matcherDesc: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.75)',
-    lineHeight: 18,
+  mainTitle: {
+    fontSize: 20,
+    lineHeight: 25,
+    fontWeight: '900',
+    marginBottom: 6,
   },
-  libraryGrid: {
-    flexDirection: 'row' as const,
-    flexWrap: 'wrap' as const,
-    gap: 10,
-    marginBottom: 28,
+  mainDescription: {
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: '700',
+    marginBottom: 13,
   },
-  libraryCard: {
-    width: '48%' as unknown as number,
-    flexGrow: 1,
-    flexBasis: '47%' as unknown as number,
-    backgroundColor: Colors.card,
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    shadowColor: 'rgba(27,40,56,0.04)',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 6,
-    elevation: 1,
+  mainActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
-  libraryIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
+  mainActionText: {
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  libraryHeader: {
+    marginBottom: 10,
+  },
+  moreSupportHeader: {
+    marginTop: 22,
     marginBottom: 10,
   },
   libraryTitle: {
-    fontSize: 15,
-    fontWeight: '700' as const,
-    color: Colors.text,
-    marginBottom: 2,
+    fontSize: 19,
+    fontWeight: '900',
+    marginBottom: 4,
   },
-  libraryDesc: {
-    fontSize: 12,
-    color: Colors.textMuted,
-  },
-  featureCard: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'space-between' as const,
-    backgroundColor: Colors.card,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    shadowColor: 'rgba(27,40,56,0.03)',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 1,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  playbookFeatureCard: {
-    borderColor: Colors.brandTeal + '30',
-  },
-  featureLeft: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 14,
-    flex: 1,
-  },
-  featureIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-  },
-  featureInfo: {
-    flex: 1,
-  },
-  featureTitle: {
-    fontSize: 15,
-    fontWeight: '600' as const,
-    color: Colors.text,
-    marginBottom: 2,
-  },
-  featureDesc: {
+  librarySubtitle: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    lineHeight: 19,
   },
-  recentChip: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 10,
-    backgroundColor: Colors.card,
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 8,
+  communityCard: {
+    minHeight: 92,
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 15,
+    marginBottom: 22,
   },
-  recentChipInfo: {
+  communityIconWrap: {
+    width: 46,
+    height: 46,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  communityTextWrap: {
     flex: 1,
   },
-  recentText: {
-    fontSize: 14,
-    color: Colors.text,
-    fontWeight: '500' as const,
+  communityTitle: {
+    fontSize: 17,
+    fontWeight: '900',
+    marginBottom: 4,
   },
-  recentMeta: {
-    fontSize: 11,
-    color: Colors.success,
-    marginTop: 2,
-    fontWeight: '500' as const,
+  communityBody: {
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: '700',
+  },
+  libraryList: {
+    gap: 8,
+    marginBottom: 14,
+  },
+  libraryRow: {
+    minHeight: 62,
+    borderRadius: 16,
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 13,
+    paddingVertical: 11,
+  },
+  libraryIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  libraryTextWrap: {
+    flex: 1,
+  },
+  libraryRowTitle: {
+    fontSize: 15,
+    fontWeight: '900',
+    marginBottom: 3,
+  },
+  libraryRowDesc: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '700',
   },
 });

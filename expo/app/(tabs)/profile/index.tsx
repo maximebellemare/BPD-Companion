@@ -1,118 +1,111 @@
-import React, { useRef, useEffect, useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
+  Alert,
   Animated,
   Platform,
+  ScrollView,
+  StyleSheet,
   Switch,
-  Alert,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import {
-  User,
-  Heart,
-  Shield,
-  Bell,
-  Lock,
-  ChevronRight,
-  TrendingUp,
-  Clock,
-  Flame,
-  Activity,
-  Target,
-  Sparkles,
-  Phone,
-  BarChart3,
-  Users,
-  Award,
-  Calendar,
-  FileText,
-  Crown,
-  Compass,
-  HeartHandshake,
-  Fingerprint,
-  Brain,
-  BookOpen,
-  Bug,
-  Zap,
-  MessageCircle,
-  Trash2,
   AlertTriangle,
+  Bell,
+  ChevronRight,
+  Crown,
+  FileText,
+  HelpCircle,
+  Lock,
   LogOut,
-  CloudOff,
-  LogIn,
+  Mail,
+  Moon,
+  RefreshCw,
+  Shield,
+  Sparkles,
+  Sun,
+  Trash2,
+  User,
 } from 'lucide-react-native';
-import BrandLogo from '@/components/branding/BrandLogo';
-import { BRAND } from '@/constants/branding';
 import * as Haptics from 'expo-haptics';
+import BrandLogo from '@/components/branding/BrandLogo';
 import Colors from '@/constants/colors';
+import { useAuth } from '@/providers/AuthProvider';
 import { useProfile } from '@/providers/ProfileProvider';
 import { useSubscription } from '@/providers/SubscriptionProvider';
-import { useCoaching } from '@/hooks/useCoaching';
-import { usePersonalization } from '@/hooks/usePersonalization';
-import { useSmartReminders } from '@/hooks/useSmartReminders';
-import { useRewards } from '@/providers/RewardsProvider';
-import { useAuth } from '@/providers/AuthProvider';
+import { useUserProfile } from '@/providers/UserProfileProvider';
+import { useAppTheme } from '@/providers/ThemeProvider';
+import { updateProfile as updateAccountProfile } from '@/lib/supabase/profiles';
+import { storageService } from '@/services/storage/storageService';
+import { PURCHASES_UNAVAILABLE_MESSAGE } from '@/services/subscription/purchasesService';
+import { resetTodayTutorial } from '@/services/habits/tutorialAndRewardsService';
+import {
+  CommunityProfile,
+  loadCommunityProfile,
+  saveCommunityProfile,
+  validateUsername,
+  normalizeUsername,
+} from '@/services/community/communityProfileService';
+
+const OWNER_QA_EMAIL = 'valmontmarketing@gmail.com';
+const AVATAR_COLORS = ['#2E2A72', '#3B82F6', '#14B8A6', '#67E8F9', '#059669'];
+
+type SettingsRowProps = {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  onPress?: () => void;
+  testID?: string;
+  right?: React.ReactNode;
+  destructive?: boolean;
+};
+
+function getDaysUntil(timestamp: number | null | undefined): number {
+  if (!timestamp) return 0;
+  return Math.max(0, Math.ceil((timestamp - Date.now()) / (24 * 60 * 60 * 1000)));
+}
+
+function titleCase(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { profile, patternSummary, updateProfile, updatePrivacy } = useProfile();
-  const { isPremium, daysRemaining, state: subState } = useSubscription();
-  const { wins } = useCoaching();
-  const personalization = usePersonalization();
-  const { getState: getSmartState } = useSmartReminders();
-  const { totalUnlocked, hasUnseen } = useRewards();
-  const { user, isGuest, isAuthenticated, signOut } = useAuth();
-
-  const handleSignOut = useCallback(() => {
-    const doSignOut = async () => {
-      try {
-        await signOut();
-      } catch (e) {
-        console.log('[Profile] signOut error', e);
-      }
-    };
-    if (Platform.OS === 'web') {
-      if (typeof window !== 'undefined' && window.confirm('Sign out of your account?')) {
-        void doSignOut();
-      }
-      return;
-    }
-    Alert.alert('Sign out?', 'You can sign back in anytime to sync your data.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign out', style: 'destructive', onPress: () => void doSignOut() },
-    ]);
-  }, [signOut]);
-
-  const handleCreateAccount = useCallback(() => {
-    router.push('/auth/welcome' as never);
-  }, [router]);
-  const [smartInfo, setSmartInfo] = useState({ todayFired: 0, activeCount: 0 });
-
-  useEffect(() => {
-    const state = getSmartState();
-    setSmartInfo({
-      todayFired: state.todayFiredCount,
-      activeCount: state.activeReminders.length,
-    });
-  }, [getSmartState]);
-
+  const { profile, updateNotifications, updatePrivacy } = useProfile();
+  const { theme, colors: palette, setTheme } = useAppTheme();
+  const {
+    isPremium,
+    isEntitlementActive,
+    isRestoring,
+    restore,
+    restoreError,
+    state: subscriptionState,
+  } = useSubscription();
+  const { profile: accountProfile, refreshProfile: refreshAccountProfile } = useUserProfile();
+  const { user, isAuthenticated, resetPassword, signOut } = useAuth();
+  const [notice, setNotice] = useState<string | null>(null);
+  const [communityProfile, setCommunityProfile] = useState<CommunityProfile | null>(null);
+  const [communityUsername, setCommunityUsername] = useState('');
+  const [communityDisplayName, setCommunityDisplayName] = useState('');
+  const [communityAvatarColor, setCommunityAvatarColor] = useState(AVATAR_COLORS[0]);
+  const [communityProfileError, setCommunityProfileError] = useState<string | null>(null);
+  const [isSavingCommunityProfile, setIsSavingCommunityProfile] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(20)).current;
+  const slideAnim = useRef(new Animated.Value(18)).current;
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 500,
+        duration: 420,
         useNativeDriver: true,
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 500,
+        duration: 420,
         useNativeDriver: true,
       }),
     ]).start();
@@ -124,42 +117,249 @@ export default function ProfileScreen() {
     }
   }, []);
 
-  const daysSinceJoined = Math.max(1, Math.floor((Date.now() - profile.createdAt) / (24 * 60 * 60 * 1000)));
+  const profileEmail = user?.email || 'Not signed in';
+  const isOwnerQa = __DEV__ && user?.email?.toLowerCase() === OWNER_QA_EMAIL;
 
-  const renderNavRow = useCallback((
-    icon: React.ReactNode,
-    title: string,
-    desc: string,
-    onPress: () => void,
-    testId?: string,
-    badge?: React.ReactNode,
-  ) => (
-    <TouchableOpacity
-      style={styles.navRow}
-      onPress={() => { handleHaptic(); onPress(); }}
-      activeOpacity={0.7}
-      testID={testId}
-    >
-      {icon}
-      <View style={styles.navRowText}>
-        <View style={styles.navRowTitleRow}>
-          <Text style={styles.navRowTitle}>{title}</Text>
-          {badge}
+  useEffect(() => {
+    let mounted = true;
+    loadCommunityProfile()
+      .then((profile) => {
+        if (!mounted) return;
+        const hydrated = profile ?? (accountProfile?.username ? {
+          username: accountProfile.username,
+          displayName: accountProfile.display_name ?? undefined,
+          avatarColor: accountProfile.avatar_color ?? AVATAR_COLORS[0],
+          updatedAt: Date.now(),
+        } : null);
+        setCommunityProfile(hydrated);
+        setCommunityUsername(hydrated?.username ?? '');
+        setCommunityDisplayName(hydrated?.displayName ?? '');
+        setCommunityAvatarColor(hydrated?.avatarColor ?? AVATAR_COLORS[0]);
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, [accountProfile?.avatar_color, accountProfile?.display_name, accountProfile?.username]);
+
+  const handleSaveCommunityProfile = useCallback(async () => {
+    const normalized = normalizeUsername(communityUsername);
+    const validation = validateUsername(normalized);
+    if (validation) {
+      setCommunityProfileError(validation);
+      return;
+    }
+    setIsSavingCommunityProfile(true);
+    setCommunityProfileError(null);
+    try {
+      const saved = await saveCommunityProfile({
+        username: normalized,
+        displayName: communityDisplayName,
+        avatarColor: communityAvatarColor,
+      });
+      setCommunityProfile(saved);
+      setCommunityUsername(saved.username);
+      setCommunityDisplayName(saved.displayName ?? '');
+      setCommunityAvatarColor(saved.avatarColor);
+      if (user) {
+        try {
+          await updateAccountProfile(user.id, {
+            username: saved.username,
+            display_name: saved.displayName ?? null,
+            avatar_color: saved.avatarColor,
+          });
+        } catch (profileError) {
+          const message = profileError instanceof Error ? profileError.message : '';
+          if (/avatar_color|schema cache|column/i.test(message)) {
+            await updateAccountProfile(user.id, {
+              username: saved.username,
+              display_name: saved.displayName ?? null,
+            });
+          } else {
+            throw profileError;
+          }
+        }
+        await refreshAccountProfile();
+      }
+      setNotice('Community profile saved.');
+    } catch (error) {
+      setCommunityProfileError(error instanceof Error ? error.message : 'Could not save community profile.');
+    } finally {
+      setIsSavingCommunityProfile(false);
+    }
+  }, [communityAvatarColor, communityDisplayName, communityUsername, refreshAccountProfile, user]);
+  const trialDaysRemaining = getDaysUntil(subscriptionState.trialEndsAt);
+  const statusLabel = useMemo(() => {
+    if (isEntitlementActive) return 'Premium active';
+    if (subscriptionState.isTrialActive) {
+      return trialDaysRemaining === 1 ? 'Trial ends in 1 day' : `Trial ends in ${trialDaysRemaining} days`;
+    }
+    return 'Subscription required';
+  }, [isEntitlementActive, subscriptionState.isTrialActive, trialDaysRemaining]);
+
+  const statusDescription = useMemo(() => {
+    if (isEntitlementActive) {
+      return 'Premium active. Unlimited Companion and Premium insights are unlocked.';
+    }
+    if (subscriptionState.isTrialActive) {
+      return 'Upgrade anytime to unlock unlimited Companion and Premium insights.';
+    }
+    return 'Upgrade to keep emotional patterns and premium insights available.';
+  }, [isEntitlementActive, subscriptionState.isTrialActive]);
+
+  const handleResetPassword = useCallback(() => {
+    if (!user?.email) {
+      Alert.alert('Email required', 'Sign in with an email address to reset your password.');
+      return;
+    }
+    const sendReset = async () => {
+      setNotice(null);
+      try {
+        await resetPassword(user.email);
+        setNotice(`Password reset email sent to ${user.email}.`);
+      } catch (error) {
+        Alert.alert(
+          'Reset failed',
+          error instanceof Error ? error.message : 'We could not send a password reset email.',
+        );
+      }
+    };
+    if (Platform.OS === 'web') {
+      void sendReset();
+      return;
+    }
+    Alert.alert('Send password reset?', `We will email reset instructions to ${user.email}.`, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Send', onPress: () => void sendReset() },
+    ]);
+  }, [resetPassword, user?.email]);
+
+  const handleRestore = useCallback(() => {
+    setNotice(null);
+    restore()
+      .then((active) => {
+        setNotice(active ? 'Purchase restored. Premium is active.' : 'No active subscription was found.');
+      })
+      .catch(() => {
+        Alert.alert('Purchases unavailable', PURCHASES_UNAVAILABLE_MESSAGE);
+      });
+  }, [restore]);
+
+  const handleManageSubscription = useCallback(() => {
+    setNotice(null);
+    router.push('/upgrade' as never);
+    if (__DEV__) {
+      setNotice(PURCHASES_UNAVAILABLE_MESSAGE);
+    }
+  }, [router]);
+
+  const updateOwnerAccountProfile = useCallback(async (updates: Parameters<typeof updateAccountProfile>[1]) => {
+    if (!user || !isOwnerQa) return;
+    await updateAccountProfile(user.id, updates);
+    await refreshAccountProfile();
+  }, [isOwnerQa, refreshAccountProfile, user]);
+
+  const handleResetOnboarding = useCallback(() => {
+    updateOwnerAccountProfile({ onboarding_completed: false, onboarding_answers: null })
+      .then(() => setNotice('QA: onboarding reset for this account.'))
+      .catch((error) => Alert.alert('QA action failed', error instanceof Error ? error.message : 'Please try again.'));
+  }, [updateOwnerAccountProfile]);
+
+  const handleRestartTrial = useCallback(() => {
+    const started = new Date();
+    const ends = new Date(started);
+    ends.setUTCDate(ends.getUTCDate() + 7);
+    updateOwnerAccountProfile({
+      trial_started_at: started.toISOString(),
+      trial_ends_at: ends.toISOString(),
+    })
+      .then(() => setNotice('QA: 7-day trial restarted for this account.'))
+      .catch((error) => Alert.alert('QA action failed', error instanceof Error ? error.message : 'Please try again.'));
+  }, [updateOwnerAccountProfile]);
+
+  const handleForceTrialExpired = useCallback(() => {
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    updateOwnerAccountProfile({ trial_ends_at: yesterday.toISOString() })
+      .then(() => setNotice('QA: trial forced expired for this account.'))
+      .catch((error) => Alert.alert('QA action failed', error instanceof Error ? error.message : 'Please try again.'));
+  }, [updateOwnerAccountProfile]);
+
+  const handleClearLocalState = useCallback(() => {
+    storageService.clearLocalForCurrentUser()
+      .then(() => setNotice('QA: local app state/cache cleared. Restart the app to reload from cloud.'))
+      .catch((error) => Alert.alert('QA action failed', error instanceof Error ? error.message : 'Please try again.'));
+  }, []);
+
+  const handleReplayTutorial = useCallback(() => {
+    resetTodayTutorial()
+      .then(() => {
+        setNotice('QA: Today tutorial reset. Open Today to replay it.');
+        router.push('/(tabs)/(home)' as never);
+      })
+      .catch((error) => Alert.alert('QA action failed', error instanceof Error ? error.message : 'Please try again.'));
+  }, [router]);
+
+  const handleSignOut = useCallback(() => {
+    const doSignOut = async () => {
+      try {
+        await signOut();
+      } catch (error) {
+        Alert.alert('Logout failed', error instanceof Error ? error.message : 'Please try again.');
+      }
+    };
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined' && window.confirm('Log out of BPD Companion?')) {
+        void doSignOut();
+      }
+      return;
+    }
+    Alert.alert('Log out?', 'You can sign back in anytime.', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Log out', style: 'destructive', onPress: () => void doSignOut() },
+    ]);
+  }, [signOut]);
+
+  const renderSettingsRow = useCallback(({
+    icon,
+    title,
+    description,
+    onPress,
+    testID,
+    right,
+    destructive,
+  }: SettingsRowProps) => {
+    const content = (
+      <>
+        <View style={[styles.rowIcon, { backgroundColor: palette.surface }, destructive && styles.rowIconDanger]}>{icon}</View>
+        <View style={styles.rowText}>
+          <Text style={[styles.rowTitle, { color: destructive ? palette.danger : palette.text }]}>{title}</Text>
+          <Text style={[styles.rowDescription, { color: palette.textSecondary }]}>{description}</Text>
         </View>
-        <Text style={styles.navRowDesc}>{desc}</Text>
-      </View>
-      <ChevronRight size={16} color={Colors.textMuted} />
-    </TouchableOpacity>
-  ), [handleHaptic]);
+        {right ?? (onPress ? <ChevronRight size={18} color={palette.textMuted} /> : null)}
+      </>
+    );
 
-  const premiumBadge = (
-    <View style={styles.premiumBadge}>
-      <Crown size={10} color="#67E8F9" />
-    </View>
-  );
+    if (!onPress) {
+      return <View style={[styles.settingsRow, { backgroundColor: palette.card }]}>{content}</View>;
+    }
+
+    return (
+      <TouchableOpacity
+        style={[styles.settingsRow, { backgroundColor: palette.card }]}
+        activeOpacity={0.72}
+        onPress={() => {
+          handleHaptic();
+          onPress();
+        }}
+        testID={testID}
+      >
+        {content}
+      </TouchableOpacity>
+    );
+  }, [handleHaptic]);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: palette.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView
         style={styles.scrollView}
@@ -167,653 +367,384 @@ export default function ProfileScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Animated.View style={[styles.header, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
-          <View style={styles.headerTop}>
-            <View style={styles.avatarContainer}>
-              <View style={styles.avatar}>
-                <User size={24} color={Colors.brandTeal} />
+          <View style={[styles.logoWrap, { backgroundColor: palette.card, borderColor: palette.borderLight, shadowColor: palette.shadow }]}>
+            <BrandLogo size={42} />
+          </View>
+          <View style={styles.headerCopy}>
+            <Text style={styles.eyebrow}>Account</Text>
+            <Text style={[styles.headerTitle, { color: palette.text }]}>Profile & settings</Text>
+          </View>
+        </Animated.View>
+
+        <Animated.View style={[styles.accountCard, { opacity: fadeAnim, backgroundColor: palette.card, borderColor: palette.borderLight, shadowColor: palette.shadow }]}>
+          <View style={styles.accountTopRow}>
+            <View style={[styles.avatar, { backgroundColor: palette.primaryLight }]}>
+              <User size={22} color={palette.primary} />
+            </View>
+            <View style={styles.accountText}>
+              <Text style={[styles.accountLabel, { color: palette.textMuted }]}>Signed in as</Text>
+              <Text style={[styles.accountEmail, { color: palette.text }]} numberOfLines={1}>{profileEmail}</Text>
+            </View>
+          </View>
+          <View style={[styles.statusPanel, { backgroundColor: palette.surface }]}>
+            <View style={[styles.statusIcon, { backgroundColor: palette.card }]}>
+              <Crown size={18} color={isPremium ? palette.brandTeal : palette.primary} />
+            </View>
+            <View style={styles.statusTextWrap}>
+              <Text style={[styles.statusTitle, { color: palette.text }]}>{statusLabel}</Text>
+              <Text style={[styles.statusDescription, { color: palette.textSecondary }]}>{statusDescription}</Text>
+            </View>
+          </View>
+        </Animated.View>
+
+        {notice ? <Text style={styles.noticeText}>{notice}</Text> : null}
+        {restoreError ? <Text style={styles.errorText}>{restoreError}</Text> : null}
+
+        <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
+          <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>SUBSCRIPTION</Text>
+          <View style={[styles.card, { backgroundColor: palette.card, borderColor: palette.borderLight }]}>
+            {renderSettingsRow({
+              icon: <Crown size={17} color={Colors.primary} />,
+              title: isEntitlementActive ? 'Manage subscription' : 'Upgrade to Premium',
+              description: isEntitlementActive
+                ? 'View plans, renewal details, and premium access.'
+                : subscriptionState.isTrialActive
+                  ? 'Trial active. Upgrade anytime for unlimited Companion.'
+                  : 'View monthly and yearly Premium plans.',
+              onPress: handleManageSubscription,
+              testID: 'manage-subscription-btn',
+            })}
+            <View style={[styles.divider, { backgroundColor: palette.borderLight }]} />
+            {renderSettingsRow({
+              icon: <RefreshCw size={17} color={Colors.brandTeal} />,
+              title: isRestoring ? 'Restoring purchases...' : 'Restore purchases',
+              description: 'Recover an active App Store or Google Play subscription.',
+              onPress: handleRestore,
+              testID: 'restore-purchases-btn',
+            })}
+          </View>
+        </Animated.View>
+
+        <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
+          <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>ACCOUNT</Text>
+          <View style={[styles.card, { backgroundColor: palette.card, borderColor: palette.borderLight }]}>
+            {renderSettingsRow({
+              icon: <Mail size={17} color={Colors.accent} />,
+              title: 'Email',
+              description: profileEmail,
+            })}
+            <View style={[styles.divider, { backgroundColor: palette.borderLight }]} />
+            {renderSettingsRow({
+              icon: <Lock size={17} color={Colors.primary} />,
+              title: 'Change password',
+              description: 'Send a secure password reset email.',
+              onPress: handleResetPassword,
+              testID: 'reset-password-btn',
+            })}
+          </View>
+        </Animated.View>
+
+        <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
+          <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>COMMUNITY PROFILE</Text>
+          <View style={[styles.card, styles.communityProfileCard, { backgroundColor: palette.card, borderColor: palette.borderLight }]}>
+            <View style={styles.communityProfileTop}>
+              <View style={[styles.communityAvatarPreview, { backgroundColor: communityAvatarColor }]}>
+                <Text style={styles.communityAvatarText}>
+                  {(communityDisplayName || communityUsername || 'You').slice(0, 2).toUpperCase()}
+                </Text>
               </View>
-              {isPremium && (
-                <View style={styles.premiumAvatarBadge}>
-                  <Crown size={10} color="#67E8F9" />
-                </View>
-              )}
-            </View>
-            <View style={styles.headerInfo}>
-              <Text style={styles.headerTitle}>
-                {profile.displayName || 'Your Profile'}
-              </Text>
-              <Text style={styles.headerSubtitle}>
-                {daysSinceJoined} day{daysSinceJoined !== 1 ? 's' : ''} of showing up for yourself
-              </Text>
-            </View>
-          </View>
-        </Animated.View>
-
-        <Animated.View style={[styles.statsRow, { opacity: fadeAnim }]}>
-          <View style={styles.statCard}>
-            <View style={[styles.statIcon, { backgroundColor: Colors.primaryLight }]}>
-              <Flame size={14} color={Colors.primary} />
-            </View>
-            <Text style={styles.statValue}>{patternSummary.journalStreak}</Text>
-            <Text style={styles.statLabel}>Streak</Text>
-          </View>
-          <View style={styles.statCard}>
-            <View style={[styles.statIcon, { backgroundColor: Colors.accentLight }]}>
-              <Target size={14} color={Colors.accent} />
-            </View>
-            <Text style={styles.statValue}>{patternSummary.checkInCount}</Text>
-            <Text style={styles.statLabel}>Check-ins</Text>
-          </View>
-          <View style={styles.statCard}>
-            <View style={[styles.statIcon, { backgroundColor: Colors.successLight }]}>
-              <Activity size={14} color={Colors.success} />
-            </View>
-            <Text style={styles.statValue}>{patternSummary.averageDistressIntensity || '—'}</Text>
-            <Text style={styles.statLabel}>Avg Dist.</Text>
-          </View>
-          <View style={styles.statCard}>
-            <View style={[styles.statIcon, { backgroundColor: '#FFFFFF' }]}>
-              <BookOpen size={14} color="#3B82F6" />
-            </View>
-            <Text style={styles.statValue}>{patternSummary.totalJournalEntries}</Text>
-            <Text style={styles.statLabel}>Entries</Text>
-          </View>
-        </Animated.View>
-
-        <Animated.View style={{ opacity: fadeAnim }}>
-          <TouchableOpacity
-            style={[styles.upgradeBanner, isPremium && styles.upgradeBannerActive]}
-            onPress={() => { handleHaptic(); router.push('/upgrade' as never); }}
-            activeOpacity={0.7}
-            testID="upgrade-btn"
-          >
-            <View style={styles.upgradeBannerIcon}>
-              <Crown size={20} color={isPremium ? '#67E8F9' : Colors.white} />
-            </View>
-            <View style={styles.upgradeBannerContent}>
-              <Text style={[styles.upgradeBannerTitle, isPremium && styles.upgradeBannerTitleActive]}>
-                {isPremium ? 'Premium Active' : 'Upgrade to Premium'}
-              </Text>
-              <Text style={[styles.upgradeBannerDesc, isPremium && styles.upgradeBannerDescActive]}>
-                {isPremium
-                  ? (subState.isTrialActive ? `Trial · ${daysRemaining} days left` : 'All features unlocked')
-                  : 'Deeper insights, unlimited AI, therapy reports'}
-              </Text>
-            </View>
-            <ChevronRight size={18} color={isPremium ? '#67E8F9' : Colors.white} style={{ opacity: 0.7 }} />
-          </TouchableOpacity>
-        </Animated.View>
-
-        {personalization.growthSignals.length > 0 && (
-          <Animated.View style={[styles.growthSection, { opacity: fadeAnim }]}>
-            <View style={styles.growthHeader}>
-              <Sparkles size={14} color={Colors.success} />
-              <Text style={styles.growthHeaderText}>Growth Signals</Text>
-            </View>
-            {personalization.growthSignals.slice(0, 2).map((signal, i) => (
-              <Text key={i} style={styles.growthText}>{signal}</Text>
-            ))}
-          </Animated.View>
-        )}
-
-        {wins.length > 0 && (
-          <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-            <Text style={styles.sectionLabel}>RECENT WINS</Text>
-            {wins.slice(0, 2).map(win => (
-              <View key={win.id} style={styles.winCard}>
-                <Compass size={14} color={Colors.success} />
-                <Text style={styles.winText}>{win.description}</Text>
+              <View style={styles.communityProfileCopy}>
+                <Text style={[styles.rowTitle, { color: palette.text }]}>
+                  {communityProfile ? `@${communityProfile.username}` : 'Set up community profile'}
+                </Text>
+                <Text style={[styles.rowDescription, { color: palette.textSecondary }]}>
+                  Community shows your username or display name, never your email.
+                </Text>
               </View>
-            ))}
-          </Animated.View>
-        )}
-
-        <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-          <Text style={styles.sectionLabel}>INSIGHTS & PROGRESS</Text>
-          <View style={styles.navGroup}>
-            {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: Colors.primaryLight }]}>
-                <TrendingUp size={16} color={Colors.primary} />
-              </View>,
-              'My Patterns',
-              patternSummary.topTriggerThisMonth ? `Top: ${patternSummary.topTriggerThisMonth}` : 'See your emotional patterns',
-              () => router.push('/profile/patterns' as never),
-              'patterns-btn',
-            )}
-            {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: '#FFFFFF' }]}>
-                <BarChart3 size={16} color="#3B82F6" />
-              </View>,
-              'Insights Dashboard',
-              'Emotional trends, triggers, and coping',
-              () => router.push('/profile/insights-dashboard' as never),
-              'insights-dashboard-btn',
-            )}
-            {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: Colors.accentLight }]}>
-                <Award size={16} color={Colors.accent} />
-              </View>,
-              'Recovery Progress',
-              'Track your growth and milestones',
-              () => router.push('/profile/progress' as never),
-              'progress-btn',
-              !isPremium ? premiumBadge : undefined,
-            )}
-            {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: '#FFFFFF' }]}>
-                <Flame size={16} color="#67E8F9" />
-              </View>,
-              'Milestones',
-              totalUnlocked > 0 ? `${totalUnlocked} earned` : 'Track your consistency',
-              () => router.push('/milestones' as never),
-              'milestones-btn',
-              hasUnseen ? <View style={styles.unseenDot} /> : undefined,
-            )}
-            {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: '#FFFFFF' }]}>
-                <FileText size={16} color="#3B82F6" />
-              </View>,
-              'Weekly Reflection',
-              'Therapy-style summary of your week',
-              () => router.push('/weekly-reflection' as never),
-              'weekly-reflection-btn',
-              !isPremium ? premiumBadge : undefined,
-            )}
-            {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: Colors.successLight }]}>
-                <Calendar size={16} color={Colors.success} />
-              </View>,
-              'Therapist Report',
-              'Structured summaries for therapy',
-              () => router.push('/therapy-report' as never),
-              'therapy-report-btn',
-              !isPremium ? premiumBadge : undefined,
-            )}
-          </View>
-        </Animated.View>
-
-        <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-          <Text style={styles.sectionLabel}>RELATIONSHIPS</Text>
-          <View style={styles.navGroup}>
-            {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: '#FFFFFF' }]}>
-                <Heart size={16} color="#3B82F6" />
-              </View>,
-              'Relationship Patterns',
-              'Understand your emotional reactions',
-              () => router.push('/relationship-insights' as never),
-              'relationship-insights-btn',
-              !isPremium ? premiumBadge : undefined,
-            )}
-            {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: '#FFFFFF' }]}>
-                <HeartHandshake size={16} color="#3B82F6" />
-              </View>,
-              'Relationship Copilot',
-              'Guided support during triggers',
-              () => router.push('/relationship-copilot' as never),
-              'relationship-copilot-btn',
-              !isPremium ? premiumBadge : undefined,
-            )}
-            {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: '#FFFFFF' }]}>
-                <Users size={16} color="#3B82F6" />
-              </View>,
-              'Relationship Profiles',
-              'Track patterns with specific people',
-              () => router.push('/profile/relationship-profiles' as never),
-              'relationship-profiles-btn',
-            )}
-          </View>
-        </Animated.View>
-
-        <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-          <Text style={styles.sectionLabel}>ADVANCED INTELLIGENCE</Text>
-          <View style={styles.navGroup}>
-            {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: Colors.primaryLight }]}>
-                <Brain size={16} color={Colors.primary} />
-              </View>,
-              'Emotional Profile',
-              'Your personal emotional model',
-              () => router.push('/emotional-profile' as never),
-              'emotional-profile-btn',
-              !isPremium ? premiumBadge : undefined,
-            )}
-            {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: '#FFFFFF' }]}>
-                <Sparkles size={16} color={Colors.success} />
-              </View>,
-              'Reflection Mirror',
-              'Compassionate reflections on patterns',
-              () => router.push('/reflection-mirror' as never),
-              'reflection-mirror-btn',
-              !isPremium ? premiumBadge : undefined,
-            )}
-            {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: Colors.accentLight }]}>
-                <Activity size={16} color={Colors.accent} />
-              </View>,
-              'Emotional Timeline',
-              'Replay emotional episodes',
-              () => router.push('/emotional-timeline' as never),
-              'emotional-timeline-btn',
-              !isPremium ? premiumBadge : undefined,
-            )}
-            {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: '#FFFFFF' }]}>
-                <Fingerprint size={16} color="#3B82F6" />
-              </View>,
-              'Identity & Values',
-              'Build self-trust and a stable sense of self',
-              () => router.push('/values-explorer' as never),
-              'identity-values-btn',
-            )}
-            {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: '#0B1238' }]}>
-                <FileText size={16} color={Colors.primaryDark} />
-              </View>,
-              'Reflection Report',
-              'AI-powered therapy-style summaries',
-              () => router.push('/profile/reflection-report' as never),
-              'reflection-report-btn',
-              !isPremium ? premiumBadge : undefined,
-            )}
-          </View>
-        </Animated.View>
-
-        <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-          <Text style={styles.sectionLabel}>SUPPORT PROFILE</Text>
-          <View style={styles.navGroup}>
-            <TouchableOpacity
-              style={styles.profileChipRow}
-              onPress={() => { handleHaptic(); router.push('/profile/edit-list?type=triggers' as never); }}
-              activeOpacity={0.7}
-              testID="edit-triggers-btn"
-            >
-              <View style={[styles.chipDot, { backgroundColor: '#3B82F6' }]} />
-              <Text style={styles.chipLabel}>Common Triggers</Text>
-              <Text style={styles.chipCount}>
-                {profile.commonTriggers.length > 0 ? `${profile.commonTriggers.length}` : '—'}
-              </Text>
-              <ChevronRight size={14} color={Colors.textMuted} />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.profileChipRow}
-              onPress={() => { handleHaptic(); router.push('/profile/edit-list?type=urges' as never); }}
-              activeOpacity={0.7}
-              testID="edit-urges-btn"
-            >
-              <View style={[styles.chipDot, { backgroundColor: '#3B82F6' }]} />
-              <Text style={styles.chipLabel}>Common Urges</Text>
-              <Text style={styles.chipCount}>
-                {profile.commonUrges.length > 0 ? `${profile.commonUrges.length}` : '—'}
-              </Text>
-              <ChevronRight size={14} color={Colors.textMuted} />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.profileChipRow}
-              onPress={() => { handleHaptic(); router.push('/profile/edit-list?type=coping' as never); }}
-              activeOpacity={0.7}
-              testID="edit-coping-btn"
-            >
-              <View style={[styles.chipDot, { backgroundColor: Colors.primary }]} />
-              <Text style={styles.chipLabel}>What Helps Me</Text>
-              <Text style={styles.chipCount}>
-                {profile.whatHelpsMe.length > 0 ? `${profile.whatHelpsMe.length}` : '—'}
-              </Text>
-              <ChevronRight size={14} color={Colors.textMuted} />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.profileChipRow}
-              onPress={() => { handleHaptic(); router.push('/profile/edit-list?type=grounding' as never); }}
-              activeOpacity={0.7}
-              testID="edit-grounding-btn"
-            >
-              <View style={[styles.chipDot, { backgroundColor: Colors.success }]} />
-              <Text style={styles.chipLabel}>Grounding Tools</Text>
-              <Text style={styles.chipCount}>
-                {profile.preferredGroundingTools.length > 0 ? `${profile.preferredGroundingTools.length}` : '—'}
-              </Text>
-              <ChevronRight size={14} color={Colors.textMuted} />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.profileChipRow}
-              onPress={() => { handleHaptic(); router.push('/profile/edit-list?type=relationship' as never); }}
-              activeOpacity={0.7}
-              testID="edit-relationship-btn"
-            >
-              <View style={[styles.chipDot, { backgroundColor: '#3B82F6' }]} />
-              <Text style={styles.chipLabel}>Relationship Triggers</Text>
-              <Text style={styles.chipCount}>
-                {profile.relationshipTriggers.length > 0 ? `${profile.relationshipTriggers.length}` : '—'}
-              </Text>
-              <ChevronRight size={14} color={Colors.textMuted} />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.profileChipRow}
-              onPress={() => { handleHaptic(); router.push('/profile/edit-list?type=spirals' as never); }}
-              activeOpacity={0.7}
-              testID="edit-spirals-btn"
-            >
-              <View style={[styles.chipDot, { backgroundColor: '#67E8F9' }]} />
-              <Text style={styles.chipLabel}>Emotional Spirals</Text>
-              <Text style={styles.chipCount}>
-                {(profile.emotionalSpirals?.length ?? 0) > 0 ? `${profile.emotionalSpirals.length}` : '—'}
-              </Text>
-              <ChevronRight size={14} color={Colors.textMuted} />
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
-
-        <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-          <Text style={styles.sectionLabel}>MESSAGE SETTINGS</Text>
-          <View style={styles.settingCard}>
-            <View style={styles.settingCardTop}>
-              <Clock size={16} color="#3B82F6" />
-              <Text style={styles.settingTitle}>Pause Before Sending</Text>
-              <Text style={styles.settingValue}>{profile.messageDelaySeconds < 60 ? `${profile.messageDelaySeconds}s` : `${profile.messageDelaySeconds / 60}m`}</Text>
             </View>
-            <View style={styles.delayRow}>
-              {[30, 120, 600].map((seconds) => (
+
+            <Text style={[styles.inputLabel, { color: palette.textSecondary }]}>Username</Text>
+            <TextInput
+              style={[styles.profileInput, { color: palette.text, backgroundColor: palette.surface, borderColor: palette.borderLight }]}
+              value={communityUsername}
+              onChangeText={(value) => {
+                setCommunityUsername(normalizeUsername(value));
+                setCommunityProfileError(null);
+              }}
+              placeholder="username"
+              placeholderTextColor={palette.textMuted}
+              autoCapitalize="none"
+              autoCorrect={false}
+              maxLength={20}
+              testID="community-username-input"
+            />
+            <Text style={[styles.inputHelp, { color: palette.textMuted }]}>3-20 characters. Letters, numbers, and underscores only.</Text>
+
+            <Text style={[styles.inputLabel, { color: palette.textSecondary }]}>Display name optional</Text>
+            <TextInput
+              style={[styles.profileInput, { color: palette.text, backgroundColor: palette.surface, borderColor: palette.borderLight }]}
+              value={communityDisplayName}
+              onChangeText={setCommunityDisplayName}
+              placeholder="What people can call you"
+              placeholderTextColor={palette.textMuted}
+              maxLength={40}
+              testID="community-display-name-input"
+            />
+
+            <Text style={[styles.inputLabel, { color: palette.textSecondary }]}>Avatar color</Text>
+            <View style={styles.avatarColorRow}>
+              {AVATAR_COLORS.map((color) => (
                 <TouchableOpacity
-                  key={seconds}
+                  key={color}
                   style={[
-                    styles.delayChip,
-                    profile.messageDelaySeconds === seconds && styles.delayChipActive,
+                    styles.avatarColorSwatch,
+                    { backgroundColor: color, borderColor: communityAvatarColor === color ? palette.text : 'transparent' },
                   ]}
-                  onPress={() => { handleHaptic(); updateProfile({ messageDelaySeconds: seconds }); }}
-                >
-                  <Text
-                    style={[
-                      styles.delayChipText,
-                      profile.messageDelaySeconds === seconds && styles.delayChipTextActive,
-                    ]}
-                  >
-                    {seconds < 60 ? `${seconds}s` : `${seconds / 60}m`}
-                  </Text>
-                </TouchableOpacity>
+                  onPress={() => setCommunityAvatarColor(color)}
+                  activeOpacity={0.78}
+                  testID={`avatar-color-${color}`}
+                />
               ))}
             </View>
+
+            {communityProfileError ? <Text style={styles.errorText}>{communityProfileError}</Text> : null}
+
+            <TouchableOpacity
+              style={[styles.saveCommunityButton, { backgroundColor: palette.primary }]}
+              onPress={handleSaveCommunityProfile}
+              disabled={isSavingCommunityProfile}
+              activeOpacity={0.84}
+              testID="save-community-profile-btn"
+            >
+              <Text style={styles.saveCommunityButtonText}>
+                {isSavingCommunityProfile ? 'Saving...' : communityProfile ? 'Save community profile' : 'Create community profile'}
+              </Text>
+            </TouchableOpacity>
           </View>
         </Animated.View>
 
         <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-          <Text style={styles.sectionLabel}>EMERGENCY SUPPORT</Text>
-          <View style={styles.navGroup}>
-            {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: Colors.dangerLight }]}>
-                <Phone size={16} color={Colors.danger} />
-              </View>,
-              'Crisis Support Preferences',
-              profile.crisisSupport.emergencyContact ? 'Contact set up' : 'Set up your safety net',
-              () => router.push('/profile/crisis-settings' as never),
-              'crisis-settings-btn',
-            )}
-            {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: '#FFFFFF' }]}>
-                <Users size={16} color="#3B82F6" />
-              </View>,
-              'Trusted Support Contacts',
-              (profile.trustedContacts?.length ?? 0) > 0
-                ? `${profile.trustedContacts.length} contact${profile.trustedContacts.length !== 1 ? 's' : ''}`
-                : 'Add people you trust',
-              () => router.push('/profile/trusted-contacts' as never),
-              'trusted-contacts-btn',
-            )}
-          </View>
-        </Animated.View>
-
-        <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-          <Text style={styles.sectionLabel}>NOTIFICATIONS</Text>
-          <View style={styles.smartReminderCard}>
-            <View style={styles.smartReminderHeader}>
-              <View style={[styles.smartReminderIcon, { backgroundColor: '#FFFFFF' }]}>
-                <Zap size={14} color={Colors.success} />
+          <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>NOTIFICATIONS</Text>
+          <View style={[styles.card, { backgroundColor: palette.card, borderColor: palette.borderLight }]}>
+            {renderSettingsRow({
+              icon: <Bell size={17} color={Colors.brandTeal} />,
+              title: 'Notification settings',
+              description: `${titleCase(profile.notifications.frequency ?? 'balanced')} frequency · ${profile.notifications.quietHoursEnabled ? 'Quiet hours on' : 'Quiet hours off'}`,
+              onPress: () => router.push('/profile/notification-preferences' as never),
+              testID: 'notification-preferences-btn',
+            })}
+            <View style={[styles.divider, { backgroundColor: palette.borderLight }]} />
+            <View style={styles.settingsRow}>
+              <View style={styles.rowIcon}>
+                <Bell size={17} color={Colors.accent} />
               </View>
-              <View style={styles.smartReminderInfo}>
-                <Text style={styles.smartReminderTitle}>Smart Reminders</Text>
-                <Text style={styles.smartReminderDesc}>
-                  Reminders adapt to how you use the app
-                </Text>
-              </View>
-            </View>
-            <View style={styles.smartReminderStats}>
-              <View style={styles.smartReminderStat}>
-                <Text style={styles.smartReminderStatValue}>{smartInfo.todayFired}</Text>
-                <Text style={styles.smartReminderStatLabel}>Sent today</Text>
-              </View>
-              <View style={styles.smartReminderStatDivider} />
-              <View style={styles.smartReminderStat}>
-                <Text style={styles.smartReminderStatValue}>{smartInfo.activeCount}</Text>
-                <Text style={styles.smartReminderStatLabel}>Active rules</Text>
-              </View>
-              <View style={styles.smartReminderStatDivider} />
-              <View style={styles.smartReminderStat}>
-                <Text style={styles.smartReminderStatValue}>
-                  {(profile.notifications.frequency ?? 'balanced').charAt(0).toUpperCase() + (profile.notifications.frequency ?? 'balanced').slice(1)}
-                </Text>
-                <Text style={styles.smartReminderStatLabel}>Frequency</Text>
-              </View>
-            </View>
-          </View>
-          <View style={styles.navGroup}>
-            {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: Colors.accentLight }]}>
-                <Bell size={16} color={Colors.accent} />
-              </View>,
-              'Notification Preferences',
-              `${(profile.notifications.frequency ?? 'balanced').charAt(0).toUpperCase() + (profile.notifications.frequency ?? 'balanced').slice(1)} · ${profile.notifications.quietHoursEnabled ? 'Quiet hours on' : 'Quiet hours off'}`,
-              () => router.push('/profile/notification-preferences' as never),
-              'notification-preferences-btn',
-            )}
-          </View>
-        </Animated.View>
-
-        <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-          <Text style={styles.sectionLabel}>PRIVACY</Text>
-          <View style={styles.toggleGroup}>
-            <View style={styles.toggleRow}>
-              <View style={styles.toggleLeft}>
-                <Lock size={15} color="#3B82F6" />
-                <View>
-                  <Text style={styles.toggleTitle}>Anonymous Community</Text>
-                  <Text style={styles.toggleDesc}>Default to anonymous when posting</Text>
-                </View>
+              <View style={styles.rowText}>
+                <Text style={[styles.rowTitle, { color: palette.text }]}>Daily check-in reminder</Text>
+                <Text style={[styles.rowDescription, { color: palette.textSecondary }]}>A gentle prompt to keep the habit alive.</Text>
               </View>
               <Switch
-                value={profile.privacy.anonymousCommunityPosts}
-                onValueChange={(val) => updatePrivacy({ anonymousCommunityPosts: val })}
-                trackColor={{ false: Colors.border, true: Colors.primaryLight }}
-                thumbColor={profile.privacy.anonymousCommunityPosts ? Colors.primary : Colors.textMuted}
+                value={profile.notifications.dailyCheckInReminder}
+                onValueChange={(value) => updateNotifications({ dailyCheckInReminder: value })}
+                trackColor={{ false: Colors.border, true: Colors.accentLight }}
+                thumbColor={profile.notifications.dailyCheckInReminder ? Colors.accent : Colors.textMuted}
               />
             </View>
-            <View style={styles.toggleDivider} />
-            <View style={styles.toggleRow}>
-              <View style={styles.toggleLeft}>
-                <Sparkles size={15} color={Colors.primary} />
-                <View>
-                  <Text style={styles.toggleTitle}>Share with AI Companion</Text>
-                  <Text style={styles.toggleDesc}>Let AI reference your patterns</Text>
-                </View>
+          </View>
+        </Animated.View>
+
+        <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
+          <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>APPEARANCE</Text>
+          <View style={[styles.card, { backgroundColor: palette.card, borderColor: palette.borderLight }]}>
+            <View style={styles.themeHeader}>
+              <View style={styles.rowIcon}>
+                <Sun size={17} color={Colors.primary} />
+              </View>
+              <View style={styles.rowText}>
+                <Text style={[styles.rowTitle, { color: palette.text }]}>Theme preference</Text>
+                <Text style={[styles.rowDescription, { color: palette.textSecondary }]}>Choose a bright or dark interface.</Text>
+              </View>
+            </View>
+            <View style={[styles.segmentedControl, { backgroundColor: palette.surface }]}>
+              {[
+                { id: 'light', label: 'Light', icon: Sun },
+                { id: 'dark', label: 'Dark', icon: Moon },
+              ].map((option) => {
+                const Icon = option.icon;
+                const active = theme === option.id;
+                return (
+                  <TouchableOpacity
+                    key={option.id}
+                    style={[styles.segmentButton, { backgroundColor: palette.surface, borderColor: palette.border }, active && { backgroundColor: palette.primary, borderColor: palette.primary }]}
+                    onPress={() => {
+                      handleHaptic();
+                      setTheme(option.id as 'light' | 'dark');
+                    }}
+                    activeOpacity={0.8}
+                    testID={`theme-${option.id}-btn`}
+                  >
+                    <Icon size={14} color={active ? palette.white : palette.textSecondary} />
+                    <Text style={[styles.segmentText, { color: palette.textSecondary }, active && { color: palette.white }]}>{option.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <View style={[styles.divider, { backgroundColor: palette.borderLight }]} />
+            {renderSettingsRow({
+              icon: <Sparkles size={17} color={Colors.brandTeal} />,
+              title: 'Replay app tutorial',
+              description: 'Review Daily Check-Ins, Companion, Insights, Calm Me Down, Community, DBT Academy, and Don’t Send It.',
+              onPress: () => router.push('/onboarding' as never),
+              testID: 'replay-onboarding-tutorial-btn',
+            })}
+          </View>
+        </Animated.View>
+
+        {isOwnerQa ? (
+          <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
+          <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>OWNER QA</Text>
+          <View style={[styles.card, { backgroundColor: palette.card, borderColor: palette.borderLight }]}>
+              {renderSettingsRow({
+                icon: <RefreshCw size={17} color={Colors.primary} />,
+                title: 'Reset onboarding',
+                description: 'Show onboarding again for this owner account.',
+                onPress: handleResetOnboarding,
+                testID: 'qa-reset-onboarding-btn',
+              })}
+              <View style={[styles.divider, { backgroundColor: palette.borderLight }]} />
+              {renderSettingsRow({
+                icon: <Crown size={17} color={Colors.brandTeal} />,
+                title: 'Restart 7-day trial',
+                description: 'Set trial start to now and trial end to 7 days from now.',
+                onPress: handleRestartTrial,
+                testID: 'qa-restart-trial-btn',
+              })}
+              <View style={[styles.divider, { backgroundColor: palette.borderLight }]} />
+              {renderSettingsRow({
+                icon: <AlertTriangle size={17} color={Colors.danger} />,
+                title: 'Force trial expired',
+                description: 'Set trial end to yesterday for paywall QA.',
+                onPress: handleForceTrialExpired,
+                testID: 'qa-force-expired-btn',
+              })}
+              <View style={[styles.divider, { backgroundColor: palette.borderLight }]} />
+              {renderSettingsRow({
+                icon: <Trash2 size={17} color={Colors.danger} />,
+                title: 'Clear local app state/cache',
+                description: 'Clear local scoped data on this device only.',
+                onPress: handleClearLocalState,
+                testID: 'qa-clear-local-btn',
+              })}
+              <View style={[styles.divider, { backgroundColor: palette.borderLight }]} />
+              {renderSettingsRow({
+                icon: <ChevronRight size={17} color={Colors.primary} />,
+                title: 'Go to onboarding',
+                description: 'Open the onboarding flow directly.',
+                onPress: () => router.push('/onboarding' as never),
+                testID: 'qa-go-onboarding-btn',
+              })}
+              <View style={[styles.divider, { backgroundColor: palette.borderLight }]} />
+              {renderSettingsRow({
+                icon: <Sparkles size={17} color={Colors.brandTeal} />,
+                title: 'Replay Today tutorial',
+                description: 'Reset the first-visit tutorial for owner QA.',
+                onPress: handleReplayTutorial,
+                testID: 'qa-replay-tutorial-btn',
+              })}
+            </View>
+          </Animated.View>
+        ) : null}
+
+        <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
+          <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>PRIVACY & SAFETY</Text>
+          <View style={[styles.card, { backgroundColor: palette.card, borderColor: palette.borderLight }]}>
+            <View style={styles.settingsRow}>
+              <View style={styles.rowIcon}>
+                <Shield size={17} color={Colors.primary} />
+              </View>
+              <View style={styles.rowText}>
+                <Text style={[styles.rowTitle, { color: palette.text }]}>Share context with AI Companion</Text>
+                <Text style={[styles.rowDescription, { color: palette.textSecondary }]}>Allow the AI to reference your saved patterns.</Text>
               </View>
               <Switch
                 value={profile.privacy.shareInsightsWithCompanion}
-                onValueChange={(val) => updatePrivacy({ shareInsightsWithCompanion: val })}
+                onValueChange={(value) => updatePrivacy({ shareInsightsWithCompanion: value })}
                 trackColor={{ false: Colors.border, true: Colors.primaryLight }}
                 thumbColor={profile.privacy.shareInsightsWithCompanion ? Colors.primary : Colors.textMuted}
               />
             </View>
-            <View style={styles.toggleDivider} />
-            <View style={styles.toggleRow}>
-              <View style={styles.toggleLeft}>
-                <Shield size={15} color="#3B82F6" />
-                <View>
-                  <Text style={styles.toggleTitle}>Biometric Lock</Text>
-                  <Text style={styles.toggleDesc}>Require Face ID / fingerprint</Text>
-                </View>
-              </View>
-              <Switch
-                value={profile.privacy.lockAppWithBiometrics}
-                onValueChange={(val) => updatePrivacy({ lockAppWithBiometrics: val })}
-                trackColor={{ false: Colors.border, true: Colors.primaryLight }}
-                thumbColor={profile.privacy.lockAppWithBiometrics ? Colors.primary : Colors.textMuted}
-              />
-            </View>
+            <View style={[styles.divider, { backgroundColor: palette.borderLight }]} />
+            {renderSettingsRow({
+              icon: <AlertTriangle size={17} color={Colors.danger} />,
+              title: 'Medical disclaimer / crisis resources',
+              description: 'Read safety guidance and find urgent support options.',
+              onPress: () => router.push('/mental-health-disclaimer' as never),
+              testID: 'medical-disclaimer-btn',
+            })}
+            <View style={[styles.divider, { backgroundColor: palette.borderLight }]} />
+            {renderSettingsRow({
+              icon: <Shield size={17} color={Colors.danger} />,
+              title: 'Crisis support settings',
+              description: 'Emergency contacts and crisis support preferences.',
+              onPress: () => router.push('/profile/crisis-settings' as never),
+              testID: 'crisis-settings-btn',
+            })}
           </View>
         </Animated.View>
 
         <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-          <Text style={styles.sectionLabel}>SUPPORT & LEGAL</Text>
-          <View style={styles.navGroup}>
-            {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: '#FFFFFF' }]}>
-                <MessageCircle size={16} color="#3B82F6" />
-              </View>,
-              'Support & Feedback',
-              'Get help or share your thoughts',
-              () => router.push('/support-feedback' as never),
-              'support-feedback-btn',
-            )}
-            {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: Colors.brandTealSoft }]}>
-                <Shield size={16} color={Colors.brandTeal} />
-              </View>,
-              'Privacy Policy',
-              'How we protect your data',
-              () => router.push('/privacy-policy' as never),
-              'privacy-policy-btn',
-            )}
-            {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: Colors.surface }]}>
-                <FileText size={16} color={Colors.brandNavy} />
-              </View>,
-              'Terms of Service',
-              'Usage terms and conditions',
-              () => router.push('/terms-of-service' as never),
-              'terms-of-service-btn',
-            )}
-            {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: Colors.dangerLight }]}>
-                <AlertTriangle size={16} color={Colors.danger} />
-              </View>,
-              'Mental Health Disclaimer',
-              'Important safety information',
-              () => router.push('/mental-health-disclaimer' as never),
-              'disclaimer-btn',
-            )}
-            {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: '#FFFFFF' }]}>
-                <Trash2 size={16} color={Colors.danger} />
-              </View>,
-              'Delete My Data',
-              'Remove your personal data',
-              () => router.push('/data-deletion' as never),
-              'data-deletion-btn',
-            )}
+          <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>LEGAL & HELP</Text>
+          <View style={[styles.card, { backgroundColor: palette.card, borderColor: palette.borderLight }]}>
+            {renderSettingsRow({
+              icon: <Shield size={17} color={Colors.brandTeal} />,
+              title: 'Privacy Policy',
+              description: 'How your information is protected and used.',
+              onPress: () => router.push('/privacy-policy' as never),
+              testID: 'privacy-policy-btn',
+            })}
+            <View style={[styles.divider, { backgroundColor: palette.borderLight }]} />
+            {renderSettingsRow({
+              icon: <FileText size={17} color={Colors.primary} />,
+              title: 'Terms of Use',
+              description: 'Subscription, account, and app usage terms.',
+              onPress: () => router.push('/terms-of-service' as never),
+              testID: 'terms-of-use-btn',
+            })}
+            <View style={[styles.divider, { backgroundColor: palette.borderLight }]} />
+            {renderSettingsRow({
+              icon: <HelpCircle size={17} color={Colors.accent} />,
+              title: 'Contact support',
+              description: 'Get help, report a problem, or send feedback.',
+              onPress: () => router.push('/support-feedback' as never),
+              testID: 'contact-support-btn',
+            })}
           </View>
         </Animated.View>
-
-        <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-          <Text style={styles.sectionLabel}>DEVELOPER</Text>
-          <View style={styles.navGroup}>
-            {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: '#FFFFFF' }]}>
-                <Bug size={16} color="#3B82F6" />
-              </View>,
-              'Analytics Debug',
-              'View tracked events and flow metrics',
-              () => router.push('/profile/analytics-debug' as never),
-              'analytics-debug-btn',
-            )}
-            {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: '#FFFFFF' }]}>
-                <Bell size={16} color={Colors.accent} />
-              </View>,
-              'Notification Debug',
-              'Scheduled reminders, logs, test triggers',
-              () => router.push('/profile/notification-debug' as never),
-              'notification-debug-btn',
-            )}
-            {renderNavRow(
-              <View style={[styles.navIcon, { backgroundColor: '#FFFFFF' }]}>
-                <Zap size={16} color={Colors.success} />
-              </View>,
-              'Smart Reminder Debug',
-              'Engine state, rules, analytics',
-              () => router.push('/profile/smart-reminder-debug' as never),
-              'smart-reminder-debug-btn',
-            )}
-          </View>
-        </Animated.View>
-
-        {isGuest ? (
-          <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-            <View style={styles.guestBanner}>
-              <View style={styles.guestBannerIcon}>
-                <CloudOff size={18} color={Colors.danger} />
-              </View>
-              <View style={styles.guestBannerText}>
-                <Text style={styles.guestBannerTitle}>You&apos;re using guest mode</Text>
-                <Text style={styles.guestBannerDesc}>
-                  Your data lives only on this device. Create an account to sync and back up safely.
-                </Text>
-              </View>
-            </View>
-            <TouchableOpacity
-              style={styles.createAccountBtn}
-              onPress={() => { handleHaptic(); handleCreateAccount(); }}
-              activeOpacity={0.9}
-              testID="create-account-btn"
-            >
-              <LogIn size={16} color={Colors.white} />
-              <Text style={styles.createAccountBtnText}>Create account & save my data</Text>
-            </TouchableOpacity>
-          </Animated.View>
-        ) : null}
 
         {isAuthenticated ? (
           <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-            <View style={styles.navGroup}>
-              <View style={styles.accountRow}>
-                <View style={[styles.navIcon, { backgroundColor: Colors.brandTealSoft }]}>
-                  <User size={16} color={Colors.brandTeal} />
-                </View>
-                <View style={styles.navRowText}>
-                  <Text style={styles.navRowTitle}>Signed in</Text>
-                  <Text style={styles.navRowDesc} numberOfLines={1}>{user?.email ?? ''}</Text>
-                </View>
-              </View>
-              <TouchableOpacity
-                style={styles.signOutRow}
-                onPress={() => { handleHaptic(); handleSignOut(); }}
-                activeOpacity={0.7}
-                testID="sign-out-btn"
-              >
-                <View style={[styles.navIcon, { backgroundColor: Colors.dangerLight }]}>
-                  <LogOut size={16} color={Colors.danger} />
-                </View>
-                <View style={styles.navRowText}>
-                  <Text style={[styles.navRowTitle, { color: Colors.danger }]}>Sign out</Text>
-                  <Text style={styles.navRowDesc}>Log out of your account</Text>
-                </View>
-              </TouchableOpacity>
+            <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>ACCOUNT CONTROL</Text>
+            <View style={[styles.card, { backgroundColor: palette.card, borderColor: palette.borderLight }]}>
+              {renderSettingsRow({
+                icon: <Trash2 size={17} color={Colors.danger} />,
+                title: 'Delete account',
+                description: 'Request account and personal data deletion.',
+                onPress: () => router.push('/data-deletion' as never),
+                testID: 'delete-account-btn',
+                destructive: true,
+              })}
+              <View style={[styles.divider, { backgroundColor: palette.borderLight }]} />
+              {renderSettingsRow({
+                icon: <LogOut size={17} color={Colors.danger} />,
+                title: 'Logout',
+                description: 'Sign out of this device.',
+                onPress: handleSignOut,
+                testID: 'logout-btn',
+                destructive: true,
+              })}
             </View>
           </Animated.View>
         ) : null}
 
-        <View style={styles.footer}>
-          <BrandLogo size={36} />
-          <Text style={styles.footerText}>{BRAND.name}</Text>
-          <Text style={styles.footerVersion}>{BRAND.tagline}</Text>
-        </View>
-
-        <View style={styles.bottomSpacer} />
       </ScrollView>
     </View>
   );
@@ -828,512 +759,320 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingTop: 60,
+    paddingTop: 62,
     paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingBottom: 36,
   },
   header: {
-    marginBottom: 20,
-    paddingTop: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    marginBottom: 18,
   },
-  headerTop: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
+  logoWrap: {
+    width: 58,
+    height: 58,
+    borderRadius: 18,
+    backgroundColor: Colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 1,
+    shadowRadius: 18,
+    elevation: 2,
   },
-  avatarContainer: {
-    position: 'relative' as const,
-    marginRight: 16,
-  },
-  avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: Colors.brandTealSoft,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    borderWidth: 2.5,
-    borderColor: Colors.brandTeal,
-  },
-  premiumAvatarBadge: {
-    position: 'absolute' as const,
-    bottom: -2,
-    right: -2,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 2,
-    borderColor: Colors.white,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-  },
-  headerInfo: {
+  headerCopy: {
     flex: 1,
+  },
+  eyebrow: {
+    color: Colors.brandTeal,
+    fontSize: 12,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 3,
   },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: '700' as const,
-    color: Colors.brandNavy,
-    letterSpacing: -0.3,
+    color: Colors.text,
+    fontSize: 25,
+    fontWeight: '800',
+    letterSpacing: 0,
   },
-  headerSubtitle: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    marginTop: 3,
-    lineHeight: 18,
-  },
-  statsRow: {
-    flexDirection: 'row' as const,
-    gap: 8,
-    marginBottom: 20,
-  },
-  statCard: {
-    flex: 1,
+  accountCard: {
     backgroundColor: Colors.card,
-    borderRadius: 14,
-    padding: 12,
-    alignItems: 'center' as const,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: Colors.borderLight,
-    shadowColor: 'rgba(27,40,56,0.04)',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 6,
-    elevation: 1,
-  },
-  statIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    marginBottom: 6,
-  },
-  statValue: {
-    fontSize: 18,
-    fontWeight: '700' as const,
-    color: Colors.brandNavy,
-    marginBottom: 1,
-  },
-  statLabel: {
-    fontSize: 10,
-    color: Colors.textMuted,
-    fontWeight: '500' as const,
-  },
-  upgradeBanner: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    backgroundColor: Colors.primary,
     padding: 16,
-    borderRadius: 18,
-    marginBottom: 20,
-    shadowColor: 'rgba(27,40,56,0.15)',
-    shadowOffset: { width: 0, height: 4 },
+    marginBottom: 12,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 1,
-    shadowRadius: 12,
-    elevation: 4,
+    shadowRadius: 18,
+    elevation: 2,
   },
-  upgradeBannerActive: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#0B1238',
+  accountTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 14,
   },
-  upgradeBannerIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    marginRight: 12,
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: Colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  upgradeBannerContent: {
+  accountText: {
     flex: 1,
   },
-  upgradeBannerTitle: {
+  accountLabel: {
+    color: Colors.textMuted,
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: 3,
+  },
+  accountEmail: {
+    color: Colors.text,
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  statusPanel: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: Colors.surface,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    padding: 13,
+  },
+  statusIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: Colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statusTextWrap: {
+    flex: 1,
+  },
+  statusTitle: {
+    color: Colors.text,
     fontSize: 15,
-    fontWeight: '700' as const,
-    color: Colors.white,
+    fontWeight: '800',
     marginBottom: 2,
   },
-  upgradeBannerTitleActive: {
-    color: Colors.text,
-  },
-  upgradeBannerDesc: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.8)',
-  },
-  upgradeBannerDescActive: {
+  statusDescription: {
     color: Colors.textSecondary,
-  },
-  growthSection: {
-    backgroundColor: Colors.successLight,
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 20,
-  },
-  growthHeader: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 6,
-    marginBottom: 10,
-  },
-  growthHeaderText: {
     fontSize: 13,
-    fontWeight: '600' as const,
+    lineHeight: 18,
+  },
+  noticeText: {
     color: Colors.success,
-  },
-  growthText: {
+    backgroundColor: Colors.successLight,
+    borderRadius: 12,
+    padding: 12,
     fontSize: 13,
-    color: Colors.text,
-    lineHeight: 19,
-    marginBottom: 4,
+    lineHeight: 18,
+    marginBottom: 14,
+  },
+  errorText: {
+    color: Colors.danger,
+    backgroundColor: Colors.dangerLight,
+    borderRadius: 12,
+    padding: 12,
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 14,
+  },
+  themeDebugText: {
+    fontSize: 11,
+    fontWeight: '800',
+    marginTop: -6,
+    marginBottom: 12,
+    textAlign: 'center',
   },
   section: {
-    marginBottom: 24,
+    marginTop: 18,
   },
   sectionLabel: {
-    fontSize: 12,
-    fontWeight: '600' as const,
     color: Colors.textMuted,
-    letterSpacing: 0.8,
-    marginBottom: 10,
-    marginLeft: 2,
-    textTransform: 'uppercase' as const,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.7,
+    marginBottom: 9,
+    paddingHorizontal: 2,
   },
-  navGroup: {
+  card: {
     backgroundColor: Colors.card,
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: Colors.borderLight,
-    overflow: 'hidden' as const,
-    shadowColor: 'rgba(27,40,56,0.03)',
-    shadowOffset: { width: 0, height: 1 },
+    overflow: 'hidden',
+    shadowColor: 'rgba(16, 42, 67, 0.06)',
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 1,
-    shadowRadius: 4,
+    shadowRadius: 14,
     elevation: 1,
   },
-  navRow: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    padding: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  accountRow: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    padding: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  signOutRow: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    padding: 14,
-  },
-  guestBanner: {
-    flexDirection: 'row' as const,
-    alignItems: 'flex-start' as const,
-    gap: 12,
-    padding: 14,
-    backgroundColor: Colors.dangerLight,
-    borderRadius: 14,
-    marginBottom: 10,
-  },
-  guestBannerIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: Colors.white,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-  },
-  guestBannerText: {
-    flex: 1,
-  },
-  guestBannerTitle: {
-    fontSize: 14,
-    fontWeight: '700' as const,
-    color: Colors.dangerDark,
-  },
-  guestBannerDesc: {
-    fontSize: 12,
-    color: Colors.dangerDark,
-    marginTop: 3,
-    lineHeight: 17,
-  },
-  createAccountBtn: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    gap: 8,
-    backgroundColor: Colors.primary,
-    borderRadius: 14,
-    paddingVertical: 14,
-  },
-  createAccountBtnText: {
-    color: Colors.white,
-    fontSize: 14,
-    fontWeight: '600' as const,
-  },
-  navIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    marginRight: 12,
-  },
-  navRowText: {
-    flex: 1,
-  },
-  navRowTitleRow: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 6,
-  },
-  navRowTitle: {
-    fontSize: 15,
-    fontWeight: '600' as const,
-    color: Colors.brandNavy,
-  },
-  navRowDesc: {
-    fontSize: 12,
-    color: Colors.textMuted,
-    marginTop: 2,
-    lineHeight: 16,
-  },
-  premiumBadge: {
-    width: 18,
-    height: 18,
-    borderRadius: 6,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-  },
-  profileChipRow: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    padding: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  chipDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 12,
-  },
-  chipLabel: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '500' as const,
-    color: Colors.text,
-  },
-  chipCount: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: Colors.textMuted,
-    marginRight: 8,
-  },
-  settingCard: {
-    backgroundColor: Colors.card,
-    borderRadius: 16,
+  communityProfileCard: {
     padding: 16,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    shadowColor: 'rgba(27,40,56,0.03)',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 1,
-    shadowRadius: 4,
-    elevation: 1,
+    overflow: 'visible',
   },
-  settingCardTop: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
+  communityProfileTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 16,
+  },
+  communityAvatarPreview: {
+    width: 52,
+    height: 52,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  communityAvatarText: {
+    color: Colors.white,
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  communityProfileCopy: {
+    flex: 1,
+  },
+  inputLabel: {
+    fontSize: 12,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 7,
+  },
+  profileInput: {
+    minHeight: 48,
+    borderRadius: 15,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  inputHelp: {
+    fontSize: 12,
+    lineHeight: 17,
+    marginBottom: 14,
+  },
+  avatarColorRow: {
+    flexDirection: 'row',
     gap: 10,
     marginBottom: 14,
   },
-  settingTitle: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: '600' as const,
-    color: Colors.text,
+  avatarColorSwatch: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    borderWidth: 3,
   },
-  settingValue: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: Colors.primary,
-  },
-  delayRow: {
-    flexDirection: 'row' as const,
-    gap: 8,
-  },
-  delayChip: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 10,
-    backgroundColor: Colors.surface,
-    alignItems: 'center' as const,
-  },
-  delayChipActive: {
-    backgroundColor: Colors.primary,
-  },
-  delayChipText: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: Colors.textSecondary,
-  },
-  delayChipTextActive: {
-    color: Colors.white,
-  },
-  toggleGroup: {
-    backgroundColor: Colors.card,
+  saveCommunityButton: {
+    minHeight: 48,
     borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+  },
+  saveCommunityButtonText: {
+    color: Colors.white,
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  settingsRow: {
+    minHeight: 72,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    backgroundColor: Colors.white,
+  },
+  rowIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: Colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
     borderColor: Colors.borderLight,
-    overflow: 'hidden' as const,
-    shadowColor: 'rgba(27,40,56,0.03)',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 1,
-    shadowRadius: 4,
-    elevation: 1,
   },
-  toggleRow: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'space-between' as const,
-    padding: 14,
+  rowIconDanger: {
+    backgroundColor: Colors.dangerLight,
+    borderColor: 'rgba(220, 38, 38, 0.16)',
   },
-  toggleLeft: {
+  rowText: {
     flex: 1,
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 12,
-    marginRight: 12,
+    minWidth: 0,
   },
-  toggleTitle: {
-    fontSize: 14,
-    fontWeight: '600' as const,
+  rowTitle: {
     color: Colors.text,
+    fontSize: 15,
+    fontWeight: '800',
+    marginBottom: 3,
   },
-  toggleDesc: {
-    fontSize: 11,
-    color: Colors.textMuted,
-    marginTop: 1,
+  rowTitleDanger: {
+    color: Colors.danger,
   },
-  toggleDivider: {
+  rowDescription: {
+    color: Colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  divider: {
     height: 1,
     backgroundColor: Colors.borderLight,
-    marginHorizontal: 14,
+    marginLeft: 62,
   },
-  winCard: {
-    flexDirection: 'row' as const,
-    alignItems: 'flex-start' as const,
-    gap: 10,
-    backgroundColor: Colors.successLight,
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 6,
+  themeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 14,
+    paddingTop: 14,
+    paddingBottom: 12,
   },
-  winText: {
-    flex: 1,
-    fontSize: 13,
-    color: Colors.text,
-    lineHeight: 18,
-    marginTop: 1,
-  },
-  footer: {
-    alignItems: 'center' as const,
-    paddingVertical: 24,
+  segmentedControl: {
+    flexDirection: 'row',
     gap: 8,
+    paddingHorizontal: 14,
+    paddingBottom: 14,
   },
-  footerText: {
-    fontSize: 15,
-    fontWeight: '700' as const,
-    color: Colors.brandNavy,
-    letterSpacing: -0.3,
-  },
-  footerVersion: {
-    fontSize: 12,
-    color: Colors.brandTeal,
-    fontWeight: '500' as const,
-  },
-  bottomSpacer: {
-    height: 30,
-  },
-  smartReminderCard: {
-    backgroundColor: Colors.card,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    padding: 16,
-    marginBottom: 10,
-    shadowColor: 'rgba(27,40,56,0.03)',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 1,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  smartReminderHeader: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    marginBottom: 14,
-  },
-  smartReminderIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    marginRight: 12,
-  },
-  smartReminderInfo: {
+  segmentButton: {
     flex: 1,
-  },
-  smartReminderTitle: {
-    fontSize: 15,
-    fontWeight: '600' as const,
-    color: Colors.text,
-  },
-  smartReminderDesc: {
-    fontSize: 12,
-    color: Colors.textMuted,
-    marginTop: 2,
-  },
-  smartReminderStats: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    backgroundColor: Colors.surface,
+    minHeight: 42,
     borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 6,
   },
-  smartReminderStat: {
-    flex: 1,
-    alignItems: 'center' as const,
+  segmentButtonActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
-  smartReminderStatValue: {
-    fontSize: 15,
-    fontWeight: '700' as const,
-    color: Colors.text,
-    marginBottom: 2,
+  segmentText: {
+    color: Colors.textSecondary,
+    fontSize: 13,
+    fontWeight: '800',
   },
-  smartReminderStatLabel: {
-    fontSize: 10,
-    color: Colors.textMuted,
-    fontWeight: '500' as const,
-  },
-  smartReminderStatDivider: {
-    width: 1,
-    height: 24,
-    backgroundColor: Colors.borderLight,
-  },
-  unseenDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: Colors.accent,
+  segmentTextActive: {
+    color: Colors.white,
   },
 });

@@ -6,13 +6,13 @@ import {
   TouchableOpacity,
   Animated,
   Linking,
-  Platform,
 } from 'react-native';
 import { Phone, MessageCircle, Heart, Wind, Shield, ChevronRight } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
-import { SafetyAssessment, CRISIS_RESOURCES } from '@/types/aiSafety';
+import { SafetyAssessment } from '@/types/aiSafety';
 import { getInterventionConfig } from '@/services/ai/aiSafetyService';
+import { getCrisisResources, getResourceContactText, getResourceUrl } from '@/services/safety/crisisResources';
 
 interface SafetyInterventionBannerProps {
   assessment: SafetyAssessment;
@@ -28,6 +28,8 @@ export default React.memo(function SafetyInterventionBanner({
   const router = useRouter();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const config = getInterventionConfig(assessment);
+  const crisisResources = getCrisisResources();
+  const primaryResource = crisisResources[0];
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -37,28 +39,9 @@ export default React.memo(function SafetyInterventionBanner({
     }).start();
   }, [fadeAnim]);
 
-  const handleCall988 = () => {
-    if (Platform.OS === 'web') {
-      void Linking.openURL('https://988lifeline.org/');
-    } else {
-      void Linking.openURL('tel:988');
-    }
-  };
-
-  const handleText988 = () => {
-    if (Platform.OS === 'web') {
-      void Linking.openURL('https://988lifeline.org/chat/');
-    } else {
-      void Linking.openURL('sms:988');
-    }
-  };
-
-  const handleTextCrisisLine = () => {
-    if (Platform.OS === 'web') {
-      void Linking.openURL('https://www.crisistextline.org/');
-    } else {
-      void Linking.openURL('sms:741741&body=HOME');
-    }
+  const handleResource = (url: string | null) => {
+    if (!url) return;
+    void Linking.openURL(url);
   };
 
   const handleGrounding = () => {
@@ -85,11 +68,11 @@ export default React.memo(function SafetyInterventionBanner({
         {config.showCrisisHotline && (
           <TouchableOpacity
             style={styles.compactAction}
-            onPress={handleCall988}
-            testID="safety-compact-988"
+            onPress={() => handleResource(getResourceUrl(primaryResource))}
+            testID="safety-compact-crisis-resource"
           >
             <Phone size={14} color={Colors.white} />
-            <Text style={styles.compactActionText}>988</Text>
+            <Text style={styles.compactActionText}>{getResourceContactText(primaryResource).replace(/^Call or text\s+/i, '')}</Text>
           </TouchableOpacity>
         )}
         {config.showGroundingTools && (
@@ -125,39 +108,43 @@ export default React.memo(function SafetyInterventionBanner({
 
       {config.showCrisisHotline && (
         <View style={styles.crisisSection}>
-          <TouchableOpacity
-            style={styles.crisisButton}
-            onPress={handleCall988}
-            testID="safety-call-988"
-          >
-            <Phone size={18} color={Colors.white} />
-            <View style={styles.crisisButtonTextContainer}>
-              <Text style={styles.crisisButtonTitle}>
-                {CRISIS_RESOURCES.hotline988.action}
-              </Text>
-              <Text style={styles.crisisButtonSubtitle}>
-                {CRISIS_RESOURCES.hotline988.description}
-              </Text>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.textCrisisButton}
-            onPress={handleText988}
-            testID="safety-text-988"
-          >
-            <MessageCircle size={16} color={Colors.danger} />
-            <Text style={styles.textCrisisLabel}>Text 988</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.textCrisisButton}
-            onPress={handleTextCrisisLine}
-            testID="safety-crisis-text-line"
-          >
-            <MessageCircle size={16} color={Colors.danger} />
-            <Text style={styles.textCrisisLabel}>{CRISIS_RESOURCES.crisisText.action}</Text>
-          </TouchableOpacity>
+          {crisisResources.map((resource, index) => {
+            const url = getResourceUrl(resource);
+            const Icon = index === 0 ? Phone : MessageCircle;
+            return index === 0 ? (
+              <TouchableOpacity
+                key={resource.id}
+                style={styles.crisisButton}
+                onPress={() => handleResource(url)}
+                disabled={!url}
+                testID={`safety-resource-${resource.id}`}
+              >
+                <Icon size={18} color={Colors.white} />
+                <View style={styles.crisisButtonTextContainer}>
+                  <Text style={styles.crisisButtonTitle}>{resource.actionLabel}</Text>
+                  <Text style={styles.crisisButtonNumber}>{getResourceContactText(resource)}</Text>
+                  <Text style={styles.crisisButtonSubtitle}>{resource.description}</Text>
+                </View>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                key={resource.id}
+                style={styles.textCrisisButton}
+                onPress={() => handleResource(url)}
+                disabled={!url}
+                testID={`safety-resource-${resource.id}`}
+              >
+                <Icon size={16} color={Colors.danger} />
+                <View style={styles.textCrisisCopy}>
+                  <Text style={styles.textCrisisLabel}>{getResourceContactText(resource)}</Text>
+                  <Text style={styles.textCrisisDesc}>{resource.label}</Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+          <Text style={styles.immediateDangerText}>
+            If you are in immediate danger, call your local emergency number now.
+          </Text>
         </View>
       )}
 
@@ -169,7 +156,7 @@ export default React.memo(function SafetyInterventionBanner({
             testID="safety-grounding"
           >
             <Wind size={16} color={Colors.primary} />
-            <Text style={styles.toolLabel}>Grounding</Text>
+            <Text style={styles.toolLabel}>Calm Me Down</Text>
             <ChevronRight size={14} color={Colors.textMuted} />
           </TouchableOpacity>
         )}
@@ -254,6 +241,12 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.85)',
     marginTop: 2,
   },
+  crisisButtonNumber: {
+    fontSize: 13,
+    fontWeight: '800' as const,
+    color: Colors.white,
+    marginTop: 2,
+  },
   textCrisisButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -269,6 +262,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500' as const,
     color: Colors.danger,
+  },
+  textCrisisCopy: {
+    flex: 1,
+  },
+  textCrisisDesc: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  immediateDangerText: {
+    fontSize: 12,
+    lineHeight: 17,
+    color: Colors.textSecondary,
+    fontWeight: '600' as const,
+    textAlign: 'center',
+    marginTop: 2,
   },
   toolsSection: {
     gap: 6,

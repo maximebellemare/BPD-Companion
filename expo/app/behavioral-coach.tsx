@@ -45,12 +45,12 @@ import {
 } from '@/types/behavioralCoach';
 
 const SECTION_COLORS = {
-  pattern: { bg: '#FFFFFF', border: '#0B1238', accent: '#3B82F6' },
-  timing: { bg: '#FFFFFF', border: '#0B1238', accent: '#3B82F6' },
-  coping: { bg: '#FFFFFF', border: '#0B1238', accent: '#14B8A6' },
-  growth: { bg: '#FFFFFF', border: '#0B1238', accent: '#14B8A6' },
-  relationship: { bg: '#0B1238', border: '#0B1238', accent: '#3B82F6' },
-  regulation: { bg: '#0B1238', border: '#0B1238', accent: '#2E2A72' },
+  pattern: { bg: '#FFFFFF', border: '#D9E2EC', accent: '#3B82F6' },
+  timing: { bg: '#FFFFFF', border: '#D9E2EC', accent: '#3B82F6' },
+  coping: { bg: '#FFFFFF', border: '#D9E2EC', accent: '#14B8A6' },
+  growth: { bg: '#FFFFFF', border: '#D9E2EC', accent: '#14B8A6' },
+  relationship: { bg: '#D9E2EC', border: '#D9E2EC', accent: '#3B82F6' },
+  regulation: { bg: '#D9E2EC', border: '#D9E2EC', accent: '#2E2A72' },
 };
 
 function SectionHeader({ title, icon, color }: { title: string; icon: React.ReactNode; color: string }) {

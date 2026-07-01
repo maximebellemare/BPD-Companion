@@ -21,7 +21,11 @@ export default function MedicationHistoryScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id?: string }>();
-  const { logs, getMedicationById, overallAdherence, getAdherenceRate } = useMedications();
+  const medicationContext = useMedications();
+  const logs = medicationContext?.logs ?? [];
+  const getMedicationById = medicationContext?.getMedicationById ?? (() => null);
+  const overallAdherence = medicationContext?.overallAdherence ?? 0;
+  const getAdherenceRate = medicationContext?.getAdherenceRate ?? (() => 0);
 
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
 

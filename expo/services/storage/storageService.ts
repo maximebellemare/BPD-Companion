@@ -207,6 +207,21 @@ class HybridStorageService implements IStorageService {
       console.log('[StorageService] Push failed:', e);
     }
   }
+
+  async clearLocalForCurrentUser(): Promise<void> {
+    try {
+      const prefixes = this.userId ? [`u_${this.userId}__`] : ['guest__'];
+      const allKeys = await AsyncStorage.getAllKeys();
+      const matching = allKeys.filter((key) => prefixes.some((prefix) => key.startsWith(prefix)));
+      if (matching.length > 0) {
+        await AsyncStorage.multiRemove(matching);
+      }
+      console.log('[StorageService] Cleared local scoped keys:', matching.length);
+    } catch (error) {
+      console.log('[StorageService] Local clear error:', error);
+      throw error;
+    }
+  }
 }
 
 export const storageService: HybridStorageService = new HybridStorageService();

@@ -105,11 +105,10 @@ export default function AppointmentsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { trackEvent } = useAnalytics();
-  const {
-    upcomingAppointments,
-    pastAppointments,
-    needsPostSession,
-  } = useAppointments();
+  const appointmentContext = useAppointments();
+  const upcomingAppointments = appointmentContext?.upcomingAppointments ?? [];
+  const pastAppointments = appointmentContext?.pastAppointments ?? [];
+  const needsPostSession = appointmentContext?.needsPostSession ?? [];
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
 

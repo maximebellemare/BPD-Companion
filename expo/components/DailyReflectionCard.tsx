@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
   cardPending: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1.5,
-    borderColor: '#0B1238',
+    borderColor: '#D9E2EC',
   },
   cardCompleted: {
     backgroundColor: Colors.white,
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   iconPending: {
-    backgroundColor: '#0B1238',
+    backgroundColor: '#D9E2EC',
   },
   iconCompleted: {
     backgroundColor: Colors.primaryLight,

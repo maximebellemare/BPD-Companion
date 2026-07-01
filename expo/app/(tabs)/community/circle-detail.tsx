@@ -48,7 +48,7 @@ function timeAgo(timestamp: number): string {
   return `${Math.floor(days / 7)}w ago`;
 }
 
-const CirclePostCard = React.memo(function CirclePostCard({ post }: { post: CirclePost }) {
+const CirclePostCard = React.memo(function CirclePostCard({ post, onPress }: { post: CirclePost; onPress: () => void }) {
   const postType = CIRCLE_POST_TYPES.find((t) => t.id === post.type);
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
@@ -69,6 +69,7 @@ const CirclePostCard = React.memo(function CirclePostCard({ post }: { post: Circ
     <Animated.View style={[styles.circlePostCard, { transform: [{ scale: scaleAnim }] }]}>
       <TouchableOpacity
         activeOpacity={0.9}
+        onPress={onPress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         testID={`circle-post-${post.id}`}
@@ -164,6 +165,10 @@ export default function CircleDetailScreen() {
     setSelectedType('update');
     setShowComposer(false);
   }, [newTitle, newBody, selectedType, createPost]);
+
+  const handleOpenThread = useCallback((postId: string) => {
+    router.push(`/community/circle-thread?circleId=${id}&postId=${postId}` as never);
+  }, [id, router]);
 
   if (isLoading || !circle) {
     return (
@@ -274,7 +279,7 @@ export default function CircleDetailScreen() {
               </View>
             ) : circlePosts.length > 0 ? (
               circlePosts.map((post) => (
-                <CirclePostCard key={post.id} post={post} />
+                <CirclePostCard key={post.id} post={post} onPress={() => handleOpenThread(post.id)} />
               ))
             ) : (
               <View style={styles.emptyDiscussions}>

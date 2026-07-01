@@ -16,9 +16,11 @@ import { useRouter } from 'expo-router';
 import { ArrowLeft, Mail } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
+import { useAppTheme } from '@/providers/ThemeProvider';
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
+  const { colors } = useAppTheme();
   const { resetPassword } = useAuth();
   const [email, setEmail] = useState<string>('');
   const [submitting, setSubmitting] = useState<boolean>(false);
@@ -49,7 +51,7 @@ export default function ForgotPasswordScreen() {
   }, [email, resetPassword]);
 
   return (
-    <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -63,9 +65,9 @@ export default function ForgotPasswordScreen() {
             <ArrowLeft size={22} color={Colors.text} />
           </TouchableOpacity>
 
-          <Text style={styles.title}>Reset password</Text>
-          <Text style={styles.subtitle}>
-            Enter your account email and we will send a secure reset link through Supabase Auth.
+          <Text style={[styles.title, { color: colors.text }]}>Reset password</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+            Enter your account email and we will send a secure reset link.
           </Text>
 
           <View style={styles.field}>

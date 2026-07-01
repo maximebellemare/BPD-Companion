@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#0B1238',
+    borderColor: '#D9E2EC',
   },
   anchorText: {
     flex: 1,

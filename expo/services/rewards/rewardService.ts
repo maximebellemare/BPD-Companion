@@ -16,10 +16,20 @@ function getMetricValueForCategory(
       return metrics.checkInDays;
     case 'journaling':
       return metrics.journalDays;
+    case 'insight':
+      if (milestone.id === 'first_saved_insight') return metrics.savedInsightCount;
+      return metrics.firstInsightCount;
+    case 'calm':
+      return metrics.calmMeDownSessions;
+    case 'community':
+      return metrics.communityPosts;
     case 'pause_win':
       return metrics.pauseWins;
     case 'reflection':
+      if (milestone.id === 'five_day_reflection') return metrics.journalDays;
       return metrics.weeklyReflections;
+    case 'skill_practice':
+      return metrics.skillPracticeSessions;
     case 'therapy_prep':
       return metrics.therapyPreps;
     case 'medication':
@@ -31,6 +41,9 @@ function getMetricValueForCategory(
     case 'appointment':
       return metrics.appointmentsAttended;
     case 'consistency':
+      if (milestone.id === 'first_week_complete') {
+        return metrics.checkInDays;
+      }
       if (milestone.id.startsWith('checkin_streak')) {
         return metrics.currentCheckInStreak;
       }

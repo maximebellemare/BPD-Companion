@@ -20,8 +20,6 @@ export default React.memo(function AICompanionHomeCard() {
     memoryProfile,
     startNewConversation,
     continueLastConversation,
-    setActiveConversationId,
-    sendMessage,
   } = useAICompanion();
 
   const sparkleAnim = useRef(new Animated.Value(0)).current;
@@ -60,11 +58,17 @@ export default React.memo(function AICompanionHomeCard() {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     if (hasRecentConvo) {
-      continueLastConversation();
-      router.push('/companion/chat' as never);
+      const id = continueLastConversation();
+      router.push({
+        pathname: '/companion/chat',
+        params: { conversationId: id },
+      } as never);
     } else {
-      startNewConversation();
-      router.push('/companion/chat' as never);
+      const id = startNewConversation();
+      router.push({
+        pathname: '/companion/chat',
+        params: { conversationId: id },
+      } as never);
     }
   }, [hasRecentConvo, continueLastConversation, startNewConversation, router]);
 
@@ -72,13 +76,15 @@ export default React.memo(function AICompanionHomeCard() {
     if (Platform.OS !== 'web') {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    const id = startNewConversation();
-    setActiveConversationId(id);
-    router.push('/companion/chat' as never);
-    setTimeout(() => {
-      void sendMessage('Help me slow down, everything feels overwhelming right now');
-    }, 300);
-  }, [startNewConversation, setActiveConversationId, router, sendMessage]);
+    const id = startNewConversation(false);
+    router.push({
+      pathname: '/companion/chat',
+      params: {
+        conversationId: id,
+        initialMessage: 'Help me slow down, everything feels overwhelming right now',
+      },
+    } as never);
+  }, [startNewConversation, router]);
 
   return (
     <View style={styles.container}>

@@ -8,8 +8,9 @@ import {
 import { generateObject } from '@rork-ai/toolkit-sdk';
 import { z } from 'zod';
 import { assessInputSafety } from '@/services/ai/aiSafetyService';
-import { SafetyAssessment, CRISIS_RESOURCES } from '@/types/aiSafety';
+import { SafetyAssessment } from '@/types/aiSafety';
 import { trackEvent } from '@/services/analytics/analyticsService';
+import { getPrimaryCrisisResourceText } from '@/services/safety/crisisResources';
 
 function generateId(): string {
   return `sj_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -50,8 +51,9 @@ export async function analyzeJournalEntry(
   const emotionLabels = entry.emotions.map(e => e.label).join(', ');
   const triggerLabels = entry.triggers.map(t => t.label).join(', ');
 
+  const primaryCrisisText = getPrimaryCrisisResourceText();
   const safetyPromptAddition = safetyAssessment.level === 'crisis'
-    ? `\n\nIMPORTANT SAFETY NOTE: This entry contains crisis-level content. Your analysis MUST:\n- Acknowledge the pain directly and compassionately\n- NOT minimize or dismiss the distress\n- Include a coping suggestion that mentions reaching out to the ${CRISIS_RESOURCES.hotline988.name} (${CRISIS_RESOURCES.hotline988.action})\n- NOT use toxic positivity\n- Be warm, grounding, and present`
+    ? `\n\nIMPORTANT SAFETY NOTE: This entry contains crisis-level content. Your analysis MUST:\n- Acknowledge the pain directly and compassionately\n- NOT minimize or dismiss the distress\n- Include a coping suggestion that mentions reaching out to regional/local crisis support: ${primaryCrisisText}\n- NOT use toxic positivity\n- Be warm, grounding, and present`
     : safetyAssessment.level === 'high_risk'
       ? `\n\nIMPORTANT: This entry shows significant distress. Your analysis should prioritize validation and suggest grounding or reaching out to a trusted person. Do not minimize the pain.`
       : '';
@@ -89,8 +91,8 @@ ANALYSIS RULES:
     const parsed = insightSchema.parse(result);
     const insight: JournalAIInsight = { ...parsed, timestamp: Date.now() };
 
-    if (safetyAssessment.level === 'crisis' && insight.copingSuggestion && !insight.copingSuggestion.includes('988')) {
-      insight.copingSuggestion = `${insight.copingSuggestion} If you're in crisis, the ${CRISIS_RESOURCES.hotline988.name} is available 24/7 — ${CRISIS_RESOURCES.hotline988.action}.`;
+    if (safetyAssessment.level === 'crisis' && insight.copingSuggestion && !/crisis|emergency|samaritans|lifeline|suicide écoute|01 45 39 40 00|988/i.test(insight.copingSuggestion)) {
+      insight.copingSuggestion = `${insight.copingSuggestion} If you're in crisis, please reach out now. ${primaryCrisisText}`;
     }
 
     return {
@@ -117,12 +119,12 @@ function buildLocalInsight(entry: SmartJournalEntry, safetyAssessment?: SafetyAs
 
   if (safetyAssessment && safetyAssessment.level === 'crisis') {
     summary = `What you're going through sounds incredibly painful. Writing about it takes courage, and your feelings are real and valid.`;
-    copingSuggestion = `Right now, the most important thing is your safety. If you're having thoughts of hurting yourself, please reach out to the ${CRISIS_RESOURCES.hotline988.name} — ${CRISIS_RESOURCES.hotline988.action}. You can also try placing your feet on the ground and taking three slow breaths.`;
+    copingSuggestion = `Right now, the most important thing is your safety. If you're having thoughts of hurting yourself, please reach out now. ${getPrimaryCrisisResourceText()} You can also try placing your feet on the ground and taking three slow breaths.`;
   } else if (safetyAssessment && safetyAssessment.level === 'high_risk') {
     summary = `You expressed ${primary.toLowerCase()}`;
     if (trigger) summary += ` connected to "${trigger}"`;
     summary += '. This sounds really heavy. You showed strength by putting it into words.';
-    copingSuggestion = `Your distress is very high right now. Try the 5-4-3-2-1 grounding technique: name 5 things you can see, 4 you can touch, 3 you can hear, 2 you can smell, and 1 you can taste. If it feels like too much, reaching out to someone you trust — or the ${CRISIS_RESOURCES.hotline988.name} (${CRISIS_RESOURCES.hotline988.action}) — is a strong choice.`;
+    copingSuggestion = `Your distress is very high right now. Try the 5-4-3-2-1 grounding technique: name 5 things you can see, 4 you can touch, 3 you can hear, 2 you can smell, and 1 you can taste. If it feels like too much, reaching out to someone you trust or local crisis support is a strong choice. ${getPrimaryCrisisResourceText()}`;
   } else {
     summary = `You expressed ${primary.toLowerCase()}`;
     if (trigger) summary += ` connected to "${trigger}"`;

@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 18,
     borderWidth: 1,
-    borderColor: '#0B1238',
+    borderColor: '#D9E2EC',
   },
   headerRow: {
     flexDirection: 'row',
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     marginTop: 14,
     paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: '#0B1238',
+    borderTopColor: '#D9E2EC',
   },
   actionChip: {
     flex: 1,
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
   },
   actionChipAccent: {
     backgroundColor: '#FFFFFF',
-    borderColor: '#0B1238',
+    borderColor: '#D9E2EC',
   },
   actionChipText: {
     fontSize: 12,

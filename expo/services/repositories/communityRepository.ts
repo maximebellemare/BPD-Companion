@@ -1,4 +1,4 @@
-import { MOCK_POSTS, MOCK_REPLIES, MOCK_CIRCLES } from '@/constants/community';
+import { DEV_SEEDED_POSTS, DEV_SEEDED_REPLIES, DEV_SEEDED_CIRCLES } from '@/constants/community';
 import {
   CommunityPost,
   PostReply,
@@ -11,6 +11,7 @@ import {
   SupportReaction,
 } from '@/types/community';
 import { ICommunityRepository } from './types';
+import { ensureCommunityProfile, getCommunityAuthor } from '@/services/community/communityProfileService';
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -24,11 +25,11 @@ const DEFAULT_SUPPORT_REACTIONS: SupportReaction[] = [
 ];
 
 export class LocalCommunityRepository implements ICommunityRepository {
-  private posts: CommunityPost[] = [...MOCK_POSTS];
-  private replies: Record<string, PostReply[]> = JSON.parse(JSON.stringify(MOCK_REPLIES));
+  private posts: CommunityPost[] = JSON.parse(JSON.stringify(DEV_SEEDED_POSTS));
+  private replies: Record<string, PostReply[]> = JSON.parse(JSON.stringify(DEV_SEEDED_REPLIES));
   private blockedUsers: BlockedUser[] = [];
   private reports: ReportInput[] = [];
-  private circles: SupportCircle[] = [...MOCK_CIRCLES];
+  private circles: SupportCircle[] = JSON.parse(JSON.stringify(DEV_SEEDED_CIRCLES));
 
   async getPosts(category?: PostCategory | null, search?: string): Promise<CommunityPost[]> {
     await delay(300);
@@ -69,17 +70,14 @@ export class LocalCommunityRepository implements ICommunityRepository {
 
   async createPost(input: NewPostInput): Promise<CommunityPost> {
     await delay(400);
+    const profile = await ensureCommunityProfile();
     const newPost: CommunityPost = {
       id: `p_${Date.now()}`,
       title: input.title,
       body: input.body,
       category: input.category,
       situationTag: input.situationTag,
-      author: {
-        id: 'current_user',
-        displayName: input.isAnonymous ? 'Anonymous' : 'You',
-        isAnonymous: input.isAnonymous,
-      },
+      author: getCommunityAuthor(profile, input.isAnonymous),
       createdAt: Date.now(),
       isPinned: false,
       hasContentWarning: input.hasContentWarning,
@@ -102,15 +100,12 @@ export class LocalCommunityRepository implements ICommunityRepository {
 
   async createReply(input: NewReplyInput): Promise<PostReply> {
     await delay(350);
+    const profile = await ensureCommunityProfile();
     const newReply: PostReply = {
       id: `r_${Date.now()}`,
       postId: input.postId,
       body: input.body,
-      author: {
-        id: 'current_user',
-        displayName: input.isAnonymous ? 'Anonymous' : 'You',
-        isAnonymous: input.isAnonymous,
-      },
+      author: getCommunityAuthor(profile, input.isAnonymous),
       createdAt: Date.now(),
       reactions: [{ type: 'heart', count: 0, userReacted: false }],
       supportReactions: [...DEFAULT_SUPPORT_REACTIONS],
@@ -132,13 +127,39 @@ export class LocalCommunityRepository implements ICommunityRepository {
     return newReply;
   }
 
+  async deletePost(postId: string): Promise<void> {
+    await delay(220);
+    const post = this.posts.find((p) => p.id === postId);
+    if (!post || post.author.id !== 'current_user') {
+      throw new Error('You can only delete your own posts.');
+    }
+    this.posts = this.posts.filter((p) => p.id !== postId);
+    delete this.replies[postId];
+    this.reports = this.reports.filter((report) => report.targetId !== postId);
+    console.log('[CommunityRepository] Deleted post:', postId);
+  }
+
+  async deleteReply(postId: string, replyId: string): Promise<void> {
+    await delay(180);
+    const postReplies = this.replies[postId] ?? [];
+    const reply = postReplies.find((r) => r.id === replyId);
+    if (!reply || reply.author.id !== 'current_user') {
+      throw new Error('You can only delete your own replies.');
+    }
+    this.replies[postId] = postReplies.filter((r) => r.id !== replyId);
+    const post = this.posts.find((p) => p.id === postId);
+    if (post) {
+      post.replyCount = Math.max(0, post.replyCount - 1);
+    }
+    console.log('[CommunityRepository] Deleted reply:', replyId, 'for post:', postId);
+  }
+
   async toggleReaction(
     postId: string,
     reactionType: string,
     replyId?: string,
   ): Promise<void> {
     await delay(150);
-
     if (replyId) {
       const postReplies = this.replies[postId];
       if (postReplies) {

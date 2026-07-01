@@ -20,7 +20,7 @@ import { SELF_TRUST_PROMPTS } from '@/services/identity/valuesService';
 import type { SelfTrustPrompt } from '@/types/identity';
 
 const CATEGORY_COLORS: Record<string, { color: string; bg: string }> = {
-  grounding: { color: '#14B8A6', bg: '#0B1238' },
+  grounding: { color: '#14B8A6', bg: '#D9E2EC' },
   clarity: { color: '#3B82F6', bg: '#FFFFFF' },
   'self-respect': { color: '#67E8F9', bg: '#FFFFFF' },
   'future-self': { color: '#3B82F6', bg: '#FFFFFF' },
@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 12,
     borderWidth: 1,
-    borderColor: '#0B1238',
+    borderColor: '#D9E2EC',
     marginBottom: 20,
   },
   introEmoji: {
@@ -497,7 +497,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     gap: 10,
     borderWidth: 1,
-    borderColor: '#0B1238',
+    borderColor: '#D9E2EC',
   },
   favoriteContent: {
     flex: 1,

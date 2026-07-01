@@ -4,8 +4,10 @@ import {
   MedicationTime,
   LogStatus,
   MoodAfter,
+  shouldMedicationOccurOnDay,
 } from '@/types/medication';
 import { medicationRepository } from '@/services/repositories';
+import { normalizeMedicationState } from '@/services/care/careDataNormalizer';
 
 function generateId(): string {
   return `med_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -25,46 +27,46 @@ class MedicationService {
       updatedAt: now,
     };
 
-    const state = await medicationRepository.getState();
-    state.medications.unshift(newMed);
-    await medicationRepository.saveState(state);
+    const medicationState = normalizeMedicationState(await medicationRepository.getState(), 'MedicationService.addMedication');
+    medicationState.medications.unshift(newMed);
+    await medicationRepository.saveState(medicationState);
 
     console.log('[MedicationService] Added medication:', newMed.name);
     return newMed;
   }
 
   async updateMedication(id: string, updates: Partial<Medication>): Promise<Medication | null> {
-    const state = await medicationRepository.getState();
-    const idx = state.medications.findIndex(m => m.id === id);
+    const medicationState = normalizeMedicationState(await medicationRepository.getState(), 'MedicationService.updateMedication');
+    const idx = medicationState.medications.findIndex(m => m.id === id);
     if (idx === -1) return null;
 
-    state.medications[idx] = {
-      ...state.medications[idx],
+    medicationState.medications[idx] = {
+      ...medicationState.medications[idx],
       ...updates,
       updatedAt: Date.now(),
     };
-    await medicationRepository.saveState(state);
+    await medicationRepository.saveState(medicationState);
 
-    console.log('[MedicationService] Updated medication:', state.medications[idx].name);
-    return state.medications[idx];
+    console.log('[MedicationService] Updated medication:', medicationState.medications[idx].name);
+    return medicationState.medications[idx];
   }
 
   async deleteMedication(id: string): Promise<void> {
-    const state = await medicationRepository.getState();
-    state.medications = state.medications.filter(m => m.id !== id);
-    state.logs = state.logs.filter(l => l.medicationId !== id);
-    await medicationRepository.saveState(state);
+    const medicationState = normalizeMedicationState(await medicationRepository.getState(), 'MedicationService.deleteMedication');
+    medicationState.medications = medicationState.medications.filter(m => m.id !== id);
+    medicationState.logs = medicationState.logs.filter(l => l.medicationId !== id);
+    await medicationRepository.saveState(medicationState);
     console.log('[MedicationService] Deleted medication:', id);
   }
 
   async toggleMedicationActive(id: string): Promise<Medication | null> {
-    const state = await medicationRepository.getState();
-    const med = state.medications.find(m => m.id === id);
+    const medicationState = normalizeMedicationState(await medicationRepository.getState(), 'MedicationService.toggleMedicationActive');
+    const med = medicationState.medications.find(m => m.id === id);
     if (!med) return null;
 
     med.active = !med.active;
     med.updatedAt = Date.now();
-    await medicationRepository.saveState(state);
+    await medicationRepository.saveState(medicationState);
 
     console.log('[MedicationService] Toggled medication active:', med.name, med.active);
     return med;
@@ -95,28 +97,28 @@ class MedicationService {
       notes: params.notes ?? '',
     };
 
-    const state = await medicationRepository.getState();
-    state.logs.unshift(log);
-    await medicationRepository.saveState(state);
+    const medicationState = normalizeMedicationState(await medicationRepository.getState(), 'MedicationService.logMedication');
+    medicationState.logs.unshift(log);
+    await medicationRepository.saveState(medicationState);
 
     console.log('[MedicationService] Logged medication:', params.medicationId, params.status);
     return log;
   }
 
   async updateLog(logId: string, updates: Partial<MedicationLog>): Promise<MedicationLog | null> {
-    const state = await medicationRepository.getState();
-    const idx = state.logs.findIndex(l => l.id === logId);
+    const medicationState = normalizeMedicationState(await medicationRepository.getState(), 'MedicationService.updateLog');
+    const idx = medicationState.logs.findIndex(l => l.id === logId);
     if (idx === -1) return null;
 
-    state.logs[idx] = { ...state.logs[idx], ...updates };
-    await medicationRepository.saveState(state);
-    return state.logs[idx];
+    medicationState.logs[idx] = { ...medicationState.logs[idx], ...updates };
+    await medicationRepository.saveState(medicationState);
+    return medicationState.logs[idx];
   }
 
   async deleteLog(logId: string): Promise<void> {
-    const state = await medicationRepository.getState();
-    state.logs = state.logs.filter(l => l.id !== logId);
-    await medicationRepository.saveState(state);
+    const medicationState = normalizeMedicationState(await medicationRepository.getState(), 'MedicationService.deleteLog');
+    medicationState.logs = medicationState.logs.filter(l => l.id !== logId);
+    await medicationRepository.saveState(medicationState);
   }
 
   getLogsForMedication(logs: MedicationLog[], medicationId: string): MedicationLog[] {
@@ -136,11 +138,12 @@ class MedicationService {
     const todayLogs = this.getTodayLogs(logs);
     const due: Array<{ medication: Medication; time: MedicationTime; logged: boolean }> = [];
 
-    for (const med of medications) {
+    for (const med of Array.isArray(medications) ? medications : []) {
       if (!med.active) continue;
       if (med.schedule === 'as_needed') continue;
+      if (!shouldMedicationOccurOnDay(med, now)) continue;
 
-      for (const time of med.times) {
+      for (const time of Array.isArray(med.times) ? med.times : []) {
         const isLoggedForTime = todayLogs.some(
           l => l.medicationId === med.id &&
             l.scheduledTime?.hour === time.hour &&

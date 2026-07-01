@@ -14,32 +14,13 @@ import { Phone, MessageCircle, Heart, X, Shield, Zap } from 'lucide-react-native
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useApp } from '@/providers/AppProvider';
-
-const CRISIS_RESOURCES = [
-  {
-    id: 'crisis-line',
-    label: '988 Suicide & Crisis Lifeline',
-    action: 'tel:988',
-    desc: 'Call or text 24/7',
-    icon: Phone,
-    color: Colors.danger,
-    bg: Colors.dangerLight,
-  },
-  {
-    id: 'crisis-text',
-    label: 'Crisis Text Line',
-    action: 'sms:741741',
-    desc: 'Text HOME to 741741',
-    icon: MessageCircle,
-    color: '#3B82F6',
-    bg: '#FFFFFF',
-  },
-];
+import { getCrisisResources, getResourceContactText, getResourceUrl } from '@/services/safety/crisisResources';
 
 export default function SafetyModeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { deactivateSafetyMode } = useApp();
+  const crisisResources = getCrisisResources();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -95,11 +76,12 @@ export default function SafetyModeScreen() {
     router.back();
   }, [deactivateSafetyMode, router]);
 
-  const handleResource = useCallback((action: string) => {
+  const handleResource = useCallback((url: string | null) => {
+    if (!url) return;
     if (Platform.OS !== 'web') {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-    void Linking.openURL(action);
+    void Linking.openURL(url);
   }, []);
 
   const handleGrounding = useCallback(() => {
@@ -160,25 +142,30 @@ export default function SafetyModeScreen() {
 
         <View style={styles.resourcesSection}>
           <Text style={styles.resourcesTitle}>Reach out now</Text>
-          {CRISIS_RESOURCES.map(resource => {
-            const IconComponent = resource.icon;
+          {crisisResources.map((resource, index) => {
+            const IconComponent = index === 0 ? Phone : MessageCircle;
             return (
               <TouchableOpacity
                 key={resource.id}
                 style={styles.resourceCard}
-                onPress={() => handleResource(resource.action)}
+                onPress={() => handleResource(getResourceUrl(resource))}
+                disabled={!getResourceUrl(resource)}
                 activeOpacity={0.7}
               >
-                <View style={[styles.resourceIcon, { backgroundColor: resource.bg }]}>
-                  <IconComponent size={22} color={resource.color} />
+                <View style={[styles.resourceIcon, { backgroundColor: index === 0 ? Colors.dangerLight : Colors.white }]}>
+                  <IconComponent size={22} color={index === 0 ? Colors.danger : '#3B82F6'} />
                 </View>
                 <View style={styles.resourceInfo}>
                   <Text style={styles.resourceLabel}>{resource.label}</Text>
-                  <Text style={styles.resourceDesc}>{resource.desc}</Text>
+                  <Text style={styles.resourceNumber}>{getResourceContactText(resource)}</Text>
+                  <Text style={styles.resourceDesc}>{resource.description}</Text>
                 </View>
               </TouchableOpacity>
             );
           })}
+          <Text style={styles.resourceFallbackText}>
+            If you are in immediate danger, call your local emergency number now.
+          </Text>
         </View>
 
         <TouchableOpacity
@@ -326,10 +313,24 @@ const styles = StyleSheet.create({
     fontWeight: '600' as const,
     color: Colors.text,
   },
+  resourceNumber: {
+    fontSize: 15,
+    color: Colors.danger,
+    fontWeight: '800' as const,
+    marginTop: 3,
+  },
   resourceDesc: {
     fontSize: 13,
     color: Colors.textSecondary,
     marginTop: 2,
+  },
+  resourceFallbackText: {
+    color: Colors.textMuted,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '600' as const,
+    marginTop: 2,
+    textAlign: 'center',
   },
   groundingButton: {
     backgroundColor: Colors.primary,

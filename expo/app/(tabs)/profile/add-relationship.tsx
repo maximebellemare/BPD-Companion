@@ -22,12 +22,9 @@ import {
 
 const RELATIONSHIP_TYPES: RelationshipType[] = [
   'partner',
-  'ex',
-  'friend',
   'parent',
-  'sibling',
-  'coworker',
-  'therapist',
+  'friend',
+  'ex',
   'other',
 ];
 

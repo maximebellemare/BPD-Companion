@@ -1,3 +1,5 @@
+import type { RelationshipType } from '@/types/relationship';
+
 export interface Emotion {
   id: string;
   label: string;
@@ -9,6 +11,7 @@ export interface Trigger {
   id: string;
   label: string;
   category: 'relationship' | 'self' | 'situation' | 'memory' | 'other';
+  relationshipTags?: RelationshipType[];
 }
 
 export interface BodySensation {
@@ -33,6 +36,7 @@ export interface CheckInEntry {
   intensityLevel: number;
   notes: string;
   copingUsed?: string[];
+  relationshipTags?: RelationshipType[];
 }
 
 export interface JournalEntry {
@@ -41,6 +45,7 @@ export interface JournalEntry {
   checkIn: CheckInEntry;
   reflection?: string;
   outcome?: 'managed' | 'struggled' | 'neutral';
+  relationshipTags?: RelationshipType[];
 }
 
 export interface MessageDraft {

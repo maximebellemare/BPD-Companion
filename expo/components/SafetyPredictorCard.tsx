@@ -59,7 +59,7 @@ const STATE_CONFIG: Record<SafetyState, {
     borderColor: Colors.dangerDark,
     accentColor: Colors.dangerDark,
     iconColor: Colors.dangerDark,
-    tagBg: '#0B1238',
+    tagBg: '#D9E2EC',
     tagText: Colors.dangerDark,
   },
 };

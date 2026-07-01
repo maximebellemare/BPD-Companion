@@ -21,7 +21,7 @@ import type { PersonalValue, ValueCategory } from '@/types/identity';
 
 const CATEGORY_META: Record<ValueCategory, { label: string; color: string; bg: string }> = {
   connection: { label: 'Connection', color: '#3B82F6', bg: '#FFFFFF' },
-  integrity: { label: 'Integrity', color: '#14B8A6', bg: '#0B1238' },
+  integrity: { label: 'Integrity', color: '#14B8A6', bg: '#D9E2EC' },
   self: { label: 'Self', color: '#67E8F9', bg: '#FFFFFF' },
   growth: { label: 'Growth', color: '#14B8A6', bg: '#FFFFFF' },
   peace: { label: 'Peace', color: '#3B82F6', bg: '#FFFFFF' },

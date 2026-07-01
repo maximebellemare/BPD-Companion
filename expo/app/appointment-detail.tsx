@@ -54,15 +54,14 @@ export default function AppointmentDetailScreen() {
   const params = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const { trackEvent } = useAnalytics();
-  const {
-    getAppointmentById,
-    deleteAppointment,
-    savePreSessionNotes,
-    savePostSessionNotes,
-    markCompleted,
-    isSavingPreSession,
-    isSavingPostSession,
-  } = useAppointments();
+  const appointmentContext = useAppointments();
+  const getAppointmentById = appointmentContext?.getAppointmentById ?? (() => null);
+  const deleteAppointment = appointmentContext?.deleteAppointment ?? (async () => undefined);
+  const savePreSessionNotes = appointmentContext?.savePreSessionNotes ?? (async () => null);
+  const savePostSessionNotes = appointmentContext?.savePostSessionNotes ?? (async () => null);
+  const markCompleted = appointmentContext?.markCompleted ?? (async () => null);
+  const isSavingPreSession = appointmentContext?.isSavingPreSession ?? false;
+  const isSavingPostSession = appointmentContext?.isSavingPostSession ?? false;
 
   const appointment = getAppointmentById(params.id ?? '');
   const isPast = appointment ? isAppointmentPast(appointment) : false;
@@ -81,6 +80,10 @@ export default function AppointmentDetailScreen() {
   });
 
   const [postNotes, setPostNotes] = useState({
+    whatStoodOut: appointment?.postSessionNotes?.whatStoodOut ?? '',
+    remember: appointment?.postSessionNotes?.remember ?? '',
+    actionItems: appointment?.postSessionNotes?.actionItems ?? '',
+    followUpQuestions: appointment?.postSessionNotes?.followUpQuestions ?? '',
     mainTakeaways: appointment?.postSessionNotes?.mainTakeaways ?? '',
     newCopingTools: appointment?.postSessionNotes?.newCopingTools ?? '',
     thingsToPractice: appointment?.postSessionNotes?.thingsToPractice ?? '',
@@ -162,6 +165,10 @@ export default function AppointmentDetailScreen() {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
     const notes: PostSessionNotes = {
+      whatStoodOut: postNotes.whatStoodOut,
+      remember: postNotes.remember,
+      actionItems: postNotes.actionItems,
+      followUpQuestions: postNotes.followUpQuestions,
       mainTakeaways: postNotes.mainTakeaways,
       newCopingTools: postNotes.newCopingTools,
       thingsToPractice: postNotes.thingsToPractice,
@@ -182,6 +189,11 @@ export default function AppointmentDetailScreen() {
     }
     await markCompleted(appointment.id);
     trackEvent('appointment_completed', { appointment_type: appointment.appointmentType });
+    setActiveTab('post_session');
+    Alert.alert(
+      'Appointment completed',
+      'Take a minute to save what stood out while it is still fresh.',
+    );
   }, [appointment, markCompleted, trackEvent]);
 
   const LocationIcon = appointment?.locationType === 'telehealth' ? Video :
@@ -402,35 +414,19 @@ export default function AppointmentDetailScreen() {
             {activeTab === 'post_session' && (
               <View style={styles.sessionSection}>
                 <Text style={styles.sessionIntro}>
-                  Capture what came up in your session while it's fresh.
+                  Save the pieces you may want to remember later. Companion can use these notes gently when they are relevant.
                 </Text>
 
                 <View style={styles.promptGroup}>
                   <View style={styles.promptHeader}>
                     <Lightbulb size={14} color={Colors.accent} />
-                    <Text style={styles.promptLabel}>Main Takeaways</Text>
+                    <Text style={styles.promptLabel}>What stood out?</Text>
                   </View>
                   <TextInput
-                    style={[styles.promptInput, postNotes.mainTakeaways.length > 0 && styles.promptInputFilled]}
-                    value={postNotes.mainTakeaways}
-                    onChangeText={(text) => setPostNotes(prev => ({ ...prev, mainTakeaways: text }))}
-                    placeholder="What were the key insights from today's session?"
-                    placeholderTextColor={Colors.textMuted}
-                    multiline
-                    textAlignVertical="top"
-                  />
-                </View>
-
-                <View style={styles.promptGroup}>
-                  <View style={styles.promptHeader}>
-                    <TrendingUp size={14} color={Colors.success} />
-                    <Text style={styles.promptLabel}>New Coping Tools</Text>
-                  </View>
-                  <TextInput
-                    style={[styles.promptInput, postNotes.newCopingTools.length > 0 && styles.promptInputFilled]}
-                    value={postNotes.newCopingTools}
-                    onChangeText={(text) => setPostNotes(prev => ({ ...prev, newCopingTools: text }))}
-                    placeholder="Any new skills or strategies suggested?"
+                    style={[styles.promptInput, postNotes.whatStoodOut.length > 0 && styles.promptInputFilled]}
+                    value={postNotes.whatStoodOut}
+                    onChangeText={(text) => setPostNotes(prev => ({ ...prev, whatStoodOut: text }))}
+                    placeholder="A moment, phrase, idea, or feeling you do not want to lose..."
                     placeholderTextColor={Colors.textMuted}
                     multiline
                     textAlignVertical="top"
@@ -440,13 +436,13 @@ export default function AppointmentDetailScreen() {
                 <View style={styles.promptGroup}>
                   <View style={styles.promptHeader}>
                     <BookOpen size={14} color="#3B82F6" />
-                    <Text style={styles.promptLabel}>Things to Practice</Text>
+                    <Text style={styles.promptLabel}>What do you want to remember?</Text>
                   </View>
                   <TextInput
-                    style={[styles.promptInput, postNotes.thingsToPractice.length > 0 && styles.promptInputFilled]}
-                    value={postNotes.thingsToPractice}
-                    onChangeText={(text) => setPostNotes(prev => ({ ...prev, thingsToPractice: text }))}
-                    placeholder="What should I work on before next session?"
+                    style={[styles.promptInput, postNotes.remember.length > 0 && styles.promptInputFilled]}
+                    value={postNotes.remember}
+                    onChangeText={(text) => setPostNotes(prev => ({ ...prev, remember: text }))}
+                    placeholder="Something your provider suggested, something you realized, or a reminder for yourself..."
                     placeholderTextColor={Colors.textMuted}
                     multiline
                     textAlignVertical="top"
@@ -455,14 +451,46 @@ export default function AppointmentDetailScreen() {
 
                 <View style={styles.promptGroup}>
                   <View style={styles.promptHeader}>
-                    <Calendar size={14} color="#3B82F6" />
-                    <Text style={styles.promptLabel}>Next Appointment Notes</Text>
+                    <TrendingUp size={14} color={Colors.success} />
+                    <Text style={styles.promptLabel}>Any action items?</Text>
                   </View>
                   <TextInput
-                    style={[styles.promptInput, postNotes.nextAppointmentNotes.length > 0 && styles.promptInputFilled]}
-                    value={postNotes.nextAppointmentNotes}
-                    onChangeText={(text) => setPostNotes(prev => ({ ...prev, nextAppointmentNotes: text }))}
-                    placeholder="Reminders for next session?"
+                    style={[styles.promptInput, postNotes.actionItems.length > 0 && styles.promptInputFilled]}
+                    value={postNotes.actionItems}
+                    onChangeText={(text) => setPostNotes(prev => ({ ...prev, actionItems: text }))}
+                    placeholder="Practice a skill, track something, bring up a topic, book a follow-up..."
+                    placeholderTextColor={Colors.textMuted}
+                    multiline
+                    textAlignVertical="top"
+                  />
+                </View>
+
+                <View style={styles.promptGroup}>
+                  <View style={styles.promptHeader}>
+                    <MessageCircle size={14} color={Colors.primary} />
+                    <Text style={styles.promptLabel}>Any follow-up questions?</Text>
+                  </View>
+                  <TextInput
+                    style={[styles.promptInput, postNotes.followUpQuestions.length > 0 && styles.promptInputFilled]}
+                    value={postNotes.followUpQuestions}
+                    onChangeText={(text) => setPostNotes(prev => ({ ...prev, followUpQuestions: text }))}
+                    placeholder="Questions to ask next time, or things you want to understand better..."
+                    placeholderTextColor={Colors.textMuted}
+                    multiline
+                    textAlignVertical="top"
+                  />
+                </View>
+
+                <View style={styles.promptGroup}>
+                  <View style={styles.promptHeader}>
+                    <FileText size={14} color={Colors.textSecondary} />
+                    <Text style={styles.promptLabel}>Other notes</Text>
+                  </View>
+                  <TextInput
+                    style={[styles.promptInput, postNotes.mainTakeaways.length > 0 && styles.promptInputFilled]}
+                    value={postNotes.mainTakeaways}
+                    onChangeText={(text) => setPostNotes(prev => ({ ...prev, mainTakeaways: text }))}
+                    placeholder="Anything else you want to keep..."
                     placeholderTextColor={Colors.textMuted}
                     multiline
                     textAlignVertical="top"
@@ -472,13 +500,13 @@ export default function AppointmentDetailScreen() {
                 <View style={styles.promptGroup}>
                   <View style={styles.promptHeader}>
                     <Pill size={14} color="#3B82F6" />
-                    <Text style={styles.promptLabel}>Medication Changes</Text>
+                    <Text style={styles.promptLabel}>Medication or care notes</Text>
                   </View>
                   <TextInput
                     style={[styles.promptInput, postNotes.medicationChanges.length > 0 && styles.promptInputFilled]}
                     value={postNotes.medicationChanges}
                     onChangeText={(text) => setPostNotes(prev => ({ ...prev, medicationChanges: text }))}
-                    placeholder="Any medication adjustments discussed?"
+                    placeholder="Medication changes, side effects to monitor, or provider instructions..."
                     placeholderTextColor={Colors.textMuted}
                     multiline
                     textAlignVertical="top"

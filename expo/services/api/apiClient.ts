@@ -37,12 +37,10 @@ class HttpApiClient implements IApiClient {
       'Content-Type': 'application/json',
       ...defaultHeaders,
     };
-    console.log('[ApiClient] Initialized with baseUrl:', baseUrl);
   }
 
   setAuthToken(token: string | null): void {
     this.authToken = token;
-    console.log('[ApiClient] Auth token', token ? 'set' : 'cleared');
   }
 
   getAuthToken(): string | null {
@@ -79,8 +77,6 @@ class HttpApiClient implements IApiClient {
     const url = this.buildUrl(path, config?.params);
     const headers = this.buildHeaders(config);
 
-    console.log(`[ApiClient] ${method} ${url}`);
-
     try {
       const response = await fetch(url, {
         method,
@@ -96,14 +92,11 @@ class HttpApiClient implements IApiClient {
           message: `Request failed with status ${response.status}`,
           status: response.status,
         };
-        console.log('[ApiClient] Error:', error);
         throw error;
       }
 
-      console.log(`[ApiClient] ${method} ${path} -> ${response.status}`);
       return { data, status: response.status, ok: true };
     } catch (error) {
-      console.log(`[ApiClient] ${method} ${path} failed:`, error);
       throw error;
     }
   }
@@ -129,6 +122,10 @@ class HttpApiClient implements IApiClient {
   }
 }
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? 'https://api.placeholder.local';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
 
-export const apiClient: IApiClient = new HttpApiClient(API_BASE_URL);
+if (!API_BASE_URL && __DEV__) {
+  console.warn('[ApiClient] EXPO_PUBLIC_API_BASE_URL is not set. API client calls will fail until configured.');
+}
+
+export const apiClient: IApiClient = new HttpApiClient(API_BASE_URL ?? 'https://missing-api-config.invalid');

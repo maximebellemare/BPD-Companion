@@ -1,5 +1,6 @@
 import { MedicationState, DEFAULT_MEDICATION_STATE, Medication, MedicationLog } from '@/types/medication';
 import { IStorageService } from '@/services/storage/storageService';
+import { normalizeMedicationState } from '@/services/care/careDataNormalizer';
 
 const MEDICATION_KEY = 'bpd_medications';
 
@@ -17,32 +18,34 @@ export class LocalMedicationRepository implements IMedicationRepository {
 
   async getState(): Promise<MedicationState> {
     const data = await this.storage.get<MedicationState>(MEDICATION_KEY);
-    console.log('[MedicationRepository] Loaded state:', data?.medications?.length ?? 0, 'medications,', data?.logs?.length ?? 0, 'logs');
-    return data ?? { ...DEFAULT_MEDICATION_STATE };
+    const normalized = normalizeMedicationState(data ?? DEFAULT_MEDICATION_STATE, 'MedicationRepository.getState');
+    console.log('[MedicationRepository] Loaded state:', normalized.medications.length, 'medications,', normalized.logs.length, 'logs');
+    return normalized;
   }
 
   async saveState(state: MedicationState): Promise<void> {
-    await this.storage.set(MEDICATION_KEY, state);
-    console.log('[MedicationRepository] Saved state:', state.medications.length, 'medications,', state.logs.length, 'logs');
+    const normalized = normalizeMedicationState(state, 'MedicationRepository.saveState');
+    await this.storage.set(MEDICATION_KEY, normalized);
+    console.log('[MedicationRepository] Saved state:', normalized.medications.length, 'medications,', normalized.logs.length, 'logs');
   }
 
   async getMedications(): Promise<Medication[]> {
     const state = await this.getState();
-    return state.medications;
+    return normalizeMedicationState(state, 'MedicationRepository.getMedications').medications;
   }
 
   async saveMedications(medications: Medication[]): Promise<void> {
     const state = await this.getState();
-    await this.saveState({ ...state, medications });
+    await this.saveState({ ...state, medications: Array.isArray(medications) ? medications : [] });
   }
 
   async getLogs(): Promise<MedicationLog[]> {
     const state = await this.getState();
-    return state.logs;
+    return normalizeMedicationState(state, 'MedicationRepository.getLogs').logs;
   }
 
   async saveLogs(logs: MedicationLog[]): Promise<void> {
     const state = await this.getState();
-    await this.saveState({ ...state, logs });
+    await this.saveState({ ...state, logs: Array.isArray(logs) ? logs : [] });
   }
 }

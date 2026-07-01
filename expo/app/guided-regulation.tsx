@@ -479,7 +479,7 @@ export default function GuidedRegulationScreen() {
         label: 'Wait before messaging',
         desc: 'Give yourself space first',
         color: '#14B8A6',
-        bg: '#0B1238',
+        bg: '#D9E2EC',
       },
       {
         id: 'journal',

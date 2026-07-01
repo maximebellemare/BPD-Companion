@@ -187,7 +187,6 @@ class NotificationService {
           title,
           body,
           data: { category, ...data },
-          sound: undefined,
         },
         trigger,
       });
@@ -247,7 +246,6 @@ class NotificationService {
           title,
           body,
           data: { category },
-          sound: undefined,
         },
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes.DAILY,
@@ -312,7 +310,6 @@ class NotificationService {
           title,
           body,
           data: { category },
-          sound: undefined,
         },
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes.WEEKLY,

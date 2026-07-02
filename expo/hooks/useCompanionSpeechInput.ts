@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
 type SpeechInputStatus = 'idle' | 'listening' | 'error' | 'unavailable';
 
@@ -20,8 +21,12 @@ type SpeechModule = {
 
 const ENABLE_COMPANION_SPEECH_INPUT = __DEV__;
 
+function isExpoGo(): boolean {
+  return Constants.appOwnership === 'expo';
+}
+
 function loadSpeechModule(): SpeechModule | null {
-  if (!ENABLE_COMPANION_SPEECH_INPUT || Platform.OS === 'web') return null;
+  if (!ENABLE_COMPANION_SPEECH_INPUT || Platform.OS === 'web' || isExpoGo()) return null;
 
   try {
     return require('expo-speech-recognition') as SpeechModule;
@@ -43,6 +48,15 @@ export function useCompanionSpeechInput({ onTranscript }: UseCompanionSpeechInpu
   }, [onTranscript]);
 
   useEffect(() => {
+    if (isExpoGo()) {
+      speechModuleRef.current = null;
+      setIsAvailable(false);
+      setIsListening(false);
+      setStatus('unavailable');
+      setMessage('Voice input unavailable in Expo Go.');
+      return undefined;
+    }
+
     const speechModule = loadSpeechModule()?.ExpoSpeechRecognitionModule ?? null;
     speechModuleRef.current = speechModule;
 
@@ -100,7 +114,9 @@ export function useCompanionSpeechInput({ onTranscript }: UseCompanionSpeechInpu
     const speechModule = speechModuleRef.current;
     if (!speechModule || !isAvailable) {
       setStatus('unavailable');
-      setMessage('Voice input is temporarily unavailable. Please type instead.');
+      setMessage(isExpoGo()
+        ? 'Voice input unavailable in Expo Go.'
+        : 'Voice input is temporarily unavailable. Please type instead.');
       return;
     }
 

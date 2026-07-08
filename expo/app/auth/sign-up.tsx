@@ -18,6 +18,58 @@ import Colors from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
 import { useAppTheme } from '@/providers/ThemeProvider';
 
+function getFriendlySignUpError(error: unknown): string {
+  const raw = error instanceof Error ? error.message : String(error ?? '');
+  const message = raw.toLowerCase();
+
+  if (__DEV__) {
+    console.log('[Auth] Sign-up failed:', error);
+  }
+
+  if (
+    message.includes('already registered') ||
+    message.includes('already exists') ||
+    message.includes('user already') ||
+    message.includes('email address is already')
+  ) {
+    return 'An account already exists for this email. Try signing in instead.';
+  }
+
+  if (
+    message.includes('invalid email') ||
+    message.includes('email address is invalid') ||
+    message.includes('invalid login credentials')
+  ) {
+    return 'Please enter a valid email address.';
+  }
+
+  if (
+    message.includes('weak password') ||
+    message.includes('password should') ||
+    message.includes('password must') ||
+    message.includes('at least 6') ||
+    message.includes('too short')
+  ) {
+    return 'Please choose a stronger password with at least 6 characters.';
+  }
+
+  if (
+    message.includes('network request failed') ||
+    message.includes('failed to fetch') ||
+    message.includes('networkerror') ||
+    message.includes('timeout') ||
+    message.includes('internet connection')
+  ) {
+    return 'Network connection failed. Check your internet connection and try again.';
+  }
+
+  if (message.includes('missing supabase configuration') || message.includes('supabase configuration')) {
+    return 'Account creation is temporarily unavailable. Please try again shortly.';
+  }
+
+  return 'Could not create your account. Please check your details and try again.';
+}
+
 export default function SignUpScreen() {
   const router = useRouter();
   const { colors } = useAppTheme();
@@ -50,8 +102,7 @@ export default function SignUpScreen() {
       await signUp({ email: trimmed, password, displayName: name });
       if (Platform.OS !== 'web') void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Sign up failed';
-      setError(msg);
+      setError(getFriendlySignUpError(e));
       if (Platform.OS !== 'web') void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
       setSubmitting(false);

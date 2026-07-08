@@ -2,7 +2,7 @@
   "expo": {
     "name": "BPD Companion",
     "slug": "bpd-companion",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "bpd-companion",
@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "app.rork.zh9wtiagi54193nc7wcvb",
-      "buildNumber": "2",
+      "buildNumber": "3",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSMicrophoneUsageDescription": "BPD Companion uses the microphone only when you choose voice input for Companion.",

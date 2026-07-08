@@ -130,6 +130,7 @@ export default function UpgradeScreen() {
   const [selectedPlanId, setSelectedPlanId] = useState<string>('yearly');
   const [restoreNotice, setRestoreNotice] = useState<string | null>(null);
   const isNativePurchases = isNativePurchasesPlatform();
+  const shouldCloseAfterAccessRef = useRef<boolean>(false);
 
   useEffect(() => {
     if (plans.length > 0 && !plans.some(plan => plan.id === selectedPlanId)) {
@@ -144,6 +145,12 @@ export default function UpgradeScreen() {
       trackEvent('upgrade_screen_anchored', { anchor });
     }
   }, [trackEvent, anchor]);
+
+  useEffect(() => {
+    if (!shouldCloseAfterAccessRef.current || !isPremium) return;
+    shouldCloseAfterAccessRef.current = false;
+    router.replace('/');
+  }, [isPremium, router]);
   const [testimonialIndex, setTestimonialIndex] = useState<number>(0);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -221,7 +228,7 @@ export default function UpgradeScreen() {
         ? 'https://apps.apple.com/account/subscriptions'
         : 'https://play.google.com/store/account/subscriptions';
       void Linking.openURL(url).catch(() => {
-        Alert.alert('Manage subscription', 'Open your App Store or Google Play subscription settings to manage Premium.');
+        Alert.alert('Manage subscription', 'Open your App Store or Google Play subscription settings to manage your membership.');
       });
       return;
     }
@@ -232,10 +239,11 @@ export default function UpgradeScreen() {
       return;
     }
     if (selected.isFallbackPrice || offeringStatus !== 'ready') {
-      Alert.alert('Subscriptions unavailable', offeringsError ?? 'Subscription plans could not be loaded. Please try again shortly.');
+      Alert.alert('Membership unavailable', offeringsError ?? 'Membership plans could not be loaded. Please try again shortly.');
       return;
     }
     trackEvent('upgrade_clicked', { plan_id: selectedPlanId });
+    shouldCloseAfterAccessRef.current = true;
     subscribe(selected);
   }, [isPremium, selectedPlanId, subscribe, trackEvent, plans, offeringStatus, offeringsError, isNativePurchases]);
 
@@ -257,11 +265,12 @@ export default function UpgradeScreen() {
     }
     restore()
       .then((active) => {
-        setRestoreNotice(
-          active
-            ? 'Purchase restored. Premium access is active.'
-            : 'No active subscription was found for this store account.',
-        );
+        if (active) {
+          setRestoreNotice('Subscription restored. Membership access is active.');
+          router.replace('/');
+          return;
+        }
+        setRestoreNotice('No active membership was found for this store account.');
       })
       .catch(() => {
         setRestoreNotice(null);
@@ -273,23 +282,23 @@ export default function UpgradeScreen() {
   const trialDaysRemaining = state.trialEndsAt
     ? Math.max(0, Math.ceil((state.trialEndsAt - Date.now()) / (24 * 60 * 60 * 1000)))
     : 0;
-  const accessStatusTitle = isPremium
-    ? 'Premium active.'
-    : state.isTrialActive
-      ? trialDaysRemaining === 1
-        ? 'Trial active — 1 day left.'
-        : `Trial active — ${trialDaysRemaining} days left.`
-      : 'Premium unlocks continued access.';
-  const accessStatusBody = isPremium
-    ? 'You have unlimited Companion messages and Premium insights.'
-    : state.isTrialActive
-      ? 'Trial active — upgrade anytime to unlock unlimited Companion and Premium insights.'
-      : 'Your 7-day trial controls app access. Premium keeps the app available after trial expiration.';
+  const accessStatusTitle = state.isTrialActive
+    ? trialDaysRemaining === 1
+      ? 'Store trial active — 1 day left.'
+      : `Store trial active — ${trialDaysRemaining} days left.`
+    : isPremium
+      ? 'Membership active.'
+      : 'Start your 3-day free trial.';
+  const accessStatusBody = state.isTrialActive
+    ? 'Your App Store or Google Play trial includes full access during the trial period.'
+    : isPremium
+      ? 'Your membership unlocks Companion, Insights, calming tools, and the emotional map.'
+      : 'After onboarding, membership is required to use BPD Companion. Start your 3-day free trial through the App Store or Google Play.';
   const statusMessage = useMemo(() => {
-    if (offeringStatus === 'loading') return 'Loading secure App Store and Google Play plans...';
+    if (offeringStatus === 'loading') return 'Loading secure App Store and Google Play membership plans...';
     if (offeringStatus === 'preview') return isNativePurchases ? null : PURCHASES_UNAVAILABLE_MESSAGE;
     if (offeringStatus === 'empty') return 'No subscription offering is configured yet. Check the RevenueCat offering and package setup.';
-    if (offeringStatus === 'error') return offeringsError ?? 'Subscription plans could not be loaded.';
+    if (offeringStatus === 'error') return offeringsError ?? 'Membership plans could not be loaded.';
     return null;
   }, [offeringStatus, offeringsError, isNativePurchases]);
 
@@ -362,7 +371,7 @@ export default function UpgradeScreen() {
           </Animated.View>
           <Text style={[styles.heroTitle, { color: colors.text }]}>Understand patterns. Pause reactions. Build skills.</Text>
           <Text style={[styles.heroSubtitle, { color: colors.textSecondary }]}>
-            Premium keeps your Companion, calming tools, Don't Send It, and emotional map available after your trial.
+            Start your 3-day free trial to unlock Companion, calming tools, Don't Send It, and your emotional map.
           </Text>
         </Animated.View>
 
@@ -389,7 +398,7 @@ export default function UpgradeScreen() {
         <Animated.View
           style={[styles.featuresSection, { opacity: fadeAnim }]}
         >
-          <Text style={[styles.comparisonTitle, { color: colors.text }]}>What Premium helps with</Text>
+          <Text style={[styles.comparisonTitle, { color: colors.text }]}>What membership helps with</Text>
           {PAYWALL_VALUE_ITEMS.map((item, index) => {
             const IconComponent = item.icon;
             return (
@@ -428,10 +437,10 @@ export default function UpgradeScreen() {
             <Sparkles size={14} color={Colors.primary} />
             <Text style={styles.personalizationText}>
               {personalization.isRelationshipActivated
-                ? "Relationship stress seems active lately. Premium keeps Companion, Don't Send It, and relationship support available."
+                ? "Relationship stress seems active lately. Membership keeps Companion, Don't Send It, and relationship support available."
                 : personalization.recentDistressAvg >= 6
-                  ? 'It seems like an intense week. Premium keeps calming tools and Companion support available when you need them.'
-                  : 'Premium helps you keep practicing: understand the pattern, pause the reaction, choose the next step.'}
+                  ? 'It seems like an intense week. Membership keeps calming tools and Companion support available when you need them.'
+                  : 'Membership helps you keep practicing: understand the pattern, pause the reaction, choose the next step.'}
             </Text>
           </Animated.View>
         )}
@@ -444,16 +453,16 @@ export default function UpgradeScreen() {
         </Animated.View>
 
         <Animated.View style={[styles.freeVsPremiumSection, { opacity: fadeAnim }]}>
-          <Text style={[styles.comparisonTitle, { color: colors.text }]}>Included during your trial</Text>
+          <Text style={[styles.comparisonTitle, { color: colors.text }]}>Membership includes</Text>
           <View style={styles.freeList}>
             {[
-              'Check-ins & basic journaling',
-              'Basic coping tools & grounding',
+              'Daily check-ins and emotional tracking',
+              'Companion conversations and memory',
+              "Don't Send It message support",
+              'Insights and emotional pattern tracking',
               'Safety mode & crisis support',
-              `${5} AI conversations per day`,
-              `${3} message rewrites per day`,
-              'Draft vault & pause timer',
-              'Do-not-send recommendations',
+              'Calm Me Down and regulation tools',
+              'Community, medications, and appointments',
             ].map((item, i) => (
               <View key={i} style={styles.freeRow}>
                 <Check size={13} color={Colors.success} />
@@ -462,7 +471,7 @@ export default function UpgradeScreen() {
             ))}
           </View>
           <Text style={styles.trialClarifier}>
-            After the 7-day trial, Premium keeps BPD Companion available when emotions feel intense.
+            Start your 3-day App Store or Google Play trial to use BPD Companion. Cancel anytime through your store account.
           </Text>
         </Animated.View>
 
@@ -590,9 +599,9 @@ export default function UpgradeScreen() {
             </View>
           ) : (
             <View style={styles.emptyPlansCard}>
-              <Text style={styles.emptyPlansTitle}>Plans unavailable</Text>
+              <Text style={styles.emptyPlansTitle}>Membership plans unavailable</Text>
               <Text style={styles.emptyPlansText}>
-                Subscription plans could not be loaded. You can still restore an existing purchase.
+                Membership plans could not be loaded. You can still restore an existing subscription.
               </Text>
             </View>
           )}
@@ -613,8 +622,8 @@ export default function UpgradeScreen() {
                 : canSubscribe
                   ? isPremium
                     ? 'Manage existing subscription'
-                    : `Upgrade to Premium ${selectedPlan?.priceLabel ?? ''}`
-                  : 'Subscriptions unavailable'}
+                    : `Start your 3-day free trial ${selectedPlan?.priceLabel ?? ''}`
+                  : 'Membership unavailable'}
             </Text>
           </TouchableOpacity>
 
@@ -624,7 +633,7 @@ export default function UpgradeScreen() {
         <View style={styles.trustSection}>
           <View style={styles.trustRow}>
             <Shield size={13} color={Colors.textMuted} />
-            <Text style={styles.trustText}>7-day free trial · Cancel anytime</Text>
+            <Text style={styles.trustText}>3-day free trial · Cancel anytime</Text>
           </View>
           <TouchableOpacity onPress={handleRestore} style={styles.restoreBtn} testID="restore-btn" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Text style={styles.restoreText}>{isRestoring ? 'Restoring...' : 'Restore purchase'}</Text>

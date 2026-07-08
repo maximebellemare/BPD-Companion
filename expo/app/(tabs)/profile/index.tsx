@@ -193,21 +193,21 @@ export default function ProfileScreen() {
   }, [communityAvatarColor, communityDisplayName, communityUsername, refreshAccountProfile, user]);
   const trialDaysRemaining = getDaysUntil(subscriptionState.trialEndsAt);
   const statusLabel = useMemo(() => {
-    if (isEntitlementActive) return 'Premium active';
+    if (isEntitlementActive) return 'Membership active';
     if (subscriptionState.isTrialActive) {
-      return trialDaysRemaining === 1 ? 'Trial ends in 1 day' : `Trial ends in ${trialDaysRemaining} days`;
+      return trialDaysRemaining === 1 ? 'Store trial ends in 1 day' : `Store trial ends in ${trialDaysRemaining} days`;
     }
     return 'Subscription required';
   }, [isEntitlementActive, subscriptionState.isTrialActive, trialDaysRemaining]);
 
   const statusDescription = useMemo(() => {
     if (isEntitlementActive) {
-      return 'Premium active. Unlimited Companion and Premium insights are unlocked.';
+      return 'Your membership is active. Companion, Insights, and regulation tools are unlocked.';
     }
     if (subscriptionState.isTrialActive) {
-      return 'Upgrade anytime to unlock unlimited Companion and Premium insights.';
+      return 'Your App Store or Google Play trial includes full access during the trial period.';
     }
-    return 'Upgrade to keep emotional patterns and premium insights available.';
+    return 'Start membership to use BPD Companion after onboarding.';
   }, [isEntitlementActive, subscriptionState.isTrialActive]);
 
   const handleResetPassword = useCallback(() => {
@@ -241,7 +241,7 @@ export default function ProfileScreen() {
     setNotice(null);
     restore()
       .then((active) => {
-        setNotice(active ? 'Purchase restored. Premium is active.' : 'No active subscription was found.');
+        setNotice(active ? 'Subscription restored. Membership is active.' : 'No active membership was found.');
       })
       .catch(() => {
         Alert.alert('Purchases unavailable', PURCHASES_UNAVAILABLE_MESSAGE);
@@ -276,14 +276,14 @@ export default function ProfileScreen() {
       trial_started_at: started.toISOString(),
       trial_ends_at: ends.toISOString(),
     })
-      .then(() => setNotice('QA: 7-day trial restarted for this account.'))
+      .then(() => setNotice('QA: legacy profile trial metadata refreshed. Store membership still controls access.'))
       .catch((error) => Alert.alert('QA action failed', error instanceof Error ? error.message : 'Please try again.'));
   }, [updateOwnerAccountProfile]);
 
   const handleForceTrialExpired = useCallback(() => {
     const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
     updateOwnerAccountProfile({ trial_ends_at: yesterday.toISOString() })
-      .then(() => setNotice('QA: trial forced expired for this account.'))
+      .then(() => setNotice('QA: legacy profile trial forced expired. Store membership still controls access.'))
       .catch((error) => Alert.alert('QA action failed', error instanceof Error ? error.message : 'Please try again.'));
   }, [updateOwnerAccountProfile]);
 
@@ -408,12 +408,12 @@ export default function ProfileScreen() {
           <View style={[styles.card, { backgroundColor: palette.card, borderColor: palette.borderLight }]}>
             {renderSettingsRow({
               icon: <Crown size={17} color={Colors.primary} />,
-              title: isEntitlementActive ? 'Manage subscription' : 'Upgrade to Premium',
+              title: isEntitlementActive ? 'Manage subscription' : 'Start membership',
               description: isEntitlementActive
-                ? 'View plans, renewal details, and premium access.'
+                ? 'View plans, renewal details, and membership access.'
                 : subscriptionState.isTrialActive
-                  ? 'Trial active. Upgrade anytime for unlimited Companion.'
-                  : 'View monthly and yearly Premium plans.',
+                  ? 'Store trial active. Manage your membership anytime.'
+                  : 'View monthly and yearly membership plans.',
               onPress: handleManageSubscription,
               testID: 'manage-subscription-btn',
             })}
@@ -616,8 +616,8 @@ export default function ProfileScreen() {
               <View style={[styles.divider, { backgroundColor: palette.borderLight }]} />
               {renderSettingsRow({
                 icon: <Crown size={17} color={Colors.brandTeal} />,
-                title: 'Restart 7-day trial',
-                description: 'Set trial start to now and trial end to 7 days from now.',
+                title: 'Refresh legacy trial metadata',
+                description: 'Updates profile trial fields only. Store membership still controls access.',
                 onPress: handleRestartTrial,
                 testID: 'qa-restart-trial-btn',
               })}
@@ -625,7 +625,7 @@ export default function ProfileScreen() {
               {renderSettingsRow({
                 icon: <AlertTriangle size={17} color={Colors.danger} />,
                 title: 'Force trial expired',
-                description: 'Set trial end to yesterday for paywall QA.',
+                description: 'Sets legacy profile trial end to yesterday. Store membership still controls access.',
                 onPress: handleForceTrialExpired,
                 testID: 'qa-force-expired-btn',
               })}

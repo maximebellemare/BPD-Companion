@@ -223,7 +223,7 @@ export default function TherapyReportScreen() {
           <Text style={styles.dateRange}>{report.dateRange}</Text>
           <PremiumInlinePrompt
             feature="therapist_report"
-            message="Upgrade for full therapy reports with discussion prompts and sharing."
+            message="Start membership for full therapy reports with discussion prompts and sharing."
           />
 
           <View style={styles.periodSelector}>

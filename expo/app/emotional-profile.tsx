@@ -421,7 +421,7 @@ export default function EmotionalProfileScreen() {
           </Text>
           <PremiumInlinePrompt
             feature="emotional_profile"
-            message="Upgrade for deep emotional pattern intelligence and personalized insights."
+            message="Start membership for deep emotional pattern intelligence and personalized insights."
           />
         </Animated.View>
 

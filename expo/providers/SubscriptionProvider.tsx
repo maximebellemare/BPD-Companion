@@ -44,8 +44,6 @@ import {
 } from '@/services/subscription/purchasesService';
 import type { PurchasesPackage } from '@/services/subscription/purchasesService';
 import { useAuth } from '@/providers/AuthProvider';
-import { useUserProfile } from '@/providers/UserProfileProvider';
-import { isProfileTrialActive } from '@/lib/supabase/profiles';
 import {
   REVENUECAT_MONTHLY_PRODUCT_ID,
   REVENUECAT_YEARLY_PRODUCT_ID,
@@ -79,7 +77,6 @@ const FALLBACK_PREVIEW_PLANS: SubscriptionPlan[] = [
 export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   const queryClient = useQueryClient();
   const { user, isAuthenticated } = useAuth();
-  const { profile } = useUserProfile();
   const isExpoGo = isExpoGoPurchases();
   const [dailyAIUsage, setDailyAIUsage] = useState<number>(0);
   const [dailyRewriteUsage, setDailyRewriteUsage] = useState<number>(0);
@@ -196,16 +193,14 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
 
     const info = customerInfoQuery.data ?? null;
     const isEntitlementActive = hasActiveEntitlement(info);
-    const accountTrialActive = isProfileTrialActive(profile);
-    const profileTrialEndsAt = profile ? new Date(profile.trial_ends_at).getTime() : null;
     if (!isEntitlementActive) {
       return {
         tier: 'free',
         plan: null,
         expiresAt: null,
         startedAt: null,
-        trialEndsAt: profileTrialEndsAt,
-        isTrialActive: accountTrialActive,
+        trialEndsAt: null,
+        isTrialActive: false,
       };
     }
     const expiresAt = getActiveExpiration(info);
@@ -228,12 +223,12 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
       trialEndsAt: trial ? expiresAt : null,
       isTrialActive: trial,
     };
-  }, [customerInfoQuery.data, isExpoGo, profile]);
+  }, [customerInfoQuery.data, isExpoGo]);
 
   const tier: SubscriptionTier = state.tier;
   const isEntitlementActive = isExpoGo || hasActiveEntitlement(customerInfoQuery.data ?? null);
   const isPremium = isExpoGo || isEntitlementActive;
-  const hasPremiumAccess = isExpoGo || state.isTrialActive || isEntitlementActive;
+  const hasPremiumAccess = isExpoGo || isEntitlementActive;
 
   const offeringStatus: OfferingStatus = useMemo(() => {
     if (isExpoGo) return 'preview';

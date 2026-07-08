@@ -240,7 +240,7 @@ export default function WeeklyReflectionScreen() {
           <Text style={styles.openingNarrative}>{reflection.openingNarrative}</Text>
           <PremiumInlinePrompt
             feature="weekly_reflection"
-            message="Upgrade for full weekly reflections and personalized growth insights."
+            message="Start membership for full weekly reflections and personalized growth insights."
           />
         </Animated.View>
 

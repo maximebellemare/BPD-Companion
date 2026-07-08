@@ -981,7 +981,7 @@ export default function ChatScreen() {
                 <Crown size={18} color={Colors.primary} />
                 <Text style={styles.aiLimitTitle}>You’ve used today’s 5 free Companion messages.</Text>
               </View>
-              <Text style={styles.aiLimitBody}>Upgrade to Premium for unlimited Companion support.</Text>
+              <Text style={styles.aiLimitBody}>Start membership for unlimited Companion support.</Text>
               <View style={styles.aiLimitActions}>
                 <TouchableOpacity
                   style={styles.aiLimitUpgradeButton}
@@ -989,7 +989,7 @@ export default function ChatScreen() {
                   activeOpacity={0.82}
                   testID="companion-limit-upgrade"
                 >
-                  <Text style={styles.aiLimitUpgradeText}>Upgrade to Premium</Text>
+                  <Text style={styles.aiLimitUpgradeText}>Start membership</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.aiLimitTomorrowButton}

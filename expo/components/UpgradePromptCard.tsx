@@ -49,11 +49,11 @@ export default function UpgradePromptCard() {
             <Crown size={20} color="#67E8F9" />
           </View>
           <View style={styles.textWrap}>
-            <Text style={styles.title}>Unlock deeper support</Text>
+            <Text style={styles.title}>Membership access</Text>
             <Text style={styles.subtitle}>
               {remainingAIMessages !== null && remainingAIMessages <= 3
                 ? `${remainingAIMessages} AI messages left today`
-                : 'Advanced insights, therapy plans & more'}
+                : 'Start your 3-day free trial'}
             </Text>
           </View>
         </View>

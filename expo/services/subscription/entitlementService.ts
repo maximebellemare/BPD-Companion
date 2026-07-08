@@ -214,7 +214,7 @@ export function getEntitlement(feature: PremiumFeature): FeatureEntitlement | un
 
 export function getUpgradeReason(feature: PremiumFeature): string {
   const entitlement = getEntitlement(feature);
-  if (!entitlement) return 'Unlock this feature with Premium.';
+  if (!entitlement) return 'Start membership to unlock this feature.';
 
   const reasons: Record<PremiumFeature, string> = {
     unlimited_ai: 'Continue with unlimited AI conversations.',

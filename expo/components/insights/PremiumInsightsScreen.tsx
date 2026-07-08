@@ -830,10 +830,10 @@ export default function PremiumInsightsScreen() {
   const remainingForFirstInsight = Math.max(0, FIRST_INSIGHT_COUNT - checkInCount);
   const remainingForFullReport = Math.max(0, FULL_INSIGHT_COUNT - checkInCount);
   const accessLabel = isEntitlementActive
-    ? 'Premium active'
+    ? 'Membership active'
     : state.isTrialActive
-      ? 'Free trial active'
-      : 'Premium insights';
+      ? 'Store trial active'
+      : 'Membership required';
   const handleToggleAhaSave = async (moment: AhaMoment | FavoriteAhaMoment) => {
     try {
       const updated = savedAhaIds.has(moment.id)
@@ -854,7 +854,7 @@ export default function PremiumInsightsScreen() {
           </View>
           <Text style={[styles.lockedTitle, { color: colors.text }]}>Keep your emotional patterns</Text>
           <Text style={[styles.lockedBody, { color: colors.textSecondary }]}>
-            Premium keeps your pattern summaries, saved Companion insights, and first-week report available after your trial.
+            Membership keeps your pattern summaries, saved Companion insights, and first-week report available.
           </Text>
           <TouchableOpacity
             style={[styles.primaryButton, { backgroundColor: colors.primary }]}
@@ -862,7 +862,7 @@ export default function PremiumInsightsScreen() {
             activeOpacity={0.86}
             testID="insights-upgrade-btn"
           >
-            <Text style={styles.primaryButtonText}>Unlock Insights</Text>
+            <Text style={styles.primaryButtonText}>Start membership</Text>
             <ChevronRight size={18} color={Colors.white} />
           </TouchableOpacity>
         </ScrollView>

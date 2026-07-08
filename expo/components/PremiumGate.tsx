@@ -108,7 +108,7 @@ function FullUpgradePrompt({ feature }: { feature: PremiumFeature }) {
       <View style={styles.fullIconWrap}>
         <Crown size={28} color="#67E8F9" />
       </View>
-      <Text style={styles.fullTitle}>Premium Feature</Text>
+      <Text style={styles.fullTitle}>Membership required</Text>
       <Text style={styles.fullDescription}>{reason}</Text>
       <TouchableOpacity
         style={styles.fullButton}
@@ -117,9 +117,9 @@ function FullUpgradePrompt({ feature }: { feature: PremiumFeature }) {
         testID={`premium-gate-full-${feature}`}
       >
         <Crown size={16} color={Colors.white} />
-        <Text style={styles.fullButtonText}>Unlock with Premium</Text>
+        <Text style={styles.fullButtonText}>Start membership</Text>
       </TouchableOpacity>
-      <Text style={styles.fullFooter}>7-day free trial available</Text>
+      <Text style={styles.fullFooter}>3-day free trial available</Text>
     </Animated.View>
   );
 }
@@ -160,7 +160,7 @@ export function PremiumBadge() {
   return (
     <View style={styles.badge} testID="premium-badge">
       <Crown size={10} color="#67E8F9" />
-      <Text style={styles.badgeText}>PRO</Text>
+      <Text style={styles.badgeText}>MEMBER</Text>
     </View>
   );
 }
@@ -191,7 +191,7 @@ export function PremiumLockOverlay({ feature, children }: { feature: PremiumFeat
       <View style={styles.lockOverlay}>
         <View style={styles.lockOverlayBadge}>
           <Lock size={12} color={Colors.white} />
-          <Text style={styles.lockOverlayText}>Premium</Text>
+          <Text style={styles.lockOverlayText}>Membership</Text>
         </View>
       </View>
     </TouchableOpacity>

@@ -469,7 +469,7 @@ export default function EmotionalTimelineReplayScreen() {
               </Text>
               <PremiumInlinePrompt
                 feature="emotional_timeline"
-                message="Upgrade for full emotional timeline replay and AI reflections."
+                message="Start membership for full emotional timeline replay and AI reflections."
               />
             </View>
 

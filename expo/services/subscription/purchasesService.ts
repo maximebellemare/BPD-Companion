@@ -68,7 +68,7 @@ let configureExceptionMessage: string | null = null;
 let expoGoDisabledLogged = false;
 
 export const PURCHASES_UNAVAILABLE_MESSAGE =
-  'Purchases are only available in the installed iOS/Android app.';
+  'Membership options are loading. Please try again in a moment.';
 
 export function isNativePurchasesPlatform(): boolean {
   return !isExpoGoPurchases() && (Platform.OS === 'ios' || Platform.OS === 'android');

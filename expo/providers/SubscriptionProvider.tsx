@@ -226,7 +226,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   }, [customerInfoQuery.data, isExpoGo]);
 
   const tier: SubscriptionTier = state.tier;
-  const isEntitlementActive = isExpoGo || hasActiveEntitlement(customerInfoQuery.data ?? null);
+  const isEntitlementActive = hasActiveEntitlement(customerInfoQuery.data ?? null);
   const isPremium = isExpoGo || isEntitlementActive;
   const hasPremiumAccess = isExpoGo || isEntitlementActive;
 

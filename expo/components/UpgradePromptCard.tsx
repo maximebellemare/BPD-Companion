@@ -8,7 +8,7 @@ import { useSubscription } from '@/providers/SubscriptionProvider';
 
 export default function UpgradePromptCard() {
   const router = useRouter();
-  const { isPremium, remainingAIMessages } = useSubscription();
+  const { isPremium } = useSubscription();
   const glowAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -50,11 +50,7 @@ export default function UpgradePromptCard() {
           </View>
           <View style={styles.textWrap}>
             <Text style={styles.title}>Membership access</Text>
-            <Text style={styles.subtitle}>
-              {remainingAIMessages !== null && remainingAIMessages <= 3
-                ? `${remainingAIMessages} AI messages left today`
-                : 'Start your 3-day free trial'}
-            </Text>
+            <Text style={styles.subtitle}>Start your 3-day free trial</Text>
           </View>
         </View>
         <View style={styles.arrowWrap}>

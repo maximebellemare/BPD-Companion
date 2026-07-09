@@ -140,7 +140,7 @@ class BehaviorNotificationEngine {
 
     if (dailyCount >= effectiveMax) {
       for (const signal of signals) {
-        suppressed.push(this.buildDecision(signal, false, `Daily limit reached (${dailyCount}/${effectiveMax})`));
+        suppressed.push(this.buildDecision(signal, false, `Daily notification cap reached (${dailyCount}/${effectiveMax})`));
       }
       return { fired, suppressed };
     }

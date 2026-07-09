@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import createContextHook from '@nkzw/create-context-hook';
 import { JournalEntry, MessageDraft, DistressLevel } from '@/types';
 import { journalRepository, messageRepository } from '@/services/repositories';
+import { storageService } from '@/services/storage/storageService';
 
 export const [AppProvider, useApp] = createContextHook(() => {
   const queryClient = useQueryClient();
@@ -10,15 +11,29 @@ export const [AppProvider, useApp] = createContextHook(() => {
   const [safetyModeActive, setSafetyModeActive] = useState<boolean>(false);
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
   const [messageDrafts, setMessageDrafts] = useState<MessageDraft[]>([]);
+  const [storageUserId, setStorageUserId] = useState<string | null>(() => storageService.getUserId());
   const journalEntriesRef = useRef<JournalEntry[]>([]);
 
+  useEffect(() => {
+    return storageService.onUserChange((nextUserId) => {
+      journalEntriesRef.current = [];
+      setJournalEntries([]);
+      setMessageDrafts([]);
+      setDistressLevel('low');
+      setSafetyModeActive(false);
+      setStorageUserId(nextUserId);
+      void queryClient.removeQueries({ queryKey: ['journal'] });
+      void queryClient.removeQueries({ queryKey: ['messages'] });
+    });
+  }, [queryClient]);
+
   const journalQuery = useQuery({
-    queryKey: ['journal'],
+    queryKey: ['journal', storageUserId ?? 'guest'],
     queryFn: () => journalRepository.getAll(),
   });
 
   const messagesQuery = useQuery({
-    queryKey: ['messages'],
+    queryKey: ['messages', storageUserId ?? 'guest'],
     queryFn: () => messageRepository.getAll(),
   });
 
@@ -47,14 +62,14 @@ export const [AppProvider, useApp] = createContextHook(() => {
   const saveJournalMutation = useMutation({
     mutationFn: (entries: JournalEntry[]) => journalRepository.save(entries),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['journal'] });
+      void queryClient.invalidateQueries({ queryKey: ['journal', storageUserId ?? 'guest'] });
     },
   });
 
   const saveMessagesMutation = useMutation({
     mutationFn: (drafts: MessageDraft[]) => messageRepository.save(drafts),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['messages'] });
+      void queryClient.invalidateQueries({ queryKey: ['messages', storageUserId ?? 'guest'] });
     },
   });
 

@@ -208,7 +208,7 @@ export function buildFirstWeekJourneySummary(params: {
       : 'Your emotional pattern map is starting to form',
     paywallLossBullets: [
       'Your trigger and relationship patterns stop updating after the trial.',
-      'Your Day 7 emotional report stays locked without Premium.',
+      'Your Day 7 emotional report stays available with membership.',
       'AI observations lose the context that makes support feel personal.',
     ],
   };

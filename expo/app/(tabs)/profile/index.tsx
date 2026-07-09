@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
+import Constants from 'expo-constants';
 import {
   AlertTriangle,
   Bell,
@@ -42,7 +43,6 @@ import { useAppTheme } from '@/providers/ThemeProvider';
 import { useReviewPrompt } from '@/providers/ReviewPromptProvider';
 import { updateProfile as updateAccountProfile } from '@/lib/supabase/profiles';
 import { storageService } from '@/services/storage/storageService';
-import { PURCHASES_UNAVAILABLE_MESSAGE } from '@/services/subscription/purchasesService';
 import { resetTodayTutorial } from '@/services/habits/tutorialAndRewardsService';
 import {
   CommunityProfile,
@@ -96,6 +96,7 @@ export default function ProfileScreen() {
   const [communityAvatarColor, setCommunityAvatarColor] = useState(AVATAR_COLORS[0]);
   const [communityProfileError, setCommunityProfileError] = useState<string | null>(null);
   const [isSavingCommunityProfile, setIsSavingCommunityProfile] = useState(false);
+  const [communityProfileSaved, setCommunityProfileSaved] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(18)).current;
 
@@ -122,6 +123,7 @@ export default function ProfileScreen() {
 
   const profileEmail = user?.email || 'Not signed in';
   const isOwnerQa = __DEV__ && user?.email?.toLowerCase() === OWNER_QA_EMAIL;
+  const isExpoGo = Constants.appOwnership === 'expo';
 
   useEffect(() => {
     let mounted = true;
@@ -182,33 +184,39 @@ export default function ProfileScreen() {
             throw profileError;
           }
         }
-        await refreshAccountProfile();
       }
-      setNotice('Community profile saved.');
+      setCommunityProfileSaved(true);
+      setNotice('Saved');
     } catch (error) {
       setCommunityProfileError(error instanceof Error ? error.message : 'Could not save community profile.');
     } finally {
       setIsSavingCommunityProfile(false);
     }
-  }, [communityAvatarColor, communityDisplayName, communityUsername, refreshAccountProfile, user]);
+  }, [communityAvatarColor, communityDisplayName, communityUsername, user]);
   const trialDaysRemaining = getDaysUntil(subscriptionState.trialEndsAt);
   const statusLabel = useMemo(() => {
-    if (isEntitlementActive) return 'Membership active';
     if (subscriptionState.isTrialActive) {
-      return trialDaysRemaining === 1 ? 'Store trial ends in 1 day' : `Store trial ends in ${trialDaysRemaining} days`;
+      return 'Membership active';
     }
+    if (isEntitlementActive) return 'Membership active';
+    if (isExpoGo) return 'Membership';
     return 'Subscription required';
-  }, [isEntitlementActive, subscriptionState.isTrialActive, trialDaysRemaining]);
+  }, [isEntitlementActive, isExpoGo, subscriptionState.isTrialActive]);
 
   const statusDescription = useMemo(() => {
+    if (subscriptionState.isTrialActive) {
+      return trialDaysRemaining === 1
+        ? 'Your 3-day trial is active and ends in 1 day.'
+        : `Your 3-day trial is active and ends in ${trialDaysRemaining} days.`;
+    }
     if (isEntitlementActive) {
       return 'Your membership is active. Companion, Insights, and regulation tools are unlocked.';
     }
-    if (subscriptionState.isTrialActive) {
-      return 'Your App Store or Google Play trial includes full access during the trial period.';
+    if (isExpoGo) {
+      return 'View membership plans, restore purchases, or manage access.';
     }
-    return 'Start membership to use BPD Companion after onboarding.';
-  }, [isEntitlementActive, subscriptionState.isTrialActive]);
+    return 'Start your membership to use BPD Companion after onboarding.';
+  }, [isEntitlementActive, isExpoGo, subscriptionState.isTrialActive, trialDaysRemaining]);
 
   const handleResetPassword = useCallback(() => {
     if (!user?.email) {
@@ -244,7 +252,7 @@ export default function ProfileScreen() {
         setNotice(active ? 'Subscription restored. Membership is active.' : 'No active membership was found.');
       })
       .catch(() => {
-        Alert.alert('Purchases unavailable', PURCHASES_UNAVAILABLE_MESSAGE);
+        Alert.alert('Restore purchase', 'Membership options are loading. Please try again in a moment.');
       });
   }, [restore]);
 
@@ -252,7 +260,7 @@ export default function ProfileScreen() {
     setNotice(null);
     router.push('/upgrade' as never);
     if (__DEV__) {
-      setNotice(PURCHASES_UNAVAILABLE_MESSAGE);
+      setNotice('Opening membership options.');
     }
   }, [router]);
 
@@ -296,10 +304,13 @@ export default function ProfileScreen() {
   const handleReplayTutorial = useCallback(() => {
     resetTodayTutorial()
       .then(() => {
-        setNotice('QA: Today tutorial reset. Open Today to replay it.');
-        router.push('/(tabs)/(home)' as never);
+        setNotice('App tutorial ready to replay.');
+        router.push({
+          pathname: '/(tabs)/(home)',
+          params: { tutorial: '1' },
+        } as never);
       })
-      .catch((error) => Alert.alert('QA action failed', error instanceof Error ? error.message : 'Please try again.'));
+      .catch((error) => Alert.alert('Could not replay tutorial', error instanceof Error ? error.message : 'Please try again.'));
   }, [router]);
 
   const handleSignOut = useCallback(() => {
@@ -408,11 +419,17 @@ export default function ProfileScreen() {
           <View style={[styles.card, { backgroundColor: palette.card, borderColor: palette.borderLight }]}>
             {renderSettingsRow({
               icon: <Crown size={17} color={Colors.primary} />,
-              title: isEntitlementActive ? 'Manage subscription' : 'Start membership',
-              description: isEntitlementActive
+              title: subscriptionState.isTrialActive || isEntitlementActive
+                ? 'Manage subscription'
+                : isExpoGo
+                  ? 'Membership options'
+                  : 'Start your membership',
+              description: subscriptionState.isTrialActive
+                ? 'Your 3-day trial is active. Manage your membership anytime.'
+                : isEntitlementActive
                 ? 'View plans, renewal details, and membership access.'
-                : subscriptionState.isTrialActive
-                  ? 'Store trial active. Manage your membership anytime.'
+                : isExpoGo
+                  ? 'View monthly and yearly membership plans.'
                   : 'View monthly and yearly membership plans.',
               onPress: handleManageSubscription,
               testID: 'manage-subscription-btn',
@@ -473,6 +490,7 @@ export default function ProfileScreen() {
               onChangeText={(value) => {
                 setCommunityUsername(normalizeUsername(value));
                 setCommunityProfileError(null);
+                setCommunityProfileSaved(false);
               }}
               placeholder="username"
               placeholderTextColor={palette.textMuted}
@@ -487,7 +505,10 @@ export default function ProfileScreen() {
             <TextInput
               style={[styles.profileInput, { color: palette.text, backgroundColor: palette.surface, borderColor: palette.borderLight }]}
               value={communityDisplayName}
-              onChangeText={setCommunityDisplayName}
+              onChangeText={(value) => {
+                setCommunityDisplayName(value);
+                setCommunityProfileSaved(false);
+              }}
               placeholder="What people can call you"
               placeholderTextColor={palette.textMuted}
               maxLength={40}
@@ -503,7 +524,10 @@ export default function ProfileScreen() {
                     styles.avatarColorSwatch,
                     { backgroundColor: color, borderColor: communityAvatarColor === color ? palette.text : 'transparent' },
                   ]}
-                  onPress={() => setCommunityAvatarColor(color)}
+                  onPress={() => {
+                    setCommunityAvatarColor(color);
+                    setCommunityProfileSaved(false);
+                  }}
                   activeOpacity={0.78}
                   testID={`avatar-color-${color}`}
                 />
@@ -520,7 +544,7 @@ export default function ProfileScreen() {
               testID="save-community-profile-btn"
             >
               <Text style={styles.saveCommunityButtonText}>
-                {isSavingCommunityProfile ? 'Saving...' : communityProfile ? 'Save community profile' : 'Create community profile'}
+                {isSavingCommunityProfile ? 'Saving...' : communityProfileSaved ? 'Saved' : communityProfile ? 'Save community profile' : 'Create community profile'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -595,8 +619,8 @@ export default function ProfileScreen() {
             {renderSettingsRow({
               icon: <Sparkles size={17} color={Colors.brandTeal} />,
               title: 'Replay app tutorial',
-              description: 'Review Daily Check-Ins, Companion, Insights, Calm Me Down, Community, DBT Academy, and Don’t Send It.',
-              onPress: () => router.push('/onboarding' as never),
+              description: 'Review Today, Companion, Tools, Insights, Community, and Profile settings.',
+              onPress: handleReplayTutorial,
               testID: 'replay-onboarding-tutorial-btn',
             })}
           </View>

@@ -361,6 +361,56 @@ function baseRewriteOptions(
   return defaults[desiredOutcome];
 }
 
+function contentAwareRewriteOptions(
+  message: string,
+  recipient: DontSendItRecipient,
+  desiredOutcome: DontSendItDesiredOutcome,
+  emotionalIntensity: number,
+  riskSignals: string[],
+): DontSendItRewriteOption[] {
+  const lower = message.toLowerCase();
+  const isWork = recipient === 'coworker';
+  const isAngry = riskSignals.includes('hostility') || riskSignals.includes('personal attack') || /\b(fuck|hate|angry|mad|furious|shut up)\b/i.test(message);
+  const isAccusatory = riskSignals.includes('repeated accusations') || /\byou (always|never|don'?t care|ignored|lied|made me)\b/i.test(message);
+  const isAnxious = /\b(reply|text back|answer me|ignored|no reply|where are you|please respond|need to know)\b/i.test(message);
+  const isNeedyOrReassuranceSeeking = /\b(do you still|are we okay|please don'?t leave|tell me you|need you|if you cared)\b/i.test(message);
+  const isEnding = desiredOutcome === 'end_relationship';
+
+  if (!isAngry && !isAccusatory && !isAnxious && !isNeedyOrReassuranceSeeking && !isEnding) {
+    return baseRewriteOptions(recipient, desiredOutcome, emotionalIntensity);
+  }
+
+  const relationNoun = isWork ? 'this' : 'us';
+  const calmDirect = isAngry
+    ? 'I’m really upset, and I don’t want to turn that into an attack. I need some time before we talk about this clearly.'
+    : isAnxious
+      ? 'I’m feeling unsettled not hearing back. When you can, please let me know where things stand.'
+      : 'I want to talk about this clearly without blaming or escalating.';
+  const warmRepair = isAngry
+    ? `I care about how this affects ${relationNoun}, so I’m going to pause instead of sending this while I’m angry. I’d like to talk when I can be more steady.`
+    : isNeedyOrReassuranceSeeking
+      ? 'I’m feeling insecure and I’m trying not to put pressure on you. When you have space, I’d appreciate a little reassurance.'
+      : 'I care about handling this well. Can we talk about what happened when we both have space?';
+  const boundary = isEnding
+    ? 'I don’t want to make a final decision while I’m this activated. I’m taking space and will come back to this when I’m clear.'
+    : isAccusatory
+      ? 'I’m not okay with what happened, but I want to discuss it without accusations. I need the conversation to stay respectful.'
+      : 'I need to pause this conversation for now. I’ll come back when I can respond more calmly.';
+  const short = isAnxious
+    ? 'Can you let me know when you have a chance? I’m trying not to assume.'
+    : isAngry
+      ? 'I’m too upset to respond well. I’m going to pause and come back later.'
+      : 'I want to talk about this calmly when there’s space.';
+
+  return [
+    { id: 'calm', label: 'Option A — Calm / Direct', description: 'Names the issue without attacking.', text: calmDirect },
+    { id: 'repair', label: 'Option B — Warm / Relationship-Preserving', description: 'Protects connection while staying honest.', text: warmRepair },
+    { id: 'boundary', label: 'Option C — Boundary-Focused', description: 'Creates space without escalating.', text: boundary },
+    { id: 'short', label: 'Option D — Short Text Version', description: 'Brief enough to send as a text.', text: short },
+    { id: 'direct', label: 'Option E — Clear Ask', description: 'Turns emotion into one clear request.', text: isWork ? 'Can we clarify what happened and what needs to happen next?' : 'Can we talk about what happened without turning it into a fight?' },
+  ];
+}
+
 function applyRewriteInstruction(
   option: DontSendItRewriteOption,
   instruction?: DontSendItRewriteInstruction | null,
@@ -368,7 +418,7 @@ function applyRewriteInstruction(
   if (!instruction) return option;
   const transformations: Record<DontSendItRewriteInstruction, string> = {
     more_direct: 'I want to be direct: ',
-    less_direct: 'I may not be saying this perfectly, but ',
+    less_direct: 'I’m trying to say this carefully: ',
     more_compassionate: 'I care about how this lands, and ',
     more_assertive: 'I need to be clear: ',
     shorter: '',
@@ -464,7 +514,13 @@ export function analyzeDontSendItMessage(
   const desiredOutcome = context?.desiredOutcome;
   const impulsivityRisk = getImpulsivityRisk(emotionalIntensity, reactiveHits, hasUrgency, riskSignals);
   const suggestedWaitingPeriod = chooseWaitingPeriod(emotionalIntensity, impulsivityRisk, desiredOutcome);
-  const rewriteOptions = baseRewriteOptions(recipient, desiredOutcome ?? 'start_conversation', emotionalIntensity)
+  const rewriteOptions = contentAwareRewriteOptions(
+    trimmed,
+    recipient,
+    desiredOutcome ?? 'start_conversation',
+    emotionalIntensity,
+    riskSignals,
+  )
     .map(option => applyRewriteInstruction(option, context?.rewriteInstruction));
 
   const whatImNoticing = [

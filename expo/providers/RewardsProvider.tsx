@@ -24,6 +24,7 @@ import {
 } from '@/services/rewards/rewardService';
 import { communityRepository, conversationRepository } from '@/services/repositories';
 import { trackEvent } from '@/services/analytics/analyticsService';
+import { storageService } from '@/services/storage/storageService';
 
 export const [RewardsProvider, useRewards] = createContextHook(() => {
   const queryClient = useQueryClient();
@@ -35,20 +36,31 @@ export const [RewardsProvider, useRewards] = createContextHook(() => {
   const appointments = appointmentContext?.appointments ?? [];
 
   const [rewardState, setRewardState] = useState<RewardState>(DEFAULT_REWARD_STATE);
+  const [storageUserId, setStorageUserId] = useState<string | null>(() => storageService.getUserId());
+
+  useEffect(() => {
+    return storageService.onUserChange((nextUserId) => {
+      setRewardState(DEFAULT_REWARD_STATE);
+      setStorageUserId(nextUserId);
+      void queryClient.removeQueries({ queryKey: ['rewards'] });
+      void queryClient.removeQueries({ queryKey: ['conversations_for_rewards'] });
+      void queryClient.removeQueries({ queryKey: ['healthy_progress_inputs'] });
+    });
+  }, [queryClient]);
 
   const stateQuery = useQuery({
-    queryKey: ['rewards'],
+    queryKey: ['rewards', storageUserId ?? 'guest'],
     queryFn: () => rewardRepository.getState(),
   });
 
   const conversationsQuery = useQuery({
-    queryKey: ['conversations_for_rewards'],
+    queryKey: ['conversations_for_rewards', storageUserId ?? 'guest'],
     queryFn: () => conversationRepository.getAll(),
     staleTime: 60 * 1000,
   });
 
   const progressInputsQuery = useQuery({
-    queryKey: ['healthy_progress_inputs'],
+    queryKey: ['healthy_progress_inputs', storageUserId ?? 'guest'],
     queryFn: async () => {
       const [calmSessions, savedInsights, communityPosts, dbtProgress] = await Promise.all([
         loadCalmMeDownSessions().catch(() => []),
@@ -70,7 +82,7 @@ export const [RewardsProvider, useRewards] = createContextHook(() => {
   const saveMutation = useMutation({
     mutationFn: (state: RewardState) => rewardRepository.saveState(state),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['rewards'] });
+      void queryClient.invalidateQueries({ queryKey: ['rewards', storageUserId ?? 'guest'] });
     },
   });
 

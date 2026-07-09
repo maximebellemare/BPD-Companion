@@ -63,7 +63,7 @@ export const NOTIFICATION_CATEGORIES: NotificationCategoryConfig[] = [
   },
   {
     id: 'premium_reflection',
-    label: 'Premium Insights',
+    label: 'Membership Insights',
     description: 'Deeper emotional pattern insights',
     defaultEnabled: true,
     defaultTimeWindow: { hour: 18, minute: 0 },
@@ -113,7 +113,7 @@ export const NOTIFICATION_CATEGORIES: NotificationCategoryConfig[] = [
   },
   {
     id: 'premium_upgrade',
-    label: 'Premium Insights Reminders',
+    label: 'Membership Insights Reminders',
     description: 'Occasional reminders about advanced features you\'ve shown interest in',
     defaultEnabled: true,
     defaultTimeWindow: { hour: 12, minute: 0 },

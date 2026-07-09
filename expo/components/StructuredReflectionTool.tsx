@@ -209,7 +209,7 @@ export default function StructuredReflectionTool({
               activeOpacity={0.82}
             >
               <RotateCcw size={17} color={colors.primary} />
-              <Text style={[styles.completionButtonText, { color: colors.primary }]}>Start another Thought Record</Text>
+              <Text style={[styles.completionButtonText, { color: colors.primary }]}>Reflect on something else</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

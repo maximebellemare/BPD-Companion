@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowRight,
@@ -213,6 +213,7 @@ function getDistressLevel(intensity: number) {
 
 export default function HomeScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ tutorial?: string }>();
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
   const { journalEntries, messageDrafts, addJournalEntry, updateJournalEntry, setDistressLevel } = useApp();
@@ -259,9 +260,15 @@ export default function HomeScreen() {
 
   useEffect(() => {
     hasSeenTodayTutorial()
-      .then((seen) => setShowTutorial(!seen && journalEntries.length === 0))
+      .then((seen) => setShowTutorial(!seen))
       .catch(() => setShowTutorial(false));
-  }, [journalEntries.length]);
+  }, []);
+
+  useEffect(() => {
+    if (params.tutorial === '1') {
+      setShowTutorial(true);
+    }
+  }, [params.tutorial]);
 
   useEffect(() => {
     let mounted = true;
@@ -848,10 +855,10 @@ export default function HomeScreen() {
               <Text style={[styles.intensityValue, { color: colors.primary }]}>{intensity}</Text>
               <View style={styles.intensityCopy}>
                 <Text style={[styles.intensityLabel, { color: colors.text }]}>
-                  {emotionTone === 'positive' ? `Strength · ${getIntensityLabel(intensity, emotionTone)}` : `Intensity · ${getIntensityLabel(intensity, emotionTone)}`}
+                  How intense does this feel right now?
                 </Text>
                 <Text style={[styles.intensityHint, { color: colors.textSecondary }]}>
-                  {emotionTone === 'positive' ? '1 = barely there · 10 = very strong' : '1 = mild · 10 = overwhelming'}
+                  1 = very manageable · 10 = overwhelming
                 </Text>
               </View>
             </View>
@@ -1104,10 +1111,12 @@ export default function HomeScreen() {
           <View style={[styles.tutorialCard, { backgroundColor: colors.card }]}>
             <Text style={[styles.tutorialTitle, { color: colors.text }]}>How BPD Companion helps</Text>
             {[
-              'Check in daily',
-              'Talk to Companion when something happens',
-              'Use Tools before reacting',
-              'Watch Insights reveal patterns',
+              'Today: save one quick emotional check-in',
+              'Companion: talk through what happened',
+              'Tools: calm down, pause, or reflect before reacting',
+              'Insights: watch patterns become clearer',
+              'Community: connect with peer support',
+              'Profile: manage membership and settings',
             ].map((item, index) => (
               <View key={item} style={styles.tutorialStep}>
                 <View style={[styles.tutorialStepNumber, { backgroundColor: colors.primaryLight }]}>

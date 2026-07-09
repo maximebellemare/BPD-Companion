@@ -111,7 +111,7 @@ class PremiumReminderEngine {
 
     const totalMaxPerWeek = 2;
     if (this.state.firedCountThisWeek >= totalMaxPerWeek) {
-      return { allowed: false, reason: `Weekly total limit reached (${totalMaxPerWeek})` };
+      return { allowed: false, reason: `Weekly notification cap reached (${totalMaxPerWeek})` };
     }
 
     if (this.state.lastFiredTime) {
@@ -329,7 +329,7 @@ class PremiumReminderEngine {
   private getCopy(reminderType: PremiumReminderType): { title: string; body: string } {
     const variants = PREMIUM_REMINDER_COPY[reminderType];
     if (!variants || variants.length === 0) {
-      return { title: 'Premium insight', body: 'Deeper support is available when you\'re ready.' };
+      return { title: 'Membership insight', body: 'Deeper support is available when you\'re ready.' };
     }
     return variants[Math.floor(Math.random() * variants.length)];
   }

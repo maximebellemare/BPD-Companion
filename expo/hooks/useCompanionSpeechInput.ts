@@ -19,7 +19,7 @@ type SpeechModule = {
   };
 };
 
-const ENABLE_COMPANION_SPEECH_INPUT = __DEV__;
+const ENABLE_COMPANION_SPEECH_INPUT = true;
 
 function isExpoGo(): boolean {
   return Constants.appOwnership === 'expo';

@@ -123,7 +123,7 @@ export default function TermsOfServiceScreen() {
             <Text style={styles.iconRowText}>In-App Purchases</Text>
           </View>
           <Text style={styles.bodyText}>
-            Some features require a premium subscription. Subscriptions are billed through your App Store or Google Play account.
+            BPD Companion requires an active membership. Subscriptions are billed through your App Store or Google Play account.
           </Text>
           <View style={styles.bulletList}>
             <Text style={styles.bulletItem}>Subscriptions auto-renew unless cancelled at least 24 hours before the end of the current period</Text>

@@ -77,7 +77,7 @@ export class ReminderDecisionEngine {
       }
 
       if (currentState.todayFiredCount >= maxDaily) {
-        suppressed.push({ ...decision, shouldFire: false, reason: `Daily limit reached (${maxDaily})` });
+        suppressed.push({ ...decision, shouldFire: false, reason: `Daily notification cap reached (${maxDaily})` });
         continue;
       }
 

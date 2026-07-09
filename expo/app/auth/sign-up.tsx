@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -36,6 +36,14 @@ function getFriendlySignUpError(error: unknown): string {
   }
 
   if (
+    message.includes('rate limit') ||
+    message.includes('too many requests') ||
+    message.includes('over_email_send_rate_limit')
+  ) {
+    return 'Too many signup attempts. Please wait a moment and try again.';
+  }
+
+  if (
     message.includes('invalid email') ||
     message.includes('email address is invalid') ||
     message.includes('invalid login credentials')
@@ -60,14 +68,14 @@ function getFriendlySignUpError(error: unknown): string {
     message.includes('timeout') ||
     message.includes('internet connection')
   ) {
-    return 'Network connection failed. Check your internet connection and try again.';
+    return 'Connection issue. Please try again.';
   }
 
   if (message.includes('missing supabase configuration') || message.includes('supabase configuration')) {
     return 'Account creation is temporarily unavailable. Please try again shortly.';
   }
 
-  return 'Could not create your account. Please check your details and try again.';
+  return raw || 'Sign up did not complete. Please try again.';
 }
 
 export default function SignUpScreen() {
@@ -80,8 +88,11 @@ export default function SignUpScreen() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const submitAttemptRef = useRef(0);
 
   const handleSubmit = useCallback(async () => {
+    const attemptId = submitAttemptRef.current + 1;
+    submitAttemptRef.current = attemptId;
     setError(null);
     const name = displayName.trim();
     const trimmed = email.trim().toLowerCase();
@@ -100,12 +111,17 @@ export default function SignUpScreen() {
     setSubmitting(true);
     try {
       await signUp({ email: trimmed, password, displayName: name });
+      if (submitAttemptRef.current !== attemptId) return;
+      setError(null);
       if (Platform.OS !== 'web') void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (e) {
+      if (submitAttemptRef.current !== attemptId) return;
       setError(getFriendlySignUpError(e));
       if (Platform.OS !== 'web') void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
-      setSubmitting(false);
+      if (submitAttemptRef.current === attemptId) {
+        setSubmitting(false);
+      }
     }
   }, [displayName, email, password, signUp]);
 
@@ -126,7 +142,7 @@ export default function SignUpScreen() {
 
           <Text style={styles.title}>Create your account</Text>
           <Text style={styles.subtitle}>
-            Start a private space to understand patterns, pause reactions, and build regulation skills.
+            Start a private space to understand your patterns, regulate emotions, improve relationships, and build skills that help you pause before reacting.
           </Text>
 
           <View style={styles.field}>
@@ -189,7 +205,7 @@ export default function SignUpScreen() {
             </View>
           </View>
 
-          {error ? (
+          {error && !submitting ? (
             <View style={styles.errorBox}>
               <Text style={styles.errorText}>{error}</Text>
             </View>

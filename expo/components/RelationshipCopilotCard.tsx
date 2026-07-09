@@ -88,7 +88,7 @@ export default React.memo(function RelationshipCopilotCard({
               <Text style={styles.title}>Relationship Copilot</Text>
               <View style={styles.premiumBadge}>
                 <Shield size={9} color={Colors.white} />
-                <Text style={styles.premiumText}>PRO</Text>
+                <Text style={styles.premiumText}>MEMBER</Text>
               </View>
             </View>
             <Text style={styles.subtitle} numberOfLines={2}>

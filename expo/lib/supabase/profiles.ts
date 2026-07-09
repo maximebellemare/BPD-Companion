@@ -26,12 +26,15 @@ function buildNewProfile(userId: string, email?: string | null, createdAt?: stri
   };
 }
 
-export function isProfileTrialActive(profile: AccountProfile | null): boolean {
-  if (!profile) return false;
-  return new Date(profile.trial_ends_at).getTime() > Date.now();
+function isDuplicateProfileError(error: unknown): boolean {
+  const maybe = error as { code?: string; message?: string } | null;
+  const message = maybe?.message?.toLowerCase() ?? '';
+  return maybe?.code === '23505' ||
+    message.includes('duplicate key') ||
+    message.includes('profiles_pkey');
 }
 
-export async function getOrCreateProfile(userId: string, email?: string | null, createdAt?: string): Promise<AccountProfile> {
+async function loadProfile(userId: string): Promise<AccountProfile | null> {
   const { data, error } = await supabase
     .from(PROFILES_TABLE)
     .select('*')
@@ -39,7 +42,17 @@ export async function getOrCreateProfile(userId: string, email?: string | null, 
     .maybeSingle<AccountProfile>();
 
   if (error) throw new Error(error.message);
-  if (data) return data;
+  return data ?? null;
+}
+
+export function isProfileTrialActive(profile: AccountProfile | null): boolean {
+  if (!profile) return false;
+  return new Date(profile.trial_ends_at).getTime() > Date.now();
+}
+
+export async function getOrCreateProfile(userId: string, email?: string | null, createdAt?: string): Promise<AccountProfile> {
+  const existing = await loadProfile(userId);
+  if (existing) return existing;
 
   const profile = buildNewProfile(userId, email, createdAt);
   const { data: inserted, error: insertError } = await supabase
@@ -48,7 +61,13 @@ export async function getOrCreateProfile(userId: string, email?: string | null, 
     .select('*')
     .single<AccountProfile>();
 
-  if (insertError) throw new Error(insertError.message);
+  if (insertError) {
+    if (isDuplicateProfileError(insertError)) {
+      const existingAfterDuplicate = await loadProfile(userId);
+      if (existingAfterDuplicate) return existingAfterDuplicate;
+    }
+    throw new Error(insertError.message);
+  }
   return inserted;
 }
 

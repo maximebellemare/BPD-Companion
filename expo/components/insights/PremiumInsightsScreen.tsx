@@ -90,6 +90,14 @@ function normalize(value: string): string {
   return value.trim().toLowerCase();
 }
 
+function isSameLocalDay(a: number, b: number): boolean {
+  const first = new Date(a);
+  const second = new Date(b);
+  return first.getFullYear() === second.getFullYear()
+    && first.getMonth() === second.getMonth()
+    && first.getDate() === second.getDate();
+}
+
 function countLabels(labels: string[]): CountItem[] {
   const counts = new Map<string, number>();
   for (const label of labels) {
@@ -716,6 +724,7 @@ export default function PremiumInsightsScreen() {
 
   const sortedEntries = useMemo(() => [...journalEntries].sort((a, b) => b.timestamp - a.timestamp), [journalEntries]);
   const recentEntries = useMemo(() => sortedEntries.slice(0, 12), [sortedEntries]);
+  const todaysCheckIn = useMemo(() => sortedEntries.find(entry => isSameLocalDay(entry.timestamp, Date.now())) ?? null, [sortedEntries]);
   const checkInCount = sortedEntries.length;
   const stage = getStage(checkInCount);
   const topEmotion = useMemo(() => {
@@ -736,13 +745,15 @@ export default function PremiumInsightsScreen() {
     if (stage === 'forming') {
       return [
         {
-          title: 'Example insight',
-          value: 'Anxiety may show up before urgency',
+          title: todaysCheckIn ? 'Today’s check-in complete' : 'Example insight',
+          value: todaysCheckIn ? 'Your entry is saved for today.' : 'Anxiety may show up before urgency',
           why: 'When enough check-ins are saved, BPD Companion will explain why a repeated emotion may matter and what to watch for.',
           watchFor: ['reassurance seeking', 'repeated texting', 'catastrophizing'],
-          nextStep: 'Complete a few more check-ins to unlock your real pattern.',
-          actionLabel: 'Check in today',
-          route: '/(tabs)/(home)',
+          nextStep: todaysCheckIn
+            ? 'Today’s check-in is complete. You can review what is starting to form.'
+            : 'Complete a few more check-ins to unlock your real pattern.',
+          actionLabel: todaysCheckIn ? 'View today’s insights' : 'Check in today',
+          route: todaysCheckIn ? '/(tabs)/(home)' : '/(tabs)/(home)',
           icon: <Heart size={19} color={colors.brandTeal} />,
         },
       ];
@@ -781,7 +792,7 @@ export default function PremiumInsightsScreen() {
       icon: <Brain size={19} color={colors.primary} />,
     });
     return cards;
-  }, [average, colors.accent, colors.brandTeal, colors.primary, hasPositivePattern, stage, suggestedFocus, topEmotion, topTrigger]);
+  }, [average, colors.accent, colors.brandTeal, colors.primary, hasPositivePattern, stage, suggestedFocus, todaysCheckIn, topEmotion, topTrigger]);
 
   const handleOpenSavedInsight = useCallback((insight: SavedCompanionInsight) => {
     setSelectedSavedInsight(insight);
@@ -886,9 +897,13 @@ export default function PremiumInsightsScreen() {
             <View style={[styles.formingIcon, { backgroundColor: colors.primaryLight }]}>
               <Sparkles size={24} color={colors.primary} />
             </View>
-            <Text style={[styles.formingTitle, { color: colors.text }]}>Your patterns are starting to form.</Text>
+            <Text style={[styles.formingTitle, { color: colors.text }]}>
+              {todaysCheckIn ? 'Today’s check-in complete' : 'Your patterns are starting to form.'}
+            </Text>
             <Text style={[styles.formingText, { color: colors.textSecondary }]}>
-              Complete {remainingForFirstInsight} more check-in{remainingForFirstInsight === 1 ? '' : 's'} to unlock your first insight.
+              {todaysCheckIn
+                ? 'Your entry is saved for today. Keep checking in to unlock your first emotional pattern.'
+                : `Complete ${remainingForFirstInsight} more check-in${remainingForFirstInsight === 1 ? '' : 's'} to unlock your first insight.`}
             </Text>
             <TouchableOpacity
               style={[styles.checkInButton, { backgroundColor: colors.primary }]}
@@ -896,7 +911,9 @@ export default function PremiumInsightsScreen() {
               activeOpacity={0.86}
               testID="insights-check-in-btn"
             >
-              <Text style={styles.checkInButtonText}>Check in today</Text>
+              <Text style={styles.checkInButtonText}>
+                {todaysCheckIn ? 'View today’s insights' : 'Check in today'}
+              </Text>
               <ArrowRight size={17} color={Colors.white} />
             </TouchableOpacity>
           </View>
@@ -1192,7 +1209,9 @@ export default function PremiumInsightsScreen() {
             activeOpacity={0.86}
             testID="insights-bottom-check-in-btn"
           >
-            <Text style={styles.checkInButtonText}>Check in today</Text>
+            <Text style={styles.checkInButtonText}>
+              {todaysCheckIn ? 'View today’s insights' : 'Check in today'}
+            </Text>
             <ArrowRight size={17} color={Colors.white} />
           </TouchableOpacity>
         )}

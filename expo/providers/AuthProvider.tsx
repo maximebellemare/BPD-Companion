@@ -108,15 +108,27 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         const prevUserId = storageService.getUserId();
         const s = await authRepository.signUp(input);
         storageService.setUser(s.user.id);
-        if (migrateGuest) {
-          await storageService.pushLocalToCloud(prevUserId);
-        } else {
-          await storageService.hydrateFromCloud();
-        }
         setSession(s);
         setUser(s.user);
         setIsGuest(false);
-        await queryClient.invalidateQueries();
+        try {
+          if (migrateGuest) {
+            await storageService.pushLocalToCloud(prevUserId);
+          } else {
+            await storageService.hydrateFromCloud();
+          }
+        } catch (error) {
+          if (__DEV__) {
+            console.log('[AuthProvider] post-signup storage sync failed after auth success:', error);
+          }
+        }
+        try {
+          await queryClient.invalidateQueries();
+        } catch (error) {
+          if (__DEV__) {
+            console.log('[AuthProvider] post-signup query invalidation failed after auth success:', error);
+          }
+        }
         return s;
       } finally {
         setIsLoading(false);

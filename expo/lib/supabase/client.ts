@@ -57,7 +57,10 @@ export function formatSupabaseError(error: unknown, fallback: string): string {
   const lower = message.toLowerCase();
 
   if (lower.includes('network request failed') || lower.includes('fetch')) {
-    return 'We could not reach Supabase. Check your connection and confirm the Supabase URL/key are set for this build.';
+    return 'Connection issue. Please try again.';
+  }
+  if (lower.includes('rate limit') || lower.includes('too many requests') || lower.includes('over_email_send_rate_limit')) {
+    return 'Too many signup attempts. Please wait a moment and try again.';
   }
   if (lower.includes('invalid login credentials')) {
     return 'The email or password is incorrect.';
@@ -67,6 +70,9 @@ export function formatSupabaseError(error: unknown, fallback: string): string {
   }
   if (lower.includes('user already registered') || lower.includes('already registered')) {
     return 'An account already exists for this email. Try signing in instead.';
+  }
+  if (lower.includes('invalid email') || lower.includes('email address is invalid')) {
+    return 'Please enter a valid email address.';
   }
   if (lower.includes('password')) {
     return message;

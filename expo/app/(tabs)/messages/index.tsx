@@ -1011,12 +1011,12 @@ export default function MessagesScreen() {
                   testID="rewrite-limit-btn"
                 >
                   <Sparkles size={16} color={Colors.white} />
-                  <Text style={styles.analysisPrimaryBtnText}>Unlock Unlimited Rewrites</Text>
+                  <Text style={styles.analysisPrimaryBtnText}>Start membership</Text>
                 </TouchableOpacity>
               )}
               {!isPremium && remainingRewrites !== null && remainingRewrites > 0 && (
                 <Text style={styles.rewriteLimitText}>
-                  {remainingRewrites} free rewrite{remainingRewrites !== 1 ? 's' : ''} remaining today
+                  Start membership for full message support
                 </Text>
               )}
 

@@ -36,7 +36,6 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useAICompanion } from '@/providers/AICompanionProvider';
 import { useEntitlements } from '@/hooks/useEntitlements';
-import { Crown } from 'lucide-react-native';
 import { AIMessage } from '@/types/ai';
 import { AIMode } from '@/types/aiModes';
 import { getManualModeOptions, getModeConfig } from '@/services/ai/aiModeService';
@@ -584,7 +583,7 @@ export default function ChatScreen() {
     latestSafetyAssessment,
   } = useAICompanion();
 
-  const { aiLimitReached, remainingAIMessages, trackAIUsage, isPremium } = useEntitlements();
+  const { trackAIUsage } = useEntitlements();
   const [inputText, setInputText] = useState<string>('');
   const [menuVisible, setMenuVisible] = useState<boolean>(false);
   const [initialMessageHandled, setInitialMessageHandled] = useState<boolean>(false);
@@ -663,13 +662,6 @@ export default function ChatScreen() {
     const text = inputText.trim();
     if (!text || isGenerating) return;
 
-    if (aiLimitReached) {
-      if (Platform.OS !== 'web') {
-        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-      }
-      return;
-    }
-
     if (Platform.OS !== 'web') {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
@@ -686,7 +678,6 @@ export default function ChatScreen() {
     inputText,
     isGenerating,
     sendMessage,
-    aiLimitReached,
     trackAIUsage,
     router,
     startNewConversation,
@@ -975,40 +966,6 @@ export default function ChatScreen() {
         )}
 
         <View style={styles.inputBar}>
-          {aiLimitReached && (
-            <View style={styles.aiLimitCard} testID="companion-limit-card">
-              <View style={styles.aiLimitHeader}>
-                <Crown size={18} color={Colors.primary} />
-                <Text style={styles.aiLimitTitle}>You’ve used today’s 5 free Companion messages.</Text>
-              </View>
-              <Text style={styles.aiLimitBody}>Start membership for unlimited Companion support.</Text>
-              <View style={styles.aiLimitActions}>
-                <TouchableOpacity
-                  style={styles.aiLimitUpgradeButton}
-                  onPress={() => router.push({ pathname: '/upgrade', params: { anchor: 'unlimited_ai' } } as never)}
-                  activeOpacity={0.82}
-                  testID="companion-limit-upgrade"
-                >
-                  <Text style={styles.aiLimitUpgradeText}>Start membership</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.aiLimitTomorrowButton}
-                  onPress={() => router.back()}
-                  activeOpacity={0.76}
-                  testID="companion-limit-tomorrow"
-                >
-                  <Text style={styles.aiLimitTomorrowText}>Come back tomorrow</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
-          {!isPremium && !aiLimitReached && remainingAIMessages !== null && remainingAIMessages <= 2 && (
-            <View style={styles.aiRemainingBanner}>
-              <Text style={styles.aiRemainingText}>
-                {remainingAIMessages} message{remainingAIMessages !== 1 ? 's' : ''} remaining today
-              </Text>
-            </View>
-          )}
           <View style={styles.inputRow}>
             <TextInput
               ref={inputRef}
@@ -1022,7 +979,7 @@ export default function ChatScreen() {
               testID="chat-input"
               onSubmitEditing={handleSend}
               blurOnSubmit={false}
-              editable={!isGenerating && !aiLimitReached}
+              editable={!isGenerating}
             />
             {speechInput.isAvailable && (
               <TouchableOpacity
@@ -1049,10 +1006,10 @@ export default function ChatScreen() {
             <TouchableOpacity
               style={[
                 styles.sendButton,
-                (!inputText.trim() || isGenerating || aiLimitReached) && styles.sendButtonDisabled,
+                (!inputText.trim() || isGenerating) && styles.sendButtonDisabled,
               ]}
               onPress={handleSend}
-              disabled={!inputText.trim() || isGenerating || aiLimitReached}
+              disabled={!inputText.trim() || isGenerating}
               activeOpacity={0.7}
               testID="send-btn"
             >
@@ -1667,76 +1624,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500' as const,
     color: Colors.primary,
-  },
-  aiLimitCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    marginHorizontal: 14,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-  },
-  aiLimitHeader: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 8,
-  },
-  aiLimitTitle: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '900' as const,
-    color: Colors.text,
-    lineHeight: 19,
-  },
-  aiLimitBody: {
-    marginTop: 5,
-    fontSize: 13,
-    fontWeight: '700' as const,
-    color: Colors.textSecondary,
-    lineHeight: 18,
-  },
-  aiLimitActions: {
-    flexDirection: 'row' as const,
-    gap: 8,
-    marginTop: 10,
-  },
-  aiLimitUpgradeButton: {
-    flex: 1,
-    minHeight: 42,
-    borderRadius: 13,
-    backgroundColor: Colors.primary,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    paddingHorizontal: 10,
-  },
-  aiLimitUpgradeText: {
-    color: Colors.white,
-    fontSize: 13,
-    fontWeight: '900' as const,
-  },
-  aiLimitTomorrowButton: {
-    minHeight: 42,
-    borderRadius: 13,
-    backgroundColor: Colors.surface,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    paddingHorizontal: 12,
-  },
-  aiLimitTomorrowText: {
-    color: Colors.textSecondary,
-    fontSize: 13,
-    fontWeight: '800' as const,
-  },
-  aiRemainingBanner: {
-    alignItems: 'center' as const,
-    paddingVertical: 6,
-    marginBottom: 4,
-  },
-  aiRemainingText: {
-    fontSize: 11,
-    color: Colors.textMuted,
-    fontWeight: '500' as const,
   },
 });

@@ -16,50 +16,24 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   X,
   Sparkles,
-  Eye,
-  Calendar,
   Heart,
-  FileText,
-  TrendingUp,
-  GitBranch,
+  HeartHandshake,
   Check,
   Crown,
   Shield,
-  Zap,
   Brain,
   Clipboard,
-  Compass,
-  BarChart3,
-  Lightbulb,
   Activity,
+  Users,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useSubscription } from '@/providers/SubscriptionProvider';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
-import { PREMIUM_FEATURES } from '@/types/subscription';
 import { usePersonalization } from '@/hooks/usePersonalization';
 import BrandLogo from '@/components/branding/BrandLogo';
-import { isNativePurchasesPlatform, PURCHASES_UNAVAILABLE_MESSAGE } from '@/services/subscription/purchasesService';
+import { isNativePurchasesPlatform } from '@/services/subscription/purchasesService';
 import { useAppTheme } from '@/providers/ThemeProvider';
-
-const ICON_MAP: Record<string, React.ComponentType<{ size: number; color: string }>> = {
-  sparkles: Sparkles,
-  eye: Eye,
-  calendar: Calendar,
-  heart: Heart,
-  'file-text': FileText,
-  'trending-up': TrendingUp,
-  'git-branch': GitBranch,
-  brain: Brain,
-  clipboard: Clipboard,
-  shield: Shield,
-  compass: Compass,
-  'bar-chart-3': BarChart3,
-  lightbulb: Lightbulb,
-  activity: Activity,
-  zap: Zap,
-};
 
 const TESTIMONIALS = [
   {
@@ -101,6 +75,57 @@ const PAYWALL_VALUE_ITEMS = [
   },
 ];
 
+const MEMBERSHIP_FEATURES = [
+  {
+    id: 'companion',
+    title: 'Unlimited AI Companion',
+    description: 'Talk through hard moments with personalized context and memory.',
+    icon: Sparkles,
+  },
+  {
+    id: 'checkins',
+    title: 'Daily check-ins and emotional tracking',
+    description: 'Track intensity, emotions, triggers, urges, relationships, and notes.',
+    icon: Heart,
+  },
+  {
+    id: 'insights',
+    title: 'Personalized insights and emotional map',
+    description: 'See saved insights, recurring patterns, triggers, and progress over time.',
+    icon: Brain,
+  },
+  {
+    id: 'cbt-dbt',
+    title: 'CBT Thought Record and DBT tools',
+    description: 'Practice thought reframing, distress tolerance, STOP, and coping skills.',
+    icon: Clipboard,
+  },
+  {
+    id: 'calm',
+    title: 'Calm Me Down',
+    description: 'Use guided regulation tools when emotions feel intense.',
+    icon: Activity,
+  },
+  {
+    id: 'pause',
+    title: 'Pause Before You Send',
+    description: 'Review reactive messages before texting, emailing, or replying.',
+    icon: Shield,
+  },
+  {
+    id: 'relationships',
+    title: 'Relationship support and trigger understanding',
+    description: 'Understand conflict, abandonment fear, rejection, shame, and repair.',
+    icon: HeartHandshake,
+  },
+  {
+    id: 'community',
+    title: 'Community and reflection tools',
+    description: 'Feel less alone while keeping crisis and medical support boundaries clear.',
+    icon: Users,
+  },
+];
+
 export default function UpgradeScreen() {
   const router = useRouter();
   const isExpoGo = Constants.appOwnership === 'expo';
@@ -109,6 +134,7 @@ export default function UpgradeScreen() {
   const { colors } = useAppTheme();
   const {
     isPremium,
+    isEntitlementActive,
     subscribe,
     restore,
     isLoading,
@@ -117,13 +143,8 @@ export default function UpgradeScreen() {
     state,
     plans,
     offeringStatus,
-    offeringsError,
     purchaseError,
     restoreError,
-    remainingAIMessages,
-    dailyAIUsage,
-    revenueCatDiagnostics,
-    refreshRevenueCatDiagnostics,
   } = useSubscription();
   const personalization = usePersonalization();
   const { trackEvent } = useAnalytics();
@@ -131,6 +152,7 @@ export default function UpgradeScreen() {
   const [restoreNotice, setRestoreNotice] = useState<string | null>(null);
   const isNativePurchases = isNativePurchasesPlatform();
   const shouldCloseAfterAccessRef = useRef<boolean>(false);
+  const hasStoreAccess = isEntitlementActive || state.isTrialActive;
 
   useEffect(() => {
     if (plans.length > 0 && !plans.some(plan => plan.id === selectedPlanId)) {
@@ -147,17 +169,17 @@ export default function UpgradeScreen() {
   }, [trackEvent, anchor]);
 
   useEffect(() => {
-    if (!shouldCloseAfterAccessRef.current || !isPremium) return;
+    if (!shouldCloseAfterAccessRef.current || !hasStoreAccess) return;
     shouldCloseAfterAccessRef.current = false;
     router.replace('/');
-  }, [isPremium, router]);
+  }, [hasStoreAccess, router]);
   const [testimonialIndex, setTestimonialIndex] = useState<number>(0);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
   const shimmerAnim = useRef(new Animated.Value(0)).current;
   const testimonialFade = useRef(new Animated.Value(1)).current;
-  const featureAnims = useRef(PREMIUM_FEATURES.map(() => new Animated.Value(0))).current;
+  const featureAnims = useRef(MEMBERSHIP_FEATURES.map(() => new Animated.Value(0))).current;
 
   useEffect(() => {
     Animated.parallel([
@@ -223,7 +245,11 @@ export default function UpgradeScreen() {
     if (Platform.OS !== 'web') {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-    if (isPremium) {
+    if (isExpoGo) {
+      router.replace('/');
+      return;
+    }
+    if (hasStoreAccess) {
       const url = Platform.OS === 'ios'
         ? 'https://apps.apple.com/account/subscriptions'
         : 'https://play.google.com/store/account/subscriptions';
@@ -235,25 +261,29 @@ export default function UpgradeScreen() {
     const selected = plans.find(p => p.id === selectedPlanId);
     if (!selected) return;
     if (!isNativePurchases) {
-      Alert.alert('Purchases unavailable', PURCHASES_UNAVAILABLE_MESSAGE);
+      Alert.alert('Membership options are loading', 'Please try again in a moment.');
       return;
     }
     if (selected.isFallbackPrice || offeringStatus !== 'ready') {
-      Alert.alert('Membership unavailable', offeringsError ?? 'Membership plans could not be loaded. Please try again shortly.');
+      Alert.alert('Membership options are loading', 'Please try again in a moment.');
       return;
     }
     trackEvent('upgrade_clicked', { plan_id: selectedPlanId });
     shouldCloseAfterAccessRef.current = true;
     subscribe(selected);
-  }, [isPremium, selectedPlanId, subscribe, trackEvent, plans, offeringStatus, offeringsError, isNativePurchases]);
+  }, [hasStoreAccess, isExpoGo, router, selectedPlanId, subscribe, trackEvent, plans, offeringStatus, isNativePurchases]);
 
   const handleClose = useCallback(() => {
     if (isExpoGo) {
       router.replace('/');
       return;
     }
+    if (!hasStoreAccess) {
+      setRestoreNotice('Start your 3-day free trial to enter BPD Companion.');
+      return;
+    }
     router.back();
-  }, [isExpoGo, router]);
+  }, [hasStoreAccess, isExpoGo, router]);
 
   const handleRestore = useCallback(() => {
     handleHaptic();
@@ -278,7 +308,8 @@ export default function UpgradeScreen() {
   }, [handleHaptic, isExpoGo, restore, router]);
 
   const selectedPlan = plans.find(p => p.id === selectedPlanId);
-  const canSubscribe = isNativePurchases && offeringStatus === 'ready' && !!selectedPlan && !selectedPlan.isFallbackPrice;
+  const canSubscribe = !isExpoGo && isNativePurchases && offeringStatus === 'ready' && !!selectedPlan && !selectedPlan.isFallbackPrice;
+  const canUsePrimaryCta = isExpoGo || isPremium || canSubscribe;
   const trialDaysRemaining = state.trialEndsAt
     ? Math.max(0, Math.ceil((state.trialEndsAt - Date.now()) / (24 * 60 * 60 * 1000)))
     : 0;
@@ -286,71 +317,43 @@ export default function UpgradeScreen() {
     ? trialDaysRemaining === 1
       ? 'Store trial active — 1 day left.'
       : `Store trial active — ${trialDaysRemaining} days left.`
-    : isPremium
+    : isEntitlementActive
       ? 'Membership active.'
       : 'Start your 3-day free trial.';
   const accessStatusBody = state.isTrialActive
-    ? 'Your App Store or Google Play trial includes full access during the trial period.'
-    : isPremium
-      ? 'Your membership unlocks Companion, Insights, calming tools, and the emotional map.'
-      : 'After onboarding, membership is required to use BPD Companion. Start your 3-day free trial through the App Store or Google Play.';
+    ? 'Everything is unlocked during your App Store or Google Play trial. No daily limits.'
+    : isEntitlementActive
+      ? 'You have full access to every feature, including Companion, check-ins, tools, insights, and Community.'
+      : 'Start your 3-day free trial for full access from day one. Cancel anytime before the trial ends.';
   const statusMessage = useMemo(() => {
-    if (offeringStatus === 'loading') return 'Loading secure App Store and Google Play membership plans...';
-    if (offeringStatus === 'preview') return isNativePurchases ? null : PURCHASES_UNAVAILABLE_MESSAGE;
-    if (offeringStatus === 'empty') return 'No subscription offering is configured yet. Check the RevenueCat offering and package setup.';
-    if (offeringStatus === 'error') return offeringsError ?? 'Membership plans could not be loaded.';
+    if (offeringStatus === 'loading') return 'Loading membership options...';
+    if (offeringStatus === 'preview') return isNativePurchases ? null : 'Preparing your personalized membership...';
+    if (offeringStatus === 'empty') return 'Preparing your personalized membership...';
+    if (offeringStatus === 'error') return 'Preparing your personalized membership...';
     return null;
-  }, [offeringStatus, offeringsError, isNativePurchases]);
+  }, [offeringStatus, isNativePurchases]);
 
   const anchorMessage = useMemo(() => {
     const map: Record<string, string> = {
-      weekly_reflection: 'Unlock deeper weekly reflection insights',
+      weekly_reflection: 'Continue with deeper weekly reflection insights',
       therapist_report: 'Keep a complete history of your therapy reports',
       unlimited_ai: 'Continue with unlimited AI companion support',
-      relationship_analysis: 'Unlock advanced relationship pattern analysis',
+      relationship_analysis: 'Continue with relationship pattern support',
       emotional_profile: 'Discover deeper emotional pattern intelligence',
-      secure_rewrite: 'Unlock calm, self-respecting secure rewrites',
+      secure_rewrite: 'Continue with calm, self-respecting rewrites',
       message_simulation: 'See likely outcomes before you send',
       message_health_scoring: 'Get detailed message health analysis',
       communication_insights: 'Discover your communication patterns',
       unlimited_rewrites: 'Continue with unlimited message rewrites',
     };
     if (!anchor) return '';
-    return map[anchor] ?? 'Unlock deeper support tools';
+    return map[anchor] ?? 'Continue with deeper support tools';
   }, [anchor]);
 
   const shimmerOpacity = shimmerAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [0.7, 1],
   });
-  const diagnosticRows = __DEV__ && revenueCatDiagnostics
-    ? [
-        ['RevenueCat configured?', revenueCatDiagnostics.configured ? 'true' : 'false'],
-        ['API key detected?', revenueCatDiagnostics.apiKeyDetected ? 'true' : 'false'],
-        ['API key prefix', revenueCatDiagnostics.apiKeyPrefix ?? '(none)'],
-        ['configure() success?', revenueCatDiagnostics.configureSucceeded ? 'true' : 'false'],
-        ['configure() exception', revenueCatDiagnostics.configureExceptionMessage ?? '(none)'],
-        ['initialization completed?', revenueCatDiagnostics.initializationCompleted ? 'true' : 'false'],
-        ['Current appUserID', revenueCatDiagnostics.currentAppUserId ?? '(none)'],
-        ['Customer original appUserID', revenueCatDiagnostics.customerInfoOriginalAppUserId ?? '(none)'],
-        ['Offerings fetched?', revenueCatDiagnostics.offeringsFetched ? 'true' : 'false'],
-        ['offerings.current exists?', revenueCatDiagnostics.offeringsCurrentExists ? 'true' : 'false'],
-        ['offerings.all keys', revenueCatDiagnostics.offeringsAllKeys.length > 0 ? revenueCatDiagnostics.offeringsAllKeys.join(', ') : '(none)'],
-        ['Package count', String(revenueCatDiagnostics.packageCount)],
-        ['Current offering identifier', revenueCatDiagnostics.currentOfferingIdentifier ?? '(none)'],
-        ['Monthly package found?', revenueCatDiagnostics.monthlyPackageFound ? 'true' : 'false'],
-        ['Annual package found?', revenueCatDiagnostics.annualPackageFound ? 'true' : 'false'],
-        ['Monthly product ID', revenueCatDiagnostics.monthlyProductIdentifier ?? '(none)'],
-        ['Annual product ID', revenueCatDiagnostics.annualProductIdentifier ?? '(none)'],
-        ['Expected offering ID', revenueCatDiagnostics.expectedOfferingId],
-        ['Expected entitlement ID', revenueCatDiagnostics.expectedEntitlementId],
-        ['Expected monthly product ID', revenueCatDiagnostics.expectedMonthlyProductId],
-        ['Expected yearly product ID', revenueCatDiagnostics.expectedYearlyProductId],
-        ['Platform', revenueCatDiagnostics.platform],
-        ['Error', revenueCatDiagnostics.error ?? '(none)'],
-      ]
-    : [];
-
   return (
     <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -369,29 +372,21 @@ export default function UpgradeScreen() {
           <Animated.View style={[styles.heroIconWrap, { opacity: shimmerOpacity }]}>
             <BrandLogo size={56} />
           </Animated.View>
-          <Text style={[styles.heroTitle, { color: colors.text }]}>Understand patterns. Pause reactions. Build skills.</Text>
+          <Text style={[styles.heroTitle, { color: colors.text }]}>Start your 3-day free trial.</Text>
           <Text style={[styles.heroSubtitle, { color: colors.textSecondary }]}>
-            Start your 3-day free trial to unlock Companion, calming tools, Don't Send It, and your emotional map.
+            Everything is unlocked from day one: Companion, check-ins, tools, Community, insights, and progress tracking.
           </Text>
         </Animated.View>
 
         <Animated.View style={[styles.accessStatusCard, { opacity: fadeAnim }]}>
           <View style={styles.accessStatusTopRow}>
             <View style={styles.accessStatusIcon}>
-              <Crown size={18} color={isPremium ? Colors.brandTeal : Colors.primary} />
+              <Crown size={18} color={isEntitlementActive ? Colors.brandTeal : Colors.primary} />
             </View>
             <View style={styles.accessStatusTextWrap}>
               <Text style={styles.accessStatusTitle}>{accessStatusTitle}</Text>
               <Text style={styles.accessStatusBody}>{accessStatusBody}</Text>
             </View>
-          </View>
-          <View style={styles.accessStatusMetaRow}>
-            <Text style={styles.accessStatusMetaLabel}>Companion today</Text>
-            <Text style={styles.accessStatusMetaValue}>
-              {isPremium
-                ? 'Unlimited'
-                : `${dailyAIUsage}/5 used${remainingAIMessages !== null ? ` · ${remainingAIMessages} left` : ''}`}
-            </Text>
           </View>
         </Animated.View>
 
@@ -453,16 +448,15 @@ export default function UpgradeScreen() {
         </Animated.View>
 
         <Animated.View style={[styles.freeVsPremiumSection, { opacity: fadeAnim }]}>
-          <Text style={[styles.comparisonTitle, { color: colors.text }]}>Membership includes</Text>
+          <Text style={[styles.comparisonTitle, { color: colors.text }]}>Full access includes</Text>
           <View style={styles.freeList}>
             {[
-              'Daily check-ins and emotional tracking',
-              'Companion conversations and memory',
-              "Don't Send It message support",
-              'Insights and emotional pattern tracking',
-              'Safety mode & crisis support',
-              'Calm Me Down and regulation tools',
-              'Community, medications, and appointments',
+              'No daily limits',
+              'Unlimited AI Companion',
+              'Unlimited check-ins and emotional tracking',
+              'Unlimited tools for reflection, CBT, DBT, calming, and communication',
+              'Personalized insights, saved patterns, and emotional map',
+              'Community and crisis-safe support language',
             ].map((item, i) => (
               <View key={i} style={styles.freeRow}>
                 <Check size={13} color={Colors.success} />
@@ -471,7 +465,7 @@ export default function UpgradeScreen() {
             ))}
           </View>
           <Text style={styles.trialClarifier}>
-            Start your 3-day App Store or Google Play trial to use BPD Companion. Cancel anytime through your store account.
+            Cancel anytime before your 3-day trial ends. You won’t be charged until your trial is over.
           </Text>
         </Animated.View>
 
@@ -485,8 +479,8 @@ export default function UpgradeScreen() {
             </View>
           ) : null}
           <Text style={styles.comparisonTitle}>Also included</Text>
-          {PREMIUM_FEATURES.slice(0, 7).map((feature, index) => {
-            const IconComponent = ICON_MAP[feature.icon] ?? Sparkles;
+          {MEMBERSHIP_FEATURES.map((feature, index) => {
+            const IconComponent = feature.icon;
             return (
               <Animated.View
                 key={feature.id}
@@ -520,31 +514,6 @@ export default function UpgradeScreen() {
 
         <Animated.View style={[styles.plansSection, { opacity: fadeAnim }]}>
           <Text style={styles.plansTitle}>Choose your plan</Text>
-          {__DEV__ && (
-            <View style={styles.diagnosticsCard}>
-              <View style={styles.diagnosticsHeader}>
-                <Text style={styles.diagnosticsTitle}>RevenueCat diagnostics</Text>
-                <TouchableOpacity
-                  style={styles.diagnosticsRefresh}
-                  onPress={refreshRevenueCatDiagnostics}
-                  activeOpacity={0.75}
-                  testID="revenuecat-diagnostics-refresh"
-                >
-                  <Text style={styles.diagnosticsRefreshText}>Refresh</Text>
-                </TouchableOpacity>
-              </View>
-              {diagnosticRows.length > 0 ? (
-                diagnosticRows.map(([label, value]) => (
-                  <View key={label} style={styles.diagnosticsRow}>
-                    <Text style={styles.diagnosticsLabel}>{label}</Text>
-                    <Text style={styles.diagnosticsValue}>{value}</Text>
-                  </View>
-                ))
-              ) : (
-                <Text style={styles.diagnosticsEmpty}>Diagnostics loading…</Text>
-              )}
-            </View>
-          )}
           {statusMessage ? (
             <View style={styles.offeringStatusCard}>
               <Shield size={16} color={Colors.brandTeal} />
@@ -585,11 +554,6 @@ export default function UpgradeScreen() {
                         {plan.savings}
                       </Text>
                     )}
-                    {plan.isFallbackPrice && (
-                      <Text style={[styles.planFallback, isSelected && styles.planSavingsSelected]}>
-                        Preview price
-                      </Text>
-                    )}
                     <View style={[styles.planRadio, isSelected && styles.planRadioSelected]}>
                       {isSelected && <View style={styles.planRadioInner} />}
                     </View>
@@ -599,9 +563,9 @@ export default function UpgradeScreen() {
             </View>
           ) : (
             <View style={styles.emptyPlansCard}>
-              <Text style={styles.emptyPlansTitle}>Membership plans unavailable</Text>
+              <Text style={styles.emptyPlansTitle}>Loading membership options</Text>
               <Text style={styles.emptyPlansText}>
-                Membership plans could not be loaded. You can still restore an existing subscription.
+                Membership options are loading. Please try again in a moment. You can still restore an existing subscription.
               </Text>
             </View>
           )}
@@ -609,21 +573,23 @@ export default function UpgradeScreen() {
 
         <Animated.View style={[styles.ctaSection, { opacity: fadeAnim }]}>
           <TouchableOpacity
-            style={[styles.ctaButton, (!isPremium && (!canSubscribe || isSubscribing || isLoading)) && styles.ctaButtonDisabled]}
+            style={[styles.ctaButton, (!canUsePrimaryCta || (!isExpoGo && !isPremium && (isSubscribing || isLoading))) && styles.ctaButtonDisabled]}
             onPress={handleSubscribe}
             activeOpacity={0.8}
-            disabled={!isPremium && (!canSubscribe || isSubscribing || isLoading)}
+            disabled={!canUsePrimaryCta || (!isExpoGo && !isPremium && (isSubscribing || isLoading))}
             testID="subscribe-btn"
           >
             <Crown size={18} color={Colors.white} />
             <Text style={styles.ctaButtonText}>
-              {isSubscribing
+              {isExpoGo
+                ? 'Continue to app'
+                : isSubscribing
                 ? 'Processing...'
-                : canSubscribe
-                  ? isPremium
-                    ? 'Manage existing subscription'
-                    : `Start your 3-day free trial ${selectedPlan?.priceLabel ?? ''}`
-                  : 'Membership unavailable'}
+                : isPremium
+                  ? 'Manage existing subscription'
+                  : canSubscribe
+                    ? `Start your 3-day free trial ${selectedPlan?.priceLabel ?? ''}`
+                  : 'Loading membership options...'}
             </Text>
           </TouchableOpacity>
 
@@ -972,63 +938,6 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     letterSpacing: -0.2,
   },
-  diagnosticsCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-  },
-  diagnosticsHeader: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'space-between' as const,
-    gap: 12,
-    marginBottom: 10,
-  },
-  diagnosticsTitle: {
-    color: Colors.text,
-    fontSize: 14,
-    fontWeight: '900' as const,
-  },
-  diagnosticsRefresh: {
-    minHeight: 34,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    backgroundColor: Colors.primary,
-  },
-  diagnosticsRefreshText: {
-    color: Colors.white,
-    fontSize: 12,
-    fontWeight: '900' as const,
-  },
-  diagnosticsRow: {
-    paddingVertical: 7,
-    borderTopWidth: 1,
-    borderTopColor: Colors.borderLight,
-  },
-  diagnosticsLabel: {
-    color: Colors.textMuted,
-    fontSize: 11,
-    fontWeight: '800' as const,
-    textTransform: 'uppercase' as const,
-    marginBottom: 2,
-  },
-  diagnosticsValue: {
-    color: Colors.text,
-    fontSize: 12,
-    lineHeight: 17,
-    fontWeight: '700' as const,
-  },
-  diagnosticsEmpty: {
-    color: Colors.textSecondary,
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: '700' as const,
-  },
   offeringStatusCard: {
     flexDirection: 'row' as const,
     alignItems: 'flex-start' as const,
@@ -1049,6 +958,7 @@ const styles = StyleSheet.create({
   plansRow: {
     flexDirection: 'row' as const,
     gap: 12,
+    paddingTop: 30,
   },
   emptyPlansCard: {
     backgroundColor: Colors.card,
@@ -1072,11 +982,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.card,
     borderRadius: 18,
-    padding: 18,
+    paddingHorizontal: 18,
+    paddingTop: 38,
+    paddingBottom: 18,
     alignItems: 'center' as const,
     borderWidth: 2,
     borderColor: Colors.borderLight,
     position: 'relative' as const,
+    overflow: 'visible' as const,
   },
   planCardSelected: {
     borderColor: Colors.brandTeal,
@@ -1084,11 +997,14 @@ const styles = StyleSheet.create({
   },
   popularBadge: {
     position: 'absolute' as const,
-    top: -10,
+    top: -25,
+    alignSelf: 'center' as const,
     backgroundColor: Colors.brandTealSoft,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: Colors.brandTeal,
   },
   popularBadgeText: {
     fontSize: 11,
@@ -1207,11 +1123,13 @@ const styles = StyleSheet.create({
     color: Colors.brandTeal,
   },
   trustSection: {
-    flexDirection: 'row' as const,
+    flexDirection: 'column' as const,
     alignItems: 'center' as const,
-    justifyContent: 'space-between' as const,
+    justifyContent: 'center' as const,
+    marginTop: -4,
     marginBottom: 20,
     paddingHorizontal: 4,
+    gap: 8,
   },
   trustRow: {
     flexDirection: 'row' as const,
@@ -1223,14 +1141,13 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
   },
   restoreBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 10,
-    backgroundColor: Colors.brandTealSoft,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
   restoreText: {
-    fontSize: 13,
-    color: Colors.brandTeal,
+    fontSize: 12,
+    color: Colors.textMuted,
     fontWeight: '600' as const,
   },
   disclaimerSection: {

@@ -399,11 +399,11 @@ export default function NotificationPreferencesScreen() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>PREMIUM</Text>
+            <Text style={styles.sectionLabel}>MEMBERSHIP</Text>
             <View style={styles.card}>
               {renderToggle(
                 <Sparkles size={16} color="#67E8F9" />,
-                'Premium Insights',
+                'Membership Insights',
                 'Deeper emotional pattern notifications',
                 n.premiumReflections ?? true,
                 (val) => updateNotifications({ premiumReflections: val }),
@@ -413,7 +413,7 @@ export default function NotificationPreferencesScreen() {
 
               {renderToggle(
                 <Crown size={16} color="#67E8F9" />,
-                'Premium Feature Reminders',
+                'Feature Reminders',
                 'Occasional reminders about advanced features you\'ve explored',
                 n.premiumInsightReminders ?? true,
                 (val) => updateNotifications({ premiumInsightReminders: val }),
@@ -423,15 +423,15 @@ export default function NotificationPreferencesScreen() {
 
               {renderToggle(
                 <Gift size={16} color="#67E8F9" />,
-                'Upgrade Reminders',
-                'Respectful reminders about premium benefits',
+                'Membership Reminders',
+                'Respectful reminders about membership benefits',
                 n.upgradeReminders ?? true,
                 (val) => updateNotifications({ upgradeReminders: val }),
                 'toggle-upgrade-reminders',
               )}
             </View>
             <Text style={styles.premiumNote}>
-              Premium reminders are never sent during high distress or crisis moments.
+              Membership reminders are never sent during high distress or crisis moments.
             </Text>
           </View>
 
@@ -526,7 +526,7 @@ export default function NotificationPreferencesScreen() {
           <View style={styles.safetyNote}>
             <Shield size={14} color={Colors.primary} />
             <Text style={styles.safetyNoteText}>
-              We never send guilt-based reminders, pressure-heavy phrases, or upgrade prompts during high distress. Your emotional safety comes first.
+              We never send guilt-based reminders, pressure-heavy phrases, or membership prompts during high distress. Your emotional safety comes first.
             </Text>
           </View>
 

@@ -214,7 +214,7 @@ export function getEntitlement(feature: PremiumFeature): FeatureEntitlement | un
 
 export function getUpgradeReason(feature: PremiumFeature): string {
   const entitlement = getEntitlement(feature);
-  if (!entitlement) return 'Start membership to unlock this feature.';
+  if (!entitlement) return 'Start membership for full access.';
 
   const reasons: Record<PremiumFeature, string> = {
     unlimited_ai: 'Continue with unlimited AI conversations.',
@@ -238,7 +238,7 @@ export function getUpgradeReason(feature: PremiumFeature): string {
     communication_playbook: 'Access personalized strategies for difficult conversations.',
     message_outcome_learning: 'Let the app learn from your outcomes to give better advice.',
     unlimited_rewrites: 'Continue with unlimited message rewrites.',
-    advanced_journal: 'Unlock AI-powered journal insights and guided reflection.',
+    advanced_journal: 'Continue with AI-powered journal insights and guided reflection.',
     weekly_emotional_report: 'Get comprehensive weekly emotional pattern reports.',
     advanced_tools: 'Access the full suite of therapeutic tools.',
   };

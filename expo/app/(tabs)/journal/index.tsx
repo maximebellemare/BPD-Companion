@@ -375,7 +375,7 @@ export default function JournalScreen() {
                   <Text style={styles.aiTherapistTitle}>AI Journal Guide</Text>
                   <View style={styles.premiumBadge}>
                     <Sparkles size={10} color={Colors.brandLilac} />
-                    <Text style={styles.premiumBadgeText}>Premium</Text>
+                    <Text style={styles.premiumBadgeText}>Membership</Text>
                   </View>
                 </View>
                 <Text style={styles.aiTherapistDesc}>

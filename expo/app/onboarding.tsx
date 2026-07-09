@@ -7,6 +7,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -19,7 +20,6 @@ import {
   ChevronRight,
   HeartHandshake,
   MessageCircle,
-  RefreshCw,
   Shield,
   Sparkles,
   Users,
@@ -33,7 +33,6 @@ import { useOnboarding } from '@/providers/OnboardingProvider';
 import { useUserProfile } from '@/providers/UserProfileProvider';
 import { useAppTheme } from '@/providers/ThemeProvider';
 import { useReviewPrompt } from '@/providers/ReviewPromptProvider';
-import { useSubscription } from '@/providers/SubscriptionProvider';
 import {
   DEFAULT_ONBOARDING_PROFILE,
   OnboardingProfile,
@@ -54,6 +53,14 @@ interface AssessmentAnswers {
   reasons: string[];
   situations: string[];
   success: string[];
+  reasonLabels: string[];
+  situationLabels: string[];
+  successLabels: string[];
+  customAnswers: {
+    reasons: string[];
+    situations: string[];
+    success: string[];
+  };
   focus: string[];
   completedVersion: string;
 }
@@ -77,6 +84,7 @@ const REASONS: Choice[] = [
   { label: 'Self-esteem', value: 'self_esteem' },
   { label: 'I was recently diagnosed', value: 'recently_diagnosed' },
   { label: 'I want to better understand myself', value: 'understand_myself' },
+  { label: 'Other', value: 'other' },
 ];
 
 const SITUATIONS: Choice[] = [
@@ -101,30 +109,63 @@ const SUCCESS: Choice[] = [
   { label: 'Feeling calmer', value: 'feeling_calmer' },
   { label: 'Understanding my triggers', value: 'understanding_triggers' },
   { label: 'Building healthy habits', value: 'building_healthy_habits' },
+  { label: 'Other', value: 'other' },
 ];
 
 const BENEFITS = [
   'Unlimited AI Companion',
   'Unlimited check-ins',
-  'All therapeutic tools',
+  'CBT Thought Record',
+  'DBT tools',
+  'Calm Me Down and Pause Before You Send',
+  'Trigger understanding',
+  'Emotional map',
+  'Relationship support',
+  'Reflection tools',
   'Community',
-  'Personalized insights',
   'Progress tracking',
+  'Future updates included',
+];
+
+const TRANSFORMATION_POINTS = [
+  'Calmer during arguments instead of reacting instantly',
+  'Able to understand why your mood changed today',
+  'Aware of triggers before they spiral',
+  'More confident before sending difficult messages',
+  'Less alone and less judged',
+  'Supported every day, not only during crisis moments',
 ];
 
 const TOTAL_STEPS = 7;
 
 function labelsFor(values: string[], options: Choice[]): string[] {
   return values
+    .filter(value => value !== 'other')
     .map(value => options.find(option => option.value === value)?.label)
     .filter((label): label is string => Boolean(label));
+}
+
+function cleanCustom(value: string): string {
+  return value.trim().replace(/\s+/g, ' ');
+}
+
+function buildLabels(values: string[], options: Choice[], customValue: string): string[] {
+  const custom = cleanCustom(customValue);
+  return custom ? [...labelsFor(values, options), custom] : labelsFor(values, options);
+}
+
+function buildStoredValues(values: string[], customValue: string): string[] {
+  const custom = cleanCustom(customValue);
+  return custom
+    ? [...values.filter(value => value !== 'other'), `other:${custom}`]
+    : values.filter(value => value !== 'other');
 }
 
 function includesAny(values: string[], candidates: string[]): boolean {
   return values.some(value => candidates.includes(value));
 }
 
-function getFocus(reasons: string[], situations: string[], success: string[]): string[] {
+function getFocus(reasons: string[], situations: string[], success: string[], customAnswers: string[] = []): string[] {
   const focus: string[] = [];
   const add = (item: string) => {
     if (!focus.includes(item)) focus.push(item);
@@ -157,6 +198,10 @@ function getFocus(reasons: string[], situations: string[], success: string[]): s
   if (includesAny(situations, ['loneliness', 'family', 'work', 'stress', 'other'])) {
     add('Daily steadiness');
   }
+  const customFocus = customAnswers.map(cleanCustom).find(Boolean);
+  if (customFocus && focus.length < 3) {
+    add(`Support with ${customFocus}`);
+  }
 
   if (focus.length === 0) {
     add('Emotional regulation');
@@ -174,8 +219,19 @@ function sentenceList(items: string[]): string {
   return `${items[0].toLowerCase()}, ${items[1].toLowerCase()}, and ${items[2].toLowerCase()}`;
 }
 
-function buildProfile(reasons: string[], situations: string[], success: string[], skipped: boolean): AssessmentOnboardingProfile {
-  const focus = getFocus(reasons, situations, success);
+function buildProfile(
+  reasons: string[],
+  situations: string[],
+  success: string[],
+  customReason: string,
+  customSituation: string,
+  customSuccess: string,
+  skipped: boolean,
+): AssessmentOnboardingProfile {
+  const customReasons = cleanCustom(customReason) ? [cleanCustom(customReason)] : [];
+  const customSituations = cleanCustom(customSituation) ? [cleanCustom(customSituation)] : [];
+  const customSuccessAnswers = cleanCustom(customSuccess) ? [cleanCustom(customSuccess)] : [];
+  const focus = getFocus(reasons, situations, success, [...customReasons, ...customSituations, ...customSuccessAnswers]);
   const preferredTools = new Set<PreferredTool>(['ai_companion', 'understand_patterns', 'calm_emotional_spikes']);
   const primaryReasons = new Set<PrimaryReason>();
   const hardestMoments = new Set<HardestMoment>();
@@ -210,9 +266,17 @@ function buildProfile(reasons: string[], situations: string[], success: string[]
     completedAt: Date.now(),
     skippedAt: skipped ? Date.now() : null,
     assessment: {
-      reasons,
-      situations,
-      success,
+      reasons: buildStoredValues(reasons, customReason),
+      situations: buildStoredValues(situations, customSituation),
+      success: buildStoredValues(success, customSuccess),
+      reasonLabels: buildLabels(reasons, REASONS, customReason),
+      situationLabels: buildLabels(situations, SITUATIONS, customSituation),
+      successLabels: buildLabels(success, SUCCESS, customSuccess),
+      customAnswers: {
+        reasons: customReasons,
+        situations: customSituations,
+        success: customSuccessAnswers,
+      },
       focus,
       completedVersion: VERSION,
     },
@@ -226,22 +290,27 @@ export default function OnboardingScreen() {
   const { colors } = useAppTheme();
   const { completeOnboarding } = useOnboarding();
   const { refreshProfile } = useUserProfile();
-  const { restore } = useSubscription();
   const { trackEvent } = useAnalytics();
   const { maybeShowReviewPrompt } = useReviewPrompt();
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [reasons, setReasons] = useState<string[]>([]);
   const [situations, setSituations] = useState<string[]>([]);
   const [success, setSuccess] = useState<string[]>([]);
+  const [customReason, setCustomReason] = useState<string>('');
+  const [customSituation, setCustomSituation] = useState<string>('');
+  const [customSuccess, setCustomSuccess] = useState<string>('');
   const [isCompleting, setIsCompleting] = useState<boolean>(false);
   const [completionText, setCompletionText] = useState<string>('Saving your personalization');
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const slideAnim = useRef(new Animated.Value(0)).current;
   const progressAnim = useRef(new Animated.Value(1 / TOTAL_STEPS)).current;
 
-  const focus = useMemo(() => getFocus(reasons, situations, success), [reasons, situations, success]);
-  const selectedReasonLabels = useMemo(() => labelsFor(reasons, REASONS), [reasons]);
-  const selectedSituationLabels = useMemo(() => labelsFor(situations, SITUATIONS), [situations]);
+  const focus = useMemo(
+    () => getFocus(reasons, situations, success, [customReason, customSituation, customSuccess]),
+    [customReason, customSituation, customSuccess, reasons, situations, success],
+  );
+  const selectedReasonLabels = useMemo(() => buildLabels(reasons, REASONS, customReason), [customReason, reasons]);
+  const selectedSituationLabels = useMemo(() => buildLabels(situations, SITUATIONS, customSituation), [customSituation, situations]);
 
   useEffect(() => {
     void trackEvent('onboarding_started', { version: VERSION });
@@ -284,14 +353,14 @@ export default function OnboardingScreen() {
     }
   }, []);
 
-  const saveAndRoute = useCallback(async (skipped: boolean, route: 'upgrade' | 'restore') => {
+  const saveAndRoute = useCallback(async (skipped: boolean) => {
     if (isCompleting) return;
     if (Platform.OS !== 'web') {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     setIsCompleting(true);
-    setCompletionText(route === 'restore' ? 'Checking your subscription' : 'Preparing your membership options');
-    const profile = buildProfile(reasons, situations, success, skipped);
+    setCompletionText('Preparing your membership options');
+    const profile = buildProfile(reasons, situations, success, customReason, customSituation, customSuccess, skipped);
     try {
       await completeOnboarding(profile);
       await refreshProfile();
@@ -301,26 +370,20 @@ export default function OnboardingScreen() {
       });
       void maybeShowReviewPrompt('after_onboarding');
 
-      if (route === 'restore') {
-        const active = await restore();
-        router.replace(active ? '/' as never : '/upgrade' as never);
-        return;
-      }
-
       router.replace('/upgrade' as never);
     } catch (error) {
       console.log('[Onboarding] completion failed:', error);
       Alert.alert('Could not finish setup', 'Please check your connection and try again.');
       setIsCompleting(false);
     }
-  }, [completeOnboarding, isCompleting, maybeShowReviewPrompt, reasons, refreshProfile, restore, router, situations, success, trackEvent]);
+  }, [completeOnboarding, customReason, customSituation, customSuccess, isCompleting, maybeShowReviewPrompt, reasons, refreshProfile, router, situations, success, trackEvent]);
 
   const canContinue = useMemo(() => {
-    if (currentStep === 1) return reasons.length > 0;
-    if (currentStep === 2) return situations.length > 0;
-    if (currentStep === 3) return success.length > 0;
+    if (currentStep === 1) return reasons.length > 0 && (!reasons.includes('other') || reasons.length > 1 || cleanCustom(customReason).length > 0);
+    if (currentStep === 2) return situations.length > 0 && (!situations.includes('other') || situations.length > 1 || cleanCustom(customSituation).length > 0);
+    if (currentStep === 3) return success.length > 0 && (!success.includes('other') || success.length > 1 || cleanCustom(customSuccess).length > 0);
     return true;
-  }, [currentStep, reasons.length, situations.length, success.length]);
+  }, [currentStep, customReason, customSituation, customSuccess, reasons, situations, success]);
 
   const goBack = useCallback(() => {
     if (currentStep === 0 || isCompleting) return;
@@ -334,19 +397,11 @@ export default function OnboardingScreen() {
     }
     trackEvent('onboarding_step_completed', { step_index: currentStep, version: VERSION });
     if (currentStep === TOTAL_STEPS - 1) {
-      void saveAndRoute(false, 'upgrade');
+      void saveAndRoute(false);
       return;
     }
     animateStep('forward', () => setCurrentStep(prev => prev + 1));
   }, [animateStep, canContinue, currentStep, isCompleting, saveAndRoute, trackEvent]);
-
-  const skip = useCallback(() => {
-    void saveAndRoute(true, 'upgrade');
-  }, [saveAndRoute]);
-
-  const restorePurchase = useCallback(() => {
-    void saveAndRoute(false, 'restore');
-  }, [saveAndRoute]);
 
   if (isCompleting) {
     return (
@@ -368,11 +423,6 @@ export default function OnboardingScreen() {
           </View>
           <Text style={[styles.progressText, { color: colors.primary }]}>{currentStep + 1} / {TOTAL_STEPS}</Text>
         </View>
-        {currentStep < TOTAL_STEPS - 1 ? (
-          <TouchableOpacity onPress={skip} activeOpacity={0.75} style={styles.skipButton} testID="onboarding-skip">
-            <Text style={[styles.skipText, { color: colors.textSecondary }]}>Skip</Text>
-          </TouchableOpacity>
-        ) : null}
       </View>
 
       <ScrollView
@@ -391,6 +441,9 @@ export default function OnboardingScreen() {
               options={REASONS}
               selected={reasons}
               onToggle={(value) => toggleChoice('reasons', value)}
+              customValue={customReason}
+              onCustomChange={setCustomReason}
+              customPlaceholder="Tell us what brought you here"
               colors={colors}
             />
           ) : currentStep === 2 ? (
@@ -401,6 +454,9 @@ export default function OnboardingScreen() {
               options={SITUATIONS}
               selected={situations}
               onToggle={(value) => toggleChoice('situations', value)}
+              customValue={customSituation}
+              onCustomChange={setCustomSituation}
+              customPlaceholder="Name the situation"
               colors={colors}
             />
           ) : currentStep === 3 ? (
@@ -411,6 +467,9 @@ export default function OnboardingScreen() {
               options={SUCCESS}
               selected={success}
               onToggle={(value) => toggleChoice('success', value)}
+              customValue={customSuccess}
+              onCustomChange={setCustomSuccess}
+              customPlaceholder="Describe your version of success"
               colors={colors}
             />
           ) : currentStep === 4 ? (
@@ -423,7 +482,7 @@ export default function OnboardingScreen() {
               colors={colors}
             />
           ) : (
-            <MembershipIntroStep colors={colors} onRestore={restorePurchase} />
+            <MembershipIntroStep colors={colors} />
           )}
         </Animated.View>
       </ScrollView>
@@ -478,6 +537,9 @@ function ChoiceStep({
   options,
   selected,
   onToggle,
+  customValue,
+  onCustomChange,
+  customPlaceholder,
   colors,
 }: {
   eyebrow: string;
@@ -486,8 +548,12 @@ function ChoiceStep({
   options: Choice[];
   selected: string[];
   onToggle: (value: string) => void;
+  customValue: string;
+  onCustomChange: (value: string) => void;
+  customPlaceholder: string;
   colors: ReturnType<typeof useAppTheme>['colors'];
 }) {
+  const showCustom = selected.includes('other');
   return (
     <View>
       <Text style={[styles.eyebrow, { color: colors.brandTeal }]}>{eyebrow}</Text>
@@ -516,6 +582,21 @@ function ChoiceStep({
           );
         })}
       </View>
+      {showCustom ? (
+        <View style={[styles.customInputWrap, { backgroundColor: colors.card, borderColor: colors.primary }]}>
+          <TextInput
+            value={customValue}
+            onChangeText={onCustomChange}
+            placeholder={customPlaceholder}
+            placeholderTextColor={colors.textMuted}
+            style={[styles.customInput, { color: colors.text }]}
+            multiline
+            maxLength={90}
+            autoCapitalize="sentences"
+            testID="onboarding-custom-input"
+          />
+        </View>
+      ) : null}
       <Text style={[styles.helperText, { color: colors.textMuted }]}>Select at least one.</Text>
     </View>
   );
@@ -608,18 +689,27 @@ function HowItHelpsStep({
 
 function MembershipIntroStep({
   colors,
-  onRestore,
 }: {
   colors: ReturnType<typeof useAppTheme>['colors'];
-  onRestore: () => void;
 }) {
   return (
     <View>
       <View style={[styles.membershipHero, { backgroundColor: colors.primaryLight, borderColor: colors.borderLight }]}>
         <HeartHandshake size={32} color={colors.primary} />
-        <Text style={[styles.membershipTitle, { color: colors.text }]}>Start your 3-day free trial.</Text>
-        <Text style={[styles.membershipSubtitle, { color: colors.textSecondary }]}>Everything unlocked from day one.</Text>
+        <Text style={[styles.membershipTitle, { color: colors.text }]}>Imagine feeling...</Text>
+        <Text style={[styles.membershipSubtitle, { color: colors.textSecondary }]}>
+          Small daily support can change how you move through difficult moments.
+        </Text>
       </View>
+      <View style={styles.benefitStack}>
+        {TRANSFORMATION_POINTS.map(point => (
+          <View key={point} style={[styles.benefitRow, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
+            <Sparkles size={17} color={colors.brandTeal} />
+            <Text style={[styles.benefitText, { color: colors.text }]}>{point}</Text>
+          </View>
+        ))}
+      </View>
+      <Text style={[styles.membershipIncludesTitle, { color: colors.text }]}>Your membership includes:</Text>
       <View style={styles.benefitStack}>
         {BENEFITS.map(benefit => (
           <View key={benefit} style={[styles.benefitRow, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
@@ -631,10 +721,6 @@ function MembershipIntroStep({
       <Text style={[styles.cancelText, { color: colors.textMuted }]}>
         Cancel anytime before your 3-day trial ends. You won’t be charged until your trial is over.
       </Text>
-      <TouchableOpacity style={styles.restoreButton} onPress={onRestore} activeOpacity={0.75} testID="onboarding-restore">
-        <RefreshCw size={15} color={colors.primary} />
-        <Text style={[styles.restoreText, { color: colors.primary }]}>Restore Purchase</Text>
-      </TouchableOpacity>
     </View>
   );
 }
@@ -694,14 +780,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
   },
-  skipButton: {
-    paddingHorizontal: 4,
-    paddingVertical: 8,
-  },
-  skipText: {
-    fontSize: 14,
-    fontWeight: '800',
-  },
   scrollView: {
     flex: 1,
   },
@@ -755,6 +833,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 19,
     fontWeight: '800',
+  },
+  customInputWrap: {
+    marginTop: 12,
+    borderWidth: 1.5,
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: Platform.OS === 'ios' ? 14 : 6,
+  },
+  customInput: {
+    minHeight: 46,
+    fontSize: 16,
+    lineHeight: 22,
+    fontWeight: '700',
+    paddingVertical: Platform.OS === 'ios' ? 0 : 8,
   },
   helperText: {
     fontSize: 12,
@@ -839,6 +931,13 @@ const styles = StyleSheet.create({
   benefitStack: {
     gap: 9,
   },
+  membershipIncludesTitle: {
+    fontSize: 17,
+    lineHeight: 23,
+    fontWeight: '900',
+    marginTop: 18,
+    marginBottom: 10,
+  },
   benefitRow: {
     minHeight: 48,
     borderWidth: 1,
@@ -858,18 +957,6 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontWeight: '700',
     marginTop: 14,
-  },
-  restoreButton: {
-    minHeight: 48,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginTop: 10,
-  },
-  restoreText: {
-    fontSize: 14,
-    fontWeight: '900',
   },
   bottomBar: {
     position: 'absolute',

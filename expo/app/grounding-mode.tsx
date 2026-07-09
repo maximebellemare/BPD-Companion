@@ -18,21 +18,14 @@ import {
   MessageCircle,
   ShieldCheck,
   Sparkles,
-  Volume2,
-  VolumeX,
   Wind,
   X,
 } from 'lucide-react-native';
-import { setAudioModeAsync, useAudioPlayer } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
 import { useApp } from '@/providers/AppProvider';
 import { useAppTheme } from '@/providers/ThemeProvider';
-import {
-  isAnyCalmAudioAvailable,
-  type CalmAudioCueId,
-  type CalmAudioDurationSeconds,
-} from '@/services/calm/calmAudioService';
+import type { CalmAudioDurationSeconds } from '@/services/calm/calmAudioService';
 import { saveCalmMeDownSession } from '@/services/calm/calmSessionService';
 import type { JournalEntry } from '@/types';
 
@@ -50,13 +43,6 @@ const CALM_DURATIONS: Array<{ seconds: CalmAudioDurationSeconds; label: string; 
   { seconds: 120, label: '2 min', description: 'Recommended' },
   { seconds: 300, label: '5 min', description: 'Deeper calm' },
 ];
-const CALM_AUDIO_CUE_ASSETS: Record<CalmAudioCueId, number> = {
-  start: require('../assets/audio/calm/start-chime.wav'),
-  inhale: require('../assets/audio/calm/inhale-cue.wav'),
-  hold: require('../assets/audio/calm/hold-cue.wav'),
-  exhale: require('../assets/audio/calm/exhale-cue.wav'),
-};
-
 const ANCHORS = [
   'Press your feet into the floor and notice what is holding you up.',
   'Look for one straight line, one soft color, and one object that is not moving.',
@@ -116,12 +102,6 @@ export default function CalmMeDownScreen() {
   const [breathCycle, setBreathCycle] = useState(1);
   const [calmDuration, setCalmDuration] = useState<CalmAudioDurationSeconds>(120);
   const [breathSecondsRemaining, setBreathSecondsRemaining] = useState(120);
-  const [audioAvailable, setAudioAvailable] = useState(false);
-  const [audioEnabled, setAudioEnabled] = useState(false);
-  const startCuePlayer = useAudioPlayer(CALM_AUDIO_CUE_ASSETS.start, { updateInterval: 1000 });
-  const inhaleCuePlayer = useAudioPlayer(CALM_AUDIO_CUE_ASSETS.inhale, { updateInterval: 1000 });
-  const holdCuePlayer = useAudioPlayer(CALM_AUDIO_CUE_ASSETS.hold, { updateInterval: 1000 });
-  const exhaleCuePlayer = useAudioPlayer(CALM_AUDIO_CUE_ASSETS.exhale, { updateInterval: 1000 });
   const breathScale = useRef(new Animated.Value(0.58)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -147,19 +127,6 @@ export default function CalmMeDownScreen() {
 
   useEffect(() => {
     trackEvent('calm_me_down_opened');
-    const available = isAnyCalmAudioAvailable();
-    setAudioAvailable(available);
-    setAudioEnabled(available);
-    if (available) {
-      void setAudioModeAsync({
-        playsInSilentMode: true,
-        shouldPlayInBackground: false,
-        interruptionMode: 'mixWithOthers',
-      }).catch(() => {
-        setAudioAvailable(false);
-        setAudioEnabled(false);
-      });
-    }
     Animated.timing(fadeAnim, { toValue: 1, duration: 350, useNativeDriver: true }).start();
   }, [fadeAnim, trackEvent]);
 
@@ -171,23 +138,6 @@ export default function CalmMeDownScreen() {
   const haptic = useCallback((style: Haptics.ImpactFeedbackStyle = Haptics.ImpactFeedbackStyle.Light) => {
     if (Platform.OS !== 'web') void Haptics.impactAsync(style);
   }, []);
-
-  const playAudioCue = useCallback(async (cue: CalmAudioCueId) => {
-    if (!audioAvailable || !audioEnabled) return;
-    const player =
-      cue === 'start' ? startCuePlayer :
-      cue === 'inhale' ? inhaleCuePlayer :
-      cue === 'hold' ? holdCuePlayer :
-      exhaleCuePlayer;
-    try {
-      player.pause();
-      await player.seekTo(0);
-      player.play();
-    } catch {
-      setAudioAvailable(false);
-      setAudioEnabled(false);
-    }
-  }, [audioAvailable, audioEnabled, exhaleCuePlayer, holdCuePlayer, inhaleCuePlayer, startCuePlayer]);
 
   const clearBreathingTimers = useCallback(() => {
     if (timerRef.current) {
@@ -206,8 +156,7 @@ export default function CalmMeDownScreen() {
     if (nextPhase === 'hold') setBreathLabel('Hold');
     if (nextPhase === 'exhale') setBreathLabel('Exhale');
     haptic(nextPhase === 'exhale' ? Haptics.ImpactFeedbackStyle.Medium : Haptics.ImpactFeedbackStyle.Light);
-    void playAudioCue(nextPhase);
-  }, [haptic, playAudioCue]);
+  }, [haptic]);
 
   const runBreathing = useCallback((cycle: number) => {
     if (cycle > totalBreathCycles) {
@@ -235,11 +184,10 @@ export default function CalmMeDownScreen() {
     clearBreathingTimers();
     setBreathSecondsRemaining(calmDuration);
     startedAtRef.current = Date.now();
-    void playAudioCue('start');
     trackEvent('calm_me_down_started', {
       before_intensity: beforeIntensity,
       duration_seconds: calmDuration,
-      guided_audio_available: audioAvailable && audioEnabled,
+      guided_audio_available: false,
     });
     setPhase('breathe');
     countdownRef.current = setInterval(() => {
@@ -253,7 +201,7 @@ export default function CalmMeDownScreen() {
       });
     }, 1000);
     runBreathing(1);
-  }, [audioAvailable, audioEnabled, beforeIntensity, calmDuration, clearBreathingTimers, haptic, playAudioCue, runBreathing, trackEvent]);
+  }, [beforeIntensity, calmDuration, clearBreathingTimers, haptic, runBreathing, trackEvent]);
 
   const goNext = useCallback((next: CalmPhase) => {
     haptic();
@@ -391,40 +339,6 @@ export default function CalmMeDownScreen() {
             );
           })}
         </View>
-        {audioAvailable && (
-          <TouchableOpacity
-            style={[
-              styles.audioToggle,
-              {
-                backgroundColor: audioEnabled ? colors.primaryLight : colors.card,
-                borderColor: audioEnabled ? colors.primary : colors.borderLight,
-              },
-            ]}
-            onPress={() => {
-              haptic();
-              setAudioEnabled((enabled) => !enabled);
-            }}
-            activeOpacity={0.82}
-            testID="calm-audio-toggle"
-            accessibilityRole="button"
-            accessibilityLabel={`Audio cues are ${audioEnabled ? 'on' : 'off'}`}
-            accessibilityState={{ selected: audioEnabled }}
-          >
-            {audioEnabled ? (
-              <Volume2 size={18} color={colors.primary} />
-            ) : (
-              <VolumeX size={18} color={colors.textMuted} />
-            )}
-            <View style={styles.audioToggleTextBlock}>
-              <Text style={[styles.audioToggleTitle, { color: audioEnabled ? colors.primary : colors.text }]}>
-                Audio cues {audioEnabled ? 'on' : 'off'}
-              </Text>
-              <Text style={[styles.audioNote, { color: colors.textSecondary }]}>
-                Chimes guide inhale, hold, and exhale so you can close your eyes.
-              </Text>
-            </View>
-          </TouchableOpacity>
-        )}
       </View>
 
       <View style={[styles.miniCard, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>

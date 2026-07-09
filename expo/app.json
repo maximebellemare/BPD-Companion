@@ -64,7 +64,6 @@
         }
       ],
       "@react-native-community/datetimepicker",
-      "expo-audio",
       "expo-asset"
     ],
     "experiments": {

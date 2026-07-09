@@ -43,7 +43,7 @@ export function isCalmAudioAvailable(trackId: CalmAudioTrackId): boolean {
 }
 
 export function isAnyCalmAudioAvailable(): boolean {
-  return true;
+  return false;
 }
 
 export async function prepareCalmAudio(trackId: CalmAudioTrackId): Promise<{ available: boolean; track: CalmAudioTrack | null }> {

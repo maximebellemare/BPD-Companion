@@ -79,6 +79,14 @@ async function syncPurchasesIfAvailable(Purchases: any, context: string): Promis
   return await Purchases.getCustomerInfo() as CustomerInfo;
 }
 
+function logRestoreTiming(step: string, startedAt: number, extra?: Record<string, unknown>): void {
+  console.log('[RestoreFlow]', {
+    step,
+    elapsedMs: Date.now() - startedAt,
+    ...(extra ?? {}),
+  });
+}
+
 async function getCurrentAppUserId(Purchases: any): Promise<string | null> {
   return typeof Purchases.getAppUserID === 'function'
     ? await Purchases.getAppUserID()
@@ -86,19 +94,28 @@ async function getCurrentAppUserId(Purchases: any): Promise<string | null> {
 }
 
 async function ensureRevenueCatIdentity(Purchases: any, supabaseUserId: string): Promise<void> {
+  const startedAt = Date.now();
   if (!supabaseUserId) {
     throw new Error(REVENUECAT_IDENTITY_MISMATCH_MESSAGE);
   }
 
   const currentAppUserId = await getCurrentAppUserId(Purchases);
+  logRestoreTiming('identity:getAppUserID', startedAt, {
+    matched: currentAppUserId === supabaseUserId,
+  });
   if (currentAppUserId === supabaseUserId) return;
 
   if (typeof Purchases.logIn !== 'function') {
     throw new Error(REVENUECAT_IDENTITY_MISMATCH_MESSAGE);
   }
 
+  const loginStartedAt = Date.now();
   await Purchases.logIn(supabaseUserId);
+  logRestoreTiming('identity:logIn', loginStartedAt);
   const verifiedAppUserId = await getCurrentAppUserId(Purchases);
+  logRestoreTiming('identity:verifyAfterLogIn', startedAt, {
+    matched: verifiedAppUserId === supabaseUserId,
+  });
   if (verifiedAppUserId !== supabaseUserId) {
     throw new Error(REVENUECAT_IDENTITY_MISMATCH_MESSAGE);
   }
@@ -285,18 +302,43 @@ export async function restorePurchases(supabaseUserId: string): Promise<Customer
   await ensureConfigured();
   if (!arePurchasesAvailable()) throw new Error(PURCHASES_UNAVAILABLE_MESSAGE);
   try {
+    const restoreStartedAt = Date.now();
     const Purchases = (await import('react-native-purchases')).default;
     await ensureRevenueCatIdentity(Purchases, supabaseUserId);
-    const customerInfoBeforeRestore = await Purchases.getCustomerInfo() as CustomerInfo;
-    if (shouldAttemptAndroidSync(customerInfoBeforeRestore)) {
-      await syncPurchasesIfAvailable(Purchases, 'android_before_restore_empty_customer_info');
+    logRestoreTiming('restore:identityPreflightComplete', restoreStartedAt);
+    if (Platform.OS === 'android') {
+      const androidPreRestoreInfoStartedAt = Date.now();
+      const customerInfoBeforeRestore = await Purchases.getCustomerInfo() as CustomerInfo;
+      logRestoreTiming('restore:androidPreRestoreGetCustomerInfo', androidPreRestoreInfoStartedAt, {
+        hasActiveEntitlement: hasActiveEntitlement(customerInfoBeforeRestore),
+      });
+      if (shouldAttemptAndroidSync(customerInfoBeforeRestore)) {
+        const androidSyncStartedAt = Date.now();
+        await syncPurchasesIfAvailable(Purchases, 'android_before_restore_empty_customer_info');
+        logRestoreTiming('restore:androidPreRestoreSyncPurchases', androidSyncStartedAt);
+      }
     }
+    const sdkRestoreStartedAt = Date.now();
     const restoredCustomerInfo = await Purchases.restorePurchases();
+    logRestoreTiming('restore:restorePurchases', sdkRestoreStartedAt, {
+      hasActiveEntitlement: hasActiveEntitlement(restoredCustomerInfo as CustomerInfo | null),
+    });
+    const freshInfoStartedAt = Date.now();
     let refreshedCustomerInfo = await Purchases.getCustomerInfo() as CustomerInfo;
+    logRestoreTiming('restore:freshGetCustomerInfo', freshInfoStartedAt, {
+      hasActiveEntitlement: hasActiveEntitlement(refreshedCustomerInfo),
+    });
     if (shouldAttemptAndroidSync(refreshedCustomerInfo)) {
+      const androidSyncStartedAt = Date.now();
       refreshedCustomerInfo = await syncPurchasesIfAvailable(Purchases, 'android_after_restore_empty_customer_info') ?? refreshedCustomerInfo;
+      logRestoreTiming('restore:androidPostRestoreSyncPurchases', androidSyncStartedAt, {
+        hasActiveEntitlement: hasActiveEntitlement(refreshedCustomerInfo),
+      });
     }
     const customerInfo = refreshedCustomerInfo ?? restoredCustomerInfo ?? null;
+    logRestoreTiming('restore:complete', restoreStartedAt, {
+      hasActiveEntitlement: hasActiveEntitlement(customerInfo),
+    });
     return customerInfo;
   } catch (error) {
     throw new Error(getPurchaseErrorMessage(error));

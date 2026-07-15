@@ -129,7 +129,7 @@ const MEMBERSHIP_FEATURES = [
 export default function UpgradeScreen() {
   const router = useRouter();
   const isExpoGo = Constants.appOwnership === 'expo';
-  const { anchor } = useLocalSearchParams<{ anchor?: string }>();
+  const { anchor, mode } = useLocalSearchParams<{ anchor?: string; mode?: string }>();
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
   const {
@@ -151,8 +151,16 @@ export default function UpgradeScreen() {
   const [selectedPlanId, setSelectedPlanId] = useState<string>('yearly');
   const [restoreNotice, setRestoreNotice] = useState<string | null>(null);
   const isNativePurchases = isNativePurchasesPlatform();
-  const shouldCloseAfterAccessRef = useRef<boolean>(false);
-  const hasStoreAccess = isEntitlementActive || state.isTrialActive;
+  const hasNavigatedAfterAccessRef = useRef<boolean>(false);
+  const membershipActive = isEntitlementActive || state.isTrialActive;
+  const hasStoreAccess = membershipActive;
+  const isSubscriptionManagement = mode === 'manage';
+
+  const navigateToAppOnce = useCallback(() => {
+    if (hasNavigatedAfterAccessRef.current) return;
+    hasNavigatedAfterAccessRef.current = true;
+    router.replace('/(tabs)/(home)');
+  }, [router]);
 
   useEffect(() => {
     if (plans.length > 0 && !plans.some(plan => plan.id === selectedPlanId)) {
@@ -169,10 +177,14 @@ export default function UpgradeScreen() {
   }, [trackEvent, anchor]);
 
   useEffect(() => {
-    if (!shouldCloseAfterAccessRef.current || !hasStoreAccess) return;
-    shouldCloseAfterAccessRef.current = false;
-    router.replace('/');
-  }, [hasStoreAccess, router]);
+    if (!hasStoreAccess) return;
+    if (isSubscriptionManagement) return;
+    navigateToAppOnce();
+  }, [
+    hasStoreAccess,
+    isSubscriptionManagement,
+    navigateToAppOnce,
+  ]);
   const [testimonialIndex, setTestimonialIndex] = useState<number>(0);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -269,7 +281,6 @@ export default function UpgradeScreen() {
       return;
     }
     trackEvent('upgrade_clicked', { plan_id: selectedPlanId });
-    shouldCloseAfterAccessRef.current = true;
     subscribe(selected);
   }, [hasStoreAccess, isExpoGo, router, selectedPlanId, subscribe, trackEvent, plans, offeringStatus, isNativePurchases]);
 
@@ -289,7 +300,6 @@ export default function UpgradeScreen() {
     handleHaptic();
     setRestoreNotice(null);
     if (isExpoGo) {
-      console.log('[DevAccess] Expo Go restore bypass');
       router.replace('/');
       return;
     }
@@ -297,15 +307,15 @@ export default function UpgradeScreen() {
       .then((active) => {
         if (active) {
           setRestoreNotice('Subscription restored. Membership access is active.');
-          router.replace('/');
+          navigateToAppOnce();
           return;
         }
         setRestoreNotice('No active membership was found for this store account.');
       })
-      .catch(() => {
-        setRestoreNotice(null);
+      .catch((error) => {
+        setRestoreNotice(error instanceof Error ? error.message : 'Restore could not be completed. Please try again.');
       });
-  }, [handleHaptic, isExpoGo, restore, router]);
+  }, [handleHaptic, isExpoGo, restore, router, navigateToAppOnce]);
 
   const selectedPlan = plans.find(p => p.id === selectedPlanId);
   const canSubscribe = !isExpoGo && isNativePurchases && offeringStatus === 'ready' && !!selectedPlan && !selectedPlan.isFallbackPrice;

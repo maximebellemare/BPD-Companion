@@ -48,6 +48,7 @@ import {
   REVENUECAT_YEARLY_PRODUCT_ID,
 } from '@/constants/revenuecat';
 import { trackEvent } from '@/services/analytics/analyticsService';
+import { isSubscriptionAccessLoading } from '@/services/subscription/restoreNavigationModel';
 
 type OfferingStatus = 'loading' | 'ready' | 'empty' | 'error' | 'preview';
 
@@ -80,6 +81,14 @@ function getMissingMembershipMessage(info: Awaited<ReturnType<typeof fetchCustom
     return 'RevenueCat found a store purchase, but the membership entitlement is not active yet. Tap Restore purchase or contact support if this continues.';
   }
   return 'RevenueCat did not find an active subscription receipt yet. Tap Restore purchase, wait a moment, or try again.';
+}
+
+function logRestoreTiming(step: string, startedAt: number, extra?: Record<string, unknown>): void {
+  console.log('[RestoreFlow]', {
+    step,
+    elapsedMs: Date.now() - startedAt,
+    ...(extra ?? {}),
+  });
 }
 
 export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
@@ -229,6 +238,15 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   const isEntitlementActive = hasActiveEntitlement(customerInfoQuery.data ?? null);
   const isPremium = isExpoGo || isEntitlementActive;
   const hasPremiumAccess = isExpoGo || isEntitlementActive;
+  const subscriptionAccessLoading = isSubscriptionAccessLoading({
+    isExpoGo,
+    isAuthenticated,
+    hasUserId: !!user?.id,
+    isRevenueCatIdentified,
+    isCustomerInfoLoading: customerInfoQuery.isLoading,
+    isOfferingsLoading: offeringsQuery.isLoading,
+    customerInfo: customerInfoQuery.data ?? null,
+  });
 
   const offeringStatus: OfferingStatus = useMemo(() => {
     if (isExpoGo) return 'preview';
@@ -293,6 +311,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
       }
       const info = await rcPurchasePackage(pkg, user.id);
       const membershipActive = hasActiveEntitlement(info ?? null);
+      await queryClient.cancelQueries({ queryKey: ['rc-customer-info'] });
       if (info) {
         queryClient.setQueryData(['rc-customer-info'], info);
       }
@@ -302,7 +321,6 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
       return info;
     },
     onSuccess: (info) => {
-      void queryClient.invalidateQueries({ queryKey: ['rc-customer-info'] });
       if (rcIsTrialActive(info ?? null)) {
         void trackEvent('trial_started');
       }
@@ -310,18 +328,27 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   });
 
   const restoreMutation = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       if (isExpoGo) return Promise.resolve(null);
       if (!user?.id) {
         return Promise.reject(new Error('Please sign in again before restoring purchases.'));
       }
-      return rcRestorePurchases(user.id);
+      const startedAt = Date.now();
+      const info = await rcRestorePurchases(user.id);
+      logRestoreTiming('provider:restoreMutationResolved', startedAt, {
+        hasActiveEntitlement: hasActiveEntitlement(info ?? null),
+      });
+      return info;
     },
-    onSuccess: (info) => {
+    onSuccess: async (info) => {
+      const startedAt = Date.now();
+      await queryClient.cancelQueries({ queryKey: ['rc-customer-info'] });
       if (info) {
         queryClient.setQueryData(['rc-customer-info'], info);
       }
-      void queryClient.invalidateQueries({ queryKey: ['rc-customer-info'] });
+      logRestoreTiming('provider:setFreshCustomerInfo', startedAt, {
+        hasActiveEntitlement: hasActiveEntitlement(info ?? null),
+      });
     },
   });
 
@@ -385,10 +412,13 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
 
   const restore = useCallback(async () => {
     if (isExpoGo) return true;
+    const startedAt = Date.now();
     const info = await restoreMutation.mutateAsync();
     if (!hasActiveEntitlement(info ?? null)) {
+      logRestoreTiming('provider:restoreNoEntitlement', startedAt);
       throw new Error(getMissingMembershipMessage(info ?? null));
     }
+    logRestoreTiming('provider:restoreActiveEntitlementConfirmed', startedAt);
     return hasActiveEntitlement(info ?? null);
   }, [isExpoGo, restoreMutation]);
 
@@ -423,7 +453,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     remainingRewrites,
     daysRemaining,
     expirationLabel,
-    isLoading: !isExpoGo && ((isAuthenticated && !!user?.id && !isRevenueCatIdentified) || customerInfoQuery.isLoading || offeringsQuery.isLoading),
+    isLoading: subscriptionAccessLoading,
     isSubscribing: purchaseMutation.isPending,
     isRestoring: restoreMutation.isPending,
     purchaseError: purchaseMutation.error instanceof Error ? purchaseMutation.error.message : null,
@@ -449,6 +479,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     isEntitlementActive,
     hasPremiumAccess,
     state,
+    subscriptionAccessLoading,
     offeringsQuery.data,
     offeringStatus,
     offeringsError,
@@ -462,11 +493,6 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     daysRemaining,
     expirationLabel,
     isExpoGo,
-    isRevenueCatIdentified,
-    isAuthenticated,
-    user?.id,
-    customerInfoQuery.isLoading,
-    offeringsQuery.isLoading,
     purchaseMutation,
     restoreMutation.isPending,
     restoreMutation.error,

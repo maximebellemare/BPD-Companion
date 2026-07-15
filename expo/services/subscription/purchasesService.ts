@@ -9,10 +9,23 @@ import {
   REVENUECAT_TEST_API_KEY_ENV,
   REVENUECAT_YEARLY_PRODUCT_ID,
 } from '@/constants/revenuecat';
+import {
+  REVENUECAT_IDENTITY_MISMATCH_MESSAGE,
+  SUBSCRIPTION_LINKED_TO_ANOTHER_ACCOUNT_MESSAGE,
+  hasActiveMembershipEntitlement,
+  isRevenueCatOwnershipConflict,
+} from '@/services/subscription/restoreSecurityModel';
 
 export type CustomerInfo = {
   originalAppUserId?: string;
+  activeSubscriptions?: string[];
+  allPurchasedProductIdentifiers?: string[];
   entitlements: {
+    all?: Record<string, {
+      expirationDate?: string | null;
+      productIdentifier?: string;
+      periodType?: string;
+    }>;
     active: Record<string, {
       expirationDate?: string | null;
       productIdentifier?: string;
@@ -35,37 +48,9 @@ export type PurchasesOffering = {
   annual?: PurchasesPackage | null;
 };
 
-export type RevenueCatDiagnostics = {
-  platform: string;
-  configured: boolean;
-  apiKeyDetected: boolean;
-  apiKeyPrefix: string | null;
-  configureSucceeded: boolean;
-  configureExceptionMessage: string | null;
-  initializationCompleted: boolean;
-  currentAppUserId: string | null;
-  customerInfoOriginalAppUserId: string | null;
-  expectedOfferingId: string;
-  expectedEntitlementId: string;
-  expectedMonthlyProductId: string;
-  expectedYearlyProductId: string;
-  offeringsFetched: boolean;
-  offeringsCurrentExists: boolean;
-  offeringsAllKeys: string[];
-  packageCount: number;
-  currentOfferingIdentifier: string | null;
-  monthlyPackageFound: boolean;
-  annualPackageFound: boolean;
-  monthlyProductIdentifier: string | null;
-  annualProductIdentifier: string | null;
-  error: string | null;
-};
-
 let configured = false;
 let configurePromise: Promise<boolean> | null = null;
-let initializationCompleted = false;
 let configureExceptionMessage: string | null = null;
-let expoGoDisabledLogged = false;
 
 export const PURCHASES_UNAVAILABLE_MESSAGE =
   'Membership options are loading. Please try again in a moment.';
@@ -75,21 +60,52 @@ export function isNativePurchasesPlatform(): boolean {
 }
 
 export function isExpoGoPurchases(): boolean {
-  const isExpoGo = Constants.appOwnership === 'expo';
-  if (isExpoGo) logExpoGoRevenueCatDisabled();
-  return isExpoGo;
-}
-
-function logExpoGoRevenueCatDisabled(): void {
-  if (expoGoDisabledLogged) return;
-  expoGoDisabledLogged = true;
-  console.log('[Purchases] Expo Go detected — RevenueCat disabled for local testing');
+  return Constants.appOwnership === 'expo';
 }
 
 function getPurchaseErrorMessage(error: unknown): string {
   if (!isNativePurchasesPlatform()) return PURCHASES_UNAVAILABLE_MESSAGE;
+  if (isRevenueCatOwnershipConflict(error)) return SUBSCRIPTION_LINKED_TO_ANOTHER_ACCOUNT_MESSAGE;
   if (error instanceof Error && error.message) return error.message;
   return 'Purchase could not be completed. Please try again.';
+}
+
+async function syncPurchasesIfAvailable(Purchases: any, context: string): Promise<CustomerInfo | null> {
+  if (typeof Purchases.syncPurchases !== 'function') {
+    return null;
+  }
+  void context;
+  await Purchases.syncPurchases();
+  return await Purchases.getCustomerInfo() as CustomerInfo;
+}
+
+async function getCurrentAppUserId(Purchases: any): Promise<string | null> {
+  return typeof Purchases.getAppUserID === 'function'
+    ? await Purchases.getAppUserID()
+    : null;
+}
+
+async function ensureRevenueCatIdentity(Purchases: any, supabaseUserId: string): Promise<void> {
+  if (!supabaseUserId) {
+    throw new Error(REVENUECAT_IDENTITY_MISMATCH_MESSAGE);
+  }
+
+  const currentAppUserId = await getCurrentAppUserId(Purchases);
+  if (currentAppUserId === supabaseUserId) return;
+
+  if (typeof Purchases.logIn !== 'function') {
+    throw new Error(REVENUECAT_IDENTITY_MISMATCH_MESSAGE);
+  }
+
+  await Purchases.logIn(supabaseUserId);
+  const verifiedAppUserId = await getCurrentAppUserId(Purchases);
+  if (verifiedAppUserId !== supabaseUserId) {
+    throw new Error(REVENUECAT_IDENTITY_MISMATCH_MESSAGE);
+  }
+}
+
+function shouldAttemptAndroidSync(info: CustomerInfo | null): boolean {
+  return Platform.OS === 'android' && !!getEmptyReceiptClassification(info);
 }
 
 function getRCToken(): string | undefined {
@@ -110,15 +126,16 @@ function getExpectedApiKeyEnvName(): string {
   return REVENUECAT_TEST_API_KEY_ENV;
 }
 
-function getApiKeyPrefix(apiKey: string | undefined): string | null {
-  return apiKey ? apiKey.slice(0, 8) : null;
+function getEmptyReceiptClassification(info: CustomerInfo | null): string | null {
+  if (hasActiveEntitlement(info)) return null;
+  const hasStoreData = (info?.activeSubscriptions?.length ?? 0) > 0 ||
+    (info?.allPurchasedProductIdentifiers?.length ?? 0) > 0;
+  return hasStoreData ? 'store_purchase_without_entitlement' : 'receipt_not_synced_or_no_active_purchase';
 }
 
 export async function configurePurchases(appUserId?: string): Promise<boolean> {
   if (isExpoGoPurchases()) {
-    initializationCompleted = true;
     configureExceptionMessage = 'RevenueCat disabled in Expo Go.';
-    logExpoGoRevenueCatDisabled();
     return false;
   }
   if (configured) return true;
@@ -128,11 +145,9 @@ export async function configurePurchases(appUserId?: string): Promise<boolean> {
     try {
       const apiKey = getRCToken();
       if (!apiKey || Platform.OS === 'web') {
-        initializationCompleted = true;
         configureExceptionMessage = !apiKey
           ? `Missing RevenueCat API key: ${getExpectedApiKeyEnvName()}`
           : PURCHASES_UNAVAILABLE_MESSAGE;
-        console.log('[Purchases] configure skipped:', configureExceptionMessage);
         configurePromise = null;
         return false;
       }
@@ -140,14 +155,10 @@ export async function configurePurchases(appUserId?: string): Promise<boolean> {
       Purchases.setLogLevel(Purchases.LOG_LEVEL.WARN);
       Purchases.configure({ apiKey, appUserID: appUserId ?? null });
       configured = true;
-      initializationCompleted = true;
       configureExceptionMessage = null;
-      console.log('[Purchases] Configured for', Platform.OS);
       return true;
     } catch (error) {
-      initializationCompleted = true;
       configureExceptionMessage = error instanceof Error ? error.message : String(error);
-      console.log('[Purchases] configure error:', configureExceptionMessage);
       configurePromise = null;
       return false;
     }
@@ -167,7 +178,6 @@ export async function ensureConfigured(): Promise<void> {
 
 export async function logInPurchases(appUserId: string): Promise<CustomerInfo | null> {
   if (isExpoGoPurchases()) {
-    logExpoGoRevenueCatDisabled();
     return null;
   }
   const success = await configurePurchases(appUserId);
@@ -175,24 +185,25 @@ export async function logInPurchases(appUserId: string): Promise<CustomerInfo | 
   try {
     const Purchases = (await import('react-native-purchases')).default;
     const result = await Purchases.logIn(appUserId);
-    return result.customerInfo;
+    let customerInfo = result.customerInfo as CustomerInfo | null;
+    if (shouldAttemptAndroidSync(customerInfo)) {
+      customerInfo = await syncPurchasesIfAvailable(Purchases, 'android_login_empty_customer_info') ?? customerInfo;
+    }
+    return customerInfo;
   } catch (error) {
-    console.log('[Purchases] logIn error:', error);
     throw error;
   }
 }
 
 export async function logOutPurchases(): Promise<CustomerInfo | null> {
   if (isExpoGoPurchases()) {
-    logExpoGoRevenueCatDisabled();
     return null;
   }
   if (!configured || !isNativePurchasesPlatform()) return null;
   try {
     const Purchases = (await import('react-native-purchases')).default;
     return await Purchases.logOut();
-  } catch (error) {
-    console.log('[Purchases] logOut error:', error);
+  } catch {
     return null;
   }
 }
@@ -203,7 +214,6 @@ export function arePurchasesAvailable(): boolean {
 
 export async function fetchOfferings(): Promise<PurchasesOffering | null> {
   if (isExpoGoPurchases()) {
-    logExpoGoRevenueCatDisabled();
     return null;
   }
   await ensureConfigured();
@@ -212,159 +222,93 @@ export async function fetchOfferings(): Promise<PurchasesOffering | null> {
     const Purchases = (await import('react-native-purchases')).default;
     const offerings = await Purchases.getOfferings();
     const current = offerings.current ?? offerings.all[REVENUECAT_OFFERING_ID] ?? null;
-    console.log('[Purchases] fetched offerings, current:', current?.identifier);
     return current;
-  } catch (error) {
-    console.log('[Purchases] getOfferings error:', error);
+  } catch {
     return null;
-  }
-}
-
-export async function fetchRevenueCatDiagnostics(): Promise<RevenueCatDiagnostics> {
-  const apiKey = getRCToken();
-  const base: RevenueCatDiagnostics = {
-    platform: Platform.OS,
-    configured,
-    apiKeyDetected: Boolean(apiKey),
-    apiKeyPrefix: getApiKeyPrefix(apiKey),
-    configureSucceeded: configured,
-    configureExceptionMessage,
-    initializationCompleted,
-    currentAppUserId: null,
-    customerInfoOriginalAppUserId: null,
-    expectedOfferingId: REVENUECAT_OFFERING_ID,
-    expectedEntitlementId: REVENUECAT_ENTITLEMENT_ID,
-    expectedMonthlyProductId: REVENUECAT_MONTHLY_PRODUCT_ID,
-    expectedYearlyProductId: REVENUECAT_YEARLY_PRODUCT_ID,
-    offeringsFetched: false,
-    offeringsCurrentExists: false,
-    offeringsAllKeys: [],
-    packageCount: 0,
-    currentOfferingIdentifier: null,
-    monthlyPackageFound: false,
-    annualPackageFound: false,
-    monthlyProductIdentifier: null,
-    annualProductIdentifier: null,
-    error: null,
-  };
-
-  try {
-    if (isExpoGoPurchases()) {
-      logExpoGoRevenueCatDisabled();
-      return {
-        ...base,
-        initializationCompleted: true,
-        configureExceptionMessage: 'RevenueCat disabled in Expo Go.',
-        error: 'RevenueCat disabled in Expo Go.',
-      };
-    }
-
-    await configurePurchases();
-    base.configured = configured;
-    base.configureSucceeded = configured;
-    base.configureExceptionMessage = configureExceptionMessage;
-    base.initializationCompleted = initializationCompleted;
-
-    if (Platform.OS === 'web') {
-      return { ...base, error: PURCHASES_UNAVAILABLE_MESSAGE };
-    }
-
-    if (!configured) {
-      return { ...base, error: configureExceptionMessage ?? 'RevenueCat is not configured.' };
-    }
-
-    const Purchases = (await import('react-native-purchases')).default;
-    const currentAppUserId = typeof Purchases.getAppUserID === 'function'
-      ? await Purchases.getAppUserID()
-      : null;
-    const customerInfo = await Purchases.getCustomerInfo();
-    const offerings = await Purchases.getOfferings();
-    const all = offerings.all ?? {};
-    const current = offerings.current ?? all[REVENUECAT_OFFERING_ID] ?? null;
-    const availablePackages = Array.isArray((current as any)?.availablePackages)
-      ? (current as any).availablePackages
-      : [];
-
-    return {
-      ...base,
-      configured,
-      currentAppUserId,
-      customerInfoOriginalAppUserId: customerInfo?.originalAppUserId ?? null,
-      offeringsFetched: true,
-      offeringsCurrentExists: Boolean(offerings.current),
-      offeringsAllKeys: Object.keys(all),
-      packageCount: availablePackages.length,
-      currentOfferingIdentifier: current?.identifier ?? null,
-      monthlyPackageFound: Boolean(current?.monthly),
-      annualPackageFound: Boolean(current?.annual),
-      monthlyProductIdentifier: current?.monthly?.product?.identifier ?? null,
-      annualProductIdentifier: current?.annual?.product?.identifier ?? null,
-      error: null,
-    };
-  } catch (error) {
-    return {
-      ...base,
-      configured,
-      error: error instanceof Error ? error.message : String(error),
-    };
   }
 }
 
 export async function fetchCustomerInfo(): Promise<CustomerInfo | null> {
   if (isExpoGoPurchases()) {
-    logExpoGoRevenueCatDisabled();
     return null;
   }
   await ensureConfigured();
   if (!isNativePurchasesPlatform()) return null;
   try {
     const Purchases = (await import('react-native-purchases')).default;
-    return await Purchases.getCustomerInfo();
-  } catch (error) {
-    console.log('[Purchases] getCustomerInfo error:', error);
+    let customerInfo = await Purchases.getCustomerInfo() as CustomerInfo;
+    if (shouldAttemptAndroidSync(customerInfo)) {
+      customerInfo = await syncPurchasesIfAvailable(Purchases, 'android_fetch_customer_info_empty') ?? customerInfo;
+    }
+    return customerInfo;
+  } catch {
     return null;
   }
 }
 
-export async function purchasePackage(pkg: PurchasesPackage): Promise<CustomerInfo | null> {
+export async function purchasePackage(pkg: PurchasesPackage, supabaseUserId: string): Promise<CustomerInfo | null> {
   if (isExpoGoPurchases()) {
-    logExpoGoRevenueCatDisabled();
     return null;
   }
   await ensureConfigured();
   if (!arePurchasesAvailable()) throw new Error(PURCHASES_UNAVAILABLE_MESSAGE);
+  const Purchases = (await import('react-native-purchases')).default;
   try {
-    const Purchases = (await import('react-native-purchases')).default;
+    await ensureRevenueCatIdentity(Purchases, supabaseUserId);
     const result = await Purchases.purchasePackage(pkg as never);
-    console.log('[Purchases] purchase success:', pkg.identifier);
-    return result.customerInfo;
-  } catch (error) {
-    console.log('[Purchases] purchasePackage error:', error);
-    throw new Error(getPurchaseErrorMessage(error));
-  }
-}
-
-export async function restorePurchases(): Promise<CustomerInfo | null> {
-  if (isExpoGoPurchases()) {
-    logExpoGoRevenueCatDisabled();
-    return null;
-  }
-  await ensureConfigured();
-  if (!arePurchasesAvailable()) throw new Error(PURCHASES_UNAVAILABLE_MESSAGE);
-  try {
-    const Purchases = (await import('react-native-purchases')).default;
-    const customerInfo = await Purchases.restorePurchases();
-    console.log('[Purchases] restore success');
+    let customerInfo = ((await Purchases.getCustomerInfo()) ?? result.customerInfo ?? null) as CustomerInfo | null;
+    const emptyClassification = getEmptyReceiptClassification(customerInfo);
+    if ((Platform.OS === 'android' || emptyClassification) && emptyClassification && typeof Purchases.syncPurchases === 'function') {
+      customerInfo = await syncPurchasesIfAvailable(Purchases, 'purchase_missing_entitlement') ?? customerInfo;
+    }
     return customerInfo;
   } catch (error) {
-    console.log('[Purchases] restorePurchases error:', error);
+    let syncedCustomerInfo: CustomerInfo | null = null;
+    if (!isRevenueCatOwnershipConflict(error)) {
+      try {
+        syncedCustomerInfo = await syncPurchasesIfAvailable(Purchases, 'purchase_error_fallback');
+      } catch {
+        // Best-effort recovery only.
+      }
+    }
+    if (hasActiveEntitlement(syncedCustomerInfo)) {
+      return syncedCustomerInfo;
+    }
     throw new Error(getPurchaseErrorMessage(error));
   }
+}
+
+export async function restorePurchases(supabaseUserId: string): Promise<CustomerInfo | null> {
+  if (isExpoGoPurchases()) {
+    return null;
+  }
+  await ensureConfigured();
+  if (!arePurchasesAvailable()) throw new Error(PURCHASES_UNAVAILABLE_MESSAGE);
+  try {
+    const Purchases = (await import('react-native-purchases')).default;
+    await ensureRevenueCatIdentity(Purchases, supabaseUserId);
+    const customerInfoBeforeRestore = await Purchases.getCustomerInfo() as CustomerInfo;
+    if (shouldAttemptAndroidSync(customerInfoBeforeRestore)) {
+      await syncPurchasesIfAvailable(Purchases, 'android_before_restore_empty_customer_info');
+    }
+    const restoredCustomerInfo = await Purchases.restorePurchases();
+    let refreshedCustomerInfo = await Purchases.getCustomerInfo() as CustomerInfo;
+    if (shouldAttemptAndroidSync(refreshedCustomerInfo)) {
+      refreshedCustomerInfo = await syncPurchasesIfAvailable(Purchases, 'android_after_restore_empty_customer_info') ?? refreshedCustomerInfo;
+    }
+    const customerInfo = refreshedCustomerInfo ?? restoredCustomerInfo ?? null;
+    return customerInfo;
+  } catch (error) {
+    throw new Error(getPurchaseErrorMessage(error));
+  }
+}
+
+export function classifyRevenueCatAccessProblem(info: CustomerInfo | null): string | null {
+  return getEmptyReceiptClassification(info);
 }
 
 export function hasActiveEntitlement(info: CustomerInfo | null): boolean {
-  if (!info) return false;
-  return !!info.entitlements.active[REVENUECAT_ENTITLEMENT_ID];
+  return hasActiveMembershipEntitlement(info);
 }
 
 export function getActiveExpiration(info: CustomerInfo | null): number | null {

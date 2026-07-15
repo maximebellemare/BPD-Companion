@@ -1,5 +1,4 @@
 import { useEffect, useCallback, useMemo, useRef, useState } from 'react';
-import { Platform } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import createContextHook from '@nkzw/create-context-hook';
 import {
@@ -30,13 +29,13 @@ import {
   configurePurchases,
   fetchCustomerInfo,
   fetchOfferings,
-  fetchRevenueCatDiagnostics,
   isExpoGoPurchases,
   logInPurchases,
   logOutPurchases,
   purchasePackage as rcPurchasePackage,
   restorePurchases as rcRestorePurchases,
   hasActiveEntitlement,
+  classifyRevenueCatAccessProblem,
   getActiveExpiration,
   getActivePeriodType,
   isTrialActive as rcIsTrialActive,
@@ -48,6 +47,7 @@ import {
   REVENUECAT_MONTHLY_PRODUCT_ID,
   REVENUECAT_YEARLY_PRODUCT_ID,
 } from '@/constants/revenuecat';
+import { trackEvent } from '@/services/analytics/analyticsService';
 
 type OfferingStatus = 'loading' | 'ready' | 'empty' | 'error' | 'preview';
 
@@ -73,6 +73,14 @@ const FALLBACK_PREVIEW_PLANS: SubscriptionPlan[] = [
     isFallbackPrice: true,
   },
 ];
+
+function getMissingMembershipMessage(info: Awaited<ReturnType<typeof fetchCustomerInfo>>): string {
+  const classification = classifyRevenueCatAccessProblem(info ?? null);
+  if (classification === 'store_purchase_without_entitlement') {
+    return 'RevenueCat found a store purchase, but the membership entitlement is not active yet. Tap Restore purchase or contact support if this continues.';
+  }
+  return 'RevenueCat did not find an active subscription receipt yet. Tap Restore purchase, wait a moment, or try again.';
+}
 
 export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   const queryClient = useQueryClient();
@@ -103,9 +111,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
           setIsRevenueCatIdentified(true);
           await queryClient.invalidateQueries({ queryKey: ['rc-customer-info'] });
           await queryClient.invalidateQueries({ queryKey: ['rc-offerings'] });
-          await queryClient.invalidateQueries({ queryKey: ['rc-diagnostics'] });
-        } catch (error) {
-          console.log('[Subscription] RevenueCat identity sync failed:', error);
+        } catch {
           if (!cancelled) setIsRevenueCatIdentified(false);
         }
         return;
@@ -115,10 +121,11 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
         identifiedUserIdRef.current = null;
         setIsRevenueCatIdentified(false);
         await logOutPurchases();
-        await queryClient.invalidateQueries({ queryKey: ['rc-customer-info'] });
-        await queryClient.invalidateQueries({ queryKey: ['rc-diagnostics'] });
+        queryClient.removeQueries({ queryKey: ['rc-customer-info'] });
+        queryClient.removeQueries({ queryKey: ['rc-offerings'] });
       } else {
         setIsRevenueCatIdentified(false);
+        queryClient.removeQueries({ queryKey: ['rc-customer-info'] });
       }
     };
 
@@ -148,13 +155,6 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     queryFn: fetchOfferings,
     staleTime: 5 * 60_000,
     enabled: shouldUseRevenueCat,
-  });
-
-  const revenueCatDiagnosticsQuery = useQuery({
-    queryKey: ['rc-diagnostics'],
-    queryFn: fetchRevenueCatDiagnostics,
-    staleTime: 30_000,
-    enabled: __DEV__ && shouldUseRevenueCat,
   });
 
   const aiUsageQuery = useQuery({
@@ -286,15 +286,41 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   }, [offeringStatus, offeringsQuery.error]);
 
   const purchaseMutation = useMutation({
-    mutationFn: (pkg: PurchasesPackage) => (isExpoGo ? Promise.resolve(null) : rcPurchasePackage(pkg)),
-    onSuccess: () => {
+    mutationFn: async (pkg: PurchasesPackage) => {
+      if (isExpoGo) return null;
+      if (!user?.id) {
+        throw new Error('Please sign in again before starting your membership.');
+      }
+      const info = await rcPurchasePackage(pkg, user.id);
+      const membershipActive = hasActiveEntitlement(info ?? null);
+      if (info) {
+        queryClient.setQueryData(['rc-customer-info'], info);
+      }
+      if (!membershipActive) {
+        throw new Error(getMissingMembershipMessage(info ?? null));
+      }
+      return info;
+    },
+    onSuccess: (info) => {
       void queryClient.invalidateQueries({ queryKey: ['rc-customer-info'] });
+      if (rcIsTrialActive(info ?? null)) {
+        void trackEvent('trial_started');
+      }
     },
   });
 
   const restoreMutation = useMutation({
-    mutationFn: () => (isExpoGo ? Promise.resolve(null) : rcRestorePurchases()),
-    onSuccess: () => {
+    mutationFn: () => {
+      if (isExpoGo) return Promise.resolve(null);
+      if (!user?.id) {
+        return Promise.reject(new Error('Please sign in again before restoring purchases.'));
+      }
+      return rcRestorePurchases(user.id);
+    },
+    onSuccess: (info) => {
+      if (info) {
+        queryClient.setQueryData(['rc-customer-info'], info);
+      }
       void queryClient.invalidateQueries({ queryKey: ['rc-customer-info'] });
     },
   });
@@ -360,6 +386,9 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   const restore = useCallback(async () => {
     if (isExpoGo) return true;
     const info = await restoreMutation.mutateAsync();
+    if (!hasActiveEntitlement(info ?? null)) {
+      throw new Error(getMissingMembershipMessage(info ?? null));
+    }
     return hasActiveEntitlement(info ?? null);
   }, [isExpoGo, restoreMutation]);
 
@@ -385,10 +414,6 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     offering: offeringsQuery.data ?? null,
     offeringStatus,
     offeringsError,
-    revenueCatDiagnostics: revenueCatDiagnosticsQuery.data ?? null,
-    refreshRevenueCatDiagnostics: () => {
-      void queryClient.invalidateQueries({ queryKey: ['rc-diagnostics'] });
-    },
     plans,
     dailyAIUsage,
     aiLimitReached,
@@ -411,9 +436,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
       const pkg = current?.annual ?? current?.monthly ?? null;
       if (pkg) purchaseMutation.mutate(pkg);
     },
-    cancel: () => {
-      console.log('[Subscription] Cancel must be done in the App Store / Play Store');
-    },
+    cancel: () => {},
     restore,
     canAccessFeature,
     shouldPromptUpgrade,
@@ -429,8 +452,6 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     offeringsQuery.data,
     offeringStatus,
     offeringsError,
-    revenueCatDiagnosticsQuery.data,
-    queryClient,
     plans,
     dailyAIUsage,
     aiLimitReached,
@@ -446,8 +467,6 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     user?.id,
     customerInfoQuery.isLoading,
     offeringsQuery.isLoading,
-    purchaseMutation.isPending,
-    purchaseMutation.error,
     purchaseMutation,
     restoreMutation.isPending,
     restoreMutation.error,

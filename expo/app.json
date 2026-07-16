@@ -36,9 +36,10 @@
       "package": "com.maximebellemare.bpdcompanion",
       "permissions": [
         "POST_NOTIFICATIONS",
-        "POST_NOTIFICATIONS"
+        "POST_NOTIFICATIONS",
+        "com.google.android.gms.permission.AD_ID"
       ],
-      "versionCode": 13
+      "versionCode": 14
     },
     "web": {
       "favicon": "./assets/images/favicon.png"

@@ -318,6 +318,8 @@ export default function UpgradeScreen() {
   }, [handleHaptic, isExpoGo, restore, router, navigateToAppOnce]);
 
   const selectedPlan = plans.find(p => p.id === selectedPlanId);
+  const selectedAndroidTrialCopy = Platform.OS === 'android' ? selectedPlan?.androidTrialCopy ?? null : null;
+  const shouldShowTrialCopy = Platform.OS !== 'android' || !!selectedAndroidTrialCopy;
   const canSubscribe = !isExpoGo && isNativePurchases && offeringStatus === 'ready' && !!selectedPlan && !selectedPlan.isFallbackPrice;
   const canUsePrimaryCta = isExpoGo || isPremium || canSubscribe;
   const trialDaysRemaining = state.trialEndsAt
@@ -329,12 +331,16 @@ export default function UpgradeScreen() {
       : `Store trial active — ${trialDaysRemaining} days left.`
     : isEntitlementActive
       ? 'Membership active.'
-      : 'Start your 3-day free trial.';
+      : shouldShowTrialCopy
+        ? 'Start your 3-day free trial.'
+        : 'Start your membership.';
   const accessStatusBody = state.isTrialActive
     ? 'Everything is unlocked during your App Store or Google Play trial. No daily limits.'
     : isEntitlementActive
       ? 'You have full access to every feature, including Companion, check-ins, tools, insights, and Community.'
-      : 'Start your 3-day free trial for full access from day one. Cancel anytime before the trial ends.';
+      : shouldShowTrialCopy
+        ? 'Start your 3-day free trial for full access from day one. Cancel anytime before the trial ends.'
+        : 'Start membership for full access from day one. Cancel anytime.';
   const statusMessage = useMemo(() => {
     if (offeringStatus === 'loading') return 'Loading membership options...';
     if (offeringStatus === 'preview') return isNativePurchases ? null : 'Preparing your personalized membership...';
@@ -382,7 +388,9 @@ export default function UpgradeScreen() {
           <Animated.View style={[styles.heroIconWrap, { opacity: shimmerOpacity }]}>
             <BrandLogo size={56} />
           </Animated.View>
-          <Text style={[styles.heroTitle, { color: colors.text }]}>Start your 3-day free trial.</Text>
+          <Text style={[styles.heroTitle, { color: colors.text }]}>
+            {shouldShowTrialCopy ? 'Start your 3-day free trial.' : 'Start your membership.'}
+          </Text>
           <Text style={[styles.heroSubtitle, { color: colors.textSecondary }]}>
             Everything is unlocked from day one: Companion, check-ins, tools, Community, insights, and progress tracking.
           </Text>
@@ -474,9 +482,15 @@ export default function UpgradeScreen() {
               </View>
             ))}
           </View>
-          <Text style={styles.trialClarifier}>
-            Cancel anytime before your 3-day trial ends. You won’t be charged until your trial is over.
-          </Text>
+          {shouldShowTrialCopy ? (
+            <Text style={styles.trialClarifier}>
+              Cancel anytime before your 3-day trial ends. You won’t be charged until your trial is over.
+            </Text>
+          ) : (
+            <Text style={styles.trialClarifier}>
+              Cancel anytime from your App Store or Google Play subscription settings.
+            </Text>
+          )}
         </Animated.View>
 
         <Animated.View
@@ -559,6 +573,11 @@ export default function UpgradeScreen() {
                     <Text style={[styles.planPrice, isSelected && styles.planPriceSelected]}>
                       {plan.priceLabel}
                     </Text>
+                    {Platform.OS === 'android' && plan.androidTrialCopy ? (
+                      <Text style={[styles.planTrialText, isSelected && styles.planTrialTextSelected]}>
+                        {plan.androidTrialCopy}
+                      </Text>
+                    ) : null}
                     {plan.savings && (
                       <Text style={[styles.planSavings, isSelected && styles.planSavingsSelected]}>
                         {plan.savings}
@@ -598,7 +617,9 @@ export default function UpgradeScreen() {
                 : isPremium
                   ? 'Manage existing subscription'
                   : canSubscribe
-                    ? `Start your 3-day free trial ${selectedPlan?.priceLabel ?? ''}`
+                    ? shouldShowTrialCopy
+                      ? `Start your 3-day free trial ${selectedPlan?.priceLabel ?? ''}`
+                      : `Start membership ${selectedPlan?.priceLabel ?? ''}`
                   : 'Loading membership options...'}
             </Text>
           </TouchableOpacity>
@@ -609,7 +630,11 @@ export default function UpgradeScreen() {
         <View style={styles.trustSection}>
           <View style={styles.trustRow}>
             <Shield size={13} color={Colors.textMuted} />
-            <Text style={styles.trustText}>3-day free trial · Cancel anytime</Text>
+            <Text style={styles.trustText}>
+              {shouldShowTrialCopy
+                ? '3-day free trial for eligible new subscribers · Cancel anytime'
+                : 'Cancel anytime'}
+            </Text>
           </View>
           <TouchableOpacity onPress={handleRestore} style={styles.restoreBtn} testID="restore-btn" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Text style={styles.restoreText}>{isRestoring ? 'Restoring...' : 'Restore purchase'}</Text>
@@ -1038,6 +1063,17 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   planPriceSelected: {
+    color: Colors.brandNavy,
+  },
+  planTrialText: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: '700' as const,
+    color: Colors.primary,
+    textAlign: 'center' as const,
+    marginBottom: 6,
+  },
+  planTrialTextSelected: {
     color: Colors.brandNavy,
   },
   planSavings: {

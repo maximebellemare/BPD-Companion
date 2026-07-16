@@ -15,6 +15,21 @@ import {
   hasActiveMembershipEntitlement,
   isRevenueCatOwnershipConflict,
 } from '@/services/subscription/restoreSecurityModel';
+import {
+  selectAndroidSubscriptionOption,
+} from '@/services/subscription/androidPurchaseSelector';
+import type { SubscriptionPeriod } from '@/types/subscription';
+import type {
+  PurchasesOffering,
+  PurchasesPackage,
+} from 'react-native-purchases';
+
+export type {
+  GoogleProductChangeInfo,
+  PurchasesOffering,
+  PurchasesPackage,
+  SubscriptionOption,
+} from 'react-native-purchases';
 
 export type CustomerInfo = {
   originalAppUserId?: string;
@@ -34,18 +49,8 @@ export type CustomerInfo = {
   };
 };
 
-export type PurchasesPackage = {
-  identifier: string;
-  product: {
-    identifier?: string;
-    priceString: string;
-  };
-};
-
-export type PurchasesOffering = {
-  identifier: string;
-  monthly?: PurchasesPackage | null;
-  annual?: PurchasesPackage | null;
+export type RevenueCatBillingPeriod = string | {
+  iso8601?: string;
 };
 
 let configured = false;
@@ -263,7 +268,11 @@ export async function fetchCustomerInfo(): Promise<CustomerInfo | null> {
   }
 }
 
-export async function purchasePackage(pkg: PurchasesPackage, supabaseUserId: string): Promise<CustomerInfo | null> {
+export async function purchasePackage(
+  pkg: PurchasesPackage,
+  supabaseUserId: string,
+  period?: SubscriptionPeriod,
+): Promise<CustomerInfo | null> {
   if (isExpoGoPurchases()) {
     return null;
   }
@@ -272,7 +281,24 @@ export async function purchasePackage(pkg: PurchasesPackage, supabaseUserId: str
   const Purchases = (await import('react-native-purchases')).default;
   try {
     await ensureRevenueCatIdentity(Purchases, supabaseUserId);
-    const result = await Purchases.purchasePackage(pkg as never);
+    let result: { customerInfo?: CustomerInfo | null };
+    if (Platform.OS === 'android' && period) {
+      const customerInfoBeforePurchase = await Purchases.getCustomerInfo() as CustomerInfo;
+      const selection = selectAndroidSubscriptionOption({
+        pkg,
+        period,
+        customerInfo: customerInfoBeforePurchase,
+      });
+      if (!selection.subscriptionOption) {
+        throw new Error(PURCHASES_UNAVAILABLE_MESSAGE);
+      }
+      result = await Purchases.purchaseSubscriptionOption(
+        selection.subscriptionOption,
+        selection.googleProductChangeInfo,
+      ) as { customerInfo?: CustomerInfo | null };
+    } else {
+      result = await Purchases.purchasePackage(pkg as never);
+    }
     let customerInfo = ((await Purchases.getCustomerInfo()) ?? result.customerInfo ?? null) as CustomerInfo | null;
     const emptyClassification = getEmptyReceiptClassification(customerInfo);
     if ((Platform.OS === 'android' || emptyClassification) && emptyClassification && typeof Purchases.syncPurchases === 'function') {

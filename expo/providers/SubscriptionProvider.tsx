@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useMemo, useRef, useState } from 'react';
+import { Platform } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import createContextHook from '@nkzw/create-context-hook';
 import {
@@ -49,6 +50,7 @@ import {
 } from '@/constants/revenuecat';
 import { trackEvent } from '@/services/analytics/analyticsService';
 import { isSubscriptionAccessLoading } from '@/services/subscription/restoreNavigationModel';
+import { getAndroidPaywallSelection } from '@/services/subscription/androidPurchaseSelector';
 
 type OfferingStatus = 'loading' | 'ready' | 'empty' | 'error' | 'preview';
 
@@ -268,6 +270,13 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     const nextPlans: SubscriptionPlan[] = [];
 
     if (offering.monthly) {
+      const androidSelection = Platform.OS === 'android'
+        ? getAndroidPaywallSelection({
+            pkg: offering.monthly,
+            period: 'monthly',
+            customerInfo: customerInfoQuery.data ?? null,
+          })
+        : null;
       nextPlans.push({
         id: 'monthly',
         name: 'Monthly',
@@ -276,10 +285,18 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
         priceLabel: `${offering.monthly.product.priceString}/mo`,
         productIdentifier: offering.monthly.product.identifier ?? REVENUECAT_MONTHLY_PRODUCT_ID,
         packageIdentifier: offering.monthly.identifier,
+        androidTrialCopy: androidSelection?.trialCopy ?? null,
       });
     }
 
     if (offering.annual) {
+      const androidSelection = Platform.OS === 'android'
+        ? getAndroidPaywallSelection({
+            pkg: offering.annual,
+            period: 'yearly',
+            customerInfo: customerInfoQuery.data ?? null,
+          })
+        : null;
       nextPlans.push({
         id: 'yearly',
         name: 'Yearly',
@@ -290,11 +307,12 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
         popular: true,
         productIdentifier: offering.annual.product.identifier ?? REVENUECAT_YEARLY_PRODUCT_ID,
         packageIdentifier: offering.annual.identifier,
+        androidTrialCopy: androidSelection?.trialCopy ?? null,
       });
     }
 
     return nextPlans;
-  }, [offeringStatus, offeringsQuery.data]);
+  }, [customerInfoQuery.data, offeringStatus, offeringsQuery.data]);
 
   const offeringsError = useMemo(() => {
     if (offeringsQuery.error instanceof Error) return offeringsQuery.error.message;
@@ -304,12 +322,12 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   }, [offeringStatus, offeringsQuery.error]);
 
   const purchaseMutation = useMutation({
-    mutationFn: async (pkg: PurchasesPackage) => {
+    mutationFn: async (input: { pkg: PurchasesPackage; period: SubscriptionPlan['period'] }) => {
       if (isExpoGo) return null;
       if (!user?.id) {
         throw new Error('Please sign in again before starting your membership.');
       }
-      const info = await rcPurchasePackage(pkg, user.id);
+      const info = await rcPurchasePackage(input.pkg, user.id, input.period);
       const membershipActive = hasActiveEntitlement(info ?? null);
       await queryClient.cancelQueries({ queryKey: ['rc-customer-info'] });
       if (info) {
@@ -407,7 +425,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
 
   const purchase = useCallback((pkg: PurchasesPackage) => {
     if (isExpoGo) return;
-    purchaseMutation.mutate(pkg);
+    purchaseMutation.mutate({ pkg, period: 'monthly' });
   }, [isExpoGo, purchaseMutation]);
 
   const restore = useCallback(async () => {
@@ -432,7 +450,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     if (!pkg) {
       throw new Error(PURCHASES_UNAVAILABLE_MESSAGE);
     }
-    purchaseMutation.mutate(pkg);
+    purchaseMutation.mutate({ pkg, period: _plan.period });
   }, [isExpoGo, offeringsQuery.data, purchaseMutation]);
 
   return useMemo(() => ({
@@ -464,7 +482,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
       if (isExpoGo) return;
       const current = offeringsQuery.data;
       const pkg = current?.annual ?? current?.monthly ?? null;
-      if (pkg) purchaseMutation.mutate(pkg);
+      if (pkg) purchaseMutation.mutate({ pkg, period: current?.annual ? 'yearly' : 'monthly' });
     },
     cancel: () => {},
     restore,

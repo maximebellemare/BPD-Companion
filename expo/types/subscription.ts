@@ -13,6 +13,7 @@ export interface SubscriptionPlan {
   productIdentifier?: string;
   packageIdentifier?: string;
   isFallbackPrice?: boolean;
+  androidTrialCopy?: string | null;
 }
 
 export interface SubscriptionState {

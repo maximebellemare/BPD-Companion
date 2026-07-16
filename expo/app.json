@@ -35,9 +35,7 @@
       },
       "package": "com.maximebellemare.bpdcompanion",
       "permissions": [
-        "POST_NOTIFICATIONS",
-        "POST_NOTIFICATIONS",
-        "com.google.android.gms.permission.AD_ID"
+        "POST_NOTIFICATIONS"
       ],
       "versionCode": 14
     },

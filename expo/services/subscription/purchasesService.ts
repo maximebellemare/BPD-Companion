@@ -56,6 +56,9 @@ export type RevenueCatBillingPeriod = string | {
 let configured = false;
 let configurePromise: Promise<boolean> | null = null;
 let configureExceptionMessage: string | null = null;
+let appleAdsAttributionEnabled = false;
+
+type PurchasesStatic = typeof import('react-native-purchases').default;
 
 export const PURCHASES_UNAVAILABLE_MESSAGE =
   'Membership options are loading. Please try again in a moment.';
@@ -155,6 +158,19 @@ function getEmptyReceiptClassification(info: CustomerInfo | null): string | null
   return hasStoreData ? 'store_purchase_without_entitlement' : 'receipt_not_synced_or_no_active_purchase';
 }
 
+async function enableAppleAdsAttribution(Purchases: PurchasesStatic): Promise<void> {
+  if (Platform.OS !== 'ios' || appleAdsAttributionEnabled) {
+    return;
+  }
+
+  try {
+    await Purchases.enableAdServicesAttributionTokenCollection();
+    appleAdsAttributionEnabled = true;
+  } catch (error) {
+    console.warn('[RevenueCat] Apple Ads attribution collection failed', error);
+  }
+}
+
 export async function configurePurchases(appUserId?: string): Promise<boolean> {
   if (isExpoGoPurchases()) {
     configureExceptionMessage = 'RevenueCat disabled in Expo Go.';
@@ -176,6 +192,7 @@ export async function configurePurchases(appUserId?: string): Promise<boolean> {
       const Purchases = (await import('react-native-purchases')).default;
       Purchases.setLogLevel(Purchases.LOG_LEVEL.WARN);
       Purchases.configure({ apiKey, appUserID: appUserId ?? null });
+      await enableAppleAdsAttribution(Purchases);
       configured = true;
       configureExceptionMessage = null;
       return true;

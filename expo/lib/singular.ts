@@ -1,8 +1,16 @@
 import Constants from 'expo-constants';
+import * as Application from 'expo-application';
 import { Platform } from 'react-native';
-import { createSingularController, type SingularNativeApi } from '@/lib/singularCore';
+import { createSingularController, type SingularNativeApi, type SingularRuntimeState } from '@/lib/singularCore';
 
 type SingularModule = typeof import('singular-react-native');
+
+export type SingularDiagnosticSnapshot = SingularRuntimeState & {
+  bpdCompanionIdfv: string | null;
+  idfvStatus: 'available' | 'failed' | 'unsupported';
+};
+
+const ENABLE_TEMPORARY_SINGULAR_DIAGNOSTICS = true;
 
 async function loadSingularNativeApi(): Promise<SingularNativeApi> {
   const module: SingularModule = await import('singular-react-native');
@@ -31,10 +39,38 @@ export const singular = createSingularController({
     EXPO_PUBLIC_SINGULAR_SDK_SECRET: process.env.EXPO_PUBLIC_SINGULAR_SDK_SECRET,
   },
   isDevelopment: __DEV__,
+  enableDiagnosticLogging: ENABLE_TEMPORARY_SINGULAR_DIAGNOSTICS,
   loadNativeApi: loadSingularNativeApi,
   log: (message, details) => console.log(message, details ?? ''),
   warn: (message, error) => console.warn(message, error),
 });
+
+export async function getSingularDiagnosticSnapshot(): Promise<SingularDiagnosticSnapshot> {
+  const runtimeState = singular.getState();
+
+  if (Platform.OS !== 'ios') {
+    return {
+      ...runtimeState,
+      bpdCompanionIdfv: null,
+      idfvStatus: 'unsupported',
+    };
+  }
+
+  try {
+    const idfv = await Application.getIosIdForVendorAsync();
+    return {
+      ...singular.getState(),
+      bpdCompanionIdfv: idfv ?? null,
+      idfvStatus: idfv ? 'available' : 'failed',
+    };
+  } catch {
+    return {
+      ...singular.getState(),
+      bpdCompanionIdfv: null,
+      idfvStatus: 'failed',
+    };
+  }
+}
 
 export const initializeSingular = singular.initialize;
 export const setSingularCustomUserId = singular.setCustomUserId;

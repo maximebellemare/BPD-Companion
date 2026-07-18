@@ -65,8 +65,12 @@ export async function assertSingularIntegrationRegressionScenarios(): Promise<tr
 
   await controller.initialize();
   await controller.initialize();
+  const initializedState = controller.getState();
   assert(loadCount === 1, 'initialization loads native API once');
   assert(calls.filter(call => call === 'init').length === 1, 'initialization runs once');
+  assert(initializedState.initializationAttempted === true, 'diagnostics record initialization attempt');
+  assert(initializedState.nativeModuleLoaded === true, 'diagnostics record native module loaded');
+  assert(initializedState.initSucceeded === true, 'diagnostics record successful init');
 
   await controller.setCustomUserId('supabase-user-uuid');
   assert(calls.includes('setCustomUserId:supabase-user-uuid'), 'authenticated user sets Supabase UUID');
@@ -98,6 +102,8 @@ export async function assertSingularIntegrationRegressionScenarios(): Promise<tr
     loadNativeApi: async () => createMockApi(missingEnvCalls),
   });
   assert((await missingEnvController.initialize()) === false, 'missing env does not initialize');
+  assert(missingEnvController.getState().initializationAttempted === true, 'missing env records initialization attempt');
+  assert(missingEnvController.getState().initSucceeded === false, 'missing env records failed init status');
   assert(missingEnvCalls.length === 0, 'missing env does not touch native API');
 
   const webCalls: string[] = [];

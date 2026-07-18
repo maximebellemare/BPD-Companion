@@ -26,6 +26,7 @@ export type SingularControllerDependencies = {
   appOwnership: SingularAppOwnership;
   env: SingularEnvironment;
   isDevelopment: boolean;
+  enableDiagnosticLogging?: boolean;
   loadNativeApi: () => Promise<SingularNativeApi>;
   log?: (message: string, details?: Record<string, unknown>) => void;
   warn?: (message: string, error?: unknown) => void;
@@ -33,6 +34,9 @@ export type SingularControllerDependencies = {
 
 export type SingularRuntimeState = {
   initialized: boolean;
+  initializationAttempted: boolean;
+  nativeModuleLoaded: boolean | null;
+  initSucceeded: boolean | null;
   nativePlatform: boolean;
   expoGo: boolean;
   currentUserId: string | null;
@@ -62,6 +66,8 @@ export function createSingularController(deps: SingularControllerDependencies) {
   let initializationAttempted = false;
   let initPromise: Promise<boolean> | null = null;
   let nativeApiPromise: Promise<SingularNativeApi> | null = null;
+  let nativeModuleLoaded: boolean | null = null;
+  let initSucceeded: boolean | null = null;
   let currentUserId: string | null = null;
 
   const nativePlatform = shouldUseSingularNativeSdk({
@@ -82,7 +88,15 @@ export function createSingularController(deps: SingularControllerDependencies) {
   };
 
   const loadNativeApi = async (): Promise<SingularNativeApi> => {
-    nativeApiPromise ??= deps.loadNativeApi();
+    nativeApiPromise ??= deps.loadNativeApi()
+      .then((api) => {
+        nativeModuleLoaded = true;
+        return api;
+      })
+      .catch((error) => {
+        nativeModuleLoaded = false;
+        throw error;
+      });
     return nativeApiPromise;
   };
 
@@ -92,6 +106,8 @@ export function createSingularController(deps: SingularControllerDependencies) {
     }
 
     if (!nativePlatform) {
+      initializationAttempted = true;
+      initSucceeded = false;
       log('[Singular] Native SDK skipped', {
         platform: deps.platform,
         appOwnership: deps.appOwnership ?? null,
@@ -100,6 +116,8 @@ export function createSingularController(deps: SingularControllerDependencies) {
     }
 
     if (!hasSingularCredentials(deps.env)) {
+      initializationAttempted = true;
+      initSucceeded = false;
       log('[Singular] Missing SDK key or secret; initialization skipped');
       return false;
     }
@@ -109,24 +127,25 @@ export function createSingularController(deps: SingularControllerDependencies) {
     }
 
     initPromise = (async () => {
+      initializationAttempted = true;
       try {
         const sdkKey = normalizeEnvValue(deps.env.EXPO_PUBLIC_SINGULAR_SDK_KEY);
         const sdkSecret = normalizeEnvValue(deps.env.EXPO_PUBLIC_SINGULAR_SDK_SECRET);
         const api = await loadNativeApi();
         const config = api.createConfig(sdkKey, sdkSecret);
 
-        if (deps.isDevelopment) {
+        if (deps.isDevelopment || deps.enableDiagnosticLogging) {
           await api.enableLogging?.(config);
         }
 
         await api.init(config);
         initialized = true;
-        initializationAttempted = true;
+        initSucceeded = true;
         log('[Singular] SDK initialized', { platform: deps.platform });
         return true;
       } catch (error) {
         initialized = false;
-        initializationAttempted = true;
+        initSucceeded = false;
         warn('[Singular] SDK initialization failed', error);
         return false;
       } finally {
@@ -203,6 +222,9 @@ export function createSingularController(deps: SingularControllerDependencies) {
 
   const getState = (): SingularRuntimeState => ({
     initialized,
+    initializationAttempted,
+    nativeModuleLoaded,
+    initSucceeded,
     nativePlatform,
     expoGo: deps.appOwnership === 'expo',
     currentUserId,

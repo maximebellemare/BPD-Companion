@@ -1,4 +1,8 @@
-import { computeOfferingStatus, computePaywallLoadingState } from '@/services/subscription/paywallLoadingModel';
+import {
+  computeOfferingStatus,
+  computePaywallLoadingState,
+  getMembershipOptionsRequestDecision,
+} from '@/services/subscription/paywallLoadingModel';
 
 function assert(condition: unknown, message: string): void {
   if (!condition) throw new Error(`Paywall loading regression failed: ${message}`);
@@ -100,6 +104,46 @@ export function assertPaywallLoadingRegressionScenarios(): true {
     hasValidPlan: true,
   });
   assert(lateSuccessAfterTimeout.canSubscribe === true, 'late successful offerings response wins after timeout');
+
+  const noIdentityRequest = getMembershipOptionsRequestDecision({
+    shouldUseRevenueCat: false,
+    userKey: 'user-a',
+    requestNonce: 0,
+    lastRequestKey: null,
+  });
+  assert(noIdentityRequest.shouldStart === false, 'RevenueCat request waits for identity-ready access');
+
+  const firstIdentityReadyRequest = getMembershipOptionsRequestDecision({
+    shouldUseRevenueCat: true,
+    userKey: 'user-a',
+    requestNonce: 1,
+    lastRequestKey: null,
+  });
+  assert(firstIdentityReadyRequest.shouldStart === true, 'identity-ready transition starts a membership options request');
+
+  const duplicateRequest = getMembershipOptionsRequestDecision({
+    shouldUseRevenueCat: true,
+    userKey: 'user-a',
+    requestNonce: 1,
+    lastRequestKey: firstIdentityReadyRequest.requestKey,
+  });
+  assert(duplicateRequest.shouldStart === false, 'same identity request key is deduplicated');
+
+  const retryRequest = getMembershipOptionsRequestDecision({
+    shouldUseRevenueCat: true,
+    userKey: 'user-a',
+    requestNonce: 2,
+    lastRequestKey: firstIdentityReadyRequest.requestKey,
+  });
+  assert(retryRequest.shouldStart === true, 'retry nonce starts a real new offerings/customer-info request');
+
+  const accountSwitchRequest = getMembershipOptionsRequestDecision({
+    shouldUseRevenueCat: true,
+    userKey: 'user-b',
+    requestNonce: 2,
+    lastRequestKey: retryRequest.requestKey,
+  });
+  assert(accountSwitchRequest.shouldStart === true, 'account switch cannot reuse a previous user request guard');
 
   return true;
 }

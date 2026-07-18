@@ -28,6 +28,32 @@ export type PaywallLoadingResult = {
   canSubscribe: boolean;
 };
 
+export type MembershipOptionsRequestInput = {
+  shouldUseRevenueCat: boolean;
+  userKey: string | null | undefined;
+  requestNonce: number;
+  lastRequestKey: string | null;
+};
+
+export type MembershipOptionsRequestDecision = {
+  requestKey: string | null;
+  shouldStart: boolean;
+};
+
+export function getMembershipOptionsRequestDecision(
+  input: MembershipOptionsRequestInput,
+): MembershipOptionsRequestDecision {
+  if (!input.shouldUseRevenueCat || !input.userKey) {
+    return { requestKey: null, shouldStart: false };
+  }
+
+  const requestKey = `${input.userKey}:${input.requestNonce}`;
+  return {
+    requestKey,
+    shouldStart: requestKey !== input.lastRequestKey,
+  };
+}
+
 export function computeOfferingStatus(input: OfferingStatusInput): PaywallOptionsStatus {
   if (input.isExpoGo) return 'preview';
   if (input.isAuthenticated && input.hasUserId && input.identityStatus === 'error') return 'error';

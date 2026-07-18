@@ -19,116 +19,199 @@ type SpeechModule = {
   };
 };
 
+type SpeechInitializationDecisionInput = {
+  canAttempt: boolean;
+  hasModule: boolean;
+  isInitializing: boolean;
+  isMounted: boolean;
+};
+
+type SpeechInitializationDecision = 'unavailable' | 'use-existing' | 'await-existing' | 'start-initialization';
+
 const ENABLE_COMPANION_SPEECH_INPUT = true;
+const LISTENING_MESSAGE = 'Listening… tap to stop';
 
 function isExpoGo(): boolean {
   return Constants.appOwnership === 'expo';
 }
 
-function loadSpeechModule(): SpeechModule | null {
-  if (!ENABLE_COMPANION_SPEECH_INPUT || Platform.OS === 'web' || isExpoGo()) return null;
+export function canAttemptCompanionSpeechInput(
+  platform: typeof Platform.OS = Platform.OS,
+  appOwnership: string | null | undefined = Constants.appOwnership,
+): boolean {
+  return ENABLE_COMPANION_SPEECH_INPUT && platform !== 'web' && appOwnership !== 'expo';
+}
+
+export function getCompanionSpeechInitializationDecision(
+  input: SpeechInitializationDecisionInput,
+): SpeechInitializationDecision {
+  if (!input.canAttempt || !input.isMounted) return 'unavailable';
+  if (input.hasModule) return 'use-existing';
+  if (input.isInitializing) return 'await-existing';
+  return 'start-initialization';
+}
+
+async function loadSpeechModule(): Promise<SpeechModule | null> {
+  if (!canAttemptCompanionSpeechInput()) return null;
 
   try {
-    return require('expo-speech-recognition') as SpeechModule;
+    return await import('expo-speech-recognition') as SpeechModule;
   } catch {
     return null;
   }
 }
 
 export function useCompanionSpeechInput({ onTranscript }: UseCompanionSpeechInputOptions) {
-  const [isAvailable, setIsAvailable] = useState(false);
+  const canAttemptSpeechInput = canAttemptCompanionSpeechInput();
+  const [isAvailable, setIsAvailable] = useState(canAttemptSpeechInput);
   const [isListening, setIsListening] = useState(false);
-  const [status, setStatus] = useState<SpeechInputStatus>('unavailable');
+  const [status, setStatus] = useState<SpeechInputStatus>(canAttemptSpeechInput ? 'idle' : 'unavailable');
   const [message, setMessage] = useState<string | null>(null);
   const onTranscriptRef = useRef(onTranscript);
   const speechModuleRef = useRef<SpeechModule['ExpoSpeechRecognitionModule'] | null>(null);
+  const subscriptionsRef = useRef<{ remove: () => void }[]>([]);
+  const initializationPromiseRef = useRef<Promise<SpeechModule['ExpoSpeechRecognitionModule'] | null> | null>(null);
+  const startListeningInFlightRef = useRef(false);
+  const isMountedRef = useRef(false);
 
   useEffect(() => {
     onTranscriptRef.current = onTranscript;
   }, [onTranscript]);
 
-  useEffect(() => {
-    if (isExpoGo()) {
-      speechModuleRef.current = null;
-      setIsAvailable(false);
-      setIsListening(false);
-      setStatus('unavailable');
-      setMessage('Voice input unavailable in Expo Go.');
-      return undefined;
+  const cleanupSpeechModule = useCallback(() => {
+    subscriptionsRef.current.forEach((subscription) => {
+      try {
+        subscription.remove();
+      } catch {
+        // Native listener may already be inactive.
+      }
+    });
+    subscriptionsRef.current = [];
+    initializationPromiseRef.current = null;
+    startListeningInFlightRef.current = false;
+    try {
+      speechModuleRef.current?.abort();
+    } catch {
+      // Native module may already be inactive.
     }
+    speechModuleRef.current = null;
+  }, []);
 
-    const speechModule = loadSpeechModule()?.ExpoSpeechRecognitionModule ?? null;
-    speechModuleRef.current = speechModule;
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      cleanupSpeechModule();
+    };
+  }, [cleanupSpeechModule]);
 
+  const markSpeechUnavailable = useCallback((nextMessage?: string) => {
+    setIsAvailable(false);
+    setIsListening(false);
+    setStatus('unavailable');
+    setMessage(nextMessage ?? (
+      isExpoGo()
+        ? 'Voice input unavailable in Expo Go.'
+        : 'Voice input is temporarily unavailable. Please type instead.'
+    ));
+  }, []);
+
+  const loadAndRegisterSpeechModule = useCallback(async () => {
+    const speechModule = (await loadSpeechModule())?.ExpoSpeechRecognitionModule ?? null;
+    if (!isMountedRef.current) return null;
     if (!speechModule) {
-      setIsAvailable(false);
-      setStatus('unavailable');
-      return undefined;
+      markSpeechUnavailable();
+      return null;
     }
 
     try {
-      const available = speechModule.isRecognitionAvailable();
-      setIsAvailable(available);
-      setStatus(available ? 'idle' : 'unavailable');
+      if (!speechModule.isRecognitionAvailable()) {
+        markSpeechUnavailable();
+        return null;
+      }
+
+      const subscriptions = [
+        speechModule.addListener('start', () => {
+          setIsListening(true);
+          setStatus('listening');
+          setMessage(LISTENING_MESSAGE);
+        }),
+        speechModule.addListener('end', () => {
+          setIsListening(false);
+          setStatus((current) => (current === 'error' ? current : 'idle'));
+          setMessage((current) => (current === LISTENING_MESSAGE ? null : current));
+        }),
+        speechModule.addListener('result', (event: { isFinal?: boolean; results?: { transcript?: string }[] }) => {
+          const transcript = event.results?.[0]?.transcript?.trim();
+          if (!transcript) return;
+          onTranscriptRef.current(transcript, Boolean(event.isFinal));
+          setMessage(event.isFinal ? 'Transcription added. You can edit before sending.' : LISTENING_MESSAGE);
+        }),
+        speechModule.addListener('error', () => {
+          setIsListening(false);
+          setStatus('error');
+          setMessage('Transcription failed, please type instead.');
+        }),
+      ];
+
+      subscriptionsRef.current = subscriptions;
+      speechModuleRef.current = speechModule;
+      setIsAvailable(true);
+      setStatus('idle');
+      return speechModule;
     } catch {
-      setIsAvailable(false);
-      setStatus('unavailable');
-      return undefined;
+      cleanupSpeechModule();
+      markSpeechUnavailable();
+      return null;
+    }
+  }, [cleanupSpeechModule, markSpeechUnavailable]);
+
+  const ensureSpeechModule = useCallback(async () => {
+    const decision = getCompanionSpeechInitializationDecision({
+      canAttempt: canAttemptSpeechInput,
+      hasModule: !!speechModuleRef.current,
+      isInitializing: !!initializationPromiseRef.current,
+      isMounted: isMountedRef.current,
+    });
+
+    if (decision === 'unavailable') {
+      markSpeechUnavailable();
+      return null;
     }
 
-    const subscriptions = [
-      speechModule.addListener('start', () => {
-        setIsListening(true);
-        setStatus('listening');
-        setMessage('Listening… tap to stop');
-      }),
-      speechModule.addListener('end', () => {
-        setIsListening(false);
-        setStatus((current) => (current === 'error' ? current : 'idle'));
-        setMessage((current) => (current === 'Listening… tap to stop' ? null : current));
-      }),
-      speechModule.addListener('result', (event: { isFinal?: boolean; results?: Array<{ transcript?: string }> }) => {
-        const transcript = event.results?.[0]?.transcript?.trim();
-        if (!transcript) return;
-        onTranscriptRef.current(transcript, Boolean(event.isFinal));
-        setMessage(event.isFinal ? 'Transcription added. You can edit before sending.' : 'Listening… tap to stop');
-      }),
-      speechModule.addListener('error', () => {
-        setIsListening(false);
-        setStatus('error');
-        setMessage('Transcription failed, please type instead.');
-      }),
-    ];
+    if (decision === 'use-existing') {
+      return speechModuleRef.current;
+    }
 
-    return () => {
-      subscriptions.forEach((subscription) => subscription.remove());
-      try {
-        speechModule.abort();
-      } catch {
-        // Native module may already be inactive.
-      }
-    };
-  }, []);
+    if (decision === 'await-existing') {
+      return initializationPromiseRef.current;
+    }
+
+    initializationPromiseRef.current = loadAndRegisterSpeechModule().finally(() => {
+      initializationPromiseRef.current = null;
+    });
+    return initializationPromiseRef.current;
+  }, [canAttemptSpeechInput, loadAndRegisterSpeechModule, markSpeechUnavailable]);
 
   const startListening = useCallback(async () => {
-    const speechModule = speechModuleRef.current;
-    if (!speechModule || !isAvailable) {
-      setStatus('unavailable');
-      setMessage(isExpoGo()
-        ? 'Voice input unavailable in Expo Go.'
-        : 'Voice input is temporarily unavailable. Please type instead.');
+    if (startListeningInFlightRef.current) return;
+    startListeningInFlightRef.current = true;
+    const speechModule = await ensureSpeechModule();
+    if (!speechModule) {
+      startListeningInFlightRef.current = false;
       return;
     }
 
     try {
       const permissions = await speechModule.requestPermissionsAsync();
+      if (!isMountedRef.current) return;
       if (!permissions.granted) {
         setStatus('error');
         setMessage('Microphone permission is needed for voice input. You can type instead.');
         return;
       }
 
-      setMessage('Listening… tap to stop');
+      setMessage(LISTENING_MESSAGE);
       setStatus('listening');
       speechModule.start({
         lang: 'en-US',
@@ -143,8 +226,10 @@ export function useCompanionSpeechInput({ onTranscript }: UseCompanionSpeechInpu
       setIsListening(false);
       setStatus('error');
       setMessage('Transcription failed, please type instead.');
+    } finally {
+      startListeningInFlightRef.current = false;
     }
-  }, [isAvailable]);
+  }, [ensureSpeechModule]);
 
   const stopListening = useCallback(() => {
     try {

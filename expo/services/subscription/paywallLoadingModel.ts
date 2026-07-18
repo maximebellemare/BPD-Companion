@@ -35,6 +35,16 @@ export type MembershipOptionsRequestInput = {
   lastRequestKey: string | null;
 };
 
+export type OfferingsRecoveryInput = {
+  shouldUseRevenueCat: boolean;
+  userKey: string | null | undefined;
+  accountGeneration: number;
+  identityStatus: RevenueCatIdentityStatus;
+  hasOffering: boolean;
+  isOfferingsLoading: boolean;
+  recoveryAttemptedForKey: string | null;
+};
+
 export type MembershipOptionsRequestDecision = {
   requestKey: string | null;
   shouldStart: boolean;
@@ -51,6 +61,26 @@ export function getMembershipOptionsRequestDecision(
   return {
     requestKey,
     shouldStart: requestKey !== input.lastRequestKey,
+  };
+}
+
+export function getOfferingsRecoveryDecision(
+  input: OfferingsRecoveryInput,
+): MembershipOptionsRequestDecision {
+  if (
+    !input.shouldUseRevenueCat ||
+    !input.userKey ||
+    input.identityStatus !== 'ready' ||
+    input.hasOffering ||
+    input.isOfferingsLoading
+  ) {
+    return { requestKey: null, shouldStart: false };
+  }
+
+  const requestKey = `${input.userKey}:${input.accountGeneration}:identity-ready-offerings-recovery`;
+  return {
+    requestKey,
+    shouldStart: requestKey !== input.recoveryAttemptedForKey,
   };
 }
 

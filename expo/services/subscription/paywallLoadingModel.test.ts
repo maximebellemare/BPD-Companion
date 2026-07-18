@@ -1,6 +1,7 @@
 import {
   computeOfferingStatus,
   computePaywallLoadingState,
+  getOfferingsRecoveryDecision,
   getMembershipOptionsRequestDecision,
 } from '@/services/subscription/paywallLoadingModel';
 
@@ -144,6 +145,75 @@ export function assertPaywallLoadingRegressionScenarios(): true {
     lastRequestKey: retryRequest.requestKey,
   });
   assert(accountSwitchRequest.shouldStart === true, 'account switch cannot reuse a previous user request guard');
+
+  const recoveryBeforeIdentityReady = getOfferingsRecoveryDecision({
+    shouldUseRevenueCat: true,
+    userKey: 'user-a',
+    accountGeneration: 1,
+    identityStatus: 'loading',
+    hasOffering: false,
+    isOfferingsLoading: false,
+    recoveryAttemptedForKey: null,
+  });
+  assert(recoveryBeforeIdentityReady.shouldStart === false, 'automatic offerings recovery waits for identity-ready');
+
+  const recoveryAfterIdentityReady = getOfferingsRecoveryDecision({
+    shouldUseRevenueCat: true,
+    userKey: 'user-a',
+    accountGeneration: 1,
+    identityStatus: 'ready',
+    hasOffering: false,
+    isOfferingsLoading: false,
+    recoveryAttemptedForKey: null,
+  });
+  assert(
+    recoveryAfterIdentityReady.shouldStart === true,
+    'identity-ready transition recovers a failed or missing initial offerings request',
+  );
+
+  const duplicateRecovery = getOfferingsRecoveryDecision({
+    shouldUseRevenueCat: true,
+    userKey: 'user-a',
+    accountGeneration: 1,
+    identityStatus: 'ready',
+    hasOffering: false,
+    isOfferingsLoading: false,
+    recoveryAttemptedForKey: recoveryAfterIdentityReady.requestKey,
+  });
+  assert(duplicateRecovery.shouldStart === false, 'automatic offerings recovery runs once per account generation');
+
+  const secondAccountRecovery = getOfferingsRecoveryDecision({
+    shouldUseRevenueCat: true,
+    userKey: 'user-b',
+    accountGeneration: 2,
+    identityStatus: 'ready',
+    hasOffering: false,
+    isOfferingsLoading: false,
+    recoveryAttemptedForKey: recoveryAfterIdentityReady.requestKey,
+  });
+  assert(secondAccountRecovery.shouldStart === true, 'second account gets its own automatic offerings recovery');
+
+  const noRecoveryWhenOfferingExists = getOfferingsRecoveryDecision({
+    shouldUseRevenueCat: true,
+    userKey: 'user-a',
+    accountGeneration: 1,
+    identityStatus: 'ready',
+    hasOffering: true,
+    isOfferingsLoading: false,
+    recoveryAttemptedForKey: null,
+  });
+  assert(noRecoveryWhenOfferingExists.shouldStart === false, 'loaded packages do not trigger duplicate recovery');
+
+  const noRecoveryWhileLoading = getOfferingsRecoveryDecision({
+    shouldUseRevenueCat: true,
+    userKey: 'user-a',
+    accountGeneration: 1,
+    identityStatus: 'ready',
+    hasOffering: false,
+    isOfferingsLoading: true,
+    recoveryAttemptedForKey: null,
+  });
+  assert(noRecoveryWhileLoading.shouldStart === false, 'in-flight offerings request is not duplicated by recovery');
 
   return true;
 }

@@ -46,6 +46,7 @@ import { storageService } from '@/services/storage/storageService';
 import { resetTodayTutorial } from '@/services/habits/tutorialAndRewardsService';
 import {
   getSingularDiagnosticSnapshot,
+  sendSingularDiagnosticTestEvent,
   type SingularDiagnosticSnapshot,
 } from '@/lib/singular';
 import {
@@ -88,6 +89,11 @@ function formatNativeModuleStatus(value: boolean | null): string {
   if (value === true) return 'Loaded successfully';
   if (value === false) return 'Failed';
   return 'Not attempted yet';
+}
+
+function formatDiagnosticTimestamp(value: number | null | undefined): string {
+  if (!value) return 'Not attempted yet';
+  return new Date(value).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' });
 }
 
 export default function ProfileScreen() {
@@ -186,6 +192,17 @@ export default function ProfileScreen() {
       clearTimeout(timeout);
     };
   }, [showSingularDiagnostics]);
+
+  const refreshSingularDiagnostics = useCallback(async () => {
+    if (!showSingularDiagnostics) return;
+    const snapshot = await getSingularDiagnosticSnapshot();
+    setSingularDiagnostics(snapshot);
+  }, [showSingularDiagnostics]);
+
+  const handleSendSingularTestEvent = useCallback(async () => {
+    await sendSingularDiagnosticTestEvent();
+    await refreshSingularDiagnostics();
+  }, [refreshSingularDiagnostics]);
 
   const handleSaveCommunityProfile = useCallback(async () => {
     const normalized = normalizeUsername(communityUsername);
@@ -758,6 +775,59 @@ export default function ProfileScreen() {
                   {formatDiagnosticBoolean(singularDiagnostics?.initSucceeded ?? null)}
                 </Text>
               </View>
+              <View style={styles.diagnosticRow}>
+                <Text style={[styles.diagnosticLabel, { color: palette.textSecondary }]}>Attribution callback received</Text>
+                <Text style={[styles.diagnosticValue, { color: palette.text }]}>
+                  {singularDiagnostics?.attributionCallbackReceived ? 'Yes' : 'No'}
+                </Text>
+              </View>
+              <View style={styles.diagnosticRow}>
+                <Text style={[styles.diagnosticLabel, { color: palette.textSecondary }]}>Attribution keys</Text>
+                <Text style={[styles.diagnosticValue, { color: palette.text }]} selectable>
+                  {singularDiagnostics?.attributionCallbackKeys?.length ? singularDiagnostics.attributionCallbackKeys.join(', ') : 'None yet'}
+                </Text>
+              </View>
+              <View style={styles.diagnosticRow}>
+                <Text style={[styles.diagnosticLabel, { color: palette.textSecondary }]}>Singular SDID</Text>
+                <Text style={[styles.diagnosticValue, { color: palette.text }]} selectable>
+                  {singularDiagnostics?.sdidReceived ?? 'Not received yet'}
+                </Text>
+              </View>
+              <View style={styles.diagnosticRow}>
+                <Text style={[styles.diagnosticLabel, { color: palette.textSecondary }]}>SDID callback received</Text>
+                <Text style={[styles.diagnosticValue, { color: palette.text }]}>
+                  {singularDiagnostics?.sdidReceivedCallbackReceived ? 'Yes' : 'No'}
+                </Text>
+              </View>
+              <View style={styles.diagnosticRow}>
+                <Text style={[styles.diagnosticLabel, { color: palette.textSecondary }]}>Last event attempt</Text>
+                <Text style={[styles.diagnosticValue, { color: palette.text }]}>
+                  {singularDiagnostics?.lastEventAttemptName
+                    ? `${singularDiagnostics.lastEventAttemptName} at ${formatDiagnosticTimestamp(singularDiagnostics.lastEventAttemptAt)}`
+                    : 'None yet'}
+                </Text>
+              </View>
+              <View style={styles.diagnosticRow}>
+                <Text style={[styles.diagnosticLabel, { color: palette.textSecondary }]}>Event attempts</Text>
+                <Text style={[styles.diagnosticValue, { color: palette.text }]} selectable>
+                  {singularDiagnostics?.eventAttemptCounts
+                    ? Object.entries(singularDiagnostics.eventAttemptCounts).map(([name, count]) => `${name}: ${count}`).join(', ') || 'None yet'
+                    : 'None yet'}
+                </Text>
+              </View>
+              <View style={styles.diagnosticRow}>
+                <Text style={[styles.diagnosticLabel, { color: palette.textSecondary }]}>Last SDK status</Text>
+                <Text style={[styles.diagnosticValue, { color: palette.text }]} selectable>
+                  {singularDiagnostics?.lastSdkError ?? singularDiagnostics?.lastSdkStatus ?? 'None yet'}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={[styles.diagnosticButton, { backgroundColor: palette.primary }]}
+                onPress={handleSendSingularTestEvent}
+                testID="singular-send-test-event-btn"
+              >
+                <Text style={styles.diagnosticButtonText}>Send Singular Test Event</Text>
+              </TouchableOpacity>
             </View>
           </Animated.View>
         ) : null}
@@ -1064,6 +1134,18 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     fontWeight: '700',
+  },
+  diagnosticButton: {
+    minHeight: 44,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  diagnosticButtonText: {
+    color: Colors.white,
+    fontSize: 14,
+    fontWeight: '900',
   },
   communityProfileTop: {
     flexDirection: 'row',

@@ -14,12 +14,23 @@ export type SingularNativeApi = {
   unsetCustomUserId: () => void | Promise<void>;
   event: (name: string) => void | Promise<void>;
   enableLogging?: (config: unknown) => void | Promise<void>;
+  attachDiagnostics?: (config: unknown, handlers: SingularDiagnosticHandlers) => void | Promise<void>;
 };
 
 export type SingularAppEventName =
   | 'sign_up'
   | 'onboarding_complete'
   | 'paywall_view';
+
+export type SingularDiagnosticEventName = 'singular_diagnostic_test';
+
+type SingularEventName = SingularAppEventName | SingularDiagnosticEventName;
+
+export type SingularDiagnosticHandlers = {
+  onDeviceAttribution: (attributes: Record<string, unknown>) => void;
+  onSdidReceived: (sdid: string) => void;
+  onDidSetSdid: (sdid: string) => void;
+};
 
 export type SingularControllerDependencies = {
   platform: SingularPlatform;
@@ -40,6 +51,16 @@ export type SingularRuntimeState = {
   nativePlatform: boolean;
   expoGo: boolean;
   currentUserId: string | null;
+  attributionCallbackReceived: boolean;
+  attributionCallbackKeys: string[];
+  sdidReceived: string | null;
+  sdidReceivedCallbackReceived: boolean;
+  didSetSdidCallbackReceived: boolean;
+  lastEventAttemptName: SingularEventName | null;
+  lastEventAttemptAt: number | null;
+  eventAttemptCounts: Partial<Record<SingularEventName, number>>;
+  lastSdkStatus: string | null;
+  lastSdkError: string | null;
 };
 
 function normalizeEnvValue(value: string | undefined): string {
@@ -69,6 +90,16 @@ export function createSingularController(deps: SingularControllerDependencies) {
   let nativeModuleLoaded: boolean | null = null;
   let initSucceeded: boolean | null = null;
   let currentUserId: string | null = null;
+  let attributionCallbackReceived = false;
+  let attributionCallbackKeys: string[] = [];
+  let sdidReceived: string | null = null;
+  let sdidReceivedCallbackReceived = false;
+  let didSetSdidCallbackReceived = false;
+  let lastEventAttemptName: SingularEventName | null = null;
+  let lastEventAttemptAt: number | null = null;
+  const eventAttemptCounts: Partial<Record<SingularEventName, number>> = {};
+  let lastSdkStatus: string | null = null;
+  let lastSdkError: string | null = null;
 
   const nativePlatform = shouldUseSingularNativeSdk({
     platform: deps.platform,
@@ -76,12 +107,15 @@ export function createSingularController(deps: SingularControllerDependencies) {
   });
 
   const log = (message: string, details?: Record<string, unknown>) => {
+    lastSdkStatus = message;
     if (deps.isDevelopment) {
       deps.log?.(message, details);
     }
   };
 
   const warn = (message: string, error?: unknown) => {
+    lastSdkStatus = message;
+    lastSdkError = error instanceof Error ? error.message : String(error ?? 'Unknown error');
     if (deps.isDevelopment) {
       deps.warn?.(message, error);
     }
@@ -136,6 +170,23 @@ export function createSingularController(deps: SingularControllerDependencies) {
 
         if (deps.isDevelopment || deps.enableDiagnosticLogging) {
           await api.enableLogging?.(config);
+          await api.attachDiagnostics?.(config, {
+            onDeviceAttribution: (attributes) => {
+              attributionCallbackReceived = true;
+              attributionCallbackKeys = Object.keys(attributes).sort();
+              lastSdkStatus = 'Device attribution callback received';
+            },
+            onSdidReceived: (sdid) => {
+              sdidReceivedCallbackReceived = true;
+              sdidReceived = sdid || null;
+              lastSdkStatus = 'SDID received callback received';
+            },
+            onDidSetSdid: (sdid) => {
+              didSetSdidCallbackReceived = true;
+              if (sdid) sdidReceived = sdid;
+              lastSdkStatus = 'Did set SDID callback received';
+            },
+          });
         }
 
         await api.init(config);
@@ -205,7 +256,10 @@ export function createSingularController(deps: SingularControllerDependencies) {
     }
   };
 
-  const trackEvent = async (name: SingularAppEventName): Promise<void> => {
+  const trackEvent = async (name: SingularEventName): Promise<void> => {
+    lastEventAttemptName = name;
+    lastEventAttemptAt = Date.now();
+    eventAttemptCounts[name] = (eventAttemptCounts[name] ?? 0) + 1;
     const ready = await initialize();
     if (!ready) {
       return;
@@ -228,6 +282,16 @@ export function createSingularController(deps: SingularControllerDependencies) {
     nativePlatform,
     expoGo: deps.appOwnership === 'expo',
     currentUserId,
+    attributionCallbackReceived,
+    attributionCallbackKeys: [...attributionCallbackKeys],
+    sdidReceived,
+    sdidReceivedCallbackReceived,
+    didSetSdidCallbackReceived,
+    lastEventAttemptName,
+    lastEventAttemptAt,
+    eventAttemptCounts: { ...eventAttemptCounts },
+    lastSdkStatus,
+    lastSdkError,
   });
 
   return {

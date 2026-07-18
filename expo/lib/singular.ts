@@ -1,9 +1,18 @@
 import Constants from 'expo-constants';
 import * as Application from 'expo-application';
 import { Platform } from 'react-native';
-import { createSingularController, type SingularNativeApi, type SingularRuntimeState } from '@/lib/singularCore';
+import {
+  createSingularController,
+  type SingularDiagnosticHandlers,
+  type SingularNativeApi,
+  type SingularRuntimeState,
+} from '@/lib/singularCore';
 
 type SingularModule = typeof import('singular-react-native');
+type SingularConfigWithPassiveSdidCallbacks = InstanceType<SingularModule['SingularConfig']> & {
+  didSetSdidCallback?: (sdid: string) => void;
+  sdidReceivedCallback?: (sdid: string) => void;
+};
 
 export type SingularDiagnosticSnapshot = SingularRuntimeState & {
   bpdCompanionIdfv: string | null;
@@ -24,6 +33,17 @@ async function loadSingularNativeApi(): Promise<SingularNativeApi> {
     enableLogging: (config) => {
       if (config instanceof module.SingularConfig) {
         config.withLoggingEnabled();
+      }
+    },
+    attachDiagnostics: (config, handlers: SingularDiagnosticHandlers) => {
+      if (config instanceof module.SingularConfig) {
+        config.withDeviceAttributionCallbackHandler((attributes) => {
+          handlers.onDeviceAttribution(attributes);
+        });
+        // Listen for SDK-provided SDID callbacks without setting a custom SDID.
+        const passiveSdidConfig = config as SingularConfigWithPassiveSdidCallbacks;
+        passiveSdidConfig.didSetSdidCallback = handlers.onDidSetSdid;
+        passiveSdidConfig.sdidReceivedCallback = handlers.onSdidReceived;
       }
     },
   };
@@ -76,4 +96,5 @@ export const initializeSingular = singular.initialize;
 export const setSingularCustomUserId = singular.setCustomUserId;
 export const clearSingularCustomUserId = singular.clearCustomUserId;
 export const trackSingularEvent = singular.trackEvent;
+export const sendSingularDiagnosticTestEvent = () => singular.trackEvent('singular_diagnostic_test');
 export const getSingularRuntimeState = singular.getState;

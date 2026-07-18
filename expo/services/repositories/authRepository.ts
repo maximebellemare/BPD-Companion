@@ -3,6 +3,7 @@ import { IAuthRepository } from './types';
 import { assertSupabaseConfigured, formatSupabaseError, supabase } from '@/lib/supabase/client';
 import { getOrCreateProfile } from '@/lib/supabase/profiles';
 import type { Session as SbSession, User as SbUser } from '@supabase/supabase-js';
+import { createAccessFlowTimer } from '@/services/performance/accessFlowTiming';
 
 function getAuthErrorDetails(error: unknown) {
   const maybe = error as { status?: number; code?: string; message?: string; name?: string } | null;
@@ -148,6 +149,7 @@ export class SupabaseAuthRepository implements IAuthRepository {
 
   async signUp(input: AuthSignUpInput): Promise<AuthSession> {
     assertSupabaseConfigured();
+    const timer = createAccessFlowTimer('signup');
     const runSignUpAttempt = async (attempt: 1 | 2): Promise<Awaited<ReturnType<typeof supabase.auth.signUp>>> => {
       if (__DEV__) {
         console.log(`[SupabaseAuth] signUp attempt ${attempt} started`);
@@ -195,14 +197,18 @@ export class SupabaseAuthRepository implements IAuthRepository {
     }
     const { data, error } = signUpResponse;
     if (data.session) {
+      timer.mark('supabase_auth_complete');
       await ensureProfileForSession(data.session, error ? 'signUp with Supabase error' : 'signUp');
+      timer.mark('profile_ready');
       return mapSession(data.session);
     }
     if (error) {
       const current = await supabase.auth.getSession();
       logAuthResponse('signUp error session check', { data: current.data, error: current.error });
       if (current.data.session) {
+        timer.mark('supabase_auth_complete');
         await ensureProfileForSession(current.data.session, 'signUp error session check');
+        timer.mark('profile_ready');
         return mapSession(current.data.session);
       }
       throw new Error(formatSupabaseError(error, 'Sign up failed'));
@@ -226,7 +232,9 @@ export class SupabaseAuthRepository implements IAuthRepository {
       }
       throw new Error(formatSupabaseError(signIn.error, 'Sign up did not complete.'));
     }
+    timer.mark('supabase_auth_complete');
     await ensureProfileForSession(signIn.data.session, 'post-signUp signIn');
+    timer.mark('profile_ready');
     return mapSession(signIn.data.session);
   }
 

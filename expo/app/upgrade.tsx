@@ -35,6 +35,7 @@ import BrandLogo from '@/components/branding/BrandLogo';
 import { isNativePurchasesPlatform } from '@/services/subscription/purchasesService';
 import { useAppTheme } from '@/providers/ThemeProvider';
 import { trackSingularEvent } from '@/lib/singular';
+import { createAccessFlowTimer } from '@/services/performance/accessFlowTiming';
 
 const TESTIMONIALS = [
   {
@@ -153,6 +154,9 @@ export default function UpgradeScreen() {
   const [restoreNotice, setRestoreNotice] = useState<string | null>(null);
   const isNativePurchases = isNativePurchasesPlatform();
   const hasNavigatedAfterAccessRef = useRef<boolean>(false);
+  const timingRef = useRef(createAccessFlowTimer('paywall'));
+  const paywallRenderMarkedRef = useRef<boolean>(false);
+  const offeringsReadyMarkedRef = useRef<boolean>(false);
   const membershipActive = isEntitlementActive || state.isTrialActive;
   const hasStoreAccess = membershipActive;
   const isSubscriptionManagement = mode === 'manage';
@@ -170,6 +174,10 @@ export default function UpgradeScreen() {
   }, [plans, selectedPlanId]);
 
   useEffect(() => {
+    if (!paywallRenderMarkedRef.current) {
+      paywallRenderMarkedRef.current = true;
+      timingRef.current.mark('paywall_first_render');
+    }
     trackEvent('upgrade_screen_viewed');
     void trackSingularEvent('paywall_view');
     trackEvent('screen_view', { screen: 'upgrade' });
@@ -177,6 +185,12 @@ export default function UpgradeScreen() {
       trackEvent('upgrade_screen_anchored', { anchor });
     }
   }, [trackEvent, anchor]);
+
+  useEffect(() => {
+    if (offeringsReadyMarkedRef.current || offeringStatus !== 'ready') return;
+    offeringsReadyMarkedRef.current = true;
+    timingRef.current.mark('offerings_ready');
+  }, [offeringStatus]);
 
   useEffect(() => {
     if (!hasStoreAccess) return;

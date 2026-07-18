@@ -38,6 +38,10 @@ class HybridStorageService implements IStorageService {
     return `guest__${key}`;
   }
 
+  private scopedKeyForUser(userId: string, key: string): string {
+    return `u_${userId}__${key}`;
+  }
+
   async get<T>(key: string): Promise<T | null> {
     const scoped = this.scopedKey(key);
     try {
@@ -148,12 +152,16 @@ class HybridStorageService implements IStorageService {
 
   async hydrateFromCloud(): Promise<void> {
     if (!this.userId) return;
+    await this.hydrateFromCloudForUser(this.userId);
+  }
+
+  async hydrateFromCloudForUser(userId: string): Promise<void> {
     try {
-      console.log('[StorageService] Hydrating from cloud for', this.userId);
+      console.log('[StorageService] Hydrating from cloud for', userId);
       const { data, error } = await supabase
         .from(USER_KV_TABLE)
         .select('key, value')
-        .eq('user_id', this.userId);
+        .eq('user_id', userId);
       if (error) {
         console.log('[StorageService] Hydrate error:', error.message);
         return;
@@ -161,7 +169,7 @@ class HybridStorageService implements IStorageService {
       if (!data) return;
       for (const row of data) {
         try {
-          await AsyncStorage.setItem(this.scopedKey(row.key), JSON.stringify(row.value));
+          await AsyncStorage.setItem(this.scopedKeyForUser(userId, row.key), JSON.stringify(row.value));
         } catch {}
       }
       console.log('[StorageService] Hydrated', data.length, 'keys');
@@ -172,6 +180,10 @@ class HybridStorageService implements IStorageService {
 
   async pushLocalToCloud(prevUserId: string | null): Promise<void> {
     if (!this.userId) return;
+    await this.pushLocalToCloudForUser(prevUserId, this.userId);
+  }
+
+  async pushLocalToCloudForUser(prevUserId: string | null, targetUserId: string): Promise<void> {
     try {
       const prefix = prevUserId ? `u_${prevUserId}__` : 'guest__';
       const allKeys = await AsyncStorage.getAllKeys();
@@ -183,7 +195,7 @@ class HybridStorageService implements IStorageService {
           if (!value) return null;
           const key = fullKey.slice(prefix.length);
           try {
-            return { user_id: this.userId as string, key, value: JSON.parse(value) as unknown, updated_at: new Date().toISOString() };
+            return { user_id: targetUserId, key, value: JSON.parse(value) as unknown, updated_at: new Date().toISOString() };
           } catch {
             return null;
           }
@@ -199,7 +211,7 @@ class HybridStorageService implements IStorageService {
           if (!value) continue;
           const key = fullKey.slice(prefix.length);
           try {
-            await AsyncStorage.setItem(this.scopedKey(key), value);
+            await AsyncStorage.setItem(this.scopedKeyForUser(targetUserId, key), value);
           } catch {}
         }
       }

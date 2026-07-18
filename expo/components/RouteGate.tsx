@@ -9,6 +9,7 @@ import { useUserProfile } from '@/providers/UserProfileProvider';
 import { useProfile } from '@/providers/ProfileProvider';
 import { useAppTheme } from '@/providers/ThemeProvider';
 import BrandLogo from '@/components/branding/BrandLogo';
+import { computeRouteGateDecision } from '@/services/routing/routeGateModel';
 
 function getTopRoute(segments: string[]): string {
   return String(segments[0] ?? '');
@@ -41,44 +42,21 @@ export default function RouteGate() {
 
   const gateState = useMemo(() => {
     const topRoute = getTopRoute(segments as string[]);
-    const inAuth = topRoute === 'auth';
-    const inOnboarding = topRoute === 'onboarding';
-    const inPaywall = topRoute === 'upgrade';
-
-    let target: string | null = null;
-    let decision = 'loading-session';
-
-    if (!isInitialized || authLoading || themeProfileLoading) {
-      decision = 'loading-session';
-    } else if (!isAuthenticated) {
-      target = inAuth ? null : '/auth/welcome';
-      decision = inAuth ? 'show-auth' : 'redirect-auth';
-    } else if (profileLoading || !profile) {
-      target = null;
-      decision = 'loading-profile';
-    } else if (!profile.onboarding_completed) {
-      target = inOnboarding ? null : '/onboarding';
-      decision = inOnboarding ? 'show-onboarding' : 'redirect-onboarding';
-    } else if (subscriptionLoading) {
-      target = null;
-      decision = 'loading-access';
-    } else if (!effectiveHasPremiumAccess) {
-      target = inPaywall ? null : '/upgrade';
-      decision = inPaywall ? 'show-paywall' : 'redirect-paywall';
-    } else if (inAuth) {
-      target = '/(tabs)/(home)';
-      decision = 'redirect-main-app';
-    } else if (inOnboarding) {
-      target = null;
-      decision = 'show-onboarding-replay';
-    } else if (inPaywall) {
-      target = null;
-      decision = 'show-subscription-management';
-    } else {
-      decision = 'allow-main-app';
-    }
-
-    return { topRoute, target, decision };
+    return {
+      topRoute,
+      ...computeRouteGateDecision({
+        topRoute,
+        isInitialized,
+        authLoading,
+        themeProfileLoading,
+        isAuthenticated,
+        profileLoading,
+        hasProfile: !!profile,
+        onboardingCompleted: profile?.onboarding_completed === true,
+        subscriptionLoading,
+        hasPremiumAccess: effectiveHasPremiumAccess,
+      }),
+    };
   }, [
     authLoading,
     effectiveHasPremiumAccess,

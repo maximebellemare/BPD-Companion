@@ -8,6 +8,7 @@ import {
   isOnboardingComplete,
 } from '@/services/onboarding/onboardingService';
 import { useUserProfile } from '@/providers/UserProfileProvider';
+import { createAccessFlowTimer } from '@/services/performance/accessFlowTiming';
 
 export const [OnboardingProvider, useOnboarding] = createContextHook(() => {
   const queryClient = useQueryClient();
@@ -51,13 +52,28 @@ export const [OnboardingProvider, useOnboarding] = createContextHook(() => {
   );
 
   const completeOnboardingAndProfile = useCallback(async (finalProfile: OnboardingProfile) => {
+    const timer = createAccessFlowTimer('onboarding');
     const completed = { ...finalProfile, completedAt: Date.now() };
+    const nextProfile = await completeAccountOnboarding(completed as unknown as Record<string, unknown>);
+    timer.mark('supabase_onboarding_update_complete');
+
     setOnboardingProfile(completed);
-    await saveMutation.mutateAsync(completed);
-    await completeAccountOnboarding(completed as unknown as Record<string, unknown>);
-    await queryClient.invalidateQueries({ queryKey: ['account-profile'] });
+    queryClient.setQueryData(['onboarding_profile'], completed);
+
+    const localPersistence = saveOnboardingProfile(completed)
+      .then(() => {
+        timer.mark('local_persistence_complete');
+      })
+      .catch((error) => {
+        if (__DEV__) {
+          console.log('[OnboardingProvider] local persistence failed after completion:', error);
+        }
+      });
+
+    void localPersistence;
     console.log('[OnboardingProvider] Onboarding completed');
-  }, [completeAccountOnboarding, queryClient, saveMutation]);
+    return nextProfile;
+  }, [completeAccountOnboarding, queryClient]);
 
   return useMemo(() => ({
     onboardingProfile,

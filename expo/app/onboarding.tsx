@@ -30,9 +30,9 @@ import BrandLogo from '@/components/branding/BrandLogo';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
 import { trackSingularEvent } from '@/lib/singular';
 import { useOnboarding } from '@/providers/OnboardingProvider';
-import { useUserProfile } from '@/providers/UserProfileProvider';
 import { useAppTheme } from '@/providers/ThemeProvider';
 import { useReviewPrompt } from '@/providers/ReviewPromptProvider';
+import { createAccessFlowTimer } from '@/services/performance/accessFlowTiming';
 import {
   DEFAULT_ONBOARDING_PROFILE,
   OnboardingProfile,
@@ -289,7 +289,6 @@ export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
   const { completeOnboarding } = useOnboarding();
-  const { refreshProfile } = useUserProfile();
   const { trackEvent } = useAnalytics();
   const { maybeShowReviewPrompt } = useReviewPrompt();
   const [currentStep, setCurrentStep] = useState<number>(0);
@@ -360,10 +359,10 @@ export default function OnboardingScreen() {
     }
     setIsCompleting(true);
     setCompletionText('Preparing your membership options');
+    const timer = createAccessFlowTimer('onboarding');
     const profile = buildProfile(reasons, situations, success, customReason, customSituation, customSuccess, skipped);
     try {
       await completeOnboarding(profile);
-      await refreshProfile();
       trackEvent(skipped ? 'onboarding_skipped' : 'onboarding_completed', {
         version: VERSION,
         focus: profile.personalizedFocus.join(', '),
@@ -373,13 +372,14 @@ export default function OnboardingScreen() {
       }
       void maybeShowReviewPrompt('after_onboarding');
 
+      timer.mark('route_to_upgrade');
       router.replace('/upgrade' as never);
     } catch (error) {
       console.log('[Onboarding] completion failed:', error);
       Alert.alert('Could not finish setup', 'Please check your connection and try again.');
       setIsCompleting(false);
     }
-  }, [completeOnboarding, customReason, customSituation, customSuccess, isCompleting, maybeShowReviewPrompt, reasons, refreshProfile, router, situations, success, trackEvent]);
+  }, [completeOnboarding, customReason, customSituation, customSuccess, isCompleting, maybeShowReviewPrompt, reasons, router, situations, success, trackEvent]);
 
   const canContinue = useMemo(() => {
     if (currentStep === 1) return reasons.length > 0 && (!reasons.includes('other') || reasons.length > 1 || cleanCustom(customReason).length > 0);

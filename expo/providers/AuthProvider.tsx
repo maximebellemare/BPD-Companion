@@ -6,6 +6,9 @@ import { authRepository } from '@/services/repositories';
 import { supabase } from '@/lib/supabase/client';
 import { storageService } from '@/services/storage/storageService';
 import { clearSingularCustomUserId, setSingularCustomUserId, trackSingularEvent } from '@/lib/singular';
+import { createAccessFlowTimer } from '@/services/performance/accessFlowTiming';
+import { startAccessFlowBackgroundTask } from '@/services/performance/accessFlowPerformanceModel';
+import { clearProfileCache } from '@/lib/supabase/profiles';
 
 type AuthMode = 'authenticated' | 'guest' | 'unauthenticated';
 
@@ -36,6 +39,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         } else {
           storageService.setUser(null);
           void clearSingularCustomUserId();
+          clearProfileCache();
         }
       } catch (e) {
         console.log('[AuthProvider] bootstrap error:', e);
@@ -51,6 +55,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
 
     const { data: sub } = supabase.auth.onAuthStateChange(async (event, sbSession) => {
       console.log('[AuthProvider] auth event:', event);
+      clearProfileCache();
       if (sbSession) {
         const mapped: AuthSession = {
           user: {
@@ -111,33 +116,63 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   const signUp = useCallback(
     async (input: AuthSignUpInput, migrateGuest: boolean = false) => {
       setIsLoading(true);
+      const timer = createAccessFlowTimer('signup');
       try {
         const prevUserId = storageService.getUserId();
         const s = await authRepository.signUp(input);
-        storageService.setUser(s.user.id);
-        void setSingularCustomUserId(s.user.id);
+        const signedUpUserId = s.user.id;
+        timer.mark('supabase_auth_and_profile_ready');
+        storageService.setUser(signedUpUserId);
+        void setSingularCustomUserId(signedUpUserId);
         void trackSingularEvent('sign_up');
         setSession(s);
         setUser(s.user);
         setIsGuest(false);
-        try {
-          if (migrateGuest) {
-            await storageService.pushLocalToCloud(prevUserId);
-          } else {
-            await storageService.hydrateFromCloud();
+        timer.mark('session_state_committed');
+
+        const syncAfterSignup = async () => {
+          timer.mark('background_hydration_started');
+          try {
+            if (storageService.getUserId() !== signedUpUserId) {
+              timer.mark('background_hydration_skipped_user_changed');
+              return;
+            }
+            if (migrateGuest) {
+              await storageService.pushLocalToCloudForUser(prevUserId, signedUpUserId);
+            } else {
+              await storageService.hydrateFromCloudForUser(signedUpUserId);
+            }
+            timer.mark('background_hydration_finished');
+          } catch (error) {
+            if (__DEV__) {
+              console.log('[AuthProvider] post-signup storage sync failed after auth success:', error);
+            }
+            timer.mark('background_hydration_failed');
           }
-        } catch (error) {
+
+          if (storageService.getUserId() !== signedUpUserId) {
+            timer.mark('targeted_query_refresh_skipped_user_changed');
+            return;
+          }
+          try {
+            await Promise.all([
+              queryClient.invalidateQueries({ queryKey: ['profile'] }),
+              queryClient.invalidateQueries({ queryKey: ['onboarding_profile'] }),
+            ]);
+            timer.mark('targeted_query_refresh_finished');
+          } catch (error) {
+            if (__DEV__) {
+              console.log('[AuthProvider] post-signup query refresh failed after auth success:', error);
+            }
+          }
+        };
+
+        startAccessFlowBackgroundTask(syncAfterSignup, (error) => {
           if (__DEV__) {
-            console.log('[AuthProvider] post-signup storage sync failed after auth success:', error);
+            console.log('[AuthProvider] post-signup background task failed after auth success:', error);
           }
-        }
-        try {
-          await queryClient.invalidateQueries();
-        } catch (error) {
-          if (__DEV__) {
-            console.log('[AuthProvider] post-signup query invalidation failed after auth success:', error);
-          }
-        }
+        });
+        timer.mark('onboarding_route_available');
         return s;
       } finally {
         setIsLoading(false);
@@ -150,6 +185,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     await authRepository.signOut();
     storageService.setUser(null);
     void clearSingularCustomUserId();
+    clearProfileCache();
     setSession(null);
     setUser(null);
     setIsGuest(false);

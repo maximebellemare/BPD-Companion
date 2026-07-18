@@ -3,6 +3,15 @@ import type { AccountProfile } from '@/types/accountProfile';
 
 const PROFILES_TABLE = 'profiles';
 const TRIAL_DAYS = 7;
+const profileCache = new Map<string, AccountProfile>();
+
+export function clearProfileCache(userId?: string): void {
+  if (userId) {
+    profileCache.delete(userId);
+    return;
+  }
+  profileCache.clear();
+}
 
 function addDays(date: Date, days: number): Date {
   const copy = new Date(date);
@@ -35,6 +44,9 @@ function isDuplicateProfileError(error: unknown): boolean {
 }
 
 async function loadProfile(userId: string): Promise<AccountProfile | null> {
+  const cached = profileCache.get(userId);
+  if (cached) return cached;
+
   const { data, error } = await supabase
     .from(PROFILES_TABLE)
     .select('*')
@@ -42,6 +54,9 @@ async function loadProfile(userId: string): Promise<AccountProfile | null> {
     .maybeSingle<AccountProfile>();
 
   if (error) throw new Error(error.message);
+  if (data) {
+    profileCache.set(userId, data);
+  }
   return data ?? null;
 }
 
@@ -68,6 +83,7 @@ export async function getOrCreateProfile(userId: string, email?: string | null, 
     }
     throw new Error(insertError.message);
   }
+  profileCache.set(userId, inserted);
   return inserted;
 }
 
@@ -83,6 +99,7 @@ export async function updateProfile(
     .single<AccountProfile>();
 
   if (error) throw new Error(error.message);
+  profileCache.set(userId, data);
   return data;
 }
 

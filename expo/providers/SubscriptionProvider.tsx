@@ -27,7 +27,6 @@ import {
   FeatureEntitlement,
 } from '@/services/subscription/entitlementService';
 import {
-  configurePurchases,
   fetchCustomerInfo,
   fetchOfferings,
   isExpoGoPurchases,
@@ -114,14 +113,24 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     const syncRevenueCatIdentity = async () => {
       if (isAuthenticated && user?.id) {
         if (identifiedUserIdRef.current === user.id && isRevenueCatIdentified) return;
+        if (identifiedUserIdRef.current && identifiedUserIdRef.current !== user.id) {
+          queryClient.removeQueries({ queryKey: ['rc-customer-info'] });
+          queryClient.removeQueries({ queryKey: ['rc-offerings'] });
+        }
         setIsRevenueCatIdentified(false);
         try {
           await logInPurchases(user.id);
           if (cancelled) return;
           identifiedUserIdRef.current = user.id;
           setIsRevenueCatIdentified(true);
-          await queryClient.invalidateQueries({ queryKey: ['rc-customer-info'] });
-          await queryClient.invalidateQueries({ queryKey: ['rc-offerings'] });
+          void Promise.all([
+            queryClient.invalidateQueries({ queryKey: ['rc-customer-info'] }),
+            queryClient.invalidateQueries({ queryKey: ['rc-offerings'] }),
+          ]).catch((error) => {
+            if (__DEV__) {
+              console.log('[SubscriptionProvider] post-login RevenueCat query refresh failed:', error);
+            }
+          });
         } catch {
           if (!cancelled) setIsRevenueCatIdentified(false);
         }
@@ -146,13 +155,6 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
       cancelled = true;
     };
   }, [isAuthenticated, isExpoGo, isRevenueCatIdentified, queryClient, user?.id]);
-
-  useEffect(() => {
-    if (isExpoGo) return;
-    if (isAuthenticated && user?.id && !isRevenueCatIdentified) {
-      void configurePurchases(user.id);
-    }
-  }, [isAuthenticated, isExpoGo, isRevenueCatIdentified, user?.id]);
 
   const customerInfoQuery = useQuery({
     queryKey: ['rc-customer-info'],

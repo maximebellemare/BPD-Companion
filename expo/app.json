@@ -20,6 +20,7 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSMicrophoneUsageDescription": "BPD Companion uses the microphone only when you choose voice input for Companion.",
+        "NSPhotoLibraryUsageDescription": "BPD Companion accesses your photo library only when you choose an image from your device.",
         "NSSpeechRecognitionUsageDescription": "BPD Companion uses speech recognition only to transcribe what you choose to say into Companion.",
         "LSApplicationQueriesSchemes": [
           "tel",

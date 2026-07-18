@@ -14,8 +14,12 @@ export function assertCompanionSpeechInputScenarios(): true {
     'native iOS builds keep speech input disabled until the installed native module is crash-safe',
   );
   assert(
-    canShowCompanionSpeechInput('ios', 'standalone') === true,
-    'native iOS builds can show the mic button and fail safely without native speech activation',
+    canShowCompanionSpeechInput('ios', 'standalone') === false,
+    'native iOS builds hide speech input while native activation is disabled',
+  );
+  assert(
+    canShowCompanionSpeechInput('android', 'standalone') === true,
+    'native Android builds still render the mic button',
   );
   assert(
     canAttemptCompanionSpeechInput('android', 'standalone') === true,

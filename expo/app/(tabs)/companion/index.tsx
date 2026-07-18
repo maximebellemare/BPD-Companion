@@ -102,6 +102,9 @@ export default function CompanionScreen() {
     setInput(base ? `${base} ${transcript}` : transcript);
   }, []);
   const speechInput = useCompanionSpeechInput({ onTranscript: applySpeechTranscript });
+  const inputPlaceholder = speechInput.isAvailable
+    ? 'Write a few words or use the mic. You can edit before sending.'
+    : 'Write a few words. You can edit before sending.';
 
   const memorySummaries = useMemo(() => {
     const summaries: string[] = [];
@@ -211,10 +214,11 @@ export default function CompanionScreen() {
             <TextInput
               value={input}
               onChangeText={setInput}
-              placeholder="Write a few words or use the mic. You can edit before sending."
+              placeholder={inputPlaceholder}
               placeholderTextColor={colors.textMuted}
               style={[
                 styles.largeInput,
+                !speechInput.isAvailable && styles.largeInputWithoutMic,
                 {
                   backgroundColor: colors.surface,
                   borderColor: colors.borderLight,
@@ -501,6 +505,9 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     fontSize: 16,
     lineHeight: 23,
+  },
+  largeInputWithoutMic: {
+    paddingRight: 14,
   },
   micButton: {
     position: 'absolute',

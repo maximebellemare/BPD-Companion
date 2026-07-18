@@ -50,7 +50,7 @@ export function canShowCompanionSpeechInput(
   platform: typeof Platform.OS = Platform.OS,
   appOwnership: string | null | undefined = Constants.appOwnership,
 ): boolean {
-  return ENABLE_COMPANION_SPEECH_INPUT && platform !== 'web' && appOwnership !== 'expo';
+  return canAttemptCompanionSpeechInput(platform, appOwnership);
 }
 
 export function getCompanionSpeechInitializationDecision(

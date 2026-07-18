@@ -45,11 +45,6 @@ import { updateProfile as updateAccountProfile } from '@/lib/supabase/profiles';
 import { storageService } from '@/services/storage/storageService';
 import { resetTodayTutorial } from '@/services/habits/tutorialAndRewardsService';
 import {
-  getSingularDiagnosticSnapshot,
-  sendSingularDiagnosticTestEvent,
-  type SingularDiagnosticSnapshot,
-} from '@/lib/singular';
-import {
   CommunityProfile,
   loadCommunityProfile,
   saveCommunityProfile,
@@ -79,23 +74,6 @@ function titleCase(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-function formatDiagnosticBoolean(value: boolean | null): string {
-  if (value === true) return 'Succeeded';
-  if (value === false) return 'Failed';
-  return 'Not attempted yet';
-}
-
-function formatNativeModuleStatus(value: boolean | null): string {
-  if (value === true) return 'Loaded successfully';
-  if (value === false) return 'Failed';
-  return 'Not attempted yet';
-}
-
-function formatDiagnosticTimestamp(value: number | null | undefined): string {
-  if (!value) return 'Not attempted yet';
-  return new Date(value).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' });
-}
-
 export default function ProfileScreen() {
   const router = useRouter();
   const { profile, updateNotifications, updatePrivacy } = useProfile();
@@ -119,7 +97,6 @@ export default function ProfileScreen() {
   const [communityProfileError, setCommunityProfileError] = useState<string | null>(null);
   const [isSavingCommunityProfile, setIsSavingCommunityProfile] = useState(false);
   const [communityProfileSaved, setCommunityProfileSaved] = useState(false);
-  const [singularDiagnostics, setSingularDiagnostics] = useState<SingularDiagnosticSnapshot | null>(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(18)).current;
 
@@ -147,7 +124,6 @@ export default function ProfileScreen() {
   const profileEmail = user?.email || 'Not signed in';
   const isOwnerQa = __DEV__ && user?.email?.toLowerCase() === OWNER_QA_EMAIL;
   const isExpoGo = Constants.appOwnership === 'expo';
-  const showSingularDiagnostics = Platform.OS === 'ios' && Constants.appOwnership !== 'expo';
 
   useEffect(() => {
     let mounted = true;
@@ -170,39 +146,6 @@ export default function ProfileScreen() {
       mounted = false;
     };
   }, [accountProfile?.avatar_color, accountProfile?.display_name, accountProfile?.username]);
-
-  useEffect(() => {
-    if (!showSingularDiagnostics) return;
-    let mounted = true;
-
-    const loadDiagnostics = async () => {
-      const snapshot = await getSingularDiagnosticSnapshot();
-      if (mounted) {
-        setSingularDiagnostics(snapshot);
-      }
-    };
-
-    void loadDiagnostics();
-    const timeout = setTimeout(() => {
-      void loadDiagnostics();
-    }, 1500);
-
-    return () => {
-      mounted = false;
-      clearTimeout(timeout);
-    };
-  }, [showSingularDiagnostics]);
-
-  const refreshSingularDiagnostics = useCallback(async () => {
-    if (!showSingularDiagnostics) return;
-    const snapshot = await getSingularDiagnosticSnapshot();
-    setSingularDiagnostics(snapshot);
-  }, [showSingularDiagnostics]);
-
-  const handleSendSingularTestEvent = useCallback(async () => {
-    await sendSingularDiagnosticTestEvent();
-    await refreshSingularDiagnostics();
-  }, [refreshSingularDiagnostics]);
 
   const handleSaveCommunityProfile = useCallback(async () => {
     const normalized = normalizeUsername(communityUsername);
@@ -746,92 +689,6 @@ export default function ProfileScreen() {
           </Animated.View>
         ) : null}
 
-        {showSingularDiagnostics ? (
-          <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-            <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>SINGULAR DIAGNOSTICS</Text>
-            <View style={[styles.card, styles.diagnosticCard, { backgroundColor: palette.card, borderColor: palette.borderLight }]}>
-              <Text style={[styles.diagnosticTitle, { color: palette.text }]}>Temporary TestFlight diagnostic</Text>
-              <View style={styles.diagnosticRow}>
-                <Text style={[styles.diagnosticLabel, { color: palette.textSecondary }]}>BPD Companion IDFV</Text>
-                <Text style={[styles.diagnosticValue, { color: palette.text }]} selectable>
-                  {singularDiagnostics?.bpdCompanionIdfv ?? 'Loading...'}
-                </Text>
-              </View>
-              <View style={styles.diagnosticRow}>
-                <Text style={[styles.diagnosticLabel, { color: palette.textSecondary }]}>Singular initialization attempted</Text>
-                <Text style={[styles.diagnosticValue, { color: palette.text }]}>
-                  {singularDiagnostics?.initializationAttempted ? 'Yes' : 'No'}
-                </Text>
-              </View>
-              <View style={styles.diagnosticRow}>
-                <Text style={[styles.diagnosticLabel, { color: palette.textSecondary }]}>Native module</Text>
-                <Text style={[styles.diagnosticValue, { color: palette.text }]}>
-                  {formatNativeModuleStatus(singularDiagnostics?.nativeModuleLoaded ?? null)}
-                </Text>
-              </View>
-              <View style={styles.diagnosticRow}>
-                <Text style={[styles.diagnosticLabel, { color: palette.textSecondary }]}>Singular.init</Text>
-                <Text style={[styles.diagnosticValue, { color: palette.text }]}>
-                  {formatDiagnosticBoolean(singularDiagnostics?.initSucceeded ?? null)}
-                </Text>
-              </View>
-              <View style={styles.diagnosticRow}>
-                <Text style={[styles.diagnosticLabel, { color: palette.textSecondary }]}>Attribution callback received</Text>
-                <Text style={[styles.diagnosticValue, { color: palette.text }]}>
-                  {singularDiagnostics?.attributionCallbackReceived ? 'Yes' : 'No'}
-                </Text>
-              </View>
-              <View style={styles.diagnosticRow}>
-                <Text style={[styles.diagnosticLabel, { color: palette.textSecondary }]}>Attribution keys</Text>
-                <Text style={[styles.diagnosticValue, { color: palette.text }]} selectable>
-                  {singularDiagnostics?.attributionCallbackKeys?.length ? singularDiagnostics.attributionCallbackKeys.join(', ') : 'None yet'}
-                </Text>
-              </View>
-              <View style={styles.diagnosticRow}>
-                <Text style={[styles.diagnosticLabel, { color: palette.textSecondary }]}>Singular SDID</Text>
-                <Text style={[styles.diagnosticValue, { color: palette.text }]} selectable>
-                  {singularDiagnostics?.sdidReceived ?? 'Not received yet'}
-                </Text>
-              </View>
-              <View style={styles.diagnosticRow}>
-                <Text style={[styles.diagnosticLabel, { color: palette.textSecondary }]}>SDID callback received</Text>
-                <Text style={[styles.diagnosticValue, { color: palette.text }]}>
-                  {singularDiagnostics?.sdidReceivedCallbackReceived ? 'Yes' : 'No'}
-                </Text>
-              </View>
-              <View style={styles.diagnosticRow}>
-                <Text style={[styles.diagnosticLabel, { color: palette.textSecondary }]}>Last event attempt</Text>
-                <Text style={[styles.diagnosticValue, { color: palette.text }]}>
-                  {singularDiagnostics?.lastEventAttemptName
-                    ? `${singularDiagnostics.lastEventAttemptName} at ${formatDiagnosticTimestamp(singularDiagnostics.lastEventAttemptAt)}`
-                    : 'None yet'}
-                </Text>
-              </View>
-              <View style={styles.diagnosticRow}>
-                <Text style={[styles.diagnosticLabel, { color: palette.textSecondary }]}>Event attempts</Text>
-                <Text style={[styles.diagnosticValue, { color: palette.text }]} selectable>
-                  {singularDiagnostics?.eventAttemptCounts
-                    ? Object.entries(singularDiagnostics.eventAttemptCounts).map(([name, count]) => `${name}: ${count}`).join(', ') || 'None yet'
-                    : 'None yet'}
-                </Text>
-              </View>
-              <View style={styles.diagnosticRow}>
-                <Text style={[styles.diagnosticLabel, { color: palette.textSecondary }]}>Last SDK status</Text>
-                <Text style={[styles.diagnosticValue, { color: palette.text }]} selectable>
-                  {singularDiagnostics?.lastSdkError ?? singularDiagnostics?.lastSdkStatus ?? 'None yet'}
-                </Text>
-              </View>
-              <TouchableOpacity
-                style={[styles.diagnosticButton, { backgroundColor: palette.primary }]}
-                onPress={handleSendSingularTestEvent}
-                testID="singular-send-test-event-btn"
-              >
-                <Text style={styles.diagnosticButtonText}>Send Singular Test Event</Text>
-              </TouchableOpacity>
-            </View>
-          </Animated.View>
-        ) : null}
-
         <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
           <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>PRIVACY & SAFETY</Text>
           <View style={[styles.card, { backgroundColor: palette.card, borderColor: palette.borderLight }]}>
@@ -1111,41 +968,6 @@ const styles = StyleSheet.create({
   communityProfileCard: {
     padding: 16,
     overflow: 'visible',
-  },
-  diagnosticCard: {
-    padding: 16,
-    gap: 12,
-    overflow: 'visible',
-  },
-  diagnosticTitle: {
-    fontSize: 15,
-    fontWeight: '900',
-  },
-  diagnosticRow: {
-    gap: 4,
-  },
-  diagnosticLabel: {
-    fontSize: 12,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-  },
-  diagnosticValue: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: '700',
-  },
-  diagnosticButton: {
-    minHeight: 44,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 2,
-  },
-  diagnosticButtonText: {
-    color: Colors.white,
-    fontSize: 14,
-    fontWeight: '900',
   },
   communityProfileTop: {
     flexDirection: 'row',

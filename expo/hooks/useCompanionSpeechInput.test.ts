@@ -1,5 +1,6 @@
 import {
   canAttemptCompanionSpeechInput,
+  canShowCompanionSpeechInput,
   getCompanionSpeechInitializationDecision,
 } from '@/hooks/useCompanionSpeechInput';
 
@@ -9,8 +10,12 @@ function assert(condition: unknown, message: string): void {
 
 export function assertCompanionSpeechInputScenarios(): true {
   assert(
-    canAttemptCompanionSpeechInput('ios', 'standalone') === true,
-    'native iOS builds can expose speech input for user-initiated loading',
+    canAttemptCompanionSpeechInput('ios', 'standalone') === false,
+    'native iOS builds keep speech input disabled until the installed native module is crash-safe',
+  );
+  assert(
+    canShowCompanionSpeechInput('ios', 'standalone') === true,
+    'native iOS builds can show the mic button and fail safely without native speech activation',
   );
   assert(
     canAttemptCompanionSpeechInput('android', 'standalone') === true,

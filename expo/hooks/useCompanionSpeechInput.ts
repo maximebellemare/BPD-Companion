@@ -29,6 +29,7 @@ type SpeechInitializationDecisionInput = {
 type SpeechInitializationDecision = 'unavailable' | 'use-existing' | 'await-existing' | 'start-initialization';
 
 const ENABLE_COMPANION_SPEECH_INPUT = true;
+const ENABLE_IOS_COMPANION_SPEECH_INPUT = false;
 const LISTENING_MESSAGE = 'Listening… tap to stop';
 
 function isExpoGo(): boolean {
@@ -36,6 +37,16 @@ function isExpoGo(): boolean {
 }
 
 export function canAttemptCompanionSpeechInput(
+  platform: typeof Platform.OS = Platform.OS,
+  appOwnership: string | null | undefined = Constants.appOwnership,
+): boolean {
+  return ENABLE_COMPANION_SPEECH_INPUT
+    && (platform !== 'ios' || ENABLE_IOS_COMPANION_SPEECH_INPUT)
+    && platform !== 'web'
+    && appOwnership !== 'expo';
+}
+
+export function canShowCompanionSpeechInput(
   platform: typeof Platform.OS = Platform.OS,
   appOwnership: string | null | undefined = Constants.appOwnership,
 ): boolean {
@@ -63,7 +74,8 @@ async function loadSpeechModule(): Promise<SpeechModule | null> {
 
 export function useCompanionSpeechInput({ onTranscript }: UseCompanionSpeechInputOptions) {
   const canAttemptSpeechInput = canAttemptCompanionSpeechInput();
-  const [isAvailable, setIsAvailable] = useState(canAttemptSpeechInput);
+  const canShowSpeechInput = canShowCompanionSpeechInput();
+  const [isAvailable, setIsAvailable] = useState(canShowSpeechInput);
   const [isListening, setIsListening] = useState(false);
   const [status, setStatus] = useState<SpeechInputStatus>(canAttemptSpeechInput ? 'idle' : 'unavailable');
   const [message, setMessage] = useState<string | null>(null);

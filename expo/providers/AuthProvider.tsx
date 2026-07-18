@@ -5,6 +5,7 @@ import { AuthSession, AuthUser, AuthCredentials, AuthSignUpInput } from '@/types
 import { authRepository } from '@/services/repositories';
 import { supabase } from '@/lib/supabase/client';
 import { storageService } from '@/services/storage/storageService';
+import { clearSingularCustomUserId, setSingularCustomUserId, trackSingularEvent } from '@/lib/singular';
 
 type AuthMode = 'authenticated' | 'guest' | 'unauthenticated';
 
@@ -26,6 +27,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         if (current) {
           console.log('[AuthProvider] Restored session');
           storageService.setUser(current.user.id);
+          void setSingularCustomUserId(current.user.id);
           setSession(current);
           setUser(current.user);
           setIsGuest(false);
@@ -33,6 +35,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
           await queryClient.invalidateQueries();
         } else {
           storageService.setUser(null);
+          void clearSingularCustomUserId();
         }
       } catch (e) {
         console.log('[AuthProvider] bootstrap error:', e);
@@ -67,10 +70,13 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
           expiresAt: (sbSession.expires_at ?? Math.floor(Date.now() / 1000) + 3600) * 1000,
         };
         storageService.setUser(mapped.user.id);
+        void setSingularCustomUserId(mapped.user.id);
         setSession(mapped);
         setUser(mapped.user);
         setIsGuest(false);
       } else {
+        storageService.setUser(null);
+        void clearSingularCustomUserId();
         setSession(null);
         setUser(null);
       }
@@ -88,6 +94,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       try {
         const s = await authRepository.signIn(credentials);
         storageService.setUser(s.user.id);
+        void setSingularCustomUserId(s.user.id);
         setSession(s);
         setUser(s.user);
         setIsGuest(false);
@@ -108,6 +115,8 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         const prevUserId = storageService.getUserId();
         const s = await authRepository.signUp(input);
         storageService.setUser(s.user.id);
+        void setSingularCustomUserId(s.user.id);
+        void trackSingularEvent('sign_up');
         setSession(s);
         setUser(s.user);
         setIsGuest(false);
@@ -140,6 +149,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   const signOut = useCallback(async () => {
     await authRepository.signOut();
     storageService.setUser(null);
+    void clearSingularCustomUserId();
     setSession(null);
     setUser(null);
     setIsGuest(false);

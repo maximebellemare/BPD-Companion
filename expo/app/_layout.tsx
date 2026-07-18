@@ -23,11 +23,11 @@ import { MovementProvider } from "@/providers/MovementProvider";
 import { JournalProvider } from "@/providers/JournalProvider";
 import { SpiralPreventionProvider } from "@/providers/SpiralPreventionProvider";
 import { ReviewPromptProvider } from "@/providers/ReviewPromptProvider";
-import Colors from "@/constants/colors";
 import DeferredProviders from "@/components/DeferredProviders";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { ThemeProvider, useAppTheme } from "@/providers/ThemeProvider";
 import { runCareDataNormalizerSmokeTest } from "@/services/care/careDataNormalizer.smoke";
+import { initializeSingular } from "@/lib/singular";
 const NotificationManagerLazy = Platform.OS !== 'web' 
   ? lazy(() => import("@/components/NotificationManager"))
   : null;
@@ -625,6 +625,8 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   useEffect(() => {
+    void initializeSingular();
+
     if (__DEV__) {
       console.log('[CareDataSmokeTest] normalizer guard passed:', runCareDataNormalizerSmokeTest());
     }

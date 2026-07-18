@@ -34,6 +34,7 @@ import { usePersonalization } from '@/hooks/usePersonalization';
 import BrandLogo from '@/components/branding/BrandLogo';
 import { isNativePurchasesPlatform } from '@/services/subscription/purchasesService';
 import { useAppTheme } from '@/providers/ThemeProvider';
+import { trackSingularEvent } from '@/lib/singular';
 
 const TESTIMONIALS = [
   {
@@ -170,6 +171,7 @@ export default function UpgradeScreen() {
 
   useEffect(() => {
     trackEvent('upgrade_screen_viewed');
+    void trackSingularEvent('paywall_view');
     trackEvent('screen_view', { screen: 'upgrade' });
     if (anchor) {
       trackEvent('upgrade_screen_anchored', { anchor });

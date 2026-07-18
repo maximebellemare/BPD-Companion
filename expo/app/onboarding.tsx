@@ -23,12 +23,12 @@ import {
   Shield,
   Sparkles,
   Users,
-  Wind,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import BrandLogo from '@/components/branding/BrandLogo';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
+import { trackSingularEvent } from '@/lib/singular';
 import { useOnboarding } from '@/providers/OnboardingProvider';
 import { useUserProfile } from '@/providers/UserProfileProvider';
 import { useAppTheme } from '@/providers/ThemeProvider';
@@ -368,6 +368,9 @@ export default function OnboardingScreen() {
         version: VERSION,
         focus: profile.personalizedFocus.join(', '),
       });
+      if (!skipped) {
+        void trackSingularEvent('onboarding_complete');
+      }
       void maybeShowReviewPrompt('after_onboarding');
 
       router.replace('/upgrade' as never);

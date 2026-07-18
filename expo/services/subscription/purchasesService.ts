@@ -57,6 +57,7 @@ let configured = false;
 let configurePromise: Promise<boolean> | null = null;
 let configureExceptionMessage: string | null = null;
 let appleAdsAttributionEnabled = false;
+let deviceIdentifierCollectionStarted = false;
 
 type PurchasesStatic = typeof import('react-native-purchases').default;
 
@@ -171,6 +172,19 @@ async function enableAppleAdsAttribution(Purchases: PurchasesStatic): Promise<vo
   }
 }
 
+async function collectRevenueCatDeviceIdentifiers(Purchases: PurchasesStatic): Promise<void> {
+  if (!isNativePurchasesPlatform() || deviceIdentifierCollectionStarted) {
+    return;
+  }
+
+  deviceIdentifierCollectionStarted = true;
+  try {
+    await Purchases.collectDeviceIdentifiers();
+  } catch (error) {
+    console.warn('[RevenueCat] Device identifier collection failed', error);
+  }
+}
+
 export async function configurePurchases(appUserId?: string): Promise<boolean> {
   if (isExpoGoPurchases()) {
     configureExceptionMessage = 'RevenueCat disabled in Expo Go.';
@@ -192,6 +206,7 @@ export async function configurePurchases(appUserId?: string): Promise<boolean> {
       const Purchases = (await import('react-native-purchases')).default;
       Purchases.setLogLevel(Purchases.LOG_LEVEL.WARN);
       Purchases.configure({ apiKey, appUserID: appUserId ?? null });
+      void collectRevenueCatDeviceIdentifiers(Purchases);
       await enableAppleAdsAttribution(Purchases);
       configured = true;
       configureExceptionMessage = null;

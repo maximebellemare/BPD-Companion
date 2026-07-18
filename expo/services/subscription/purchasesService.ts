@@ -262,8 +262,8 @@ export async function fetchOfferings(): Promise<PurchasesOffering | null> {
     const offerings = await Purchases.getOfferings();
     const current = offerings.current ?? offerings.all[REVENUECAT_OFFERING_ID] ?? null;
     return current;
-  } catch {
-    return null;
+  } catch (error) {
+    throw new Error(error instanceof Error ? error.message : 'RevenueCat offerings request failed.');
   }
 }
 

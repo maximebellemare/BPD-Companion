@@ -36,6 +36,7 @@ import { isNativePurchasesPlatform } from '@/services/subscription/purchasesServ
 import { useAppTheme } from '@/providers/ThemeProvider';
 import { trackSingularEvent } from '@/lib/singular';
 import { createAccessFlowTimer } from '@/services/performance/accessFlowTiming';
+import { computePaywallLoadingState } from '@/services/subscription/paywallLoadingModel';
 
 const TESTIMONIALS = [
   {
@@ -147,11 +148,13 @@ export default function UpgradeScreen() {
     offeringStatus,
     purchaseError,
     restoreError,
+    retryMembershipOptions,
   } = useSubscription();
   const personalization = usePersonalization();
   const { trackEvent } = useAnalytics();
   const [selectedPlanId, setSelectedPlanId] = useState<string>('yearly');
   const [restoreNotice, setRestoreNotice] = useState<string | null>(null);
+  const [membershipOptionsTimedOut, setMembershipOptionsTimedOut] = useState<boolean>(false);
   const isNativePurchases = isNativePurchasesPlatform();
   const hasNavigatedAfterAccessRef = useRef<boolean>(false);
   const timingRef = useRef(createAccessFlowTimer('paywall'));
@@ -190,6 +193,18 @@ export default function UpgradeScreen() {
     if (offeringsReadyMarkedRef.current || offeringStatus !== 'ready') return;
     offeringsReadyMarkedRef.current = true;
     timingRef.current.mark('offerings_ready');
+  }, [offeringStatus]);
+
+  useEffect(() => {
+    if (offeringStatus !== 'loading') {
+      setMembershipOptionsTimedOut(false);
+      return;
+    }
+    const timeout = setTimeout(() => {
+      setMembershipOptionsTimedOut(true);
+      timingRef.current.mark('offerings_timeout');
+    }, 20_000);
+    return () => clearTimeout(timeout);
   }, [offeringStatus]);
 
   useEffect(() => {
@@ -333,10 +348,30 @@ export default function UpgradeScreen() {
       });
   }, [handleHaptic, isExpoGo, restore, router, navigateToAppOnce]);
 
+  const handleRetryMembershipOptions = useCallback(() => {
+    handleHaptic();
+    setMembershipOptionsTimedOut(false);
+    setRestoreNotice(null);
+    timingRef.current.mark('offerings_retry');
+    void retryMembershipOptions().catch((error) => {
+      if (__DEV__) {
+        console.log('[Upgrade] membership options retry failed', {
+          message: error instanceof Error ? error.message : String(error),
+        });
+      }
+    });
+  }, [handleHaptic, retryMembershipOptions]);
+
   const selectedPlan = plans.find(p => p.id === selectedPlanId);
   const selectedAndroidTrialCopy = Platform.OS === 'android' ? selectedPlan?.androidTrialCopy ?? null : null;
   const shouldShowTrialCopy = Platform.OS !== 'android' || !!selectedAndroidTrialCopy;
-  const canSubscribe = !isExpoGo && isNativePurchases && offeringStatus === 'ready' && !!selectedPlan && !selectedPlan.isFallbackPrice;
+  const hasValidSelectedPackage = !isExpoGo && isNativePurchases && !!selectedPlan && !selectedPlan.isFallbackPrice;
+  const paywallLoadingState = useMemo(() => computePaywallLoadingState({
+    offeringStatus,
+    timedOut: membershipOptionsTimedOut,
+    hasValidPlan: hasValidSelectedPackage,
+  }), [hasValidSelectedPackage, membershipOptionsTimedOut, offeringStatus]);
+  const canSubscribe = !isExpoGo && isNativePurchases && paywallLoadingState.canSubscribe;
   const canUsePrimaryCta = isExpoGo || isPremium || canSubscribe;
   const trialDaysRemaining = state.trialEndsAt
     ? Math.max(0, Math.ceil((state.trialEndsAt - Date.now()) / (24 * 60 * 60 * 1000)))
@@ -358,12 +393,10 @@ export default function UpgradeScreen() {
         ? 'Start your 3-day free trial for full access from day one. Cancel anytime before the trial ends.'
         : 'Start membership for full access from day one. Cancel anytime.';
   const statusMessage = useMemo(() => {
-    if (offeringStatus === 'loading') return 'Loading membership options...';
+    if (paywallLoadingState.message) return paywallLoadingState.message;
     if (offeringStatus === 'preview') return isNativePurchases ? null : 'Preparing your personalized membership...';
-    if (offeringStatus === 'empty') return 'Preparing your personalized membership...';
-    if (offeringStatus === 'error') return 'Preparing your personalized membership...';
     return null;
-  }, [offeringStatus, isNativePurchases]);
+  }, [isNativePurchases, offeringStatus, paywallLoadingState.message]);
 
   const anchorMessage = useMemo(() => {
     const map: Record<string, string> = {
@@ -558,6 +591,16 @@ export default function UpgradeScreen() {
             <View style={styles.offeringStatusCard}>
               <Shield size={16} color={Colors.brandTeal} />
               <Text style={styles.offeringStatusText}>{statusMessage}</Text>
+              {paywallLoadingState.canShowRetry ? (
+                <TouchableOpacity
+                  onPress={handleRetryMembershipOptions}
+                  style={styles.retryOptionsBtn}
+                  activeOpacity={0.75}
+                  testID="retry-membership-options-btn"
+                >
+                  <Text style={styles.retryOptionsText}>Try again</Text>
+                </TouchableOpacity>
+              ) : null}
             </View>
           ) : null}
           {plans.length > 0 ? (
@@ -608,10 +651,24 @@ export default function UpgradeScreen() {
             </View>
           ) : (
             <View style={styles.emptyPlansCard}>
-              <Text style={styles.emptyPlansTitle}>Loading membership options</Text>
-              <Text style={styles.emptyPlansText}>
-                Membership options are loading. Please try again in a moment. You can still restore an existing subscription.
+              <Text style={styles.emptyPlansTitle}>
+                {paywallLoadingState.canShowRetry ? 'Membership options unavailable' : 'Loading membership options'}
               </Text>
+              <Text style={styles.emptyPlansText}>
+                {paywallLoadingState.canShowRetry
+                  ? 'Please try again. You can still restore an existing subscription.'
+                  : 'Membership options are loading. Please try again in a moment. You can still restore an existing subscription.'}
+              </Text>
+              {paywallLoadingState.canShowRetry ? (
+                <TouchableOpacity
+                  onPress={handleRetryMembershipOptions}
+                  style={styles.emptyPlansRetryBtn}
+                  activeOpacity={0.75}
+                  testID="empty-plans-retry-btn"
+                >
+                  <Text style={styles.emptyPlansRetryText}>Try again</Text>
+                </TouchableOpacity>
+              ) : null}
             </View>
           )}
         </Animated.View>
@@ -1006,6 +1063,19 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     lineHeight: 19,
   },
+  retryOptionsBtn: {
+    borderRadius: 999,
+    backgroundColor: Colors.brandTealSoft,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderWidth: 1,
+    borderColor: Colors.brandTeal,
+  },
+  retryOptionsText: {
+    fontSize: 12,
+    fontWeight: '800' as const,
+    color: Colors.primary,
+  },
   plansRow: {
     flexDirection: 'row' as const,
     gap: 12,
@@ -1028,6 +1098,19 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textSecondary,
     lineHeight: 19,
+  },
+  emptyPlansRetryBtn: {
+    alignSelf: 'flex-start' as const,
+    marginTop: 12,
+    borderRadius: 999,
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+  },
+  emptyPlansRetryText: {
+    fontSize: 13,
+    fontWeight: '800' as const,
+    color: Colors.white,
   },
   planCard: {
     flex: 1,

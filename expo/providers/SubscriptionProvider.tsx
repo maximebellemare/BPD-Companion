@@ -50,6 +50,7 @@ import {
 import { trackEvent } from '@/services/analytics/analyticsService';
 import { isSubscriptionAccessLoading } from '@/services/subscription/restoreNavigationModel';
 import { getAndroidPaywallSelection } from '@/services/subscription/androidPurchaseSelector';
+import { computeOfferingStatus, RevenueCatIdentityStatus } from '@/services/subscription/paywallLoadingModel';
 
 type OfferingStatus = 'loading' | 'ready' | 'empty' | 'error' | 'preview';
 
@@ -99,12 +100,19 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   const [dailyAIUsage, setDailyAIUsage] = useState<number>(0);
   const [dailyRewriteUsage, setDailyRewriteUsage] = useState<number>(0);
   const [isRevenueCatIdentified, setIsRevenueCatIdentified] = useState<boolean>(false);
+  const [revenueCatIdentityStatus, setRevenueCatIdentityStatus] = useState<RevenueCatIdentityStatus>('idle');
+  const [identityRetryNonce, setIdentityRetryNonce] = useState<number>(0);
   const shouldUseRevenueCat = !isExpoGo && isAuthenticated && !!user?.id && isRevenueCatIdentified;
   const identifiedUserIdRef = useRef<string | null>(null);
+  const revenueCatRequestUserRef = useRef<string | null>(null);
+  const membershipOptionsRetryPromiseRef = useRef<Promise<void> | null>(null);
+  const customerInfoQueryKey = useMemo(() => ['rc-customer-info', user?.id ?? 'anonymous'] as const, [user?.id]);
+  const offeringsQueryKey = useMemo(() => ['rc-offerings'] as const, []);
 
   useEffect(() => {
     if (isExpoGo) {
       setIsRevenueCatIdentified(true);
+      setRevenueCatIdentityStatus('ready');
       return;
     }
 
@@ -114,37 +122,56 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
       if (isAuthenticated && user?.id) {
         if (identifiedUserIdRef.current === user.id && isRevenueCatIdentified) return;
         if (identifiedUserIdRef.current && identifiedUserIdRef.current !== user.id) {
+          await queryClient.cancelQueries({ queryKey: ['rc-customer-info'] });
           queryClient.removeQueries({ queryKey: ['rc-customer-info'] });
-          queryClient.removeQueries({ queryKey: ['rc-offerings'] });
+          revenueCatRequestUserRef.current = null;
         }
         setIsRevenueCatIdentified(false);
+        setRevenueCatIdentityStatus('loading');
         try {
-          await logInPurchases(user.id);
+          const info = await logInPurchases(user.id);
+          if (!info) {
+            throw new Error('RevenueCat login did not return customer info.');
+          }
           if (cancelled) return;
           identifiedUserIdRef.current = user.id;
           setIsRevenueCatIdentified(true);
+          setRevenueCatIdentityStatus('ready');
           void Promise.all([
-            queryClient.invalidateQueries({ queryKey: ['rc-customer-info'] }),
-            queryClient.invalidateQueries({ queryKey: ['rc-offerings'] }),
+            queryClient.invalidateQueries({ queryKey: customerInfoQueryKey }),
+            queryClient.invalidateQueries({ queryKey: offeringsQueryKey }),
           ]).catch((error) => {
             if (__DEV__) {
               console.log('[SubscriptionProvider] post-login RevenueCat query refresh failed:', error);
             }
           });
-        } catch {
-          if (!cancelled) setIsRevenueCatIdentified(false);
+        } catch (error) {
+          if (!cancelled) {
+            setIsRevenueCatIdentified(false);
+            setRevenueCatIdentityStatus('error');
+            if (__DEV__) {
+              console.log('[SubscriptionProvider] RevenueCat login failed', {
+                hasSupabaseUser: !!user?.id,
+                message: error instanceof Error ? error.message : String(error),
+              });
+            }
+          }
         }
         return;
       }
 
       if (identifiedUserIdRef.current) {
         identifiedUserIdRef.current = null;
+        revenueCatRequestUserRef.current = null;
         setIsRevenueCatIdentified(false);
+        setRevenueCatIdentityStatus('idle');
         await logOutPurchases();
+        await queryClient.cancelQueries({ queryKey: ['rc-customer-info'] });
         queryClient.removeQueries({ queryKey: ['rc-customer-info'] });
-        queryClient.removeQueries({ queryKey: ['rc-offerings'] });
       } else {
         setIsRevenueCatIdentified(false);
+        setRevenueCatIdentityStatus('idle');
+        await queryClient.cancelQueries({ queryKey: ['rc-customer-info'] });
         queryClient.removeQueries({ queryKey: ['rc-customer-info'] });
       }
     };
@@ -154,21 +181,44 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     return () => {
       cancelled = true;
     };
-  }, [isAuthenticated, isExpoGo, isRevenueCatIdentified, queryClient, user?.id]);
+  }, [customerInfoQueryKey, identityRetryNonce, isAuthenticated, isExpoGo, isRevenueCatIdentified, offeringsQueryKey, queryClient, user?.id]);
 
   const customerInfoQuery = useQuery({
-    queryKey: ['rc-customer-info'],
+    queryKey: customerInfoQueryKey,
     queryFn: fetchCustomerInfo,
     staleTime: 60_000,
     enabled: shouldUseRevenueCat,
   });
 
   const offeringsQuery = useQuery({
-    queryKey: ['rc-offerings'],
+    queryKey: offeringsQueryKey,
     queryFn: fetchOfferings,
     staleTime: 5 * 60_000,
     enabled: shouldUseRevenueCat,
+    retry: 1,
   });
+
+  useEffect(() => {
+    if (!shouldUseRevenueCat || !user?.id) return;
+    if (revenueCatRequestUserRef.current === user.id) return;
+    revenueCatRequestUserRef.current = user.id;
+    if (__DEV__) {
+      console.log('[SubscriptionProvider] RevenueCat requests started', {
+        hasSupabaseUser: true,
+        identityReady: isRevenueCatIdentified,
+      });
+    }
+    void Promise.all([
+      customerInfoQuery.refetch(),
+      offeringsQuery.refetch(),
+    ]).catch((error) => {
+      if (__DEV__) {
+        console.log('[SubscriptionProvider] RevenueCat request refetch failed', {
+          message: error instanceof Error ? error.message : String(error),
+        });
+      }
+    });
+  }, [customerInfoQuery, isRevenueCatIdentified, offeringsQuery, shouldUseRevenueCat, user?.id]);
 
   const aiUsageQuery = useQuery({
     queryKey: ['ai-daily-usage'],
@@ -253,15 +303,20 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   });
 
   const offeringStatus: OfferingStatus = useMemo(() => {
-    if (isExpoGo) return 'preview';
-    if (isAuthenticated && !!user?.id && !isRevenueCatIdentified) return 'loading';
-    if (offeringsQuery.isLoading || customerInfoQuery.isLoading) return 'loading';
-    if (offeringsQuery.isError) return 'error';
-    if (offeringsQuery.data?.monthly || offeringsQuery.data?.annual) return 'ready';
-    if (offeringsQuery.data) return 'empty';
-    if (__DEV__) return 'preview';
-    return 'empty';
-  }, [customerInfoQuery.isLoading, isAuthenticated, isExpoGo, isRevenueCatIdentified, offeringsQuery.data, offeringsQuery.isError, offeringsQuery.isLoading, user?.id]);
+    return computeOfferingStatus({
+      isExpoGo,
+      isAuthenticated,
+      hasUserId: !!user?.id,
+      identityStatus: revenueCatIdentityStatus,
+      isRevenueCatIdentified,
+      isOfferingsLoading: offeringsQuery.isLoading,
+      isOfferingsError: offeringsQuery.isError,
+      hasMonthlyPackage: !!offeringsQuery.data?.monthly,
+      hasAnnualPackage: !!offeringsQuery.data?.annual,
+      hasOffering: !!offeringsQuery.data,
+      isDev: __DEV__,
+    });
+  }, [isAuthenticated, isExpoGo, isRevenueCatIdentified, offeringsQuery.data, offeringsQuery.isError, offeringsQuery.isLoading, revenueCatIdentityStatus, user?.id]);
 
   const plans = useMemo<SubscriptionPlan[]>(() => {
     const offering = offeringsQuery.data;
@@ -331,9 +386,9 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
       }
       const info = await rcPurchasePackage(input.pkg, user.id, input.period);
       const membershipActive = hasActiveEntitlement(info ?? null);
-      await queryClient.cancelQueries({ queryKey: ['rc-customer-info'] });
+      await queryClient.cancelQueries({ queryKey: customerInfoQueryKey });
       if (info) {
-        queryClient.setQueryData(['rc-customer-info'], info);
+        queryClient.setQueryData(customerInfoQueryKey, info);
       }
       if (!membershipActive) {
         throw new Error(getMissingMembershipMessage(info ?? null));
@@ -362,9 +417,9 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     },
     onSuccess: async (info) => {
       const startedAt = Date.now();
-      await queryClient.cancelQueries({ queryKey: ['rc-customer-info'] });
+      await queryClient.cancelQueries({ queryKey: customerInfoQueryKey });
       if (info) {
-        queryClient.setQueryData(['rc-customer-info'], info);
+        queryClient.setQueryData(customerInfoQueryKey, info);
       }
       logRestoreTiming('provider:setFreshCustomerInfo', startedAt, {
         hasActiveEntitlement: hasActiveEntitlement(info ?? null),
@@ -442,6 +497,39 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     return hasActiveEntitlement(info ?? null);
   }, [isExpoGo, restoreMutation]);
 
+  const retryMembershipOptions = useCallback(async () => {
+    if (isExpoGo) return;
+    if (membershipOptionsRetryPromiseRef.current) {
+      return membershipOptionsRetryPromiseRef.current;
+    }
+    revenueCatRequestUserRef.current = null;
+    const retry = async () => {
+      if (!isAuthenticated || !user?.id) {
+        setRevenueCatIdentityStatus('idle');
+        return;
+      }
+      if (!isRevenueCatIdentified) {
+        setRevenueCatIdentityStatus('idle');
+        setIdentityRetryNonce((value) => value + 1);
+        return;
+      }
+      if (__DEV__) {
+        console.log('[SubscriptionProvider] RevenueCat retry requested', {
+          hasSupabaseUser: true,
+          identityReady: true,
+        });
+      }
+      await Promise.all([
+        customerInfoQuery.refetch(),
+        offeringsQuery.refetch(),
+      ]);
+    };
+    membershipOptionsRetryPromiseRef.current = retry().finally(() => {
+      membershipOptionsRetryPromiseRef.current = null;
+    });
+    return membershipOptionsRetryPromiseRef.current;
+  }, [customerInfoQuery, isAuthenticated, isExpoGo, isRevenueCatIdentified, offeringsQuery, user?.id]);
+
   const subscribe = useCallback((_plan: SubscriptionPlan) => {
     if (isExpoGo) return;
     const current = offeringsQuery.data;
@@ -488,6 +576,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     },
     cancel: () => {},
     restore,
+    retryMembershipOptions,
     canAccessFeature,
     shouldPromptUpgrade,
     lockedFeatures,
@@ -517,6 +606,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     restoreMutation.isPending,
     restoreMutation.error,
     restore,
+    retryMembershipOptions,
     purchase,
     subscribe,
     canAccessFeature,

@@ -7,7 +7,9 @@
     "start-web": "expo start --web",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "preflight:android": "node scripts/preflight-android-production.js",
+    "build:android:production": "npm run preflight:android && eas build --platform android --profile production"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

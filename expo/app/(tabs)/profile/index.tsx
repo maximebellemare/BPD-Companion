@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Alert,
   Animated,
+  Linking,
   Platform,
   ScrollView,
   StyleSheet,
@@ -44,6 +45,8 @@ import { useReviewPrompt } from '@/providers/ReviewPromptProvider';
 import { updateProfile as updateAccountProfile } from '@/lib/supabase/profiles';
 import { storageService } from '@/services/storage/storageService';
 import { resetTodayTutorial } from '@/services/habits/tutorialAndRewardsService';
+import { createSingleFlightRunner, openSubscriptionManagement } from '@/services/subscription/manageSubscriptionService';
+import { fetchCustomerInfo, getActiveProductIdentifier } from '@/services/subscription/purchasesService';
 import {
   CommunityProfile,
   loadCommunityProfile,
@@ -97,6 +100,7 @@ export default function ProfileScreen() {
   const [communityProfileError, setCommunityProfileError] = useState<string | null>(null);
   const [isSavingCommunityProfile, setIsSavingCommunityProfile] = useState(false);
   const [communityProfileSaved, setCommunityProfileSaved] = useState(false);
+  const manageSubscriptionRunnerRef = useRef(createSingleFlightRunner());
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(18)).current;
 
@@ -258,11 +262,30 @@ export default function ProfileScreen() {
 
   const handleManageSubscription = useCallback(() => {
     setNotice(null);
-    router.push('/upgrade' as never);
-    if (__DEV__) {
-      setNotice('Opening membership options.');
-    }
-  }, [router]);
+    const openManagement = async () => {
+      let activeProductIdentifier: string | null = null;
+      try {
+        activeProductIdentifier = getActiveProductIdentifier(await fetchCustomerInfo());
+      } catch {
+        activeProductIdentifier = null;
+      }
+      const result = await openSubscriptionManagement(Platform.OS, Linking, activeProductIdentifier);
+      if (!result.opened) {
+        Alert.alert(
+          'Manage subscription',
+          'We could not open your store subscription settings. Please open Google Play or App Store subscription settings from your device.',
+        );
+      }
+    };
+    void manageSubscriptionRunnerRef.current(openManagement).then((result) => {
+      void result;
+    }).catch(() => {
+      Alert.alert(
+        'Manage subscription',
+        'We could not open your store subscription settings. Please open Google Play or App Store subscription settings from your device.',
+      );
+    });
+  }, []);
 
   const updateOwnerAccountProfile = useCallback(async (updates: Parameters<typeof updateAccountProfile>[1]) => {
     if (!user || !isOwnerQa) return;

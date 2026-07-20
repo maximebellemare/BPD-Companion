@@ -418,6 +418,11 @@ export function getActiveExpiration(info: CustomerInfo | null): number | null {
   return ent.expirationDate ? new Date(ent.expirationDate).getTime() : null;
 }
 
+export function getActiveProductIdentifier(info: CustomerInfo | null): string | null {
+  if (!info) return null;
+  return info.entitlements.active[REVENUECAT_ENTITLEMENT_ID]?.productIdentifier ?? null;
+}
+
 export function getActivePeriodType(info: CustomerInfo | null): 'monthly' | 'yearly' | null {
   if (!info) return null;
   const ent = info.entitlements.active[REVENUECAT_ENTITLEMENT_ID];

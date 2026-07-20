@@ -63,17 +63,29 @@ export function getMembershipStatusCopy(params: {
   pendingEffectiveDateLabel?: string | null;
   trialDaysRemaining: number;
   shouldShowTrialCopy: boolean;
+  isSubscriptionManagement?: boolean;
+  isMembershipLoading?: boolean;
 }): { title: string; body: string; heroTitle: string; plansTitle: string } {
   const currentPlanLabel = getPlanDisplayName(params.currentPeriod);
   const pendingTargetLabel = getPlanDisplayName(params.pendingTargetPeriod);
 
   const heroTitle = params.hasStoreAccess
+    || (params.isSubscriptionManagement && params.isMembershipLoading)
     ? 'Your Membership'
     : params.shouldShowTrialCopy
       ? 'Start your 3-day free trial.'
       : 'Start your membership.';
 
-  const plansTitle = params.hasStoreAccess ? 'Manage your plan' : 'Choose your plan';
+  const plansTitle = params.hasStoreAccess || params.isSubscriptionManagement ? 'Manage your plan' : 'Choose your plan';
+
+  if (params.isSubscriptionManagement && params.isMembershipLoading && !params.hasStoreAccess) {
+    return {
+      heroTitle,
+      plansTitle,
+      title: 'Checking membership status',
+      body: 'Loading your current membership before showing plan changes.',
+    };
+  }
 
   if (params.hasStoreAccess && currentPlanLabel && pendingTargetLabel) {
     return {

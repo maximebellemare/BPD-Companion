@@ -44,6 +44,17 @@ export function assertMembershipPrimaryActionRegressionScenarios(): true {
   assert(activeMonthlyStatus.title === 'Monthly membership active', 'active monthly status identifies current plan');
   assert(activeMonthlyStatus.body.includes('Current plan: Monthly'), 'active monthly body names current plan');
 
+  const rawProductDrivenActiveStatus = getMembershipStatusCopy({
+    hasStoreAccess: true,
+    isEntitlementActive: true,
+    isTrialActive: false,
+    currentPeriod: getAndroidActivePeriodFromProductIdentifier('bpd_monthly:monthly'),
+    trialDaysRemaining: 0,
+    shouldShowTrialCopy: false,
+  });
+  assert(rawProductDrivenActiveStatus.heroTitle === 'Your Membership', 'raw active entitlement product drives membership header');
+  assert(rawProductDrivenActiveStatus.title === 'Monthly membership active', 'raw active entitlement product drives current plan status');
+
   const activeYearlyStatus = getMembershipStatusCopy({
     hasStoreAccess: true,
     isEntitlementActive: true,
@@ -98,6 +109,19 @@ export function assertMembershipPrimaryActionRegressionScenarios(): true {
     shouldShowTrialCopy: false,
   });
   assert(pendingYearlyStatus.body.includes('Switching to Yearly at renewal'), 'pending yearly scheduled copy');
+
+  const loadingManageStatus = getMembershipStatusCopy({
+    hasStoreAccess: false,
+    isEntitlementActive: false,
+    isTrialActive: false,
+    currentPeriod: null,
+    trialDaysRemaining: 0,
+    shouldShowTrialCopy: false,
+    isSubscriptionManagement: true,
+    isMembershipLoading: true,
+  });
+  assert(loadingManageStatus.heroTitle === 'Your Membership', 'manage mode does not show acquisition header while membership loads');
+  assert(loadingManageStatus.title === 'Checking membership status', 'manage loading state is explicit');
 
   assert(
     getMembershipPrimaryAction({

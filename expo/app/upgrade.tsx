@@ -190,6 +190,8 @@ export default function UpgradeScreen() {
   const activePeriodForPrimaryAction = Platform.OS === 'android'
     ? getAndroidActivePeriodFromProductIdentifier(activeProductIdentifier)
     : state.plan?.period ?? null;
+  const hasEntitlementBackedActivePlan = isEntitlementActive && !!activePeriodForPrimaryAction;
+  const hasStoreAccessForPresentation = hasStoreAccess || hasEntitlementBackedActivePlan;
 
   const navigateToAppOnce = useCallback(() => {
     if (hasNavigatedAfterAccessRef.current) return;
@@ -460,14 +462,16 @@ export default function UpgradeScreen() {
     ? Math.max(0, Math.ceil((state.trialEndsAt - Date.now()) / (24 * 60 * 60 * 1000)))
     : 0;
   const statusCopy = getMembershipStatusCopy({
-    hasStoreAccess,
-    isEntitlementActive,
+    hasStoreAccess: hasStoreAccessForPresentation,
+    isEntitlementActive: isEntitlementActive || hasEntitlementBackedActivePlan,
     isTrialActive: state.isTrialActive,
     currentPeriod: activePeriodForPrimaryAction,
     pendingTargetPeriod: pendingPlanChange?.targetPeriod ?? null,
     pendingEffectiveDateLabel,
     trialDaysRemaining,
     shouldShowTrialCopy,
+    isSubscriptionManagement,
+    isMembershipLoading: isLoading,
   });
   const statusMessage = useMemo(() => {
     if (paywallLoadingState.message) return paywallLoadingState.message;
@@ -684,7 +688,7 @@ export default function UpgradeScreen() {
             <View style={styles.plansRow}>
               {plans.map((plan) => {
                 const isSelected = plan.id === selectedPlanId;
-                const isCurrentPlan = hasStoreAccess && activePeriodForPrimaryAction === plan.period;
+                const isCurrentPlan = hasStoreAccessForPresentation && activePeriodForPrimaryAction === plan.period;
                 const isScheduledPlan = pendingPlanChange?.targetPeriod === plan.period;
                 return (
                   <TouchableOpacity

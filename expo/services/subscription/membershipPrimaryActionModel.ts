@@ -15,6 +15,16 @@ export type MembershipPrimaryAction =
   | { kind: 'purchase'; label: string; requiresPurchasablePlan: true }
   | { kind: 'loading'; label: string; requiresPurchasablePlan: false };
 
+export function getMembershipManagementRoute(): {
+  pathname: '/upgrade';
+  params: { mode: 'manage' };
+} {
+  return {
+    pathname: '/upgrade',
+    params: { mode: 'manage' },
+  };
+}
+
 export function getAndroidActivePeriodFromProductIdentifier(
   productIdentifier: string | null | undefined,
 ): SubscriptionPeriod | null {

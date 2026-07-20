@@ -1,6 +1,7 @@
 import {
   getAndroidActivePeriodFromProductIdentifier,
   getInitialManageSelectedPlanId,
+  getMembershipManagementRoute,
   getMembershipPrimaryAction,
 } from '@/services/subscription/membershipPrimaryActionModel';
 
@@ -9,6 +10,10 @@ function assert(condition: unknown, message: string): void {
 }
 
 export function assertMembershipPrimaryActionRegressionScenarios(): true {
+  const managementRoute = getMembershipManagementRoute();
+  assert(managementRoute.pathname === '/upgrade', 'Profile membership opens upgrade screen');
+  assert(managementRoute.params.mode === 'manage', 'Profile membership opens manage mode');
+
   assert(getAndroidActivePeriodFromProductIdentifier('bpd_monthly') === 'monthly', 'raw monthly product normalizes');
   assert(getAndroidActivePeriodFromProductIdentifier('bpd_monthly:monthly') === 'monthly', 'monthly base-plan product normalizes');
   assert(getAndroidActivePeriodFromProductIdentifier('bpd_yearly') === 'yearly', 'raw yearly product normalizes');

@@ -100,6 +100,17 @@ function hasThreeDayFreeTrial(option: SubscriptionOption): boolean {
   });
 }
 
+function hasAnyFreeTrial(option: SubscriptionOption): boolean {
+  if (option.freePhase) return true;
+
+  return (option.pricingPhases ?? []).some(phase => {
+    const paymentMode = String(phase.offerPaymentMode ?? '').toUpperCase();
+    const legacyPriceAmountMicros = (phase as { priceAmountMicros?: number | string | null }).priceAmountMicros ?? null;
+    const amountMicros = phase.price?.amountMicros ?? legacyPriceAmountMicros;
+    return paymentMode === 'FREE_TRIAL' || String(amountMicros) === '0';
+  });
+}
+
 function isExactTrialOption(option: SubscriptionOption, period: SubscriptionPeriod): boolean {
   if (option.isPrepaid) return false;
   const parsed = parseSubscriptionOptionId(option.id);
@@ -111,6 +122,16 @@ function isExactTrialOption(option: SubscriptionOption, period: SubscriptionPeri
     hasThreeDayFreeTrial(option);
 }
 
+function isExactBasePlanOption(option: SubscriptionOption, period: SubscriptionPeriod): boolean {
+  if (option.isPrepaid || hasAnyFreeTrial(option)) return false;
+  const parsed = parseSubscriptionOptionId(option.id);
+  if (parsed.malformed) return false;
+  const config = getAndroidPlanConfig(period);
+  return optionProductId(option) === config.productId &&
+    parsed.basePlanId === config.basePlanId &&
+    parsed.offerId === null;
+}
+
 function getDefaultNonPrepaidOption(pkg: PurchasesPackage): SubscriptionOption | null {
   if (pkg.product.defaultOption && !pkg.product.defaultOption.isPrepaid) {
     return pkg.product.defaultOption;
@@ -119,6 +140,18 @@ function getDefaultNonPrepaidOption(pkg: PurchasesPackage): SubscriptionOption |
   return (pkg.product.subscriptionOptions ?? []).find(option => option.isBasePlan && !option.isPrepaid) ??
     (pkg.product.subscriptionOptions ?? []).find(option => !option.isPrepaid) ??
     null;
+}
+
+function getActiveSubscriberTargetOption(pkg: PurchasesPackage, period: SubscriptionPeriod): SubscriptionOption | null {
+  const options = pkg.product.subscriptionOptions ?? [];
+  const exactBasePlan = options.find(option => isExactBasePlanOption(option, period));
+  if (exactBasePlan) return exactBasePlan;
+
+  if (pkg.product.defaultOption && isExactBasePlanOption(pkg.product.defaultOption, period)) {
+    return pkg.product.defaultOption;
+  }
+
+  return null;
 }
 
 export function getActiveEntitlementProductIdentifier(customerInfo: CustomerInfo | null): string | null {
@@ -193,12 +226,13 @@ export function selectAndroidSubscriptionOption(params: {
   const defaultOption = getDefaultNonPrepaidOption(pkg);
 
   if (activeProductIdentifier) {
+    const activeSubscriberOption = getActiveSubscriberTargetOption(pkg, period);
     return {
-      subscriptionOption: defaultOption,
-      googleProductChangeInfo: defaultOption && activeGoogleProductIdentifier && replacementMode
+      subscriptionOption: activeSubscriberOption,
+      googleProductChangeInfo: activeSubscriberOption && activeGoogleProductIdentifier && replacementMode
         ? { oldProductIdentifier: activeGoogleProductIdentifier, replacementMode }
         : null,
-      selectedOptionId: defaultOption?.id ?? null,
+      selectedOptionId: activeSubscriberOption?.id ?? null,
       trialCopy: null,
       priceString: pkg.product.priceString,
     };

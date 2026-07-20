@@ -73,6 +73,13 @@ function infoWithoutEntitlement(): CustomerInfo {
 }
 
 function monthlyPackage(extraOptions: SubscriptionOption[] = []): PurchasesPackage {
+  return monthlyPackageWithDefault('monthly', extraOptions);
+}
+
+function monthlyPackageWithDefault(
+  defaultOptionId: string,
+  extraOptions: SubscriptionOption[] = [],
+): PurchasesPackage {
   const base = option({
     id: 'monthly',
     productId: 'bpd_monthly',
@@ -85,12 +92,19 @@ function monthlyPackage(extraOptions: SubscriptionOption[] = []): PurchasesPacka
   });
   return pkg({
     productId: 'bpd_monthly',
-    defaultOptionId: 'monthly',
+    defaultOptionId,
     options: [base, trial, ...extraOptions],
   });
 }
 
 function yearlyPackage(extraOptions: SubscriptionOption[] = []): PurchasesPackage {
+  return yearlyPackageWithDefault('annual', extraOptions);
+}
+
+function yearlyPackageWithDefault(
+  defaultOptionId: string,
+  extraOptions: SubscriptionOption[] = [],
+): PurchasesPackage {
   const base = option({
     id: 'annual',
     productId: 'bpd_yearly',
@@ -104,7 +118,7 @@ function yearlyPackage(extraOptions: SubscriptionOption[] = []): PurchasesPackag
   return pkg({
     productId: 'bpd_yearly',
     priceString: '$59.99',
-    defaultOptionId: 'annual',
+    defaultOptionId,
     options: [base, trial, ...extraOptions],
   });
 }
@@ -257,6 +271,44 @@ export function assertAndroidPurchaseSelectorRegressionScenarios(): true {
     expectedChangeInfo: 'bpd_monthly',
     expectedReplacementMode: ANDROID_REPLACEMENT_MODE_MONTHLY_TO_YEARLY,
     info: infoWithActiveEntitlement('bpd_monthly:monthly'),
+  });
+
+  assertSelection({
+    name: 'active monthly subscriber excludes Yearly trial default option',
+    pkg: yearlyPackageWithDefault('annual:free-trial'),
+    period: 'yearly',
+    expectedOptionId: 'annual',
+    expectedTrialCopy: null,
+    expectedChangeInfo: 'bpd_monthly',
+    expectedReplacementMode: ANDROID_REPLACEMENT_MODE_MONTHLY_TO_YEARLY,
+    info: infoWithActiveEntitlement('bpd_monthly:monthly'),
+  });
+
+  assertSelection({
+    name: 'active yearly subscriber excludes Monthly trial default option',
+    pkg: monthlyPackageWithDefault('monthly:free-trial'),
+    period: 'monthly',
+    expectedOptionId: 'monthly',
+    expectedTrialCopy: null,
+    expectedChangeInfo: 'bpd_yearly',
+    expectedReplacementMode: ANDROID_REPLACEMENT_MODE_YEARLY_TO_MONTHLY,
+    info: infoWithActiveEntitlement('bpd_yearly:annual'),
+  });
+
+  assertSelection({
+    name: 'active subscriber does not fall back to trial when base plan is missing',
+    pkg: pkg({
+      productId: 'bpd_monthly',
+      defaultOptionId: 'monthly:free-trial',
+      options: [
+        option({ id: 'monthly:free-trial', productId: 'bpd_monthly' }),
+      ],
+    }),
+    period: 'monthly',
+    expectedOptionId: null,
+    expectedTrialCopy: null,
+    expectedChangeInfo: null,
+    info: infoWithActiveEntitlement('bpd_yearly:annual'),
   });
 
   assertSelection({

@@ -1,10 +1,20 @@
-import { getMembershipPrimaryAction } from '@/services/subscription/membershipPrimaryActionModel';
+import {
+  getAndroidActivePeriodFromProductIdentifier,
+  getInitialManageSelectedPlanId,
+  getMembershipPrimaryAction,
+} from '@/services/subscription/membershipPrimaryActionModel';
 
 function assert(condition: unknown, message: string): void {
   if (!condition) throw new Error(`Membership primary action regression failed: ${message}`);
 }
 
 export function assertMembershipPrimaryActionRegressionScenarios(): true {
+  assert(getAndroidActivePeriodFromProductIdentifier('bpd_monthly') === 'monthly', 'raw monthly product normalizes');
+  assert(getAndroidActivePeriodFromProductIdentifier('bpd_monthly:monthly') === 'monthly', 'monthly base-plan product normalizes');
+  assert(getAndroidActivePeriodFromProductIdentifier('bpd_yearly') === 'yearly', 'raw yearly product normalizes');
+  assert(getAndroidActivePeriodFromProductIdentifier('bpd_yearly:annual') === 'yearly', 'yearly base-plan product normalizes');
+  assert(getAndroidActivePeriodFromProductIdentifier('rc_promo_BPD Companion Pro_lifetime') === null, 'unknown active product is not guessed');
+
   assert(
     getMembershipPrimaryAction({
       isExpoGo: false,
@@ -45,6 +55,19 @@ export function assertMembershipPrimaryActionRegressionScenarios(): true {
   assert(yearlyToMonthly.kind === 'switch', 'active yearly with monthly selected switches plan');
   assert(yearlyToMonthly.label === 'Switch to Monthly', 'yearly to monthly switch label');
 
+  const staleStatePlanMonthlyToYearly = getMembershipPrimaryAction({
+    isExpoGo: false,
+    platform: 'android',
+    hasStoreAccess: true,
+    activePeriod: getAndroidActivePeriodFromProductIdentifier('bpd_monthly:monthly'),
+    selectedPeriod: 'yearly',
+    canSubscribe: true,
+    shouldShowTrialCopy: false,
+    selectedPriceLabel: '$59.99/yr',
+  });
+  assert(staleStatePlanMonthlyToYearly.kind === 'switch', 'raw active product drives switch when state.plan is stale or missing');
+  assert(staleStatePlanMonthlyToYearly.label === 'Switch to Yearly', 'raw active monthly to selected yearly label');
+
   assert(
     getMembershipPrimaryAction({
       isExpoGo: false,
@@ -84,6 +107,54 @@ export function assertMembershipPrimaryActionRegressionScenarios(): true {
       selectedPriceLabel: '$59.99/yr',
     }).kind === 'loading',
     'purchase CTA remains loading without valid package',
+  );
+
+  assert(
+    getInitialManageSelectedPlanId({
+      isSubscriptionManagement: true,
+      hasAppliedInitialSelection: false,
+      hasUserSelectedPlan: false,
+      activePeriod: 'monthly',
+      availablePlanIds: ['monthly', 'yearly'],
+      currentSelectedPlanId: 'yearly',
+    }) === 'monthly',
+    'manage mode initializes to active plan before user selection',
+  );
+
+  assert(
+    getInitialManageSelectedPlanId({
+      isSubscriptionManagement: true,
+      hasAppliedInitialSelection: false,
+      hasUserSelectedPlan: true,
+      activePeriod: 'monthly',
+      availablePlanIds: ['monthly', 'yearly'],
+      currentSelectedPlanId: 'yearly',
+    }) === 'yearly',
+    'user-selected yearly is not reset by subscription refresh',
+  );
+
+  assert(
+    getInitialManageSelectedPlanId({
+      isSubscriptionManagement: true,
+      hasAppliedInitialSelection: false,
+      hasUserSelectedPlan: true,
+      activePeriod: 'yearly',
+      availablePlanIds: ['monthly', 'yearly'],
+      currentSelectedPlanId: 'monthly',
+    }) === 'monthly',
+    'user-selected monthly is not reset by subscription refresh',
+  );
+
+  assert(
+    getInitialManageSelectedPlanId({
+      isSubscriptionManagement: true,
+      hasAppliedInitialSelection: false,
+      hasUserSelectedPlan: false,
+      activePeriod: 'yearly',
+      availablePlanIds: ['monthly', 'yearly'],
+      currentSelectedPlanId: 'monthly',
+    }) === 'yearly',
+    'account or product change can reinitialize selected plan',
   );
 
   return true;

@@ -30,6 +30,7 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useSubscription } from '@/providers/SubscriptionProvider';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
+import { useAuth } from '@/providers/AuthProvider';
 import { usePersonalization } from '@/hooks/usePersonalization';
 import BrandLogo from '@/components/branding/BrandLogo';
 import { isNativePurchasesPlatform } from '@/services/subscription/purchasesService';
@@ -37,7 +38,11 @@ import { useAppTheme } from '@/providers/ThemeProvider';
 import { trackSingularEvent } from '@/lib/singular';
 import { createAccessFlowTimer } from '@/services/performance/accessFlowTiming';
 import { computePaywallLoadingState } from '@/services/subscription/paywallLoadingModel';
-import { getMembershipPrimaryAction } from '@/services/subscription/membershipPrimaryActionModel';
+import {
+  getAndroidActivePeriodFromProductIdentifier,
+  getInitialManageSelectedPlanId,
+  getMembershipPrimaryAction,
+} from '@/services/subscription/membershipPrimaryActionModel';
 
 const TESTIMONIALS = [
   {
@@ -139,6 +144,7 @@ export default function UpgradeScreen() {
   const {
     isPremium,
     isEntitlementActive,
+    activeProductIdentifier,
     subscribe,
     restore,
     isLoading,
@@ -151,6 +157,7 @@ export default function UpgradeScreen() {
     restoreError,
     retryMembershipOptions,
   } = useSubscription();
+  const { user } = useAuth();
   const personalization = usePersonalization();
   const { trackEvent } = useAnalytics();
   const [selectedPlanId, setSelectedPlanId] = useState<string>('yearly');
@@ -162,9 +169,14 @@ export default function UpgradeScreen() {
   const paywallRenderMarkedRef = useRef<boolean>(false);
   const offeringsReadyMarkedRef = useRef<boolean>(false);
   const managementInitialPlanAppliedRef = useRef<boolean>(false);
+  const hasUserSelectedPlanRef = useRef<boolean>(false);
+  const activeAccountRef = useRef<string | null>(null);
   const membershipActive = isEntitlementActive || state.isTrialActive;
   const hasStoreAccess = membershipActive;
   const isSubscriptionManagement = mode === 'manage';
+  const activePeriodForPrimaryAction = Platform.OS === 'android'
+    ? getAndroidActivePeriodFromProductIdentifier(activeProductIdentifier)
+    : state.plan?.period ?? null;
 
   const navigateToAppOnce = useCallback(() => {
     if (hasNavigatedAfterAccessRef.current) return;
@@ -179,12 +191,26 @@ export default function UpgradeScreen() {
   }, [plans, selectedPlanId]);
 
   useEffect(() => {
-    if (!isSubscriptionManagement || managementInitialPlanAppliedRef.current) return;
-    const activePeriod = state.plan?.period ?? null;
-    if (!activePeriod || !plans.some(plan => plan.id === activePeriod)) return;
+    const accountKey = user?.id ?? null;
+    if (activeAccountRef.current === accountKey) return;
+    activeAccountRef.current = accountKey;
+    hasUserSelectedPlanRef.current = false;
+    managementInitialPlanAppliedRef.current = false;
+  }, [user?.id]);
+
+  useEffect(() => {
+    const nextSelectedPlanId = getInitialManageSelectedPlanId({
+      isSubscriptionManagement,
+      hasAppliedInitialSelection: managementInitialPlanAppliedRef.current,
+      hasUserSelectedPlan: hasUserSelectedPlanRef.current,
+      activePeriod: activePeriodForPrimaryAction,
+      availablePlanIds: plans.map(plan => plan.id),
+      currentSelectedPlanId: selectedPlanId,
+    });
+    if (nextSelectedPlanId === selectedPlanId) return;
     managementInitialPlanAppliedRef.current = true;
-    setSelectedPlanId(activePeriod);
-  }, [isSubscriptionManagement, plans, state.plan?.period]);
+    setSelectedPlanId(nextSelectedPlanId);
+  }, [activePeriodForPrimaryAction, isSubscriptionManagement, plans, selectedPlanId]);
 
   useEffect(() => {
     if (!paywallRenderMarkedRef.current) {
@@ -307,7 +333,7 @@ export default function UpgradeScreen() {
       isExpoGo,
       platform: Platform.OS,
       hasStoreAccess,
-      activePeriod: state.plan?.period ?? null,
+      activePeriod: activePeriodForPrimaryAction,
       selectedPeriod: selected?.period ?? null,
       canSubscribe: !isExpoGo && isNativePurchases && !!selected && !selected.isFallbackPrice && offeringStatus === 'ready',
       shouldShowTrialCopy: Platform.OS !== 'android' || !!selected?.androidTrialCopy,
@@ -333,7 +359,7 @@ export default function UpgradeScreen() {
     }
     trackEvent('upgrade_clicked', { plan_id: selectedPlanId });
     subscribe(selected);
-  }, [hasStoreAccess, isExpoGo, router, selectedPlanId, subscribe, trackEvent, plans, offeringStatus, isNativePurchases, state.plan?.period]);
+  }, [activePeriodForPrimaryAction, hasStoreAccess, isExpoGo, router, selectedPlanId, subscribe, trackEvent, plans, offeringStatus, isNativePurchases]);
 
   const handleClose = useCallback(() => {
     if (isExpoGo) {
@@ -396,7 +422,7 @@ export default function UpgradeScreen() {
     isExpoGo,
     platform: Platform.OS,
     hasStoreAccess,
-    activePeriod: state.plan?.period ?? null,
+    activePeriod: activePeriodForPrimaryAction,
     selectedPeriod: selectedPlan?.period ?? null,
     canSubscribe,
     shouldShowTrialCopy,
@@ -405,10 +431,10 @@ export default function UpgradeScreen() {
     canSubscribe,
     hasStoreAccess,
     isExpoGo,
+    activePeriodForPrimaryAction,
     selectedPlan?.period,
     selectedPlan?.priceLabel,
     shouldShowTrialCopy,
-    state.plan?.period,
   ]);
   const canUsePrimaryCta = primaryAction.kind === 'continue' ||
     primaryAction.kind === 'manage' ||
@@ -656,6 +682,7 @@ export default function UpgradeScreen() {
                     ]}
                     onPress={() => {
                       handleHaptic();
+                      hasUserSelectedPlanRef.current = true;
                       setSelectedPlanId(plan.id);
                     }}
                     activeOpacity={0.7}

@@ -38,6 +38,7 @@ import {
   classifyRevenueCatAccessProblem,
   getActiveExpiration,
   getActivePeriodType,
+  getActiveProductIdentifier,
   isTrialActive as rcIsTrialActive,
   PURCHASES_UNAVAILABLE_MESSAGE,
 } from '@/services/subscription/purchasesService';
@@ -395,6 +396,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
 
   const tier: SubscriptionTier = state.tier;
   const isEntitlementActive = hasActiveEntitlement(customerInfoQuery.data ?? null);
+  const activeProductIdentifier = getActiveProductIdentifier(customerInfoQuery.data ?? null);
   const isPremium = isExpoGo || isEntitlementActive;
   const hasPremiumAccess = isExpoGo || isEntitlementActive;
   const subscriptionAccessLoading = isSubscriptionAccessLoading({
@@ -654,6 +656,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     tier,
     isPremium,
     isEntitlementActive,
+    activeProductIdentifier,
     hasPremiumAccess,
     state,
     offering: offeringsQuery.data ?? null,
@@ -693,6 +696,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     tier,
     isPremium,
     isEntitlementActive,
+    activeProductIdentifier,
     hasPremiumAccess,
     state,
     subscriptionAccessLoading,

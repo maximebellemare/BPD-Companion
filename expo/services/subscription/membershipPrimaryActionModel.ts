@@ -1,4 +1,12 @@
 import type { SubscriptionPeriod } from '@/types/subscription';
+import {
+  REVENUECAT_ANDROID_MONTHLY_BASE_PLAN_ID,
+  REVENUECAT_ANDROID_MONTHLY_PRODUCT_ID,
+  REVENUECAT_ANDROID_YEARLY_BASE_PLAN_ID,
+  REVENUECAT_ANDROID_YEARLY_PRODUCT_ID,
+  REVENUECAT_MONTHLY_PRODUCT_ID,
+  REVENUECAT_YEARLY_PRODUCT_ID,
+} from '@/constants/revenuecat';
 
 export type MembershipPrimaryAction =
   | { kind: 'continue'; label: string; requiresPurchasablePlan: false }
@@ -6,6 +14,56 @@ export type MembershipPrimaryAction =
   | { kind: 'switch'; label: string; requiresPurchasablePlan: true }
   | { kind: 'purchase'; label: string; requiresPurchasablePlan: true }
   | { kind: 'loading'; label: string; requiresPurchasablePlan: false };
+
+export function getAndroidActivePeriodFromProductIdentifier(
+  productIdentifier: string | null | undefined,
+): SubscriptionPeriod | null {
+  if (
+    productIdentifier === REVENUECAT_ANDROID_MONTHLY_PRODUCT_ID ||
+    productIdentifier === REVENUECAT_MONTHLY_PRODUCT_ID ||
+    productIdentifier === `${REVENUECAT_ANDROID_MONTHLY_PRODUCT_ID}:${REVENUECAT_ANDROID_MONTHLY_BASE_PLAN_ID}`
+  ) {
+    return 'monthly';
+  }
+
+  if (
+    productIdentifier === REVENUECAT_ANDROID_YEARLY_PRODUCT_ID ||
+    productIdentifier === REVENUECAT_YEARLY_PRODUCT_ID ||
+    productIdentifier === `${REVENUECAT_ANDROID_YEARLY_PRODUCT_ID}:${REVENUECAT_ANDROID_YEARLY_BASE_PLAN_ID}`
+  ) {
+    return 'yearly';
+  }
+
+  return null;
+}
+
+export function getInitialManageSelectedPlanId(params: {
+  isSubscriptionManagement: boolean;
+  hasAppliedInitialSelection: boolean;
+  hasUserSelectedPlan: boolean;
+  activePeriod: SubscriptionPeriod | null;
+  availablePlanIds: string[];
+  currentSelectedPlanId: string;
+}): string {
+  const {
+    isSubscriptionManagement,
+    hasAppliedInitialSelection,
+    hasUserSelectedPlan,
+    activePeriod,
+    availablePlanIds,
+    currentSelectedPlanId,
+  } = params;
+
+  if (!isSubscriptionManagement || hasAppliedInitialSelection || hasUserSelectedPlan) {
+    return currentSelectedPlanId;
+  }
+
+  if (!activePeriod || !availablePlanIds.includes(activePeriod)) {
+    return currentSelectedPlanId;
+  }
+
+  return activePeriod;
+}
 
 export function getMembershipPrimaryAction(params: {
   isExpoGo: boolean;

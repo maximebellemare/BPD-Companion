@@ -43,7 +43,7 @@ export type AndroidPurchaseSelection = {
 
 type StoreReplacementMode = NonNullable<StoreProductChangeInfo['replacementMode']>;
 
-export const ANDROID_REPLACEMENT_MODE_MONTHLY_TO_YEARLY = 'WITH_TIME_PRORATION' as StoreReplacementMode;
+export const ANDROID_REPLACEMENT_MODE_MONTHLY_TO_YEARLY = 'DEFERRED' as StoreReplacementMode;
 export const ANDROID_REPLACEMENT_MODE_YEARLY_TO_MONTHLY = 'DEFERRED' as StoreReplacementMode;
 
 function getAndroidPlanConfig(period: SubscriptionPeriod): AndroidPlanConfig {

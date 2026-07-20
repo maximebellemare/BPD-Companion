@@ -43,18 +43,13 @@ export function validatePendingPlanChange(params: {
   platform: 'ios' | 'android' | 'web' | string;
   now?: number;
 }): PendingPlanChangeValidationResult {
-  const { record, hasActiveEntitlement, currentPeriod, expiresAt, willRenew, platform } = params;
+  const { record, hasActiveEntitlement, currentPeriod, expiresAt, platform } = params;
   if (!record) return { status: 'none', record: null };
   if (platform !== 'android' || record.platform !== 'android') return { status: 'clear', record: null };
   if (!hasActiveEntitlement || !currentPeriod) return { status: 'clear', record: null };
   if (record.sourcePeriod === record.targetPeriod) return { status: 'clear', record: null };
   if (currentPeriod === record.targetPeriod) return { status: 'clear', record: null };
   if (currentPeriod !== record.sourcePeriod) return { status: 'clear', record: null };
-  if (willRenew === false) return { status: 'clear', record: null };
-
-  const now = params.now ?? Date.now();
-  if (expiresAt !== null && expiresAt <= now) return { status: 'clear', record: null };
-
   return {
     status: 'valid',
     record: {

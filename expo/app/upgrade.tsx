@@ -25,6 +25,7 @@ import {
   Clipboard,
   Activity,
   Users,
+  Clock,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
@@ -40,6 +41,7 @@ import { createAccessFlowTimer } from '@/services/performance/accessFlowTiming';
 import { computePaywallLoadingState } from '@/services/subscription/paywallLoadingModel';
 import {
   getAndroidActivePeriodFromProductIdentifier,
+  getAndroidPlanChangeTimingMessage,
   getInitialManageSelectedPlanId,
   getMembershipPrimaryAction,
   getMembershipStatusCopy,
@@ -473,6 +475,14 @@ export default function UpgradeScreen() {
     isSubscriptionManagement,
     isMembershipLoading: isLoading,
   });
+  const planChangeTimingMessage = getAndroidPlanChangeTimingMessage({
+    platform: Platform.OS,
+    hasStoreAccess: hasStoreAccessForPresentation,
+    activePeriod: activePeriodForPrimaryAction,
+    selectedPeriod: selectedPlan?.period ?? null,
+    effectiveDateLabel: formatMembershipDate(state.expiresAt),
+    pendingTargetPeriod: pendingPlanChange?.targetPeriod ?? null,
+  });
   const statusMessage = useMemo(() => {
     if (paywallLoadingState.message) return paywallLoadingState.message;
     if (offeringStatus === 'preview') return isNativePurchases ? null : 'Preparing your personalized membership...';
@@ -768,6 +778,12 @@ export default function UpgradeScreen() {
         </Animated.View>
 
         <Animated.View style={[styles.ctaSection, { opacity: fadeAnim }]}>
+          {planChangeTimingMessage ? (
+            <View style={styles.planChangeTimingCard}>
+              <Clock size={15} color={Colors.primary} />
+              <Text style={styles.planChangeTimingText}>{planChangeTimingMessage}</Text>
+            </View>
+          ) : null}
           <TouchableOpacity
             style={[styles.ctaButton, (!canUsePrimaryCta || isSubscribing || (!isExpoGo && !isPremium && isLoading)) && styles.ctaButtonDisabled]}
             onPress={handleSubscribe}
@@ -1320,6 +1336,24 @@ const styles = StyleSheet.create({
   },
   ctaSection: {
     marginBottom: 16,
+  },
+  planChangeTimingCard: {
+    flexDirection: 'row' as const,
+    alignItems: 'flex-start' as const,
+    gap: 10,
+    backgroundColor: Colors.primaryLight,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 12,
+  },
+  planChangeTimingText: {
+    flex: 1,
+    color: Colors.text,
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: '700' as const,
   },
   ctaButton: {
     flexDirection: 'row' as const,

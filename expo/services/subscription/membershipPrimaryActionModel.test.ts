@@ -1,5 +1,6 @@
 import {
   getAndroidActivePeriodFromProductIdentifier,
+  getAndroidPlanChangeTimingMessage,
   getInitialManageSelectedPlanId,
   getMembershipManagementRoute,
   getMembershipPrimaryAction,
@@ -97,7 +98,12 @@ export function assertMembershipPrimaryActionRegressionScenarios(): true {
     shouldShowTrialCopy: false,
   });
   assert(pendingMonthlyStatus.body.includes('Current plan: Yearly'), 'pending monthly keeps yearly as current plan');
-  assert(pendingMonthlyStatus.body.includes('Switching to Monthly on Jul 21, 2026'), 'pending monthly scheduled copy');
+  assert(pendingMonthlyStatus.body.includes('Current plan remains active until Jul 21, 2026'), 'pending monthly keeps current plan active until effective date');
+  assert(pendingMonthlyStatus.body.includes('Scheduled next plan: Monthly'), 'pending monthly names scheduled target');
+  assert(
+    pendingMonthlyStatus.body.includes('Your Monthly membership will begin after your current Yearly period ends on Jul 21, 2026'),
+    'pending monthly explains deferred start timing',
+  );
 
   const pendingYearlyStatus = getMembershipStatusCopy({
     hasStoreAccess: true,
@@ -108,7 +114,64 @@ export function assertMembershipPrimaryActionRegressionScenarios(): true {
     trialDaysRemaining: 0,
     shouldShowTrialCopy: false,
   });
-  assert(pendingYearlyStatus.body.includes('Switching to Yearly at renewal'), 'pending yearly scheduled copy');
+  assert(pendingYearlyStatus.body.includes('Scheduled next plan: Yearly'), 'pending yearly scheduled copy');
+  assert(pendingYearlyStatus.body.includes('your renewal date'), 'pending yearly falls back to renewal date copy');
+
+  assert(
+    getAndroidPlanChangeTimingMessage({
+      platform: 'android',
+      hasStoreAccess: true,
+      activePeriod: 'monthly',
+      selectedPeriod: 'yearly',
+      effectiveDateLabel: 'Aug 20, 2026',
+    }) === 'You’ll keep your Monthly membership until Aug 20, 2026. Your Yearly membership will begin after that.',
+    'monthly to yearly pre-purchase message explains deferred timing',
+  );
+
+  assert(
+    getAndroidPlanChangeTimingMessage({
+      platform: 'android',
+      hasStoreAccess: true,
+      activePeriod: 'yearly',
+      selectedPeriod: 'monthly',
+      effectiveDateLabel: 'Jul 20, 2027',
+    }) === 'You’ll keep your Yearly membership until Jul 20, 2027. Your Monthly membership will begin after that.',
+    'yearly to monthly pre-purchase message explains deferred timing',
+  );
+
+  assert(
+    getAndroidPlanChangeTimingMessage({
+      platform: 'android',
+      hasStoreAccess: false,
+      activePeriod: null,
+      selectedPeriod: 'yearly',
+      effectiveDateLabel: 'Aug 20, 2026',
+    }) === null,
+    'fresh users see no scheduled-change messaging',
+  );
+
+  assert(
+    getAndroidPlanChangeTimingMessage({
+      platform: 'android',
+      hasStoreAccess: true,
+      activePeriod: 'monthly',
+      selectedPeriod: 'yearly',
+      effectiveDateLabel: null,
+    }) === 'You’ll keep your Monthly membership until your current billing period ends. Your Yearly membership will begin after that.',
+    'missing expiration date uses safe generic deferred timing copy',
+  );
+
+  assert(
+    getAndroidPlanChangeTimingMessage({
+      platform: 'android',
+      hasStoreAccess: true,
+      activePeriod: 'monthly',
+      selectedPeriod: 'yearly',
+      pendingTargetPeriod: 'yearly',
+      effectiveDateLabel: 'Aug 20, 2026',
+    }) === null,
+    'same scheduled switch cannot be submitted twice from timing prompt',
+  );
 
   const loadingManageStatus = getMembershipStatusCopy({
     hasStoreAccess: false,

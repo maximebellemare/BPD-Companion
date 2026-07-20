@@ -94,8 +94,8 @@ export function assertPendingPlanChangeRegressionScenarios(): true {
       willRenew: false,
       platform: 'android',
       now,
-    }).status === 'clear',
-    'pending state clears when store says subscription will not renew',
+    }).status === 'valid',
+    'pending state is not cleared solely because source plan no longer renews independently',
   );
 
   assert(
@@ -120,8 +120,8 @@ export function assertPendingPlanChangeRegressionScenarios(): true {
       willRenew: true,
       platform: 'android',
       now,
-    }).status === 'clear',
-    'expired sandbox period clears pending display state',
+    }).status === 'valid',
+    'pending display is not cleared solely because the effective date passed before fresh reconciliation',
   );
 
   assert(

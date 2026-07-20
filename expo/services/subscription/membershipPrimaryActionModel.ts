@@ -88,11 +88,12 @@ export function getMembershipStatusCopy(params: {
   }
 
   if (params.hasStoreAccess && currentPlanLabel && pendingTargetLabel) {
+    const effectiveDateText = params.pendingEffectiveDateLabel ?? 'your renewal date';
     return {
       heroTitle,
       plansTitle,
       title: params.isTrialActive ? `${currentPlanLabel} trial active` : `${currentPlanLabel} membership active`,
-      body: `Current plan: ${currentPlanLabel}. Switching to ${pendingTargetLabel}${params.pendingEffectiveDateLabel ? ` on ${params.pendingEffectiveDateLabel}` : ' at renewal'}. Your current plan stays active until then.`,
+      body: `Current plan: ${currentPlanLabel}. Current plan remains active until ${effectiveDateText}. Scheduled next plan: ${pendingTargetLabel}. Your ${pendingTargetLabel} membership will begin after your current ${currentPlanLabel} period ends on ${effectiveDateText}.`,
     };
   }
 
@@ -124,6 +125,31 @@ export function getMembershipStatusCopy(params: {
       ? 'Start your 3-day free trial for full access from day one. Cancel anytime before the trial ends.'
       : 'Start membership for full access from day one. Cancel anytime.',
   };
+}
+
+export function getAndroidPlanChangeTimingMessage(params: {
+  platform: 'ios' | 'android' | 'web' | string;
+  hasStoreAccess: boolean;
+  activePeriod: SubscriptionPeriod | null;
+  selectedPeriod: SubscriptionPeriod | null;
+  effectiveDateLabel: string | null;
+  pendingTargetPeriod?: SubscriptionPeriod | null;
+}): string | null {
+  if (params.platform !== 'android') return null;
+  if (!params.hasStoreAccess) return null;
+  if (!params.activePeriod || !params.selectedPeriod) return null;
+  if (params.activePeriod === params.selectedPeriod) return null;
+  if (params.pendingTargetPeriod === params.selectedPeriod) return null;
+
+  const currentPlanLabel = getPlanDisplayName(params.activePeriod);
+  const selectedPlanLabel = getPlanDisplayName(params.selectedPeriod);
+  if (!currentPlanLabel || !selectedPlanLabel) return null;
+
+  if (!params.effectiveDateLabel) {
+    return `You’ll keep your ${currentPlanLabel} membership until your current billing period ends. Your ${selectedPlanLabel} membership will begin after that.`;
+  }
+
+  return `You’ll keep your ${currentPlanLabel} membership until ${params.effectiveDateLabel}. Your ${selectedPlanLabel} membership will begin after that.`;
 }
 
 export function getInitialManageSelectedPlanId(params: {

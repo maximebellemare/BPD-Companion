@@ -155,6 +155,15 @@ function assertSelection(params: {
 }
 
 export function assertAndroidPurchaseSelectorRegressionScenarios(): true {
+  assert(
+    ANDROID_REPLACEMENT_MODE_MONTHLY_TO_YEARLY === 'DEFERRED',
+    'monthly to yearly uses deferred replacement mode',
+  );
+  assert(
+    ANDROID_REPLACEMENT_MODE_YEARLY_TO_MONTHLY === 'DEFERRED',
+    'yearly to monthly uses deferred replacement mode',
+  );
+
   assertSelection({
     name: 'fresh Monthly selects exact Monthly trial',
     pkg: monthlyPackage(),

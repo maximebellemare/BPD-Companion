@@ -39,15 +39,28 @@ export type CustomerInfo = {
   entitlements: {
     all?: Record<string, {
       expirationDate?: string | null;
+      isActive?: boolean;
       productIdentifier?: string;
+      productPlanIdentifier?: string | null;
       periodType?: string;
+      willRenew?: boolean;
     }>;
     active: Record<string, {
       expirationDate?: string | null;
+      isActive?: boolean;
       productIdentifier?: string;
+      productPlanIdentifier?: string | null;
       periodType?: string;
+      willRenew?: boolean;
     }>;
   };
+  subscriptionsByProductIdentifier?: Record<string, {
+    productIdentifier?: string;
+    expiresDate?: string | null;
+    isActive?: boolean;
+    periodType?: string;
+    willRenew?: boolean;
+  }>;
 };
 
 export type RevenueCatBillingPeriod = string | {
@@ -417,6 +430,13 @@ export function getActiveExpiration(info: CustomerInfo | null): number | null {
   const ent = info.entitlements.active[REVENUECAT_ENTITLEMENT_ID];
   if (!ent) return null;
   return ent.expirationDate ? new Date(ent.expirationDate).getTime() : null;
+}
+
+export function getActiveWillRenew(info: CustomerInfo | null): boolean | null {
+  if (!info) return null;
+  const ent = info.entitlements.active[REVENUECAT_ENTITLEMENT_ID];
+  if (!ent) return null;
+  return typeof ent.willRenew === 'boolean' ? ent.willRenew : null;
 }
 
 export function getActiveProductIdentifier(info: CustomerInfo | null): string | null {

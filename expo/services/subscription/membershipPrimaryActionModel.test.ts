@@ -3,6 +3,7 @@ import {
   getInitialManageSelectedPlanId,
   getMembershipManagementRoute,
   getMembershipPrimaryAction,
+  getMembershipStatusCopy,
 } from '@/services/subscription/membershipPrimaryActionModel';
 
 function assert(condition: unknown, message: string): void {
@@ -19,6 +20,84 @@ export function assertMembershipPrimaryActionRegressionScenarios(): true {
   assert(getAndroidActivePeriodFromProductIdentifier('bpd_yearly') === 'yearly', 'raw yearly product normalizes');
   assert(getAndroidActivePeriodFromProductIdentifier('bpd_yearly:annual') === 'yearly', 'yearly base-plan product normalizes');
   assert(getAndroidActivePeriodFromProductIdentifier('rc_promo_BPD Companion Pro_lifetime') === null, 'unknown active product is not guessed');
+
+  const freshStatus = getMembershipStatusCopy({
+    hasStoreAccess: false,
+    isEntitlementActive: false,
+    isTrialActive: false,
+    currentPeriod: null,
+    trialDaysRemaining: 0,
+    shouldShowTrialCopy: false,
+  });
+  assert(freshStatus.heroTitle === 'Start your membership.', 'fresh user sees start membership header');
+  assert(freshStatus.plansTitle === 'Choose your plan', 'fresh user sees choose plan title');
+
+  const activeMonthlyStatus = getMembershipStatusCopy({
+    hasStoreAccess: true,
+    isEntitlementActive: true,
+    isTrialActive: false,
+    currentPeriod: 'monthly',
+    trialDaysRemaining: 0,
+    shouldShowTrialCopy: false,
+  });
+  assert(activeMonthlyStatus.heroTitle === 'Your Membership', 'active subscriber sees membership header');
+  assert(activeMonthlyStatus.title === 'Monthly membership active', 'active monthly status identifies current plan');
+  assert(activeMonthlyStatus.body.includes('Current plan: Monthly'), 'active monthly body names current plan');
+
+  const activeYearlyStatus = getMembershipStatusCopy({
+    hasStoreAccess: true,
+    isEntitlementActive: true,
+    isTrialActive: false,
+    currentPeriod: 'yearly',
+    trialDaysRemaining: 0,
+    shouldShowTrialCopy: false,
+  });
+  assert(activeYearlyStatus.title === 'Yearly membership active', 'active yearly status identifies current plan');
+
+  const monthlyTrialStatus = getMembershipStatusCopy({
+    hasStoreAccess: true,
+    isEntitlementActive: true,
+    isTrialActive: true,
+    currentPeriod: 'monthly',
+    trialDaysRemaining: 1,
+    shouldShowTrialCopy: false,
+  });
+  assert(monthlyTrialStatus.title === 'Monthly trial active', 'monthly trial active status');
+  assert(monthlyTrialStatus.body.includes('Trial ends in 1 day'), 'monthly trial remaining time');
+
+  const yearlyTrialStatus = getMembershipStatusCopy({
+    hasStoreAccess: true,
+    isEntitlementActive: true,
+    isTrialActive: true,
+    currentPeriod: 'yearly',
+    trialDaysRemaining: 2,
+    shouldShowTrialCopy: false,
+  });
+  assert(yearlyTrialStatus.title === 'Yearly trial active', 'yearly trial active status');
+
+  const pendingMonthlyStatus = getMembershipStatusCopy({
+    hasStoreAccess: true,
+    isEntitlementActive: true,
+    isTrialActive: false,
+    currentPeriod: 'yearly',
+    pendingTargetPeriod: 'monthly',
+    pendingEffectiveDateLabel: 'Jul 21, 2026',
+    trialDaysRemaining: 0,
+    shouldShowTrialCopy: false,
+  });
+  assert(pendingMonthlyStatus.body.includes('Current plan: Yearly'), 'pending monthly keeps yearly as current plan');
+  assert(pendingMonthlyStatus.body.includes('Switching to Monthly on Jul 21, 2026'), 'pending monthly scheduled copy');
+
+  const pendingYearlyStatus = getMembershipStatusCopy({
+    hasStoreAccess: true,
+    isEntitlementActive: true,
+    isTrialActive: false,
+    currentPeriod: 'monthly',
+    pendingTargetPeriod: 'yearly',
+    trialDaysRemaining: 0,
+    shouldShowTrialCopy: false,
+  });
+  assert(pendingYearlyStatus.body.includes('Switching to Yearly at renewal'), 'pending yearly scheduled copy');
 
   assert(
     getMembershipPrimaryAction({
@@ -59,6 +138,49 @@ export function assertMembershipPrimaryActionRegressionScenarios(): true {
   });
   assert(yearlyToMonthly.kind === 'switch', 'active yearly with monthly selected switches plan');
   assert(yearlyToMonthly.label === 'Switch to Monthly', 'yearly to monthly switch label');
+
+  const yearlyToMonthlyScheduled = getMembershipPrimaryAction({
+    isExpoGo: false,
+    platform: 'android',
+    hasStoreAccess: true,
+    activePeriod: 'yearly',
+    selectedPeriod: 'monthly',
+    pendingTargetPeriod: 'monthly',
+    canSubscribe: true,
+    shouldShowTrialCopy: false,
+    selectedPriceLabel: '$9.99/mo',
+  });
+  assert(yearlyToMonthlyScheduled.kind === 'scheduled', 'scheduled target does not show Switch again');
+  assert(yearlyToMonthlyScheduled.label === 'Monthly switch scheduled', 'scheduled monthly label');
+
+  const monthlyToYearlyScheduled = getMembershipPrimaryAction({
+    isExpoGo: false,
+    platform: 'android',
+    hasStoreAccess: true,
+    activePeriod: 'monthly',
+    selectedPeriod: 'yearly',
+    pendingTargetPeriod: 'yearly',
+    canSubscribe: true,
+    shouldShowTrialCopy: false,
+    selectedPriceLabel: '$59.99/yr',
+  });
+  assert(monthlyToYearlyScheduled.kind === 'scheduled', 'monthly active + yearly scheduled has scheduled action');
+  assert(monthlyToYearlyScheduled.label === 'Yearly switch scheduled', 'scheduled yearly label');
+
+  assert(
+    getMembershipPrimaryAction({
+      isExpoGo: false,
+      platform: 'android',
+      hasStoreAccess: true,
+      activePeriod: 'yearly',
+      selectedPeriod: 'yearly',
+      pendingTargetPeriod: 'monthly',
+      canSubscribe: true,
+      shouldShowTrialCopy: false,
+      selectedPriceLabel: '$59.99/yr',
+    }).kind === 'manage',
+    'current plan remains manageable while another plan is scheduled',
+  );
 
   const staleStatePlanMonthlyToYearly = getMembershipPrimaryAction({
     isExpoGo: false,

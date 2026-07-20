@@ -1,5 +1,6 @@
 import { useEffect, useCallback, useMemo, useRef, useState } from 'react';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import createContextHook from '@nkzw/create-context-hook';
 import {
@@ -39,6 +40,7 @@ import {
   getActiveExpiration,
   getActivePeriodType,
   getActiveProductIdentifier,
+  getActiveWillRenew,
   isTrialActive as rcIsTrialActive,
   PURCHASES_UNAVAILABLE_MESSAGE,
 } from '@/services/subscription/purchasesService';
@@ -57,6 +59,12 @@ import {
   getMembershipOptionsRequestDecision,
   RevenueCatIdentityStatus,
 } from '@/services/subscription/paywallLoadingModel';
+import {
+  type PendingPlanChange,
+  createPendingPlanChange,
+  getPendingPlanChangeStorageKey,
+  validatePendingPlanChange,
+} from '@/services/subscription/pendingPlanChangeModel';
 
 type OfferingStatus = 'loading' | 'ready' | 'empty' | 'error' | 'preview';
 
@@ -118,6 +126,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   const [identityRetryNonce, setIdentityRetryNonce] = useState<number>(0);
   const [membershipOptionsRequestNonce, setMembershipOptionsRequestNonce] = useState<number>(0);
   const [accountGeneration, setAccountGeneration] = useState<number>(0);
+  const [pendingPlanChange, setPendingPlanChange] = useState<PendingPlanChange | null>(null);
   const shouldUseRevenueCat = !isExpoGo && isAuthenticated && !!user?.id && isRevenueCatIdentified;
   const identifiedUserIdRef = useRef<string | null>(null);
   const activeAccountUserIdRef = useRef<string | null>(null);
@@ -127,6 +136,22 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   const membershipOptionsRetryPromiseRef = useRef<Promise<void> | null>(null);
   const customerInfoQueryKey = useMemo(() => ['rc-customer-info', user?.id ?? 'anonymous'] as const, [user?.id]);
   const offeringsQueryKey = useMemo(() => ['rc-offerings'] as const, []);
+
+  const persistPendingPlanChange = useCallback(async (record: PendingPlanChange | null) => {
+    const userId = user?.id ?? null;
+    setPendingPlanChange(record);
+    if (!userId) return;
+    const storageKey = getPendingPlanChangeStorageKey(userId);
+    try {
+      if (record) {
+        await AsyncStorage.setItem(storageKey, JSON.stringify(record));
+      } else {
+        await AsyncStorage.removeItem(storageKey);
+      }
+    } catch {
+      // Display-only state; storage failures must never affect access.
+    }
+  }, [user?.id]);
 
   useEffect(() => {
     if (isExpoGo) {
@@ -147,6 +172,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
         membershipOptionsRequestKeyRef.current = null;
         offeringsRecoveryKeyRef.current = null;
         membershipOptionsRetryPromiseRef.current = null;
+        setPendingPlanChange(null);
         setMembershipOptionsRequestNonce(0);
         setIdentityRetryNonce(0);
         await queryClient.cancelQueries({ queryKey: ['rc-customer-info'] });
@@ -225,12 +251,14 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
         identifiedUserIdRef.current = null;
         membershipOptionsRequestKeyRef.current = null;
         offeringsRecoveryKeyRef.current = null;
+        setPendingPlanChange(null);
         setIsRevenueCatIdentified(false);
         setRevenueCatIdentityStatus('idle');
         await logOutPurchases();
         await queryClient.cancelQueries({ queryKey: ['rc-customer-info'] });
         queryClient.removeQueries({ queryKey: ['rc-customer-info'] });
       } else {
+        setPendingPlanChange(null);
         setIsRevenueCatIdentified(false);
         setRevenueCatIdentityStatus('idle');
         await queryClient.cancelQueries({ queryKey: ['rc-customer-info'] });
@@ -244,6 +272,38 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
       cancelled = true;
     };
   }, [customerInfoQueryKey, identityRetryNonce, isAuthenticated, isExpoGo, isRevenueCatIdentified, queryClient, user?.id]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const userId = user?.id ?? null;
+    if (!userId) {
+      setPendingPlanChange(null);
+      return;
+    }
+
+    const storageKey = getPendingPlanChangeStorageKey(userId);
+    AsyncStorage.getItem(storageKey)
+      .then((stored) => {
+        if (cancelled || !stored) return;
+        const parsed = JSON.parse(stored) as PendingPlanChange;
+        if (
+          parsed.platform === 'android' &&
+          (parsed.sourcePeriod === 'monthly' || parsed.sourcePeriod === 'yearly') &&
+          (parsed.targetPeriod === 'monthly' || parsed.targetPeriod === 'yearly')
+        ) {
+          setPendingPlanChange(parsed);
+          return;
+        }
+        void AsyncStorage.removeItem(storageKey);
+      })
+      .catch(() => {
+        void AsyncStorage.removeItem(storageKey);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
 
   const customerInfoQuery = useQuery({
     queryKey: customerInfoQueryKey,
@@ -397,6 +457,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   const tier: SubscriptionTier = state.tier;
   const isEntitlementActive = hasActiveEntitlement(customerInfoQuery.data ?? null);
   const activeProductIdentifier = getActiveProductIdentifier(customerInfoQuery.data ?? null);
+  const activeWillRenew = getActiveWillRenew(customerInfoQuery.data ?? null);
   const isPremium = isExpoGo || isEntitlementActive;
   const hasPremiumAccess = isExpoGo || isEntitlementActive;
   const subscriptionAccessLoading = isSubscriptionAccessLoading({
@@ -424,6 +485,28 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
       isDev: __DEV__,
     });
   }, [isAuthenticated, isExpoGo, isRevenueCatIdentified, offeringsQuery.data, offeringsQuery.isError, offeringsQuery.isLoading, revenueCatIdentityStatus, user?.id]);
+
+  useEffect(() => {
+    if (!pendingPlanChange) return;
+    if (shouldUseRevenueCat && customerInfoQuery.data === undefined) return;
+    const result = validatePendingPlanChange({
+      record: pendingPlanChange,
+      hasActiveEntitlement: isEntitlementActive,
+      currentPeriod: state.plan?.period ?? null,
+      expiresAt: state.expiresAt,
+      willRenew: activeWillRenew,
+      platform: Platform.OS,
+    });
+
+    if (result.status === 'clear') {
+      void persistPendingPlanChange(null);
+      return;
+    }
+
+    if (result.status === 'valid' && JSON.stringify(result.record) !== JSON.stringify(pendingPlanChange)) {
+      void persistPendingPlanChange(result.record);
+    }
+  }, [activeWillRenew, customerInfoQuery.data, isEntitlementActive, pendingPlanChange, persistPendingPlanChange, shouldUseRevenueCat, state.expiresAt, state.plan?.period]);
 
   const plans = useMemo<SubscriptionPlan[]>(() => {
     const offering = offeringsQuery.data;
@@ -491,7 +574,9 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
       if (!user?.id) {
         throw new Error('Please sign in again before starting your membership.');
       }
-      const info = await rcPurchasePackage(input.pkg, user.id, input.period);
+      const purchaseUserId = user.id;
+      const activePeriodBeforePurchase = getActivePeriodType(customerInfoQuery.data ?? null);
+      const info = await rcPurchasePackage(input.pkg, purchaseUserId, input.period);
       const membershipActive = hasActiveEntitlement(info ?? null);
       await queryClient.cancelQueries({ queryKey: customerInfoQueryKey });
       if (info) {
@@ -500,11 +585,30 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
       if (!membershipActive) {
         throw new Error(getMissingMembershipMessage(info ?? null));
       }
-      return info;
+      return { info, userId: purchaseUserId, activePeriodBeforePurchase };
     },
-    onSuccess: (info) => {
+    onSuccess: (result, input) => {
+      const info = result?.info ?? null;
+      if (result?.userId && user?.id !== result.userId) return;
       if (rcIsTrialActive(info ?? null)) {
         void trackEvent('trial_started');
+      }
+      const activePeriodAfterPurchase = getActivePeriodType(info ?? null);
+      const activeExpirationAfterPurchase = getActiveExpiration(info ?? null);
+      if (
+        Platform.OS === 'android' &&
+        hasActiveEntitlement(info ?? null) &&
+        result?.activePeriodBeforePurchase &&
+        activePeriodAfterPurchase === result.activePeriodBeforePurchase &&
+        input.period !== result.activePeriodBeforePurchase
+      ) {
+        const pendingChange = createPendingPlanChange({
+          sourcePeriod: result.activePeriodBeforePurchase,
+          targetPeriod: input.period,
+          effectiveAt: activeExpirationAfterPurchase,
+          platform: 'android',
+        });
+        void persistPendingPlanChange(pendingChange);
       }
     },
   });
@@ -657,6 +761,8 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     isPremium,
     isEntitlementActive,
     activeProductIdentifier,
+    activeWillRenew,
+    pendingPlanChange,
     hasPremiumAccess,
     state,
     offering: offeringsQuery.data ?? null,
@@ -697,6 +803,8 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     isPremium,
     isEntitlementActive,
     activeProductIdentifier,
+    activeWillRenew,
+    pendingPlanChange,
     hasPremiumAccess,
     state,
     subscriptionAccessLoading,

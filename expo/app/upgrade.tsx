@@ -42,6 +42,7 @@ import {
   getAndroidActivePeriodFromProductIdentifier,
   getInitialManageSelectedPlanId,
   getMembershipPrimaryAction,
+  getMembershipStatusCopy,
 } from '@/services/subscription/membershipPrimaryActionModel';
 
 const TESTIMONIALS = [
@@ -135,6 +136,17 @@ const MEMBERSHIP_FEATURES = [
   },
 ];
 
+function formatMembershipDate(timestamp: number | null | undefined): string | null {
+  if (!timestamp) return null;
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
 export default function UpgradeScreen() {
   const router = useRouter();
   const isExpoGo = Constants.appOwnership === 'expo';
@@ -151,6 +163,7 @@ export default function UpgradeScreen() {
     isSubscribing,
     isRestoring,
     state,
+    pendingPlanChange,
     plans,
     offeringStatus,
     purchaseError,
@@ -335,6 +348,7 @@ export default function UpgradeScreen() {
       hasStoreAccess,
       activePeriod: activePeriodForPrimaryAction,
       selectedPeriod: selected?.period ?? null,
+      pendingTargetPeriod: pendingPlanChange?.targetPeriod ?? null,
       canSubscribe: !isExpoGo && isNativePurchases && !!selected && !selected.isFallbackPrice && offeringStatus === 'ready',
       shouldShowTrialCopy: Platform.OS !== 'android' || !!selected?.androidTrialCopy,
       selectedPriceLabel: selected?.priceLabel ?? '',
@@ -359,7 +373,7 @@ export default function UpgradeScreen() {
     }
     trackEvent('upgrade_clicked', { plan_id: selectedPlanId });
     subscribe(selected);
-  }, [activePeriodForPrimaryAction, hasStoreAccess, isExpoGo, router, selectedPlanId, subscribe, trackEvent, plans, offeringStatus, isNativePurchases]);
+  }, [activePeriodForPrimaryAction, hasStoreAccess, isExpoGo, pendingPlanChange?.targetPeriod, router, selectedPlanId, subscribe, trackEvent, plans, offeringStatus, isNativePurchases]);
 
   const handleClose = useCallback(() => {
     if (isExpoGo) {
@@ -424,6 +438,7 @@ export default function UpgradeScreen() {
     hasStoreAccess,
     activePeriod: activePeriodForPrimaryAction,
     selectedPeriod: selectedPlan?.period ?? null,
+    pendingTargetPeriod: pendingPlanChange?.targetPeriod ?? null,
     canSubscribe,
     shouldShowTrialCopy,
     selectedPriceLabel: selectedPlan?.priceLabel ?? '',
@@ -431,6 +446,7 @@ export default function UpgradeScreen() {
     canSubscribe,
     hasStoreAccess,
     isExpoGo,
+    pendingPlanChange?.targetPeriod,
     activePeriodForPrimaryAction,
     selectedPlan?.period,
     selectedPlan?.priceLabel,
@@ -439,25 +455,20 @@ export default function UpgradeScreen() {
   const canUsePrimaryCta = primaryAction.kind === 'continue' ||
     primaryAction.kind === 'manage' ||
     (primaryAction.requiresPurchasablePlan && canSubscribe);
+  const pendingEffectiveDateLabel = formatMembershipDate(pendingPlanChange?.effectiveAt ?? null);
   const trialDaysRemaining = state.trialEndsAt
     ? Math.max(0, Math.ceil((state.trialEndsAt - Date.now()) / (24 * 60 * 60 * 1000)))
     : 0;
-  const accessStatusTitle = state.isTrialActive
-    ? trialDaysRemaining === 1
-      ? 'Store trial active — 1 day left.'
-      : `Store trial active — ${trialDaysRemaining} days left.`
-    : isEntitlementActive
-      ? 'Membership active.'
-      : shouldShowTrialCopy
-        ? 'Start your 3-day free trial.'
-        : 'Start your membership.';
-  const accessStatusBody = state.isTrialActive
-    ? 'Everything is unlocked during your App Store or Google Play trial. No daily limits.'
-    : isEntitlementActive
-      ? 'You have full access to every feature, including Companion, check-ins, tools, insights, and Community.'
-      : shouldShowTrialCopy
-        ? 'Start your 3-day free trial for full access from day one. Cancel anytime before the trial ends.'
-        : 'Start membership for full access from day one. Cancel anytime.';
+  const statusCopy = getMembershipStatusCopy({
+    hasStoreAccess,
+    isEntitlementActive,
+    isTrialActive: state.isTrialActive,
+    currentPeriod: activePeriodForPrimaryAction,
+    pendingTargetPeriod: pendingPlanChange?.targetPeriod ?? null,
+    pendingEffectiveDateLabel,
+    trialDaysRemaining,
+    shouldShowTrialCopy,
+  });
   const statusMessage = useMemo(() => {
     if (paywallLoadingState.message) return paywallLoadingState.message;
     if (offeringStatus === 'preview') return isNativePurchases ? null : 'Preparing your personalized membership...';
@@ -504,7 +515,7 @@ export default function UpgradeScreen() {
             <BrandLogo size={56} />
           </Animated.View>
           <Text style={[styles.heroTitle, { color: colors.text }]}>
-            {shouldShowTrialCopy ? 'Start your 3-day free trial.' : 'Start your membership.'}
+            {statusCopy.heroTitle}
           </Text>
           <Text style={[styles.heroSubtitle, { color: colors.textSecondary }]}>
             Everything is unlocked from day one: Companion, check-ins, tools, Community, insights, and progress tracking.
@@ -517,8 +528,8 @@ export default function UpgradeScreen() {
               <Crown size={18} color={isEntitlementActive ? Colors.brandTeal : Colors.primary} />
             </View>
             <View style={styles.accessStatusTextWrap}>
-              <Text style={styles.accessStatusTitle}>{accessStatusTitle}</Text>
-              <Text style={styles.accessStatusBody}>{accessStatusBody}</Text>
+              <Text style={styles.accessStatusTitle}>{statusCopy.title}</Text>
+              <Text style={styles.accessStatusBody}>{statusCopy.body}</Text>
             </View>
           </View>
         </Animated.View>
@@ -652,7 +663,7 @@ export default function UpgradeScreen() {
         </Animated.View>
 
         <Animated.View style={[styles.plansSection, { opacity: fadeAnim }]}>
-          <Text style={styles.plansTitle}>Choose your plan</Text>
+          <Text style={styles.plansTitle}>{statusCopy.plansTitle}</Text>
           {statusMessage ? (
             <View style={styles.offeringStatusCard}>
               <Shield size={16} color={Colors.brandTeal} />
@@ -673,6 +684,8 @@ export default function UpgradeScreen() {
             <View style={styles.plansRow}>
               {plans.map((plan) => {
                 const isSelected = plan.id === selectedPlanId;
+                const isCurrentPlan = hasStoreAccess && activePeriodForPrimaryAction === plan.period;
+                const isScheduledPlan = pendingPlanChange?.targetPeriod === plan.period;
                 return (
                   <TouchableOpacity
                     key={plan.id}
@@ -693,9 +706,19 @@ export default function UpgradeScreen() {
                         <Text style={styles.popularBadgeText}>Best Value</Text>
                       </View>
                     )}
+                    {isScheduledPlan ? (
+                      <View style={styles.scheduledBadge}>
+                        <Text style={styles.scheduledBadgeText}>Scheduled</Text>
+                      </View>
+                    ) : null}
                     <Text style={[styles.planName, isSelected && styles.planNameSelected]}>
                       {plan.name}
                     </Text>
+                    {isCurrentPlan ? (
+                      <Text style={[styles.planCurrentText, isSelected && styles.planCurrentTextSelected]}>
+                        Current plan
+                      </Text>
+                    ) : null}
                     <Text style={[styles.planPrice, isSelected && styles.planPriceSelected]}>
                       {plan.priceLabel}
                     </Text>
@@ -1202,6 +1225,22 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
     color: Colors.primary,
   },
+  scheduledBadge: {
+    alignSelf: 'center' as const,
+    backgroundColor: Colors.brandTealSoft,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: Colors.brandTeal,
+    marginBottom: 8,
+  },
+  scheduledBadgeText: {
+    fontSize: 10,
+    fontWeight: '800' as const,
+    color: Colors.brandTeal,
+    textTransform: 'uppercase' as const,
+  },
   planName: {
     fontSize: 15,
     fontWeight: '600' as const,
@@ -1210,6 +1249,15 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   planNameSelected: {
+    color: Colors.brandNavy,
+  },
+  planCurrentText: {
+    fontSize: 11,
+    fontWeight: '800' as const,
+    color: Colors.textMuted,
+    marginBottom: 4,
+  },
+  planCurrentTextSelected: {
     color: Colors.brandNavy,
   },
   planPrice: {

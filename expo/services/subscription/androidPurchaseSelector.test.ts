@@ -1,4 +1,6 @@
 import {
+  ANDROID_REPLACEMENT_MODE_MONTHLY_TO_YEARLY,
+  ANDROID_REPLACEMENT_MODE_YEARLY_TO_MONTHLY,
   ANDROID_TRIAL_COPY,
   getAndroidPaywallSelection,
   parseSubscriptionOptionId,
@@ -118,6 +120,7 @@ function assertSelection(params: {
   expectedOptionId: string | null;
   expectedTrialCopy: string | null;
   expectedChangeInfo?: string | null;
+  expectedReplacementMode?: string | null;
   info?: CustomerInfo | null;
 }): void {
   const result = selectAndroidSubscriptionOption({
@@ -130,6 +133,10 @@ function assertSelection(params: {
   assert(
     (result.googleProductChangeInfo?.oldProductIdentifier ?? null) === (params.expectedChangeInfo ?? null),
     `${params.name}: product change info`,
+  );
+  assert(
+    (result.googleProductChangeInfo?.replacementMode ?? null) === (params.expectedReplacementMode ?? null),
+    `${params.name}: replacement mode`,
   );
 }
 
@@ -247,8 +254,52 @@ export function assertAndroidPurchaseSelectorRegressionScenarios(): true {
     period: 'yearly',
     expectedOptionId: 'annual',
     expectedTrialCopy: null,
-    expectedChangeInfo: 'bpd_monthly:monthly',
+    expectedChangeInfo: 'bpd_monthly',
+    expectedReplacementMode: ANDROID_REPLACEMENT_MODE_MONTHLY_TO_YEARLY,
     info: infoWithActiveEntitlement('bpd_monthly:monthly'),
+  });
+
+  assertSelection({
+    name: 'active subscriber base monthly product uses monthly change info',
+    pkg: yearlyPackage(),
+    period: 'yearly',
+    expectedOptionId: 'annual',
+    expectedTrialCopy: null,
+    expectedChangeInfo: 'bpd_monthly',
+    expectedReplacementMode: ANDROID_REPLACEMENT_MODE_MONTHLY_TO_YEARLY,
+    info: infoWithActiveEntitlement('bpd_monthly'),
+  });
+
+  assertSelection({
+    name: 'active subscriber yearly base-plan product uses yearly change info',
+    pkg: monthlyPackage(),
+    period: 'monthly',
+    expectedOptionId: 'monthly',
+    expectedTrialCopy: null,
+    expectedChangeInfo: 'bpd_yearly',
+    expectedReplacementMode: ANDROID_REPLACEMENT_MODE_YEARLY_TO_MONTHLY,
+    info: infoWithActiveEntitlement('bpd_yearly:annual'),
+  });
+
+  assertSelection({
+    name: 'same-plan active subscriber does not create replacement info',
+    pkg: monthlyPackage(),
+    period: 'monthly',
+    expectedOptionId: 'monthly',
+    expectedTrialCopy: null,
+    expectedChangeInfo: null,
+    expectedReplacementMode: null,
+    info: infoWithActiveEntitlement('bpd_monthly:monthly'),
+  });
+
+  assertSelection({
+    name: 'active subscriber unknown product does not guess change info',
+    pkg: monthlyPackage(),
+    period: 'monthly',
+    expectedOptionId: 'monthly',
+    expectedTrialCopy: null,
+    expectedChangeInfo: null,
+    info: infoWithActiveEntitlement('rc_promo_BPD Companion Pro_lifetime'),
   });
 
   assert(

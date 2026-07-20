@@ -37,6 +37,7 @@ import { useAppTheme } from '@/providers/ThemeProvider';
 import { trackSingularEvent } from '@/lib/singular';
 import { createAccessFlowTimer } from '@/services/performance/accessFlowTiming';
 import { computePaywallLoadingState } from '@/services/subscription/paywallLoadingModel';
+import { getMembershipPrimaryAction } from '@/services/subscription/membershipPrimaryActionModel';
 
 const TESTIMONIALS = [
   {
@@ -160,6 +161,7 @@ export default function UpgradeScreen() {
   const timingRef = useRef(createAccessFlowTimer('paywall'));
   const paywallRenderMarkedRef = useRef<boolean>(false);
   const offeringsReadyMarkedRef = useRef<boolean>(false);
+  const managementInitialPlanAppliedRef = useRef<boolean>(false);
   const membershipActive = isEntitlementActive || state.isTrialActive;
   const hasStoreAccess = membershipActive;
   const isSubscriptionManagement = mode === 'manage';
@@ -175,6 +177,14 @@ export default function UpgradeScreen() {
       setSelectedPlanId(plans[0].id);
     }
   }, [plans, selectedPlanId]);
+
+  useEffect(() => {
+    if (!isSubscriptionManagement || managementInitialPlanAppliedRef.current) return;
+    const activePeriod = state.plan?.period ?? null;
+    if (!activePeriod || !plans.some(plan => plan.id === activePeriod)) return;
+    managementInitialPlanAppliedRef.current = true;
+    setSelectedPlanId(activePeriod);
+  }, [isSubscriptionManagement, plans, state.plan?.period]);
 
   useEffect(() => {
     if (!paywallRenderMarkedRef.current) {
@@ -292,7 +302,18 @@ export default function UpgradeScreen() {
       router.replace('/');
       return;
     }
-    if (hasStoreAccess) {
+    const selected = plans.find(p => p.id === selectedPlanId);
+    const primaryAction = getMembershipPrimaryAction({
+      isExpoGo,
+      platform: Platform.OS,
+      hasStoreAccess,
+      activePeriod: state.plan?.period ?? null,
+      selectedPeriod: selected?.period ?? null,
+      canSubscribe: !isExpoGo && isNativePurchases && !!selected && !selected.isFallbackPrice && offeringStatus === 'ready',
+      shouldShowTrialCopy: Platform.OS !== 'android' || !!selected?.androidTrialCopy,
+      selectedPriceLabel: selected?.priceLabel ?? '',
+    });
+    if (primaryAction.kind === 'manage') {
       const url = Platform.OS === 'ios'
         ? 'https://apps.apple.com/account/subscriptions'
         : 'https://play.google.com/store/account/subscriptions';
@@ -301,7 +322,6 @@ export default function UpgradeScreen() {
       });
       return;
     }
-    const selected = plans.find(p => p.id === selectedPlanId);
     if (!selected) return;
     if (!isNativePurchases) {
       Alert.alert('Membership options are loading', 'Please try again in a moment.');
@@ -313,7 +333,7 @@ export default function UpgradeScreen() {
     }
     trackEvent('upgrade_clicked', { plan_id: selectedPlanId });
     subscribe(selected);
-  }, [hasStoreAccess, isExpoGo, router, selectedPlanId, subscribe, trackEvent, plans, offeringStatus, isNativePurchases]);
+  }, [hasStoreAccess, isExpoGo, router, selectedPlanId, subscribe, trackEvent, plans, offeringStatus, isNativePurchases, state.plan?.period]);
 
   const handleClose = useCallback(() => {
     if (isExpoGo) {
@@ -372,7 +392,27 @@ export default function UpgradeScreen() {
     hasValidPlan: hasValidSelectedPackage,
   }), [hasValidSelectedPackage, membershipOptionsTimedOut, offeringStatus]);
   const canSubscribe = !isExpoGo && isNativePurchases && paywallLoadingState.canSubscribe;
-  const canUsePrimaryCta = isExpoGo || isPremium || canSubscribe;
+  const primaryAction = useMemo(() => getMembershipPrimaryAction({
+    isExpoGo,
+    platform: Platform.OS,
+    hasStoreAccess,
+    activePeriod: state.plan?.period ?? null,
+    selectedPeriod: selectedPlan?.period ?? null,
+    canSubscribe,
+    shouldShowTrialCopy,
+    selectedPriceLabel: selectedPlan?.priceLabel ?? '',
+  }), [
+    canSubscribe,
+    hasStoreAccess,
+    isExpoGo,
+    selectedPlan?.period,
+    selectedPlan?.priceLabel,
+    shouldShowTrialCopy,
+    state.plan?.period,
+  ]);
+  const canUsePrimaryCta = primaryAction.kind === 'continue' ||
+    primaryAction.kind === 'manage' ||
+    (primaryAction.requiresPurchasablePlan && canSubscribe);
   const trialDaysRemaining = state.trialEndsAt
     ? Math.max(0, Math.ceil((state.trialEndsAt - Date.now()) / (24 * 60 * 60 * 1000)))
     : 0;
@@ -675,25 +715,15 @@ export default function UpgradeScreen() {
 
         <Animated.View style={[styles.ctaSection, { opacity: fadeAnim }]}>
           <TouchableOpacity
-            style={[styles.ctaButton, (!canUsePrimaryCta || (!isExpoGo && !isPremium && (isSubscribing || isLoading))) && styles.ctaButtonDisabled]}
+            style={[styles.ctaButton, (!canUsePrimaryCta || isSubscribing || (!isExpoGo && !isPremium && isLoading)) && styles.ctaButtonDisabled]}
             onPress={handleSubscribe}
             activeOpacity={0.8}
-            disabled={!canUsePrimaryCta || (!isExpoGo && !isPremium && (isSubscribing || isLoading))}
+            disabled={!canUsePrimaryCta || isSubscribing || (!isExpoGo && !isPremium && isLoading)}
             testID="subscribe-btn"
           >
             <Crown size={18} color={Colors.white} />
             <Text style={styles.ctaButtonText}>
-              {isExpoGo
-                ? 'Continue to app'
-                : isSubscribing
-                ? 'Processing...'
-                : isPremium
-                  ? 'Manage existing subscription'
-                  : canSubscribe
-                    ? shouldShowTrialCopy
-                      ? `Start your 3-day free trial ${selectedPlan?.priceLabel ?? ''}`
-                      : `Start membership ${selectedPlan?.priceLabel ?? ''}`
-                  : 'Loading membership options...'}
+              {isSubscribing ? 'Processing...' : primaryAction.label}
             </Text>
           </TouchableOpacity>
 

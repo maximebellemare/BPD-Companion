@@ -6,13 +6,15 @@ import {
   REVENUECAT_ANDROID_YEARLY_PRODUCT_ID,
   REVENUECAT_ANDROID_YEARLY_TRIAL_OFFER_ID,
   REVENUECAT_ENTITLEMENT_ID,
+  REVENUECAT_MONTHLY_PRODUCT_ID,
   REVENUECAT_TRIAL_DAYS,
+  REVENUECAT_YEARLY_PRODUCT_ID,
 } from '@/constants/revenuecat';
 import type {
   CustomerInfo,
-  GoogleProductChangeInfo,
   PurchasesPackage,
   RevenueCatBillingPeriod,
+  StoreProductChangeInfo,
   SubscriptionOption,
 } from '@/services/subscription/purchasesService';
 import type { SubscriptionPeriod } from '@/types/subscription';
@@ -33,11 +35,16 @@ export type ParsedSubscriptionOptionId = {
 
 export type AndroidPurchaseSelection = {
   subscriptionOption: SubscriptionOption | null;
-  googleProductChangeInfo: GoogleProductChangeInfo | null;
+  googleProductChangeInfo: StoreProductChangeInfo | null;
   selectedOptionId: string | null;
   trialCopy: string | null;
   priceString: string;
 };
+
+type StoreReplacementMode = NonNullable<StoreProductChangeInfo['replacementMode']>;
+
+export const ANDROID_REPLACEMENT_MODE_MONTHLY_TO_YEARLY = 'WITH_TIME_PRORATION' as StoreReplacementMode;
+export const ANDROID_REPLACEMENT_MODE_YEARLY_TO_MONTHLY = 'DEFERRED' as StoreReplacementMode;
 
 function getAndroidPlanConfig(period: SubscriptionPeriod): AndroidPlanConfig {
   return period === 'yearly'
@@ -118,6 +125,59 @@ export function getActiveEntitlementProductIdentifier(customerInfo: CustomerInfo
   return customerInfo?.entitlements?.active?.[REVENUECAT_ENTITLEMENT_ID]?.productIdentifier ?? null;
 }
 
+export function getAndroidGoogleProductIdentifier(productIdentifier: string | null | undefined): string | null {
+  if (
+    productIdentifier === REVENUECAT_ANDROID_MONTHLY_PRODUCT_ID ||
+    productIdentifier === REVENUECAT_MONTHLY_PRODUCT_ID ||
+    productIdentifier === `${REVENUECAT_ANDROID_MONTHLY_PRODUCT_ID}:${REVENUECAT_ANDROID_MONTHLY_BASE_PLAN_ID}`
+  ) {
+    return REVENUECAT_ANDROID_MONTHLY_PRODUCT_ID;
+  }
+
+  if (
+    productIdentifier === REVENUECAT_ANDROID_YEARLY_PRODUCT_ID ||
+    productIdentifier === REVENUECAT_YEARLY_PRODUCT_ID ||
+    productIdentifier === `${REVENUECAT_ANDROID_YEARLY_PRODUCT_ID}:${REVENUECAT_ANDROID_YEARLY_BASE_PLAN_ID}`
+  ) {
+    return REVENUECAT_ANDROID_YEARLY_PRODUCT_ID;
+  }
+
+  return null;
+}
+
+function getSelectedGoogleProductIdentifier(period: SubscriptionPeriod): string {
+  return period === 'yearly'
+    ? REVENUECAT_ANDROID_YEARLY_PRODUCT_ID
+    : REVENUECAT_ANDROID_MONTHLY_PRODUCT_ID;
+}
+
+export function getAndroidReplacementMode(params: {
+  activeGoogleProductIdentifier: string | null;
+  selectedPeriod: SubscriptionPeriod;
+}): StoreReplacementMode | null {
+  const selectedGoogleProductIdentifier = getSelectedGoogleProductIdentifier(params.selectedPeriod);
+
+  if (!params.activeGoogleProductIdentifier || params.activeGoogleProductIdentifier === selectedGoogleProductIdentifier) {
+    return null;
+  }
+
+  if (
+    params.activeGoogleProductIdentifier === REVENUECAT_ANDROID_MONTHLY_PRODUCT_ID &&
+    selectedGoogleProductIdentifier === REVENUECAT_ANDROID_YEARLY_PRODUCT_ID
+  ) {
+    return ANDROID_REPLACEMENT_MODE_MONTHLY_TO_YEARLY;
+  }
+
+  if (
+    params.activeGoogleProductIdentifier === REVENUECAT_ANDROID_YEARLY_PRODUCT_ID &&
+    selectedGoogleProductIdentifier === REVENUECAT_ANDROID_MONTHLY_PRODUCT_ID
+  ) {
+    return ANDROID_REPLACEMENT_MODE_YEARLY_TO_MONTHLY;
+  }
+
+  return null;
+}
+
 export function selectAndroidSubscriptionOption(params: {
   pkg: PurchasesPackage;
   period: SubscriptionPeriod;
@@ -125,13 +185,18 @@ export function selectAndroidSubscriptionOption(params: {
 }): AndroidPurchaseSelection {
   const { pkg, period, customerInfo } = params;
   const activeProductIdentifier = getActiveEntitlementProductIdentifier(customerInfo);
+  const activeGoogleProductIdentifier = getAndroidGoogleProductIdentifier(activeProductIdentifier);
+  const replacementMode = getAndroidReplacementMode({
+    activeGoogleProductIdentifier,
+    selectedPeriod: period,
+  });
   const defaultOption = getDefaultNonPrepaidOption(pkg);
 
   if (activeProductIdentifier) {
     return {
       subscriptionOption: defaultOption,
-      googleProductChangeInfo: defaultOption
-        ? { oldProductIdentifier: activeProductIdentifier }
+      googleProductChangeInfo: defaultOption && activeGoogleProductIdentifier && replacementMode
+        ? { oldProductIdentifier: activeGoogleProductIdentifier, replacementMode }
         : null,
       selectedOptionId: defaultOption?.id ?? null,
       trialCopy: null,

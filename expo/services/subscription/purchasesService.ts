@@ -28,6 +28,7 @@ export type {
   GoogleProductChangeInfo,
   PurchasesOffering,
   PurchasesPackage,
+  StoreProductChangeInfo,
   SubscriptionOption,
 } from 'react-native-purchases';
 

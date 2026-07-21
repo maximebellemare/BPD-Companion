@@ -1,7 +1,7 @@
 import type { SubscriptionPeriod } from '@/types/subscription';
 
 export type PendingPlanChange = {
-  platform: 'android';
+  platform: 'ios' | 'android';
   sourcePeriod: SubscriptionPeriod;
   targetPeriod: SubscriptionPeriod;
   effectiveAt: number | null;
@@ -21,7 +21,7 @@ export function createPendingPlanChange(params: {
   sourcePeriod: SubscriptionPeriod;
   targetPeriod: SubscriptionPeriod;
   effectiveAt: number | null;
-  platform: 'android';
+  platform: 'ios' | 'android';
   now?: number;
 }): PendingPlanChange | null {
   if (params.sourcePeriod === params.targetPeriod) return null;
@@ -45,7 +45,7 @@ export function validatePendingPlanChange(params: {
 }): PendingPlanChangeValidationResult {
   const { record, hasActiveEntitlement, currentPeriod, expiresAt, platform } = params;
   if (!record) return { status: 'none', record: null };
-  if (platform !== 'android' || record.platform !== 'android') return { status: 'clear', record: null };
+  if ((platform !== 'android' && platform !== 'ios') || record.platform !== platform) return { status: 'clear', record: null };
   if (!hasActiveEntitlement || !currentPeriod) return { status: 'clear', record: null };
   if (record.sourcePeriod === record.targetPeriod) return { status: 'clear', record: null };
   if (currentPeriod === record.targetPeriod) return { status: 'clear', record: null };

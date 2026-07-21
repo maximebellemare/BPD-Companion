@@ -65,6 +65,7 @@ import {
   getPendingPlanChangeStorageKey,
   validatePendingPlanChange,
 } from '@/services/subscription/pendingPlanChangeModel';
+import { createLocalizedSubscriptionPlan } from '@/services/subscription/localizedPricingModel';
 
 type OfferingStatus = 'loading' | 'ready' | 'empty' | 'error' | 'preview';
 
@@ -524,16 +525,13 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
             customerInfo: customerInfoQuery.data ?? null,
           })
         : null;
-      nextPlans.push({
-        id: 'monthly',
-        name: 'Monthly',
+      const monthlyPlan = createLocalizedSubscriptionPlan({
+        pkg: offering.monthly,
         period: 'monthly',
-        price: 0,
-        priceLabel: `${offering.monthly.product.priceString}/mo`,
-        productIdentifier: offering.monthly.product.identifier ?? REVENUECAT_MONTHLY_PRODUCT_ID,
-        packageIdentifier: offering.monthly.identifier,
+        fallbackProductIdentifier: REVENUECAT_MONTHLY_PRODUCT_ID,
         androidTrialCopy: androidSelection?.trialCopy ?? null,
       });
+      if (monthlyPlan) nextPlans.push(monthlyPlan);
     }
 
     if (offering.annual) {
@@ -544,18 +542,13 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
             customerInfo: customerInfoQuery.data ?? null,
           })
         : null;
-      nextPlans.push({
-        id: 'yearly',
-        name: 'Yearly',
+      const annualPlan = createLocalizedSubscriptionPlan({
+        pkg: offering.annual,
         period: 'yearly',
-        price: 0,
-        priceLabel: `${offering.annual.product.priceString}/yr`,
-        savings: 'Best value',
-        popular: true,
-        productIdentifier: offering.annual.product.identifier ?? REVENUECAT_YEARLY_PRODUCT_ID,
-        packageIdentifier: offering.annual.identifier,
+        fallbackProductIdentifier: REVENUECAT_YEARLY_PRODUCT_ID,
         androidTrialCopy: androidSelection?.trialCopy ?? null,
       });
+      if (annualPlan) nextPlans.push(annualPlan);
     }
 
     return nextPlans;
@@ -596,7 +589,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
       const activePeriodAfterPurchase = getActivePeriodType(info ?? null);
       const activeExpirationAfterPurchase = getActiveExpiration(info ?? null);
       if (
-        Platform.OS === 'android' &&
+        (Platform.OS === 'android' || Platform.OS === 'ios') &&
         hasActiveEntitlement(info ?? null) &&
         result?.activePeriodBeforePurchase &&
         activePeriodAfterPurchase === result.activePeriodBeforePurchase &&
@@ -606,7 +599,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
           sourcePeriod: result.activePeriodBeforePurchase,
           targetPeriod: input.period,
           effectiveAt: activeExpirationAfterPurchase,
-          platform: 'android',
+          platform: Platform.OS,
         });
         void persistPendingPlanChange(pendingChange);
       }

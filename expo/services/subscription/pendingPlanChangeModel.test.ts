@@ -124,6 +124,51 @@ export function assertPendingPlanChangeRegressionScenarios(): true {
     'pending display is not cleared solely because the effective date passed before fresh reconciliation',
   );
 
+  const iosMonthlyToYearly = createPendingPlanChange({
+    sourcePeriod: 'monthly',
+    targetPeriod: 'yearly',
+    effectiveAt: renewalDate,
+    platform: 'ios',
+    now,
+  });
+  assert(iosMonthlyToYearly?.platform === 'ios', 'iOS deferred crossgrade pending state is recorded');
+  assert(
+    validatePendingPlanChange({
+      record: iosMonthlyToYearly,
+      hasActiveEntitlement: true,
+      currentPeriod: 'monthly',
+      expiresAt: renewalDate,
+      willRenew: true,
+      platform: 'ios',
+      now,
+    }).status === 'valid',
+    'iOS pending state remains visible while source plan stays active',
+  );
+  assert(
+    validatePendingPlanChange({
+      record: iosMonthlyToYearly,
+      hasActiveEntitlement: true,
+      currentPeriod: 'yearly',
+      expiresAt: renewalDate,
+      willRenew: true,
+      platform: 'ios',
+      now,
+    }).status === 'clear',
+    'iOS pending state clears when target becomes active',
+  );
+  assert(
+    validatePendingPlanChange({
+      record: iosMonthlyToYearly,
+      hasActiveEntitlement: true,
+      currentPeriod: 'monthly',
+      expiresAt: renewalDate,
+      willRenew: true,
+      platform: 'android',
+      now,
+    }).status === 'clear',
+    'iOS pending state is not shown on Android',
+  );
+
   assert(
     validatePendingPlanChange({
       record: yearlyToMonthly,

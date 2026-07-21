@@ -24,7 +24,9 @@ function option(params: Partial<SubscriptionOption> & { id: string }): Subscript
     storeProductId: params.storeProductId ?? params.productId ?? 'bpd_monthly',
     isBasePlan: params.isBasePlan ?? false,
     isPrepaid: params.isPrepaid ?? false,
-    freePhase: params.freePhase ?? { billingPeriod: { iso8601: 'P3D' }, price: { amountMicros: 0 } },
+    freePhase: Object.prototype.hasOwnProperty.call(params, 'freePhase')
+      ? params.freePhase
+      : { billingPeriod: { iso8601: 'P3D' }, price: { amountMicros: 0 } },
     pricingPhases: params.pricingPhases ?? [],
     tags: params.tags ?? [],
   } as SubscriptionOption;

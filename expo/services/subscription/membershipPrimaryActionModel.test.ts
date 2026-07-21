@@ -1,6 +1,8 @@
 import {
   getAndroidActivePeriodFromProductIdentifier,
   getAndroidPlanChangeTimingMessage,
+  getIosActivePeriodFromProductIdentifier,
+  getIosPlanChangeTimingMessage,
   getInitialManageSelectedPlanId,
   getMembershipManagementRoute,
   getMembershipPrimaryAction,
@@ -21,6 +23,9 @@ export function assertMembershipPrimaryActionRegressionScenarios(): true {
   assert(getAndroidActivePeriodFromProductIdentifier('bpd_yearly') === 'yearly', 'raw yearly product normalizes');
   assert(getAndroidActivePeriodFromProductIdentifier('bpd_yearly:annual') === 'yearly', 'yearly base-plan product normalizes');
   assert(getAndroidActivePeriodFromProductIdentifier('rc_promo_BPD Companion Pro_lifetime') === null, 'unknown active product is not guessed');
+  assert(getIosActivePeriodFromProductIdentifier('bpd_monthly:monthly') === 'monthly', 'configured iOS monthly product normalizes');
+  assert(getIosActivePeriodFromProductIdentifier('bpd_yearly:annual') === 'yearly', 'configured iOS yearly product normalizes');
+  assert(getIosActivePeriodFromProductIdentifier('bpd_monthly') === null, 'unknown iOS product is not guessed');
 
   const freshStatus = getMembershipStatusCopy({
     hasStoreAccess: false,
@@ -173,6 +178,36 @@ export function assertMembershipPrimaryActionRegressionScenarios(): true {
     'same scheduled switch cannot be submitted twice from timing prompt',
   );
 
+  assert(
+    getIosPlanChangeTimingMessage({
+      platform: 'ios',
+      hasStoreAccess: true,
+      activePeriod: 'monthly',
+      selectedPeriod: 'yearly',
+    }) === 'Your Yearly membership may begin immediately. Apple will show the exact charge and any applicable adjustment before you confirm.',
+    'iOS monthly to yearly uses Apple-aware upgrade copy',
+  );
+
+  assert(
+    getIosPlanChangeTimingMessage({
+      platform: 'ios',
+      hasStoreAccess: true,
+      activePeriod: 'yearly',
+      selectedPeriod: 'monthly',
+    }) === 'Your Monthly membership is expected to begin after your current Yearly period ends. Apple will confirm the effective date before you confirm.',
+    'iOS yearly to monthly uses Apple-aware downgrade copy',
+  );
+
+  assert(
+    getIosPlanChangeTimingMessage({
+      platform: 'ios',
+      hasStoreAccess: false,
+      activePeriod: null,
+      selectedPeriod: 'yearly',
+    }) === null,
+    'fresh iOS users see no plan-change timing message',
+  );
+
   const loadingManageStatus = getMembershipStatusCopy({
     hasStoreAccess: false,
     isEntitlementActive: false,
@@ -292,8 +327,36 @@ export function assertMembershipPrimaryActionRegressionScenarios(): true {
       canSubscribe: true,
       shouldShowTrialCopy: false,
       selectedPriceLabel: '$59.99/yr',
+    }).kind === 'switch',
+    'iOS active monthly subscriber can switch to yearly in app',
+  );
+
+  assert(
+    getMembershipPrimaryAction({
+      isExpoGo: false,
+      platform: 'ios',
+      hasStoreAccess: true,
+      activePeriod: 'yearly',
+      selectedPeriod: 'monthly',
+      canSubscribe: true,
+      shouldShowTrialCopy: false,
+      selectedPriceLabel: '$9.99/mo',
+    }).label === 'Switch to Monthly',
+    'iOS active yearly subscriber can switch to monthly in app',
+  );
+
+  assert(
+    getMembershipPrimaryAction({
+      isExpoGo: false,
+      platform: 'ios',
+      hasStoreAccess: true,
+      activePeriod: 'monthly',
+      selectedPeriod: 'monthly',
+      canSubscribe: true,
+      shouldShowTrialCopy: false,
+      selectedPriceLabel: '$9.99/mo',
     }).kind === 'manage',
-    'iOS active subscriber keeps existing management behavior',
+    'iOS same-plan selection opens subscription management',
   );
 
   const freshPurchase = getMembershipPrimaryAction({

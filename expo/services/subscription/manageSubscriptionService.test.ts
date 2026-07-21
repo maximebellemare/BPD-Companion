@@ -41,6 +41,15 @@ export async function assertManageSubscriptionScenarios(): Promise<true> {
   assert(normalizeAndroidSubscriptionSku('unknown_product') === null, 'unknown Android product is not treated as owned');
   assert(getSubscriptionManagementUrl('ios', 'bpd_monthly:monthly') === IOS_SUBSCRIPTIONS_APP_URL, 'iOS opens App Store subscription management');
 
+  const iosPrimaryUrls: string[] = [];
+  await openSubscriptionManagement('ios', {
+    canOpenURL: async () => true,
+    openURL: async (url) => {
+      iosPrimaryUrls.push(url);
+    },
+  }, 'bpd_monthly:monthly');
+  assert(iosPrimaryUrls[0] === IOS_SUBSCRIPTIONS_APP_URL, 'iOS primary management opens native App Store subscriptions URL');
+
   const openedUrls: string[] = [];
   const opened = await openSubscriptionManagement('android', {
     canOpenURL: async () => true,

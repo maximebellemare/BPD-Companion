@@ -48,6 +48,15 @@ export function getAndroidActivePeriodFromProductIdentifier(
   return null;
 }
 
+export function getIosActivePeriodFromProductIdentifier(
+  productIdentifier: string | null | undefined,
+): SubscriptionPeriod | null {
+  if (!productIdentifier) return null;
+  if (productIdentifier === REVENUECAT_MONTHLY_PRODUCT_ID) return 'monthly';
+  if (productIdentifier === REVENUECAT_YEARLY_PRODUCT_ID) return 'yearly';
+  return null;
+}
+
 function getPlanDisplayName(period: SubscriptionPeriod | null | undefined): string | null {
   if (period === 'yearly') return 'Yearly';
   if (period === 'monthly') return 'Monthly';
@@ -152,6 +161,28 @@ export function getAndroidPlanChangeTimingMessage(params: {
   return `You’ll keep your ${currentPlanLabel} membership until ${params.effectiveDateLabel}. Your ${selectedPlanLabel} membership will begin after that.`;
 }
 
+export function getIosPlanChangeTimingMessage(params: {
+  platform: 'ios' | 'android' | 'web' | string;
+  hasStoreAccess: boolean;
+  activePeriod: SubscriptionPeriod | null;
+  selectedPeriod: SubscriptionPeriod | null;
+}): string | null {
+  if (params.platform !== 'ios') return null;
+  if (!params.hasStoreAccess) return null;
+  if (!params.activePeriod || !params.selectedPeriod) return null;
+  if (params.activePeriod === params.selectedPeriod) return null;
+
+  if (params.activePeriod === 'monthly' && params.selectedPeriod === 'yearly') {
+    return 'Your Yearly membership may begin immediately. Apple will show the exact charge and any applicable adjustment before you confirm.';
+  }
+
+  if (params.activePeriod === 'yearly' && params.selectedPeriod === 'monthly') {
+    return 'Your Monthly membership is expected to begin after your current Yearly period ends. Apple will confirm the effective date before you confirm.';
+  }
+
+  return 'Apple will show when the new plan begins and any billing adjustment before you confirm.';
+}
+
 export function getInitialManageSelectedPlanId(params: {
   isSubscriptionManagement: boolean;
   hasAppliedInitialSelection: boolean;
@@ -221,7 +252,7 @@ export function getMembershipPrimaryAction(params: {
 
   if (
     hasStoreAccess &&
-    platform === 'android' &&
+    (platform === 'android' || platform === 'ios') &&
     activePeriod &&
     selectedPeriod &&
     activePeriod !== selectedPeriod

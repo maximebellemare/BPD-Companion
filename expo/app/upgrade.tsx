@@ -42,10 +42,13 @@ import { computePaywallLoadingState } from '@/services/subscription/paywallLoadi
 import {
   getAndroidActivePeriodFromProductIdentifier,
   getAndroidPlanChangeTimingMessage,
+  getIosActivePeriodFromProductIdentifier,
+  getIosPlanChangeTimingMessage,
   getInitialManageSelectedPlanId,
   getMembershipPrimaryAction,
   getMembershipStatusCopy,
 } from '@/services/subscription/membershipPrimaryActionModel';
+import { openSubscriptionManagement } from '@/services/subscription/manageSubscriptionService';
 
 const TESTIMONIALS = [
   {
@@ -191,7 +194,9 @@ export default function UpgradeScreen() {
   const isSubscriptionManagement = mode === 'manage';
   const activePeriodForPrimaryAction = Platform.OS === 'android'
     ? getAndroidActivePeriodFromProductIdentifier(activeProductIdentifier)
-    : state.plan?.period ?? null;
+    : Platform.OS === 'ios'
+      ? getIosActivePeriodFromProductIdentifier(activeProductIdentifier)
+      : state.plan?.period ?? null;
   const hasEntitlementBackedActivePlan = isEntitlementActive && !!activePeriodForPrimaryAction;
   const hasStoreAccessForPresentation = hasStoreAccess || hasEntitlementBackedActivePlan;
 
@@ -358,10 +363,11 @@ export default function UpgradeScreen() {
       selectedPriceLabel: selected?.priceLabel ?? '',
     });
     if (primaryAction.kind === 'manage') {
-      const url = Platform.OS === 'ios'
-        ? 'https://apps.apple.com/account/subscriptions'
-        : 'https://play.google.com/store/account/subscriptions';
-      void Linking.openURL(url).catch(() => {
+      void openSubscriptionManagement(Platform.OS, Linking, activeProductIdentifier).then((result) => {
+        if (!result.opened) {
+          Alert.alert('Manage subscription', 'Open your App Store or Google Play subscription settings to manage your membership.');
+        }
+      }).catch(() => {
         Alert.alert('Manage subscription', 'Open your App Store or Google Play subscription settings to manage your membership.');
       });
       return;
@@ -377,7 +383,7 @@ export default function UpgradeScreen() {
     }
     trackEvent('upgrade_clicked', { plan_id: selectedPlanId });
     subscribe(selected);
-  }, [activePeriodForPrimaryAction, hasStoreAccess, isExpoGo, pendingPlanChange?.targetPeriod, router, selectedPlanId, subscribe, trackEvent, plans, offeringStatus, isNativePurchases]);
+  }, [activePeriodForPrimaryAction, activeProductIdentifier, hasStoreAccess, isExpoGo, pendingPlanChange?.targetPeriod, router, selectedPlanId, subscribe, trackEvent, plans, offeringStatus, isNativePurchases]);
 
   const handleClose = useCallback(() => {
     if (isExpoGo) {
@@ -475,14 +481,21 @@ export default function UpgradeScreen() {
     isSubscriptionManagement,
     isMembershipLoading: isLoading,
   });
-  const planChangeTimingMessage = getAndroidPlanChangeTimingMessage({
-    platform: Platform.OS,
-    hasStoreAccess: hasStoreAccessForPresentation,
-    activePeriod: activePeriodForPrimaryAction,
-    selectedPeriod: selectedPlan?.period ?? null,
-    effectiveDateLabel: formatMembershipDate(state.expiresAt),
-    pendingTargetPeriod: pendingPlanChange?.targetPeriod ?? null,
-  });
+  const planChangeTimingMessage = Platform.OS === 'ios'
+    ? getIosPlanChangeTimingMessage({
+        platform: Platform.OS,
+        hasStoreAccess: hasStoreAccessForPresentation,
+        activePeriod: activePeriodForPrimaryAction,
+        selectedPeriod: selectedPlan?.period ?? null,
+      })
+    : getAndroidPlanChangeTimingMessage({
+        platform: Platform.OS,
+        hasStoreAccess: hasStoreAccessForPresentation,
+        activePeriod: activePeriodForPrimaryAction,
+        selectedPeriod: selectedPlan?.period ?? null,
+        effectiveDateLabel: formatMembershipDate(state.expiresAt),
+        pendingTargetPeriod: pendingPlanChange?.targetPeriod ?? null,
+      });
   const statusMessage = useMemo(() => {
     if (paywallLoadingState.message) return paywallLoadingState.message;
     if (offeringStatus === 'preview') return isNativePurchases ? null : 'Preparing your personalized membership...';

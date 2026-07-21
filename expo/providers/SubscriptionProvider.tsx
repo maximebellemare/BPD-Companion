@@ -30,6 +30,7 @@ import {
 import {
   fetchCustomerInfo,
   fetchOfferings,
+  isNativePurchasesPlatform,
   isExpoGoPurchases,
   logInPurchases,
   logOutPurchases,
@@ -44,7 +45,7 @@ import {
   isTrialActive as rcIsTrialActive,
   PURCHASES_UNAVAILABLE_MESSAGE,
 } from '@/services/subscription/purchasesService';
-import type { PurchasesPackage } from '@/services/subscription/purchasesService';
+import type { PurchasesOffering, PurchasesPackage } from '@/services/subscription/purchasesService';
 import { useAuth } from '@/providers/AuthProvider';
 import {
   REVENUECAT_MONTHLY_PRODUCT_ID,
@@ -135,6 +136,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   const membershipOptionsRequestKeyRef = useRef<string | null>(null);
   const offeringsRecoveryKeyRef = useRef<string | null>(null);
   const membershipOptionsRetryPromiseRef = useRef<Promise<void> | null>(null);
+  const membershipOptionsRefreshPromiseRef = useRef<Promise<void> | null>(null);
   const customerInfoQueryKey = useMemo(() => ['rc-customer-info', user?.id ?? 'anonymous'] as const, [user?.id]);
   const offeringsQueryKey = useMemo(() => ['rc-offerings'] as const, []);
 
@@ -173,11 +175,14 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
         membershipOptionsRequestKeyRef.current = null;
         offeringsRecoveryKeyRef.current = null;
         membershipOptionsRetryPromiseRef.current = null;
+        membershipOptionsRefreshPromiseRef.current = null;
         setPendingPlanChange(null);
         setMembershipOptionsRequestNonce(0);
         setIdentityRetryNonce(0);
         await queryClient.cancelQueries({ queryKey: ['rc-customer-info'] });
         queryClient.removeQueries({ queryKey: ['rc-customer-info'] });
+        void queryClient.cancelQueries({ queryKey: offeringsQueryKey })
+          .then(() => queryClient.invalidateQueries({ queryKey: offeringsQueryKey }));
         logRevenueCatAccessFlow('account_generation_changed', {
           accountGeneration: nextAccountGeneration,
           hasSupabaseUser: !!nextUserId,
@@ -272,7 +277,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     return () => {
       cancelled = true;
     };
-  }, [customerInfoQueryKey, identityRetryNonce, isAuthenticated, isExpoGo, isRevenueCatIdentified, queryClient, user?.id]);
+  }, [customerInfoQueryKey, identityRetryNonce, isAuthenticated, isExpoGo, isRevenueCatIdentified, offeringsQueryKey, queryClient, user?.id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -288,7 +293,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
         if (cancelled || !stored) return;
         const parsed = JSON.parse(stored) as PendingPlanChange;
         if (
-          parsed.platform === 'android' &&
+          (parsed.platform === 'android' || parsed.platform === 'ios') &&
           (parsed.sourcePeriod === 'monthly' || parsed.sourcePeriod === 'yearly') &&
           (parsed.targetPeriod === 'monthly' || parsed.targetPeriod === 'yearly')
         ) {
@@ -561,6 +566,28 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     return null;
   }, [offeringStatus, offeringsQuery.error]);
 
+  const logMembershipOfferingsSnapshot = useCallback((reason: string, offering: PurchasesOffering | null | undefined): void => {
+    if (!__DEV__) return;
+    if (!offering || !isNativePurchasesPlatform()) return;
+    const toSnapshot = (pkg: PurchasesPackage | null | undefined) => {
+      if (!pkg) return null;
+      const product = pkg.product as PurchasesPackage['product'] & { currencyCode?: string | null };
+      return {
+        packageIdentifier: pkg.identifier,
+        productIdentifier: product.identifier,
+        priceString: product.priceString,
+        price: product.price,
+        currencyCode: product.currencyCode ?? null,
+      };
+    };
+    console.log('[MembershipPricing]', {
+      reason,
+      platform: Platform.OS,
+      monthly: toSnapshot(offering.monthly),
+      yearly: toSnapshot(offering.annual),
+    });
+  }, []);
+
   const purchaseMutation = useMutation({
     mutationFn: async (input: { pkg: PurchasesPackage; period: SubscriptionPlan['period'] }) => {
       if (isExpoGo) return null;
@@ -575,6 +602,15 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
       if (info) {
         queryClient.setQueryData(customerInfoQueryKey, info);
       }
+      void queryClient.cancelQueries({ queryKey: offeringsQueryKey }).then(() => offeringsQuery.refetch()).then((result) => {
+        logMembershipOfferingsSnapshot('after_purchase', result.data ?? null);
+      }).catch((error) => {
+        if (__DEV__) {
+          console.log('[SubscriptionProvider] post-purchase offerings refresh failed', {
+            message: error instanceof Error ? error.message : String(error),
+          });
+        }
+      });
       if (!membershipActive) {
         throw new Error(getMissingMembershipMessage(info ?? null));
       }
@@ -625,6 +661,15 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
       if (info) {
         queryClient.setQueryData(customerInfoQueryKey, info);
       }
+      void queryClient.cancelQueries({ queryKey: offeringsQueryKey }).then(() => offeringsQuery.refetch()).then((result) => {
+        logMembershipOfferingsSnapshot('after_restore', result.data ?? null);
+      }).catch((error) => {
+        if (__DEV__) {
+          console.log('[SubscriptionProvider] post-restore offerings refresh failed', {
+            message: error instanceof Error ? error.message : String(error),
+          });
+        }
+      });
       logRestoreTiming('provider:setFreshCustomerInfo', startedAt, {
         hasActiveEntitlement: hasActiveEntitlement(info ?? null),
       });
@@ -736,6 +781,27 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     return membershipOptionsRetryPromiseRef.current;
   }, [accountGeneration, customerInfoQuery, isAuthenticated, isExpoGo, isRevenueCatIdentified, offeringsQuery, user?.id]);
 
+  const refreshMembershipOptions = useCallback(async (reason: string = 'manual') => {
+    if (isExpoGo || !isAuthenticated || !user?.id) return;
+    if (membershipOptionsRefreshPromiseRef.current) {
+      return membershipOptionsRefreshPromiseRef.current;
+    }
+    const refresh = async () => {
+      await queryClient.cancelQueries({ queryKey: offeringsQueryKey });
+      await Promise.all([
+        customerInfoQuery.refetch(),
+        offeringsQuery.refetch().then((result) => {
+          logMembershipOfferingsSnapshot(reason, result.data ?? null);
+          return result;
+        }),
+      ]);
+    };
+    membershipOptionsRefreshPromiseRef.current = refresh().finally(() => {
+      membershipOptionsRefreshPromiseRef.current = null;
+    });
+    return membershipOptionsRefreshPromiseRef.current;
+  }, [customerInfoQuery, isAuthenticated, isExpoGo, logMembershipOfferingsSnapshot, offeringsQuery, offeringsQueryKey, queryClient, user?.id]);
+
   const subscribe = useCallback((_plan: SubscriptionPlan) => {
     if (isExpoGo) return;
     const current = offeringsQuery.data;
@@ -786,6 +852,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     cancel: () => {},
     restore,
     retryMembershipOptions,
+    refreshMembershipOptions,
     canAccessFeature,
     shouldPromptUpgrade,
     lockedFeatures,
@@ -819,6 +886,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     restoreMutation.error,
     restore,
     retryMembershipOptions,
+    refreshMembershipOptions,
     purchase,
     subscribe,
     canAccessFeature,

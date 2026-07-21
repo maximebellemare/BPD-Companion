@@ -9,6 +9,7 @@ import {
   Platform,
   Alert,
   Linking,
+  AppState,
 } from 'react-native';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import Constants from 'expo-constants';
@@ -49,6 +50,10 @@ import {
   getMembershipStatusCopy,
 } from '@/services/subscription/membershipPrimaryActionModel';
 import { openSubscriptionManagement } from '@/services/subscription/manageSubscriptionService';
+import {
+  shouldRefreshMembershipPricingOnAppStateChange,
+  shouldRefreshMembershipPricingOnManageOpen,
+} from '@/services/subscription/membershipPricingRefreshModel';
 
 const TESTIMONIALS = [
   {
@@ -174,6 +179,7 @@ export default function UpgradeScreen() {
     purchaseError,
     restoreError,
     retryMembershipOptions,
+    refreshMembershipOptions,
   } = useSubscription();
   const { user } = useAuth();
   const personalization = usePersonalization();
@@ -189,6 +195,8 @@ export default function UpgradeScreen() {
   const managementInitialPlanAppliedRef = useRef<boolean>(false);
   const hasUserSelectedPlanRef = useRef<boolean>(false);
   const activeAccountRef = useRef<string | null>(null);
+  const manageModeRefreshStartedRef = useRef<boolean>(false);
+  const appStateRef = useRef(AppState.currentState);
   const membershipActive = isEntitlementActive || state.isTrialActive;
   const hasStoreAccess = membershipActive;
   const isSubscriptionManagement = mode === 'manage';
@@ -211,6 +219,40 @@ export default function UpgradeScreen() {
       setSelectedPlanId(plans[0].id);
     }
   }, [plans, selectedPlanId]);
+
+  useEffect(() => {
+    if (!shouldRefreshMembershipPricingOnManageOpen({
+      isSubscriptionManagement,
+      hasAlreadyRefreshed: manageModeRefreshStartedRef.current,
+    })) return;
+    manageModeRefreshStartedRef.current = true;
+    void refreshMembershipOptions('manage_screen_open').catch((error) => {
+      if (__DEV__) {
+        console.log('[Upgrade] manage-mode membership refresh failed', {
+          message: error instanceof Error ? error.message : String(error),
+        });
+      }
+    });
+  }, [isSubscriptionManagement, refreshMembershipOptions]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      const previousState = appStateRef.current;
+      appStateRef.current = nextState;
+      if (!shouldRefreshMembershipPricingOnAppStateChange({
+        previousState,
+        nextState,
+      })) return;
+      void refreshMembershipOptions('app_foreground').catch((error) => {
+        if (__DEV__) {
+          console.log('[Upgrade] foreground membership refresh failed', {
+            message: error instanceof Error ? error.message : String(error),
+          });
+        }
+      });
+    });
+    return () => subscription.remove();
+  }, [refreshMembershipOptions]);
 
   useEffect(() => {
     const accountKey = user?.id ?? null;

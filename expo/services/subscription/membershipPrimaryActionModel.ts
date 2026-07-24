@@ -70,6 +70,10 @@ export function getMembershipStatusCopy(params: {
   currentPeriod: SubscriptionPeriod | null;
   pendingTargetPeriod?: SubscriptionPeriod | null;
   pendingEffectiveDateLabel?: string | null;
+  activeExpirationDateLabel?: string | null;
+  activeWillRenew?: boolean | null;
+  billingIssueDateLabel?: string | null;
+  inactiveExpirationDateLabel?: string | null;
   trialDaysRemaining: number;
   shouldShowTrialCopy: boolean;
   isSubscriptionManagement?: boolean;
@@ -77,6 +81,9 @@ export function getMembershipStatusCopy(params: {
 }): { title: string; body: string; heroTitle: string; plansTitle: string } {
   const currentPlanLabel = getPlanDisplayName(params.currentPeriod);
   const pendingTargetLabel = getPlanDisplayName(params.pendingTargetPeriod);
+  const expirationDateText = params.activeExpirationDateLabel ?? null;
+  const hasBillingIssue = Boolean(params.billingIssueDateLabel);
+  const hasCancelledAutoRenew = params.activeWillRenew === false;
 
   const heroTitle = params.hasStoreAccess
     || (params.isSubscriptionManagement && params.isMembershipLoading)
@@ -97,7 +104,7 @@ export function getMembershipStatusCopy(params: {
   }
 
   if (params.hasStoreAccess && currentPlanLabel && pendingTargetLabel) {
-    const effectiveDateText = params.pendingEffectiveDateLabel ?? 'your renewal date';
+    const effectiveDateText = params.pendingEffectiveDateLabel ?? expirationDateText ?? 'your renewal date';
     return {
       heroTitle,
       plansTitle,
@@ -107,13 +114,37 @@ export function getMembershipStatusCopy(params: {
   }
 
   if (params.hasStoreAccess && currentPlanLabel) {
+    if (hasBillingIssue) {
+      return {
+        heroTitle,
+        plansTitle,
+        title: 'Billing issue',
+        body: `Current plan: ${currentPlanLabel}. We detected a billing issue${params.billingIssueDateLabel ? ` on ${params.billingIssueDateLabel}` : ''}. Manage your store subscription to keep access active.`,
+      };
+    }
+
+    if (hasCancelledAutoRenew) {
+      return {
+        heroTitle,
+        plansTitle,
+        title: `${currentPlanLabel} membership cancelled`,
+        body: expirationDateText
+          ? `Current plan: ${currentPlanLabel}. Access ends on ${expirationDateText}. You can manage billing or choose another plan anytime.`
+          : `Current plan: ${currentPlanLabel}. Access remains active until the current paid period ends.`,
+      };
+    }
+
     return {
       heroTitle,
       plansTitle,
       title: params.isTrialActive ? `${currentPlanLabel} trial active` : `${currentPlanLabel} membership active`,
       body: params.isTrialActive
-        ? `Current plan: ${currentPlanLabel}. ${params.trialDaysRemaining === 1 ? 'Trial ends in 1 day.' : `Trial ends in ${params.trialDaysRemaining} days.`} Everything is unlocked during your store trial.`
-        : `Current plan: ${currentPlanLabel}. You have full access to every feature, including Companion, check-ins, tools, insights, and Community.`,
+        ? expirationDateText
+          ? `Current plan: ${currentPlanLabel}. Trial converts on ${expirationDateText}. Everything is unlocked during your store trial.`
+          : `Current plan: ${currentPlanLabel}. ${params.trialDaysRemaining === 1 ? 'Trial ends in 1 day.' : `Trial ends in ${params.trialDaysRemaining} days.`} Everything is unlocked during your store trial.`
+        : expirationDateText
+          ? `Current plan: ${currentPlanLabel}. Renews on ${expirationDateText}. You have full access to every feature, including Companion, check-ins, tools, insights, and Community.`
+          : `Current plan: ${currentPlanLabel}. You have full access to every feature, including Companion, check-ins, tools, insights, and Community.`,
     };
   }
 
@@ -123,6 +154,15 @@ export function getMembershipStatusCopy(params: {
       plansTitle,
       title: 'Membership active',
       body: 'You have full access to every feature, including Companion, check-ins, tools, insights, and Community.',
+    };
+  }
+
+  if (params.inactiveExpirationDateLabel) {
+    return {
+      heroTitle,
+      plansTitle,
+      title: 'Membership expired',
+      body: `Your previous membership expired on ${params.inactiveExpirationDateLabel}. Start membership again for full access from day one.`,
     };
   }
 

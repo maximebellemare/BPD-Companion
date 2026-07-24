@@ -63,7 +63,13 @@ export function normalizeAndroidSubscriptionSku(productIdentifier: string | null
 export function getSubscriptionManagementUrl(
   platform: PlatformOSType | string,
   activeProductIdentifier?: string | null,
+  managementUrl?: string | null,
 ): string {
+  const revenueCatManagementUrl = managementUrl?.trim();
+  if (revenueCatManagementUrl) {
+    return revenueCatManagementUrl;
+  }
+
   if (platform === 'android') {
     const sku = normalizeAndroidSubscriptionSku(activeProductIdentifier);
     if (!sku) return GOOGLE_PLAY_SUBSCRIPTIONS_URL;
@@ -77,8 +83,9 @@ export async function openSubscriptionManagement(
   platform: PlatformOSType | string,
   linking: ExternalLinking,
   activeProductIdentifier?: string | null,
+  managementUrl?: string | null,
 ): Promise<SubscriptionManagementOpenResult> {
-  const primaryUrl = getSubscriptionManagementUrl(platform, activeProductIdentifier);
+  const primaryUrl = getSubscriptionManagementUrl(platform, activeProductIdentifier, managementUrl);
   const fallbackUrl = platform === 'ios' ? IOS_SUBSCRIPTIONS_WEB_URL : GOOGLE_PLAY_SUBSCRIPTIONS_URL;
   const urlsToTry = primaryUrl === fallbackUrl ? [primaryUrl] : [primaryUrl, fallbackUrl];
   let lastError = 'Could not open subscription management.';

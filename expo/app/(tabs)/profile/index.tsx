@@ -44,7 +44,12 @@ import { useReviewPrompt } from '@/providers/ReviewPromptProvider';
 import { updateProfile as updateAccountProfile } from '@/lib/supabase/profiles';
 import { storageService } from '@/services/storage/storageService';
 import { resetTodayTutorial } from '@/services/habits/tutorialAndRewardsService';
-import { getMembershipManagementRoute } from '@/services/subscription/membershipPrimaryActionModel';
+import {
+  getAndroidActivePeriodFromProductIdentifier,
+  getIosActivePeriodFromProductIdentifier,
+  getMembershipManagementRoute,
+  getMembershipStatusCopy,
+} from '@/services/subscription/membershipPrimaryActionModel';
 import {
   CommunityProfile,
   loadCommunityProfile,
@@ -71,6 +76,17 @@ function getDaysUntil(timestamp: number | null | undefined): number {
   return Math.max(0, Math.ceil((timestamp - Date.now()) / (24 * 60 * 60 * 1000)));
 }
 
+function formatMembershipDate(timestamp: number | null | undefined): string | null {
+  if (!timestamp) return null;
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
 function titleCase(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
@@ -83,6 +99,10 @@ export default function ProfileScreen() {
   const {
     isPremium,
     isEntitlementActive,
+    activeProductIdentifier,
+    activeWillRenew,
+    activeBillingIssueDetectedAt,
+    inactiveExpirationAt,
     isRestoring,
     restore,
     restoreError,
@@ -125,6 +145,11 @@ export default function ProfileScreen() {
   const profileEmail = user?.email || 'Not signed in';
   const isOwnerQa = __DEV__ && user?.email?.toLowerCase() === OWNER_QA_EMAIL;
   const isExpoGo = Constants.appOwnership === 'expo';
+  const activePeriodForStatus = Platform.OS === 'android'
+    ? getAndroidActivePeriodFromProductIdentifier(activeProductIdentifier)
+    : Platform.OS === 'ios'
+      ? getIosActivePeriodFromProductIdentifier(activeProductIdentifier)
+      : subscriptionState.plan?.period ?? null;
 
   useEffect(() => {
     let mounted = true;
@@ -195,29 +220,43 @@ export default function ProfileScreen() {
     }
   }, [communityAvatarColor, communityDisplayName, communityUsername, user]);
   const trialDaysRemaining = getDaysUntil(subscriptionState.trialEndsAt);
+  const profileMembershipCopy = useMemo(() => getMembershipStatusCopy({
+    hasStoreAccess: isEntitlementActive,
+    isEntitlementActive,
+    isTrialActive: subscriptionState.isTrialActive,
+    currentPeriod: activePeriodForStatus,
+    activeExpirationDateLabel: formatMembershipDate(subscriptionState.expiresAt),
+    activeWillRenew,
+    billingIssueDateLabel: formatMembershipDate(activeBillingIssueDetectedAt),
+    inactiveExpirationDateLabel: formatMembershipDate(inactiveExpirationAt),
+    trialDaysRemaining,
+    shouldShowTrialCopy: false,
+  }), [
+    activeBillingIssueDetectedAt,
+    activePeriodForStatus,
+    activeWillRenew,
+    inactiveExpirationAt,
+    isEntitlementActive,
+    subscriptionState.expiresAt,
+    subscriptionState.isTrialActive,
+    trialDaysRemaining,
+  ]);
+
   const statusLabel = useMemo(() => {
-    if (subscriptionState.isTrialActive) {
-      return 'Membership active';
-    }
-    if (isEntitlementActive) return 'Membership active';
-    if (isExpoGo) return 'Membership';
+    if (isExpoGo && !isEntitlementActive) return 'Membership';
+    if (isEntitlementActive) return profileMembershipCopy.title;
+    if (inactiveExpirationAt) return profileMembershipCopy.title;
     return 'Subscription required';
-  }, [isEntitlementActive, isExpoGo, subscriptionState.isTrialActive]);
+  }, [inactiveExpirationAt, isEntitlementActive, isExpoGo, profileMembershipCopy.title]);
 
   const statusDescription = useMemo(() => {
-    if (subscriptionState.isTrialActive) {
-      return trialDaysRemaining === 1
-        ? 'Your 3-day trial is active and ends in 1 day.'
-        : `Your 3-day trial is active and ends in ${trialDaysRemaining} days.`;
-    }
-    if (isEntitlementActive) {
-      return 'Your membership is active. Companion, Insights, and regulation tools are unlocked.';
-    }
-    if (isExpoGo) {
+    if (isExpoGo && !isEntitlementActive) {
       return 'View membership plans, restore purchases, or manage access.';
     }
+    if (isEntitlementActive) return profileMembershipCopy.body;
+    if (inactiveExpirationAt) return profileMembershipCopy.body;
     return 'Start your membership to use BPD Companion after onboarding.';
-  }, [isEntitlementActive, isExpoGo, subscriptionState.isTrialActive, trialDaysRemaining]);
+  }, [inactiveExpirationAt, isEntitlementActive, isExpoGo, profileMembershipCopy.body]);
 
   const handleResetPassword = useCallback(() => {
     if (!user?.email) {

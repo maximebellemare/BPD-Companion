@@ -37,6 +37,7 @@ export type CustomerInfo = {
   originalAppUserId?: string;
   activeSubscriptions?: string[];
   allPurchasedProductIdentifiers?: string[];
+  managementURL?: string | null;
   entitlements: {
     all?: Record<string, {
       expirationDate?: string | null;
@@ -45,6 +46,8 @@ export type CustomerInfo = {
       productPlanIdentifier?: string | null;
       periodType?: string;
       willRenew?: boolean;
+      billingIssueDetectedAt?: string | null;
+      unsubscribeDetectedAt?: string | null;
     }>;
     active: Record<string, {
       expirationDate?: string | null;
@@ -53,6 +56,8 @@ export type CustomerInfo = {
       productPlanIdentifier?: string | null;
       periodType?: string;
       willRenew?: boolean;
+      billingIssueDetectedAt?: string | null;
+      unsubscribeDetectedAt?: string | null;
     }>;
   };
   subscriptionsByProductIdentifier?: Record<string, {
@@ -436,11 +441,40 @@ export function getActiveExpiration(info: CustomerInfo | null): number | null {
   return ent.expirationDate ? new Date(ent.expirationDate).getTime() : null;
 }
 
+export function getKnownInactiveExpiration(info: CustomerInfo | null): number | null {
+  if (!info || info.entitlements.active[REVENUECAT_ENTITLEMENT_ID]) return null;
+  const ent = info.entitlements.all?.[REVENUECAT_ENTITLEMENT_ID];
+  if (!ent?.expirationDate) return null;
+  const timestamp = new Date(ent.expirationDate).getTime();
+  return Number.isFinite(timestamp) ? timestamp : null;
+}
+
 export function getActiveWillRenew(info: CustomerInfo | null): boolean | null {
   if (!info) return null;
   const ent = info.entitlements.active[REVENUECAT_ENTITLEMENT_ID];
   if (!ent) return null;
   return typeof ent.willRenew === 'boolean' ? ent.willRenew : null;
+}
+
+export function getActiveBillingIssueDetectedAt(info: CustomerInfo | null): number | null {
+  if (!info) return null;
+  const ent = info.entitlements.active[REVENUECAT_ENTITLEMENT_ID];
+  if (!ent?.billingIssueDetectedAt) return null;
+  const timestamp = new Date(ent.billingIssueDetectedAt).getTime();
+  return Number.isFinite(timestamp) ? timestamp : null;
+}
+
+export function getActiveUnsubscribeDetectedAt(info: CustomerInfo | null): number | null {
+  if (!info) return null;
+  const ent = info.entitlements.active[REVENUECAT_ENTITLEMENT_ID];
+  if (!ent?.unsubscribeDetectedAt) return null;
+  const timestamp = new Date(ent.unsubscribeDetectedAt).getTime();
+  return Number.isFinite(timestamp) ? timestamp : null;
+}
+
+export function getManagementUrl(info: CustomerInfo | null): string | null {
+  const managementUrl = info?.managementURL?.trim();
+  return managementUrl ? managementUrl : null;
 }
 
 export function getActiveProductIdentifier(info: CustomerInfo | null): string | null {

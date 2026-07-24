@@ -43,12 +43,15 @@ export function assertMembershipPrimaryActionRegressionScenarios(): true {
     isEntitlementActive: true,
     isTrialActive: false,
     currentPeriod: 'monthly',
+    activeExpirationDateLabel: 'Aug 20, 2026',
+    activeWillRenew: true,
     trialDaysRemaining: 0,
     shouldShowTrialCopy: false,
   });
   assert(activeMonthlyStatus.heroTitle === 'Your Membership', 'active subscriber sees membership header');
   assert(activeMonthlyStatus.title === 'Monthly membership active', 'active monthly status identifies current plan');
   assert(activeMonthlyStatus.body.includes('Current plan: Monthly'), 'active monthly body names current plan');
+  assert(activeMonthlyStatus.body.includes('Renews on Aug 20, 2026'), 'active renewing membership shows renewal date');
 
   const rawProductDrivenActiveStatus = getMembershipStatusCopy({
     hasStoreAccess: true,
@@ -76,11 +79,13 @@ export function assertMembershipPrimaryActionRegressionScenarios(): true {
     isEntitlementActive: true,
     isTrialActive: true,
     currentPeriod: 'monthly',
+    activeExpirationDateLabel: 'Aug 20, 2026',
+    activeWillRenew: true,
     trialDaysRemaining: 1,
     shouldShowTrialCopy: false,
   });
   assert(monthlyTrialStatus.title === 'Monthly trial active', 'monthly trial active status');
-  assert(monthlyTrialStatus.body.includes('Trial ends in 1 day'), 'monthly trial remaining time');
+  assert(monthlyTrialStatus.body.includes('Trial converts on Aug 20, 2026'), 'monthly trial conversion date');
 
   const yearlyTrialStatus = getMembershipStatusCopy({
     hasStoreAccess: true,
@@ -91,6 +96,43 @@ export function assertMembershipPrimaryActionRegressionScenarios(): true {
     shouldShowTrialCopy: false,
   });
   assert(yearlyTrialStatus.title === 'Yearly trial active', 'yearly trial active status');
+
+  const cancelledActiveStatus = getMembershipStatusCopy({
+    hasStoreAccess: true,
+    isEntitlementActive: true,
+    isTrialActive: false,
+    currentPeriod: 'yearly',
+    activeExpirationDateLabel: 'Jul 20, 2027',
+    activeWillRenew: false,
+    trialDaysRemaining: 0,
+    shouldShowTrialCopy: false,
+  });
+  assert(cancelledActiveStatus.title === 'Yearly membership cancelled', 'cancelled subscription status is explicit');
+  assert(cancelledActiveStatus.body.includes('Access ends on Jul 20, 2027'), 'cancelled active subscription shows access end date');
+
+  const billingIssueStatus = getMembershipStatusCopy({
+    hasStoreAccess: true,
+    isEntitlementActive: true,
+    isTrialActive: false,
+    currentPeriod: 'monthly',
+    billingIssueDateLabel: 'Aug 10, 2026',
+    trialDaysRemaining: 0,
+    shouldShowTrialCopy: false,
+  });
+  assert(billingIssueStatus.title === 'Billing issue', 'billing issue status is explicit');
+  assert(billingIssueStatus.body.includes('billing issue on Aug 10, 2026'), 'billing issue date is shown when available');
+
+  const expiredStatus = getMembershipStatusCopy({
+    hasStoreAccess: false,
+    isEntitlementActive: false,
+    isTrialActive: false,
+    currentPeriod: null,
+    inactiveExpirationDateLabel: 'Jul 20, 2026',
+    trialDaysRemaining: 0,
+    shouldShowTrialCopy: false,
+  });
+  assert(expiredStatus.title === 'Membership expired', 'expired subscription status is explicit');
+  assert(expiredStatus.body.includes('expired on Jul 20, 2026'), 'expired subscription shows expiration date without granting access');
 
   const pendingMonthlyStatus = getMembershipStatusCopy({
     hasStoreAccess: true,

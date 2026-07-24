@@ -227,11 +227,19 @@ export function selectAndroidSubscriptionOption(params: {
 
   if (activeProductIdentifier) {
     const activeSubscriberOption = getActiveSubscriberTargetOption(pkg, period);
+    if (!activeSubscriberOption || !activeGoogleProductIdentifier || !replacementMode) {
+      return {
+        subscriptionOption: null,
+        googleProductChangeInfo: null,
+        selectedOptionId: null,
+        trialCopy: null,
+        priceString: pkg.product.priceString,
+      };
+    }
+
     return {
       subscriptionOption: activeSubscriberOption,
-      googleProductChangeInfo: activeSubscriberOption && activeGoogleProductIdentifier && replacementMode
-        ? { oldProductIdentifier: activeGoogleProductIdentifier, replacementMode }
-        : null,
+      googleProductChangeInfo: { oldProductIdentifier: activeGoogleProductIdentifier, replacementMode },
       selectedOptionId: activeSubscriberOption?.id ?? null,
       trialCopy: null,
       priceString: pkg.product.priceString,

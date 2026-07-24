@@ -18,6 +18,10 @@ export async function assertManageSubscriptionScenarios(): Promise<true> {
     'Android active monthly SKU opens targeted monthly URL',
   );
   assert(
+    getSubscriptionManagementUrl('android', 'bpd_monthly', 'https://revenuecat.example/manage') === 'https://revenuecat.example/manage',
+    'RevenueCat managementURL is preferred when present',
+  );
+  assert(
     getSubscriptionManagementUrl('android', 'bpd_monthly:monthly') === 'https://play.google.com/store/account/subscriptions?sku=bpd_monthly&package=com.maximebellemare.bpdcompanion',
     'Android active monthly base-plan identifier opens targeted monthly URL',
   );
@@ -49,6 +53,15 @@ export async function assertManageSubscriptionScenarios(): Promise<true> {
     },
   }, 'bpd_monthly:monthly');
   assert(iosPrimaryUrls[0] === IOS_SUBSCRIPTIONS_APP_URL, 'iOS primary management opens native App Store subscriptions URL');
+
+  const revenueCatManagementUrls: string[] = [];
+  await openSubscriptionManagement('ios', {
+    canOpenURL: async () => true,
+    openURL: async (url) => {
+      revenueCatManagementUrls.push(url);
+    },
+  }, 'bpd_monthly:monthly', 'https://apps.apple.com/account/subscriptions');
+  assert(revenueCatManagementUrls[0] === 'https://apps.apple.com/account/subscriptions', 'iOS opens RevenueCat managementURL when provided');
 
   const openedUrls: string[] = [];
   const opened = await openSubscriptionManagement('android', {

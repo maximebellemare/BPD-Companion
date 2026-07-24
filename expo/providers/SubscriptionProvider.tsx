@@ -40,8 +40,12 @@ import {
   classifyRevenueCatAccessProblem,
   getActiveExpiration,
   getActivePeriodType,
+  getActiveBillingIssueDetectedAt,
   getActiveProductIdentifier,
+  getActiveUnsubscribeDetectedAt,
   getActiveWillRenew,
+  getKnownInactiveExpiration,
+  getManagementUrl,
   isTrialActive as rcIsTrialActive,
   PURCHASES_UNAVAILABLE_MESSAGE,
 } from '@/services/subscription/purchasesService';
@@ -464,6 +468,10 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   const isEntitlementActive = hasActiveEntitlement(customerInfoQuery.data ?? null);
   const activeProductIdentifier = getActiveProductIdentifier(customerInfoQuery.data ?? null);
   const activeWillRenew = getActiveWillRenew(customerInfoQuery.data ?? null);
+  const activeBillingIssueDetectedAt = getActiveBillingIssueDetectedAt(customerInfoQuery.data ?? null);
+  const activeUnsubscribeDetectedAt = getActiveUnsubscribeDetectedAt(customerInfoQuery.data ?? null);
+  const activeManagementUrl = getManagementUrl(customerInfoQuery.data ?? null);
+  const inactiveExpirationAt = getKnownInactiveExpiration(customerInfoQuery.data ?? null);
   const isPremium = isExpoGo || isEntitlementActive;
   const hasPremiumAccess = isExpoGo || isEntitlementActive;
   const subscriptionAccessLoading = isSubscriptionAccessLoading({
@@ -821,6 +829,10 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     isEntitlementActive,
     activeProductIdentifier,
     activeWillRenew,
+    activeBillingIssueDetectedAt,
+    activeUnsubscribeDetectedAt,
+    activeManagementUrl,
+    inactiveExpirationAt,
     pendingPlanChange,
     hasPremiumAccess,
     state,
@@ -864,6 +876,10 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     isEntitlementActive,
     activeProductIdentifier,
     activeWillRenew,
+    activeBillingIssueDetectedAt,
+    activeUnsubscribeDetectedAt,
+    activeManagementUrl,
+    inactiveExpirationAt,
     pendingPlanChange,
     hasPremiumAccess,
     state,

@@ -167,6 +167,10 @@ export default function UpgradeScreen() {
     isPremium,
     isEntitlementActive,
     activeProductIdentifier,
+    activeManagementUrl,
+    activeWillRenew,
+    activeBillingIssueDetectedAt,
+    inactiveExpirationAt,
     subscribe,
     restore,
     isLoading,
@@ -405,7 +409,7 @@ export default function UpgradeScreen() {
       selectedPriceLabel: selected?.priceLabel ?? '',
     });
     if (primaryAction.kind === 'manage') {
-      void openSubscriptionManagement(Platform.OS, Linking, activeProductIdentifier).then((result) => {
+      void openSubscriptionManagement(Platform.OS, Linking, activeProductIdentifier, activeManagementUrl).then((result) => {
         if (!result.opened) {
           Alert.alert('Manage subscription', 'Open your App Store or Google Play subscription settings to manage your membership.');
         }
@@ -425,7 +429,7 @@ export default function UpgradeScreen() {
     }
     trackEvent('upgrade_clicked', { plan_id: selectedPlanId });
     subscribe(selected);
-  }, [activePeriodForPrimaryAction, activeProductIdentifier, hasStoreAccess, isExpoGo, pendingPlanChange?.targetPeriod, router, selectedPlanId, subscribe, trackEvent, plans, offeringStatus, isNativePurchases]);
+  }, [activeManagementUrl, activePeriodForPrimaryAction, activeProductIdentifier, hasStoreAccess, isExpoGo, pendingPlanChange?.targetPeriod, router, selectedPlanId, subscribe, trackEvent, plans, offeringStatus, isNativePurchases]);
 
   const handleClose = useCallback(() => {
     if (isExpoGo) {
@@ -518,6 +522,10 @@ export default function UpgradeScreen() {
     currentPeriod: activePeriodForPrimaryAction,
     pendingTargetPeriod: pendingPlanChange?.targetPeriod ?? null,
     pendingEffectiveDateLabel,
+    activeExpirationDateLabel: formatMembershipDate(state.expiresAt),
+    activeWillRenew,
+    billingIssueDateLabel: formatMembershipDate(activeBillingIssueDetectedAt),
+    inactiveExpirationDateLabel: formatMembershipDate(inactiveExpirationAt),
     trialDaysRemaining,
     shouldShowTrialCopy,
     isSubscriptionManagement,

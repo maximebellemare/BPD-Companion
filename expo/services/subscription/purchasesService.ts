@@ -18,6 +18,7 @@ import {
 import {
   selectAndroidSubscriptionOption,
 } from '@/services/subscription/androidPurchaseSelector';
+import { syncMetaAnonymousIdToRevenueCat } from '@/services/analytics/metaRevenueCatAttribution';
 import type { SubscriptionPeriod } from '@/types/subscription';
 import type {
   PurchasesOffering,
@@ -221,6 +222,7 @@ export async function configurePurchases(appUserId?: string): Promise<boolean> {
       Purchases.setLogLevel(Purchases.LOG_LEVEL.WARN);
       Purchases.configure({ apiKey, appUserID: appUserId ?? null });
       void collectRevenueCatDeviceIdentifiers(Purchases);
+      void syncMetaAnonymousIdToRevenueCat(Purchases);
       await enableAppleAdsAttribution(Purchases);
       configured = true;
       configureExceptionMessage = null;
@@ -253,6 +255,7 @@ export async function logInPurchases(appUserId: string): Promise<CustomerInfo | 
   try {
     const Purchases = (await import('react-native-purchases')).default;
     const result = await Purchases.logIn(appUserId);
+    void syncMetaAnonymousIdToRevenueCat(Purchases);
     let customerInfo = result.customerInfo as CustomerInfo | null;
     if (shouldAttemptAndroidSync(customerInfo)) {
       customerInfo = await syncPurchasesIfAvailable(Purchases, 'android_login_empty_customer_info') ?? customerInfo;
@@ -326,6 +329,7 @@ export async function purchasePackage(
   if (!arePurchasesAvailable()) throw new Error(PURCHASES_UNAVAILABLE_MESSAGE);
   const Purchases = (await import('react-native-purchases')).default;
   try {
+    await syncMetaAnonymousIdToRevenueCat(Purchases);
     await ensureRevenueCatIdentity(Purchases, supabaseUserId);
     let result: { customerInfo?: CustomerInfo | null };
     if (Platform.OS === 'android' && period) {

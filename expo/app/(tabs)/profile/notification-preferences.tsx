@@ -32,10 +32,9 @@ import {
   Gift,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import { useTranslation } from 'react-i18next';
 import Colors from '@/constants/colors';
 import { useProfile } from '@/providers/ProfileProvider';
-
-const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 const TIME_OPTIONS = [
   '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
@@ -49,8 +48,10 @@ const QUIET_END_OPTIONS = ['05:00', '06:00', '07:00', '08:00', '09:00'];
 type FrequencyLevel = 'minimal' | 'balanced' | 'supportive';
 
 export default function NotificationPreferencesScreen() {
+  const { t } = useTranslation('profile');
   const { profile, updateNotifications } = useProfile();
   const n = profile.notifications;
+  const weekdays = t('notificationPreferences.weekdaysShort', { returnObjects: true }) as string[];
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [expandedTimePicker, setExpandedTimePicker] = useState<string | null>(null);
@@ -155,7 +156,7 @@ export default function NotificationPreferencesScreen() {
     onSelect: (day: number) => void,
   ) => (
     <View style={styles.weekdayRow}>
-      {WEEKDAYS.map((day, i) => (
+      {weekdays.map((day, i) => (
         <TouchableOpacity
           key={day}
           style={[
@@ -168,18 +169,18 @@ export default function NotificationPreferencesScreen() {
             styles.weekdayChipText,
             currentDay === i && styles.weekdayChipTextActive,
           ]}>
-            {day.slice(0, 3)}
+            {day}
           </Text>
         </TouchableOpacity>
       ))}
     </View>
-  ), [handleHaptic]);
+  ), [handleHaptic, weekdays]);
 
   const frequencyLevel = (n.frequency ?? 'balanced') as FrequencyLevel;
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: 'Notification Preferences', headerTintColor: Colors.text }} />
+      <Stack.Screen options={{ title: t('notificationPreferences.title'), headerTintColor: Colors.text }} />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -192,14 +193,14 @@ export default function NotificationPreferencesScreen() {
                 <Bell size={20} color={Colors.primary} />
               </View>
             </View>
-            <Text style={styles.headerTitle}>Notification Preferences</Text>
+            <Text style={styles.headerTitle}>{t('notificationPreferences.title')}</Text>
             <Text style={styles.headerSubtitle}>
-              Choose what reminders feel right for you. These are designed to support — never pressure.
+              {t('notificationPreferences.subtitle')}
             </Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>REMINDER FREQUENCY</Text>
+            <Text style={styles.sectionLabel}>{t('notificationPreferences.sections.frequency')}</Text>
             <View style={styles.frequencyRow}>
               {(['minimal', 'balanced', 'supportive'] as const).map((level) => (
                 <TouchableOpacity
@@ -218,32 +219,30 @@ export default function NotificationPreferencesScreen() {
                     styles.frequencyText,
                     frequencyLevel === level && styles.frequencyTextActive,
                   ]}>
-                    {level.charAt(0).toUpperCase() + level.slice(1)}
+                    {t(`notifications.frequencies.${level}`)}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
             <Text style={styles.frequencyHint}>
-              {frequencyLevel === 'minimal' && 'Only essential reminders like daily check-in and weekly reflection.'}
-              {frequencyLevel === 'balanced' && 'Core reminders plus gentle contextual support.'}
-              {frequencyLevel === 'supportive' && 'All available reminders including streak and re-engagement nudges.'}
+              {t(`notificationPreferences.frequencyHints.${frequencyLevel}`)}
             </Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>DAILY REMINDERS</Text>
+            <Text style={styles.sectionLabel}>{t('notificationPreferences.sections.daily')}</Text>
             <View style={styles.card}>
               {renderToggle(
                 <Sun size={16} color="#67E8F9" />,
-                'Daily Check-in',
-                'A gentle reminder to check in with yourself',
+                t('notificationPreferences.toggles.dailyCheckIn.0'),
+                t('notificationPreferences.toggles.dailyCheckIn.1'),
                 n.dailyCheckInReminder,
                 (val) => updateNotifications({ dailyCheckInReminder: val }),
                 'toggle-daily-checkin',
               )}
               {n.dailyCheckInReminder && (
                 <View style={styles.subSetting}>
-                  <Text style={styles.subSettingLabel}>Reminder time</Text>
+                  <Text style={styles.subSettingLabel}>{t('notificationPreferences.labels.reminderTime')}</Text>
                   {renderTimePicker(
                     'checkin_time',
                     n.checkInReminderTime,
@@ -256,22 +255,22 @@ export default function NotificationPreferencesScreen() {
 
               {renderToggle(
                 <Flame size={16} color={Colors.accent} />,
-                'Morning Ritual',
-                'Start your day with emotional awareness',
+                t('notificationPreferences.toggles.morningRitual.0'),
+                t('notificationPreferences.toggles.morningRitual.1'),
                 n.ritualReminders ?? true,
                 (val) => updateNotifications({ ritualReminders: val }),
                 'toggle-ritual',
               )}
               {(n.ritualReminders ?? true) && (
                 <View style={styles.subSetting}>
-                  <Text style={styles.subSettingLabel}>Morning time</Text>
+                  <Text style={styles.subSettingLabel}>{t('notificationPreferences.labels.morningTime')}</Text>
                   {renderTimePicker(
                     'morning_time',
                     n.morningRitualTime ?? '08:00',
                     TIME_OPTIONS.filter(t => parseInt(t) <= 12),
                     (val) => updateNotifications({ morningRitualTime: val }),
                   )}
-                  <Text style={[styles.subSettingLabel, { marginTop: 8 }]}>Evening time</Text>
+                  <Text style={[styles.subSettingLabel, { marginTop: 8 }]}>{t('notificationPreferences.labels.eveningTime')}</Text>
                   {renderTimePicker(
                     'evening_time',
                     n.eveningRitualTime ?? '20:00',
@@ -284,8 +283,8 @@ export default function NotificationPreferencesScreen() {
 
               {renderToggle(
                 <Zap size={16} color="#3B82F6" />,
-                'Streak Support',
-                'Encouragement to keep your check-in rhythm',
+                t('notificationPreferences.toggles.streakSupport.0'),
+                t('notificationPreferences.toggles.streakSupport.1'),
                 n.streakSupport ?? true,
                 (val) => updateNotifications({ streakSupport: val }),
                 'toggle-streak',
@@ -294,24 +293,24 @@ export default function NotificationPreferencesScreen() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>WEEKLY REMINDERS</Text>
+            <Text style={styles.sectionLabel}>{t('notificationPreferences.sections.weekly')}</Text>
             <View style={styles.card}>
               {renderToggle(
                 <RefreshCw size={16} color={Colors.primary} />,
-                'Weekly Reflection',
-                'When your weekly reflection summary is ready',
+                t('notificationPreferences.toggles.weeklyReflection.0'),
+                t('notificationPreferences.toggles.weeklyReflection.1'),
                 n.weeklyReflectionReminder,
                 (val) => updateNotifications({ weeklyReflectionReminder: val }),
                 'toggle-weekly-reflection',
               )}
               {n.weeklyReflectionReminder && (
                 <View style={styles.subSetting}>
-                  <Text style={styles.subSettingLabel}>Preferred day</Text>
+                  <Text style={styles.subSettingLabel}>{t('notificationPreferences.labels.preferredDay')}</Text>
                   {renderWeekdayPicker(
                     n.weeklyReflectionDay ?? 1,
                     (day) => updateNotifications({ weeklyReflectionDay: day }),
                   )}
-                  <Text style={[styles.subSettingLabel, { marginTop: 8 }]}>Preferred time</Text>
+                  <Text style={[styles.subSettingLabel, { marginTop: 8 }]}>{t('notificationPreferences.labels.preferredTime')}</Text>
                   {renderTimePicker(
                     'weekly_time',
                     n.weeklyReflectionTime ?? '10:00',
@@ -324,8 +323,8 @@ export default function NotificationPreferencesScreen() {
 
               {renderToggle(
                 <FileText size={16} color={Colors.success} />,
-                'Therapist Report',
-                'When a new therapy report is generated',
+                t('notificationPreferences.toggles.therapistReport.0'),
+                t('notificationPreferences.toggles.therapistReport.1'),
                 n.therapistReportReminder ?? true,
                 (val) => updateNotifications({ therapistReportReminder: val }),
                 'toggle-therapist',
@@ -335,8 +334,8 @@ export default function NotificationPreferencesScreen() {
 
               {renderToggle(
                 <Calendar size={16} color="#3B82F6" />,
-                'Weekend Reminders',
-                'Receive reminders on weekends too',
+                t('notificationPreferences.toggles.weekendReminders.0'),
+                t('notificationPreferences.toggles.weekendReminders.1'),
                 n.weekendReminders ?? true,
                 (val) => updateNotifications({ weekendReminders: val }),
                 'toggle-weekends',
@@ -345,12 +344,12 @@ export default function NotificationPreferencesScreen() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>CONTEXTUAL SUPPORT</Text>
+            <Text style={styles.sectionLabel}>{t('notificationPreferences.sections.contextual')}</Text>
             <View style={styles.card}>
               {renderToggle(
                 <MessageCircle size={16} color="#3B82F6" />,
-                'Relationship Support',
-                'Gentle pause reminders during relationship triggers',
+                t('notificationPreferences.toggles.relationshipSupport.0'),
+                t('notificationPreferences.toggles.relationshipSupport.1'),
                 n.relationshipSupportReminders,
                 (val) => updateNotifications({ relationshipSupportReminders: val }),
                 'toggle-relationship',
@@ -359,8 +358,8 @@ export default function NotificationPreferencesScreen() {
 
               {renderToggle(
                 <Thermometer size={16} color={Colors.danger} />,
-                'Regulation Follow-ups',
-                'Check-in after high distress episodes',
+                t('notificationPreferences.toggles.regulationFollowUps.0'),
+                t('notificationPreferences.toggles.regulationFollowUps.1'),
                 n.regulationFollowUps,
                 (val) => updateNotifications({ regulationFollowUps: val }),
                 'toggle-regulation',
@@ -369,8 +368,8 @@ export default function NotificationPreferencesScreen() {
 
               {renderToggle(
                 <Heart size={16} color={Colors.primary} />,
-                'Calm Follow-ups',
-                'A gentle check-in after intense moments settle',
+                t('notificationPreferences.toggles.calmFollowups.0'),
+                t('notificationPreferences.toggles.calmFollowups.1'),
                 n.calmFollowups ?? true,
                 (val) => updateNotifications({ calmFollowups: val }),
                 'toggle-calm',
@@ -379,8 +378,8 @@ export default function NotificationPreferencesScreen() {
 
               {renderToggle(
                 <Bell size={16} color={Colors.accent} />,
-                'Gentle Nudges',
-                'Supportive end-of-day reminders',
+                t('notificationPreferences.toggles.gentleNudges.0'),
+                t('notificationPreferences.toggles.gentleNudges.1'),
                 n.gentleNudges,
                 (val) => updateNotifications({ gentleNudges: val }),
                 'toggle-nudges',
@@ -389,8 +388,8 @@ export default function NotificationPreferencesScreen() {
 
               {renderToggle(
                 <RefreshCw size={16} color="#3B82F6" />,
-                'Re-engagement',
-                'Supportive nudge if you haven\'t visited in a while',
+                t('notificationPreferences.toggles.reengagement.0'),
+                t('notificationPreferences.toggles.reengagement.1'),
                 n.reengagementReminders ?? true,
                 (val) => updateNotifications({ reengagementReminders: val }),
                 'toggle-reengagement',
@@ -399,12 +398,12 @@ export default function NotificationPreferencesScreen() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>MEMBERSHIP</Text>
+            <Text style={styles.sectionLabel}>{t('notificationPreferences.sections.membership')}</Text>
             <View style={styles.card}>
               {renderToggle(
                 <Sparkles size={16} color="#67E8F9" />,
-                'Membership Insights',
-                'Deeper emotional pattern notifications',
+                t('notificationPreferences.toggles.membershipInsights.0'),
+                t('notificationPreferences.toggles.membershipInsights.1'),
                 n.premiumReflections ?? true,
                 (val) => updateNotifications({ premiumReflections: val }),
                 'toggle-premium',
@@ -413,8 +412,8 @@ export default function NotificationPreferencesScreen() {
 
               {renderToggle(
                 <Crown size={16} color="#67E8F9" />,
-                'Feature Reminders',
-                'Occasional reminders about advanced features you\'ve explored',
+                t('notificationPreferences.toggles.featureReminders.0'),
+                t('notificationPreferences.toggles.featureReminders.1'),
                 n.premiumInsightReminders ?? true,
                 (val) => updateNotifications({ premiumInsightReminders: val }),
                 'toggle-premium-insights',
@@ -423,25 +422,25 @@ export default function NotificationPreferencesScreen() {
 
               {renderToggle(
                 <Gift size={16} color="#67E8F9" />,
-                'Membership Reminders',
-                'Respectful reminders about membership benefits',
+                t('notificationPreferences.toggles.membershipReminders.0'),
+                t('notificationPreferences.toggles.membershipReminders.1'),
                 n.upgradeReminders ?? true,
                 (val) => updateNotifications({ upgradeReminders: val }),
                 'toggle-upgrade-reminders',
               )}
             </View>
             <Text style={styles.premiumNote}>
-              Membership reminders are never sent during high distress or crisis moments.
+              {t('notificationPreferences.membershipNote')}
             </Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>SMART BEHAVIOR NOTIFICATIONS</Text>
+            <Text style={styles.sectionLabel}>{t('notificationPreferences.sections.smart')}</Text>
             <View style={styles.card}>
               {renderToggle(
                 <Heart size={16} color="#14B8A6" />,
-                'Gentle Check-ins',
-                'Supportive nudge if you haven\'t visited in a while',
+                t('notificationPreferences.toggles.behaviorCheckIns.0'),
+                t('notificationPreferences.toggles.behaviorCheckIns.1'),
                 n.behaviorCheckIns ?? true,
                 (val) => updateNotifications({ behaviorCheckIns: val }),
                 'toggle-behavior-checkins',
@@ -450,8 +449,8 @@ export default function NotificationPreferencesScreen() {
 
               {renderToggle(
                 <Shield size={16} color={Colors.danger} />,
-                'Distress Support',
-                'Support nudges when emotional patterns are intense',
+                t('notificationPreferences.toggles.distressSupport.0'),
+                t('notificationPreferences.toggles.distressSupport.1'),
                 n.behaviorDistressSupport ?? true,
                 (val) => updateNotifications({ behaviorDistressSupport: val }),
                 'toggle-behavior-distress',
@@ -460,8 +459,8 @@ export default function NotificationPreferencesScreen() {
 
               {renderToggle(
                 <FileText size={16} color="#3B82F6" />,
-                'Reflection Prompts',
-                'Journal prompts after intense message sessions',
+                t('notificationPreferences.toggles.reflectionPrompts.0'),
+                t('notificationPreferences.toggles.reflectionPrompts.1'),
                 n.behaviorJournalPrompts ?? true,
                 (val) => updateNotifications({ behaviorJournalPrompts: val }),
                 'toggle-behavior-journal',
@@ -470,25 +469,25 @@ export default function NotificationPreferencesScreen() {
 
               {renderToggle(
                 <Sparkles size={16} color="#67E8F9" />,
-                'Progress Celebrations',
-                'Celebrate streaks, insights, and emotional growth',
+                t('notificationPreferences.toggles.progressCelebrations.0'),
+                t('notificationPreferences.toggles.progressCelebrations.1'),
                 n.behaviorProgressCelebrations ?? true,
                 (val) => updateNotifications({ behaviorProgressCelebrations: val }),
                 'toggle-behavior-progress',
               )}
             </View>
             <Text style={styles.premiumNote}>
-              These notifications adapt to your behavior and emotional patterns. They are always respectful of your current emotional state.
+              {t('notificationPreferences.smartNote')}
             </Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>QUIET HOURS</Text>
+            <Text style={styles.sectionLabel}>{t('notificationPreferences.sections.quiet')}</Text>
             <View style={styles.card}>
               {renderToggle(
                 <Moon size={16} color="#3B82F6" />,
-                'Enable Quiet Hours',
-                'No notifications during this time window',
+                t('notificationPreferences.toggles.quietHours.0'),
+                t('notificationPreferences.toggles.quietHours.1'),
                 n.quietHoursEnabled ?? false,
                 (val) => updateNotifications({ quietHoursEnabled: val }),
                 'toggle-quiet-hours',
@@ -497,7 +496,7 @@ export default function NotificationPreferencesScreen() {
                 <View style={styles.quietHoursConfig}>
                   <View style={styles.quietHoursRow}>
                     <View style={styles.quietHoursCol}>
-                      <Text style={styles.quietHoursLabel}>Start</Text>
+                      <Text style={styles.quietHoursLabel}>{t('notificationPreferences.labels.start')}</Text>
                       {renderTimePicker(
                         'quiet_start',
                         n.quietHoursStart ?? '22:00',
@@ -506,10 +505,10 @@ export default function NotificationPreferencesScreen() {
                       )}
                     </View>
                     <View style={styles.quietHoursDash}>
-                      <Text style={styles.quietHoursDashText}>to</Text>
+                      <Text style={styles.quietHoursDashText}>{t('notificationPreferences.labels.to')}</Text>
                     </View>
                     <View style={styles.quietHoursCol}>
-                      <Text style={styles.quietHoursLabel}>End</Text>
+                      <Text style={styles.quietHoursLabel}>{t('notificationPreferences.labels.end')}</Text>
                       {renderTimePicker(
                         'quiet_end',
                         n.quietHoursEnd ?? '07:00',
@@ -526,7 +525,7 @@ export default function NotificationPreferencesScreen() {
           <View style={styles.safetyNote}>
             <Shield size={14} color={Colors.primary} />
             <Text style={styles.safetyNoteText}>
-              We never send guilt-based reminders, pressure-heavy phrases, or membership prompts during high distress. Your emotional safety comes first.
+              {t('notificationPreferences.safetyNote')}
             </Text>
           </View>
 

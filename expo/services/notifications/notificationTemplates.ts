@@ -1,4 +1,6 @@
 import { NotificationTemplate, NotificationCategory } from '@/types/notifications';
+import { i18n } from '@/lib/i18n';
+import { normalizeLanguageTag } from '@/lib/i18n/languageStorage';
 
 export const NOTIFICATION_TEMPLATES: NotificationTemplate[] = [
   {
@@ -106,17 +108,29 @@ export const NOTIFICATION_TEMPLATES: NotificationTemplate[] = [
   },
 ];
 
+export function getLocalizedNotificationVariants(category: NotificationCategory): { title: string; body: string }[] | null {
+  const language = normalizeLanguageTag(i18n.language) ?? 'en';
+  const variants = i18n.t(`notifications:${category}`, {
+    lng: language,
+    returnObjects: true,
+    defaultValue: null,
+  });
+  return Array.isArray(variants) ? variants as { title: string; body: string }[] : null;
+}
+
 export function getRandomTemplate(category: NotificationCategory): { title: string; body: string; deepLink: string } {
   const template = NOTIFICATION_TEMPLATES.find(t => t.category === category);
   if (!template || template.variants.length === 0) {
     return {
-      title: 'BPD Companion',
-      body: 'A moment of support is here for you.',
+      title: i18n.t('notifications:fallbackTitle'),
+      body: i18n.t('notifications:fallbackBody'),
       deepLink: '/check-in',
     };
   }
 
-  const variant = template.variants[Math.floor(Math.random() * template.variants.length)];
+  const localizedVariants = getLocalizedNotificationVariants(category);
+  const variants = localizedVariants?.length ? localizedVariants : template.variants;
+  const variant = variants[Math.floor(Math.random() * variants.length)];
   return {
     title: variant.title,
     body: variant.body,

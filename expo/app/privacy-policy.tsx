@@ -9,10 +9,9 @@ import {
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { X, Shield, Lock, Eye, Server, Trash2, Mail } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import Colors from '@/constants/colors';
 import { BRAND } from '@/constants/branding';
-
-const LAST_UPDATED = 'March 14, 2026';
 
 interface SectionProps {
   icon: React.ReactNode;
@@ -48,8 +47,21 @@ function PolicySection({ icon, title, children, index, fadeAnim }: SectionProps)
 }
 
 export default function PrivacyPolicyScreen() {
+  const { t } = useTranslation('legal');
   const router = useRouter();
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const sections = t('privacy.sections', { returnObjects: true, brand: BRAND.name }) as {
+    title: string;
+    body: string[];
+    bullets: string[];
+  }[];
+  const icons = [
+    <Eye key="eye" size={16} color={Colors.brandTeal} />,
+    <Lock key="lock" size={16} color="#3B82F6" />,
+    <Server key="server" size={16} color={Colors.accent} />,
+    <Trash2 key="trash" size={16} color={Colors.danger} />,
+    <Mail key="mail" size={16} color={Colors.brandMist} />,
+  ];
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -72,7 +84,7 @@ export default function PrivacyPolicyScreen() {
         >
           <X size={20} color={Colors.textSecondary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Privacy Policy</Text>
+        <Text style={styles.headerTitle}>{t('privacy.title')}</Text>
         <View style={styles.closeBtn} />
       </View>
 
@@ -85,111 +97,46 @@ export default function PrivacyPolicyScreen() {
           <View style={styles.heroIconWrap}>
             <Shield size={28} color={Colors.brandTeal} />
           </View>
-          <Text style={styles.heroTitle}>Your Privacy Matters</Text>
+          <Text style={styles.heroTitle}>{t('privacy.heroTitle')}</Text>
           <Text style={styles.heroDesc}>
-            {BRAND.name} is designed with your emotional safety and data privacy at its core. We collect only what is necessary to provide you a meaningful experience.
+            {t('privacy.heroDescription', { brand: BRAND.name })}
           </Text>
           <View style={styles.updatedBadge}>
-            <Text style={styles.updatedText}>Last updated: {LAST_UPDATED}</Text>
+            <Text style={styles.updatedText}>{t('privacy.lastUpdatedLabel', { date: t('privacy.lastUpdated') })}</Text>
           </View>
         </Animated.View>
 
-        <PolicySection
-          icon={<Eye size={16} color={Colors.brandTeal} />}
-          title="What We Collect"
-          index={0}
-          fadeAnim={fadeAnim}
-        >
-          <Text style={styles.bodyText}>
-            We collect information you voluntarily provide, including:
-          </Text>
-          <View style={styles.bulletList}>
-            <Text style={styles.bulletItem}>Journal entries and check-in data</Text>
-            <Text style={styles.bulletItem}>Emotional state and mood information</Text>
-            <Text style={styles.bulletItem}>Message drafts and communication patterns</Text>
-            <Text style={styles.bulletItem}>Profile preferences and settings</Text>
-            <Text style={styles.bulletItem}>Anonymous usage analytics</Text>
-          </View>
-          <Text style={styles.bodyText}>
-            We do not collect your real name, phone contacts, location, or any data from outside this app unless you explicitly provide it.
-          </Text>
-        </PolicySection>
-
-        <PolicySection
-          icon={<Lock size={16} color="#3B82F6" />}
-          title="How We Protect Your Data"
-          index={1}
-          fadeAnim={fadeAnim}
-        >
-          <Text style={styles.bodyText}>
-            All personal data is stored locally on your device by default. If cloud sync is enabled, data is encrypted in transit and at rest.
-          </Text>
-          <View style={styles.bulletList}>
-            <Text style={styles.bulletItem}>End-to-end encryption for synced data</Text>
-            <Text style={styles.bulletItem}>No third-party advertising or data selling</Text>
-            <Text style={styles.bulletItem}>Optional biometric lock for app access</Text>
-            <Text style={styles.bulletItem}>Anonymous community posting by default</Text>
-          </View>
-        </PolicySection>
-
-        <PolicySection
-          icon={<Server size={16} color={Colors.accent} />}
-          title="AI Processing"
-          index={2}
-          fadeAnim={fadeAnim}
-        >
-          <Text style={styles.bodyText}>
-            When you use AI-powered features (companion chat, message analysis, insights), your input is processed by our AI systems to generate responses.
-          </Text>
-          <View style={styles.bulletList}>
-            <Text style={styles.bulletItem}>AI conversations are not used to train models</Text>
-            <Text style={styles.bulletItem}>Processing is done securely with encrypted connections</Text>
-            <Text style={styles.bulletItem}>You can delete AI conversation history at any time</Text>
-            <Text style={styles.bulletItem}>AI memory can be cleared from your profile settings</Text>
-          </View>
-        </PolicySection>
-
-        <PolicySection
-          icon={<Trash2 size={16} color={Colors.danger} />}
-          title="Data Deletion"
-          index={3}
-          fadeAnim={fadeAnim}
-        >
-          <Text style={styles.bodyText}>
-            You have the right to delete your data at any time. You can:
-          </Text>
-          <View style={styles.bulletList}>
-            <Text style={styles.bulletItem}>Delete individual entries (journals, messages, etc.)</Text>
-            <Text style={styles.bulletItem}>Clear AI companion memory</Text>
-            <Text style={styles.bulletItem}>Request full account and data deletion</Text>
-            <Text style={styles.bulletItem}>Export your data before deletion</Text>
-          </View>
-          <Text style={styles.bodyText}>
-            Full data deletion can be requested through the app's Settings or by contacting support. Deletion is processed within 30 days.
-          </Text>
-        </PolicySection>
-
-        <PolicySection
-          icon={<Mail size={16} color={Colors.brandMist} />}
-          title="Contact Us"
-          index={4}
-          fadeAnim={fadeAnim}
-        >
-          <Text style={styles.bodyText}>
-            If you have questions about this privacy policy or your data, please reach out:
-          </Text>
-          <View style={styles.contactCard}>
-            <Text style={styles.contactLabel}>Email</Text>
-            <Text style={styles.contactValue}>support@bpdcompanion.app</Text>
-          </View>
-          <Text style={styles.bodyTextMuted}>
-            We aim to respond to all privacy inquiries within 48 hours.
-          </Text>
-        </PolicySection>
+        {sections.map((section, index) => (
+          <PolicySection
+            key={section.title}
+            icon={icons[index] ?? icons[0]}
+            title={section.title}
+            index={index}
+            fadeAnim={fadeAnim}
+          >
+            <Text style={styles.bodyText}>{section.body[0]}</Text>
+            {section.bullets.length > 0 && (
+              <View style={styles.bulletList}>
+                {section.bullets.map(item => (
+                  <Text key={item} style={styles.bulletItem}>{item}</Text>
+                ))}
+              </View>
+            )}
+            {index === 4 && (
+              <View style={styles.contactCard}>
+                <Text style={styles.contactLabel}>{t('privacy.email')}</Text>
+                <Text style={styles.contactValue}>{t('privacy.contactEmail')}</Text>
+              </View>
+            )}
+            {section.body.slice(1).map(item => (
+              <Text key={item} style={index === 4 ? styles.bodyTextMuted : styles.bodyText}>{item}</Text>
+            ))}
+          </PolicySection>
+        ))}
 
         <View style={styles.footerNotice}>
           <Text style={styles.footerNoticeText}>
-            By using {BRAND.name}, you agree to the collection and use of information in accordance with this policy. We may update this policy from time to time and will notify you of significant changes.
+            {t('privacy.footer', { brand: BRAND.name })}
           </Text>
         </View>
 

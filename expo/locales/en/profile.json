@@ -1,0 +1,292 @@
+{
+  "notSignedIn": "Not signed in",
+  "you": "You",
+  "sections": {
+    "subscription": "SUBSCRIPTION",
+    "account": "ACCOUNT",
+    "communityProfile": "COMMUNITY PROFILE",
+    "notifications": "NOTIFICATIONS",
+    "appearance": "APPEARANCE",
+    "privacySafety": "PRIVACY & SAFETY",
+    "legalHelp": "LEGAL & HELP",
+    "accountControl": "ACCOUNT CONTROL"
+  },
+  "header": {
+    "eyebrow": "Account",
+    "title": "Profile & settings",
+    "signedInAs": "Signed in as"
+  },
+  "membership": {
+    "expoLocalDescription": "View monthly and yearly membership plans.",
+    "startTitle": "Start your membership",
+    "membershipTitle": "Membership",
+    "manageTitle": "Manage Membership",
+    "trialDescription": "Your 3-day trial is active. Manage your membership anytime.",
+    "activeDescription": "View plans, renewal details, and membership access.",
+    "plansDescription": "View monthly and yearly membership plans.",
+    "restoreTitle": "Restore purchases",
+    "restoringTitle": "Restoring purchases...",
+    "restoreDescription": "Recover an active App Store or Google Play subscription.",
+    "restoreActive": "Subscription restored. Membership is active.",
+    "restoreInactive": "No active membership was found.",
+    "restoreLoadingTitle": "Restore purchase",
+    "restoreLoadingMessage": "Membership options are loading. Please try again in a moment."
+  },
+  "account": {
+    "email": "Email",
+    "changePassword": "Change password",
+    "changePasswordDescription": "Send a secure password reset email.",
+    "emailRequiredTitle": "Email required",
+    "emailRequiredMessage": "Sign in with an email address to reset your password.",
+    "resetSent": "Password reset email sent to {{email}}.",
+    "resetFailedTitle": "Reset failed",
+    "resetFailedMessage": "We could not send a password reset email.",
+    "sendResetTitle": "Send password reset?",
+    "sendResetMessage": "We will email reset instructions to {{email}}.",
+    "send": "Send"
+  },
+  "community": {
+    "setup": "Set up community profile",
+    "description": "Community shows your username or display name, never your email.",
+    "username": "Username",
+    "usernamePlaceholder": "username",
+    "usernameHelp": "3-20 characters. Letters, numbers, and underscores only.",
+    "displayName": "Display name optional",
+    "displayNamePlaceholder": "What people can call you",
+    "avatarColor": "Avatar color",
+    "saving": "Saving...",
+    "saved": "Saved",
+    "save": "Save community profile",
+    "create": "Create community profile",
+    "saveError": "Could not save community profile.",
+    "errors": {
+      "tooShort": "Username must be at least 3 characters.",
+      "tooLong": "Username must be 20 characters or fewer.",
+      "invalidCharacters": "Use only letters, numbers, and underscores. No spaces.",
+      "taken": "That username is already taken. Try another one."
+    }
+  },
+  "notifications": {
+    "settings": "Notification settings",
+    "summary": "{{frequency}} frequency · {{quietHours}}",
+    "quietOn": "Quiet hours on",
+    "quietOff": "Quiet hours off",
+    "frequencies": {
+      "minimal": "Minimal",
+      "balanced": "Balanced",
+      "supportive": "Supportive"
+    },
+    "dailyReminder": "Daily check-in reminder",
+    "dailyReminderDescription": "A gentle prompt to keep the habit alive."
+  },
+  "appearance": {
+    "language": "Language",
+    "theme": "Theme preference",
+    "themeDescription": "Choose a bright or dark interface.",
+    "light": "Light",
+    "dark": "Dark",
+    "replayTutorial": "Replay app tutorial",
+    "replayTutorialDescription": "Review Today, Companion, Tools, Insights, Community, and Profile settings.",
+    "tutorialReady": "App tutorial ready to replay.",
+    "tutorialFailedTitle": "Could not replay tutorial"
+  },
+  "privacy": {
+    "shareContext": "Share context with AI Companion",
+    "shareContextDescription": "Allow the AI to reference your saved patterns.",
+    "medicalDisclaimer": "Medical disclaimer / crisis resources",
+    "medicalDisclaimerDescription": "Read safety guidance and find urgent support options.",
+    "crisisSettings": "Crisis support settings",
+    "crisisSettingsDescription": "Emergency contacts and crisis support preferences."
+  },
+  "legal": {
+    "privacyPolicy": "Privacy Policy",
+    "privacyPolicyDescription": "How your information is protected and used.",
+    "terms": "Terms of Use",
+    "termsDescription": "Subscription, account, and app usage terms.",
+    "support": "Contact support",
+    "supportDescription": "Get help, report a problem, or send feedback.",
+    "rate": "Rate BPD Companion",
+    "rateDescription": "Share an honest review if the app has been helpful."
+  },
+  "accountControl": {
+    "delete": "Delete account",
+    "deleteDescription": "Request account and personal data deletion.",
+    "logout": "Logout",
+    "logoutDescription": "Sign out of this device.",
+    "logoutFailedTitle": "Logout failed",
+    "logoutConfirmWeb": "Log out of BPD Companion?",
+    "logoutTitle": "Log out?",
+    "logoutMessage": "You can sign back in anytime.",
+    "tryAgain": "Please try again."
+  },
+  "notificationPreferences": {
+    "title": "Notification Preferences",
+    "subtitle": "Choose what reminders feel right for you. These are designed to support, never pressure.",
+    "sections": {
+      "frequency": "REMINDER FREQUENCY",
+      "daily": "DAILY REMINDERS",
+      "weekly": "WEEKLY REMINDERS",
+      "contextual": "CONTEXTUAL SUPPORT",
+      "membership": "MEMBERSHIP",
+      "smart": "SMART BEHAVIOR NOTIFICATIONS",
+      "quiet": "QUIET HOURS"
+    },
+    "frequencyHints": {
+      "minimal": "Only essential reminders like daily check-in and weekly reflection.",
+      "balanced": "Core reminders plus gentle contextual support.",
+      "supportive": "All available reminders including streak and re-engagement nudges."
+    },
+    "labels": {
+      "reminderTime": "Reminder time",
+      "morningTime": "Morning time",
+      "eveningTime": "Evening time",
+      "preferredDay": "Preferred day",
+      "preferredTime": "Preferred time",
+      "start": "Start",
+      "end": "End",
+      "to": "to"
+    },
+    "weekdaysShort": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+    "toggles": {
+      "dailyCheckIn": ["Daily Check-in", "A gentle reminder to check in with yourself"],
+      "morningRitual": ["Morning Ritual", "Start your day with emotional awareness"],
+      "streakSupport": ["Streak Support", "Encouragement to keep your check-in rhythm"],
+      "weeklyReflection": ["Weekly Reflection", "When your weekly reflection summary is ready"],
+      "therapistReport": ["Therapist Report", "When a new therapy report is generated"],
+      "weekendReminders": ["Weekend Reminders", "Receive reminders on weekends too"],
+      "relationshipSupport": ["Relationship Support", "Gentle pause reminders during relationship triggers"],
+      "regulationFollowUps": ["Regulation Follow-ups", "Check in after high-distress episodes"],
+      "calmFollowups": ["Calm Follow-ups", "A gentle check-in after intense moments settle"],
+      "gentleNudges": ["Gentle Nudges", "Supportive end-of-day reminders"],
+      "reengagement": ["Re-engagement", "Supportive nudge if you haven't visited in a while"],
+      "membershipInsights": ["Membership Insights", "Deeper emotional pattern notifications"],
+      "featureReminders": ["Feature Reminders", "Occasional reminders about advanced features you've explored"],
+      "membershipReminders": ["Membership Reminders", "Respectful reminders about membership benefits"],
+      "behaviorCheckIns": ["Gentle Check-ins", "Supportive nudge if you haven't visited in a while"],
+      "distressSupport": ["Distress Support", "Support nudges when emotional patterns are intense"],
+      "reflectionPrompts": ["Reflection Prompts", "Journal prompts after intense message sessions"],
+      "progressCelebrations": ["Progress Celebrations", "Celebrate streaks, insights, and emotional growth"],
+      "quietHours": ["Enable Quiet Hours", "No notifications during this time window"]
+    },
+    "membershipNote": "Membership reminders are never sent during high distress or crisis moments.",
+    "smartNote": "These notifications adapt to your behavior and emotional patterns. They are always respectful of your current emotional state.",
+    "safetyNote": "We never send guilt-based reminders, pressure-heavy phrases, or membership prompts during high distress. Your emotional safety comes first."
+  },
+  "crisisSettings": {
+    "title": "Crisis Support",
+    "save": "Save",
+    "intro": "These settings help the app support you during high-distress moments. Everything stays private on your device.",
+    "emergencyContact": "Emergency Contact",
+    "phoneOrName": "Phone Number or Name",
+    "phonePlaceholder": "e.g., 555-123-4567 or Mom",
+    "crisisLine": "Crisis Line",
+    "preferredLine": "Preferred Crisis Line Number",
+    "linePlaceholder": "e.g., local crisis line",
+    "lineHelper": "Safety Mode can also show regional resources automatically when available.",
+    "threshold": "Safety Mode Threshold",
+    "thresholdDescription": "When your distress intensity reaches this level, the app will suggest activating Safety Mode.",
+    "reminder": "Safety Mode Reminder",
+    "reminderDescription": "Show a gentle reminder when distress is high",
+    "note": "Setting up a safety net is an act of self-love. You deserve support in your hardest moments."
+  },
+  "dataDeletion": {
+    "title": "Delete My Data",
+    "warningTitle": "Data deletion is permanent",
+    "warningDescription": "Selected data will be permanently removed from this device. This cannot be undone.",
+    "selectData": "Select data to delete",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "deleted": "Deleted",
+    "deleteButton": "Delete {{count}} category",
+    "deleteButton_plural": "Delete {{count}} categories",
+    "confirmAllTitle": "Delete all data?",
+    "confirmSomeTitle": "Delete selected data?",
+    "confirmAllMessage": "This will permanently delete all your data from this device. This action cannot be undone.",
+    "confirmSomeMessage": "This will permanently delete {{count}} data category. This action cannot be undone.",
+    "confirmSomeMessage_plural": "This will permanently delete {{count}} data categories. This action cannot be undone.",
+    "deletePermanently": "Delete permanently",
+    "errorTitle": "Error",
+    "errorMessage": "Something went wrong while deleting your data. Please try again.",
+    "needHelp": "Need help?",
+    "helpText": "If you want to delete your account entirely, including any server-side data, please contact us at:",
+    "email": "Email",
+    "processing": "Account deletion requests are processed within 30 days. You will receive a confirmation email when complete.",
+    "categories": {
+      "journal": ["Journal Entries", "All journal entries, guided journals, and reflections"],
+      "messages": ["Message Drafts & History", "All message drafts, rewrites, outcomes, and communication patterns"],
+      "companion": ["AI Companion Data", "Conversation history, companion memory, and learned preferences"],
+      "emotions": ["Emotional Data", "Check-ins, emotional profiles, mood history, and insights"],
+      "profile": ["Profile & Preferences", "Your profile settings, onboarding data, and all app preferences"]
+    }
+  },
+  "support": {
+    "title": "Support & Feedback",
+    "quickLinks": "QUICK LINKS",
+    "emailSupport": "Email Support",
+    "privacyDescription": "How we protect your data",
+    "termsDescription": "Usage terms and conditions",
+    "deleteDescription": "Remove your personal data",
+    "sendFeedback": "SEND FEEDBACK",
+    "feedbackType": "What type of feedback?",
+    "experience": "How would you rate your experience?",
+    "message": "Your message",
+    "messagePlaceholder": "Tell us what's on your mind...",
+    "submit": "Send Feedback",
+    "missingTitle": "Missing information",
+    "missingMessage": "Please select a feedback type and write your message.",
+    "errorTitle": "Error",
+    "errorMessage": "Could not save your feedback. Please try again.",
+    "thanks": "Thank You",
+    "thanksDescription": "Your feedback helps us make {{brand}} better for everyone. We read every message.",
+    "sendMore": "Send More Feedback",
+    "done": "Done",
+    "faqTitle": "FREQUENTLY ASKED QUESTIONS",
+    "types": {
+      "bug": "Bug Report",
+      "feature": "Feature Idea",
+      "general": "General Feedback",
+      "appreciation": "Appreciation"
+    },
+    "faq": [
+      ["Is my data private?", "Yes. All data is stored locally on your device by default. See our Privacy Policy for details."],
+      ["How do I cancel my subscription?", "You can manage subscriptions through your device settings (App Store or Google Play)."],
+      ["Can I delete my data?", "Yes. Go to Profile > Delete My Data to remove specific categories or all data."],
+      ["Is the AI a real therapist?", "No. The AI companion is a self-help tool, not a substitute for professional mental health care."]
+    ]
+  },
+  "disclaimer": {
+    "title": "Mental Health Disclaimer",
+    "heroTitle": "Important Information",
+    "heroDescription": "Please read this carefully before using {{brand}}",
+    "primaryWarning": "{{brand}} is a self-help companion app. It is not a replacement for professional mental health care, therapy, diagnosis, or medication.",
+    "whatItIs": "What this app is",
+    "whatItIsNot": "What this app is not",
+    "aiTitle": "AI-generated content",
+    "aiIntro": "The AI companion, message analysis, and insight features use artificial intelligence to generate responses. These responses are:",
+    "aiFooter": "Always consult with qualified mental health professionals for clinical decisions.",
+    "crisisTitle": "Crisis resources",
+    "crisisDescription": "If you or someone you know is in immediate danger or experiencing a mental health crisis, please contact one of these resources:",
+    "immediateDanger": "If you are in immediate danger, call your local emergency number now.",
+    "footer": "We care deeply about your wellbeing. If you're struggling, please reach out to a mental health professional. You deserve real, qualified support.",
+    "isItems": [
+      "A tool for emotional awareness and self-reflection",
+      "A companion for practicing communication skills",
+      "A journaling and mood-tracking space",
+      "A supplement to professional treatment",
+      "A space to practice DBT-inspired coping skills"
+    ],
+    "notItems": [
+      "Not a therapist or mental health professional",
+      "Not a diagnostic tool",
+      "Not a substitute for medication management",
+      "Not an emergency or crisis service",
+      "Not qualified to provide clinical advice"
+    ],
+    "aiItems": [
+      "Not clinical advice",
+      "Not always accurate or appropriate for your situation",
+      "Generated based on patterns, not professional assessment",
+      "Meant to support reflection, not replace expert guidance"
+    ]
+  }
+}

@@ -23,6 +23,7 @@ import { CopingRecommendation } from '@/types/recommendation';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
 import { useNotificationEntry } from '@/providers/NotificationEntryProvider';
 import NotificationEntryBanner from '@/components/NotificationEntryBanner';
+import { useTranslation } from 'react-i18next';
 
 const STEPS = ['triggers', 'relationships', 'emotions', 'body', 'urges', 'intensity', 'notes', 'suggestions'] as const;
 
@@ -60,6 +61,7 @@ export default function CheckInScreen() {
   const { addJournalEntry, setDistressLevel } = useApp();
   const { trackEvent, trackFlowStart, trackFlowComplete } = useAnalytics();
   const { isFromNotification, markFlowCompleted } = useNotificationEntry();
+  const { t } = useTranslation('today');
 
   useEffect(() => {
     trackFlowStart('check_in');
@@ -84,6 +86,8 @@ export default function CheckInScreen() {
   const progressAnim = useRef(new Animated.Value(0)).current;
 
   const step = STEPS[stepIndex];
+  const stepTitle = t(`steps.${step}Title`, { defaultValue: STEP_TITLES[step] });
+  const stepSubtitle = t(`steps.${step}Subtitle`, { defaultValue: STEP_SUBTITLES[step] });
 
   useEffect(() => {
     Animated.timing(progressAnim, {
@@ -270,7 +274,8 @@ export default function CheckInScreen() {
     items: T[],
     selected: T[],
     setSelected: React.Dispatch<React.SetStateAction<T[]>>,
-    extraInfo?: (item: T) => string | undefined
+    extraInfo?: (item: T) => string | undefined,
+    labelForItem?: (item: T) => string,
   ) => (
     <View style={styles.chipGrid}>
       {items.map(item => {
@@ -286,7 +291,7 @@ export default function CheckInScreen() {
               <Text style={styles.chipEmoji}>{extraInfo(item)}</Text>
             )}
             <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
-              {item.label}
+              {labelForItem?.(item) ?? item.label}
             </Text>
           </TouchableOpacity>
         );
@@ -318,13 +323,13 @@ export default function CheckInScreen() {
             testID={`checkin-relationship-${option.value}`}
           >
             <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
-              {option.label}
+              {t(`options.relationships.${option.value}`, { defaultValue: option.label })}
             </Text>
           </TouchableOpacity>
         );
       })}
     </View>
-  ), [selectedRelationshipTags, toggleRelationshipTag]);
+  ), [selectedRelationshipTags, t, toggleRelationshipTag]);
 
   const customInputForStep = () => {
     const shared = {
@@ -332,16 +337,16 @@ export default function CheckInScreen() {
       style: styles.customInput,
     };
     if (step === 'triggers' && selectedTriggers.some(t => t.label === 'Something else')) {
-      return <TextInput {...shared} placeholder="Write what triggered this" value={customTrigger} onChangeText={setCustomTrigger} />;
+      return <TextInput {...shared} placeholder={t('custom.trigger')} value={customTrigger} onChangeText={setCustomTrigger} />;
     }
     if (step === 'emotions' && selectedEmotions.some(e => e.label === 'Something else')) {
-      return <TextInput {...shared} placeholder="Write what you feel" value={customEmotion} onChangeText={setCustomEmotion} />;
+      return <TextInput {...shared} placeholder={t('custom.emotion')} value={customEmotion} onChangeText={setCustomEmotion} />;
     }
     if (step === 'body' && selectedSensations.some(s => s.label === 'Somewhere else')) {
-      return <TextInput {...shared} placeholder="Write where you feel it" value={customSensation} onChangeText={setCustomSensation} />;
+      return <TextInput {...shared} placeholder={t('custom.sensation')} value={customSensation} onChangeText={setCustomSensation} />;
     }
     if (step === 'urges' && selectedUrges.some(u => u.label === 'Something else')) {
-      return <TextInput {...shared} placeholder="Write the urge" value={customUrge} onChangeText={setCustomUrge} />;
+      return <TextInput {...shared} placeholder={t('custom.urge')} value={customUrge} onChangeText={setCustomUrge} />;
     }
     return null;
   };
@@ -350,7 +355,7 @@ export default function CheckInScreen() {
     <View style={styles.intensityContainer}>
       <Text style={styles.intensityValue}>{intensity}</Text>
       <Text style={styles.intensityLabel}>
-        {intensity <= 3 ? 'Manageable' : intensity <= 6 ? 'Difficult' : intensity <= 8 ? 'Very intense' : 'Overwhelming'}
+        {intensity <= 3 ? t('intensityLabels.manageable') : intensity <= 6 ? t('intensityLabels.difficult') : intensity <= 8 ? t('intensityLabels.veryIntense') : t('intensityLabels.overwhelming')}
       </Text>
       <View style={styles.intensityDots}>
         {Array.from({ length: 10 }, (_, i) => (
@@ -380,22 +385,22 @@ export default function CheckInScreen() {
   const renderStepContent = () => {
     switch (step) {
       case 'triggers':
-        return renderChips(TRIGGERS, selectedTriggers, setSelectedTriggers);
+        return renderChips(TRIGGERS, selectedTriggers, setSelectedTriggers, undefined, item => t(`options.triggers.${item.id}`, { defaultValue: item.label }));
       case 'relationships':
         return renderRelationshipTags();
       case 'emotions':
-        return renderChips(EMOTIONS, selectedEmotions, setSelectedEmotions, (e: Emotion) => e.emoji);
+        return renderChips(EMOTIONS, selectedEmotions, setSelectedEmotions, (e: Emotion) => e.emoji, item => t(`options.emotions.${item.id}`, { defaultValue: item.label }));
       case 'body':
-        return renderChips(BODY_SENSATIONS, selectedSensations, setSelectedSensations);
+        return renderChips(BODY_SENSATIONS, selectedSensations, setSelectedSensations, undefined, item => t(`options.body.${item.id}`, { defaultValue: item.label }));
       case 'urges':
-        return renderChips(URGES, selectedUrges, setSelectedUrges);
+        return renderChips(URGES, selectedUrges, setSelectedUrges, undefined, item => t(`options.urges.${item.id}`, { defaultValue: item.label }));
       case 'intensity':
         return renderIntensitySlider();
       case 'notes':
         return (
           <TextInput
             style={styles.notesInput}
-            placeholder="Whatever you need to say..."
+            placeholder={t('custom.notes')}
             placeholderTextColor={Colors.textMuted}
             multiline
             value={notes}
@@ -452,9 +457,9 @@ export default function CheckInScreen() {
                 <Sparkles size={18} color={Colors.primary} />
               </View>
               <View style={styles.suggestionContent}>
-                <Text style={styles.companionSuggestionTitle}>Talk this through</Text>
+                <Text style={styles.companionSuggestionTitle}>{t('actions.talkThrough')}</Text>
                 <Text style={styles.companionSuggestionMsg}>
-                  {intensity >= 7 ? 'Get calmer support with AI Companion' : 'Process what you\'re feeling with AI Companion'}
+                  {intensity >= 7 ? t('actions.companionHigh') : t('actions.companionProcess')}
                 </Text>
               </View>
               <ChevronRight size={16} color={Colors.primary} />
@@ -512,8 +517,8 @@ export default function CheckInScreen() {
             transform: [{ translateX: slideAnim }],
           }}
         >
-          <Text style={styles.stepTitle}>{STEP_TITLES[step]}</Text>
-          <Text style={styles.stepSubtitle}>{STEP_SUBTITLES[step]}</Text>
+          <Text style={styles.stepTitle}>{stepTitle}</Text>
+          <Text style={styles.stepSubtitle}>{stepSubtitle}</Text>
           {renderStepContent()}
           {customInputForStep()}
         </Animated.View>
@@ -524,7 +529,7 @@ export default function CheckInScreen() {
           {stepIndex > 0 ? (
             <TouchableOpacity style={styles.backButton} onPress={goBack}>
               <ChevronLeft size={20} color={Colors.textSecondary} />
-              <Text style={styles.backButtonText}>Back</Text>
+              <Text style={styles.backButtonText}>{t('actions.back')}</Text>
             </TouchableOpacity>
           ) : (
             <View style={styles.backButton} />
@@ -538,16 +543,16 @@ export default function CheckInScreen() {
             {isLastStep ? (
               <>
                 <Check size={20} color={Colors.white} />
-                <Text style={styles.nextButtonText}>Done</Text>
+                <Text style={styles.nextButtonText}>{t('actions.done')}</Text>
               </>
             ) : isNotesStep ? (
               <>
                 <Check size={20} color={Colors.white} />
-                <Text style={styles.nextButtonText}>Save</Text>
+                <Text style={styles.nextButtonText}>{t('actions.save')}</Text>
               </>
             ) : (
               <>
-                <Text style={styles.nextButtonText}>Next</Text>
+                <Text style={styles.nextButtonText}>{t('actions.next')}</Text>
                 <ChevronRight size={20} color={Colors.white} />
               </>
             )}
@@ -555,7 +560,7 @@ export default function CheckInScreen() {
         </View>
 
         <Text style={styles.skipHint}>
-          {isLastStep ? 'Tap a tool to try it, or Done to close' : isNotesStep ? 'This will be saved to your journal' : 'You can skip — select what feels right'}
+          {isLastStep ? t('actions.lastHint') : isNotesStep ? t('actions.notesHint') : t('actions.skipHint')}
         </Text>
       </View>
     </View>

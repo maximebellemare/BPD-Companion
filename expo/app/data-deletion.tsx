@@ -14,6 +14,7 @@ import { Stack, useRouter } from 'expo-router';
 import { X, Trash2, AlertTriangle, Database, MessageSquare, BookOpen, Brain, Shield, Check } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTranslation } from 'react-i18next';
 import Colors from '@/constants/colors';
 
 type DeletionCategory = {
@@ -69,6 +70,7 @@ const DELETION_CATEGORIES: DeletionCategory[] = [
 ];
 
 export default function DataDeletionScreen() {
+  const { t } = useTranslation(['profile', 'common']);
   const router = useRouter();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
@@ -113,10 +115,13 @@ export default function DataDeletionScreen() {
     if (selectedCategories.size === 0) return;
 
     const isFullDeletion = selectedCategories.size === DELETION_CATEGORIES.length;
-    const title = isFullDeletion ? 'Delete All Data?' : 'Delete Selected Data?';
+    const title = isFullDeletion ? t('profile:dataDeletion.confirmAllTitle') : t('profile:dataDeletion.confirmSomeTitle');
     const message = isFullDeletion
-      ? 'This will permanently delete ALL your data from this device. This action cannot be undone.'
-      : `This will permanently delete ${selectedCategories.size} data categor${selectedCategories.size === 1 ? 'y' : 'ies'}. This action cannot be undone.`;
+      ? t('profile:dataDeletion.confirmAllMessage')
+      : t(
+        selectedCategories.size === 1 ? 'profile:dataDeletion.confirmSomeMessage' : 'profile:dataDeletion.confirmSomeMessage_plural',
+        { count: selectedCategories.size },
+      );
 
     const doDelete = async () => {
       setIsDeleting(true);
@@ -147,17 +152,17 @@ export default function DataDeletionScreen() {
         console.log(`[DataDeletion] Deleted ${matchingKeys.length} keys from ${categoriesToDelete.length} categories`);
       } catch (error) {
         console.error('[DataDeletion] Error deleting data:', error);
-        Alert.alert('Error', 'Something went wrong while deleting your data. Please try again.');
+        Alert.alert(t('profile:dataDeletion.errorTitle'), t('profile:dataDeletion.errorMessage'));
       } finally {
         setIsDeleting(false);
       }
     };
 
     Alert.alert(title, message, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete Permanently', style: 'destructive', onPress: doDelete },
+      { text: t('common:cancel'), style: 'cancel' },
+      { text: t('profile:dataDeletion.deletePermanently'), style: 'destructive', onPress: doDelete },
     ]);
-  }, [selectedCategories]);
+  }, [selectedCategories, t]);
 
   const allSelected = selectedCategories.size === DELETION_CATEGORIES.length;
 
@@ -174,7 +179,7 @@ export default function DataDeletionScreen() {
         >
           <X size={20} color={Colors.textSecondary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Delete My Data</Text>
+        <Text style={styles.headerTitle}>{t('profile:dataDeletion.title')}</Text>
         <View style={styles.closeBtn} />
       </View>
 
@@ -186,28 +191,30 @@ export default function DataDeletionScreen() {
         <Animated.View style={[styles.warningBanner, { opacity: fadeAnim }]}>
           <AlertTriangle size={20} color={Colors.accent} />
           <View style={styles.warningBannerContent}>
-            <Text style={styles.warningTitle}>Data Deletion is Permanent</Text>
+            <Text style={styles.warningTitle}>{t('profile:dataDeletion.warningTitle')}</Text>
             <Text style={styles.warningDesc}>
-              Selected data will be permanently removed from this device. This cannot be undone.
+              {t('profile:dataDeletion.warningDescription')}
             </Text>
           </View>
         </Animated.View>
 
         <Animated.View style={{ opacity: fadeAnim }}>
           <View style={styles.selectAllRow}>
-            <Text style={styles.selectAllLabel}>Select data to delete</Text>
+            <Text style={styles.selectAllLabel}>{t('profile:dataDeletion.selectData')}</Text>
             <TouchableOpacity
               onPress={selectAll}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               testID="select-all-btn"
             >
-              <Text style={styles.selectAllBtn}>{allSelected ? 'Deselect All' : 'Select All'}</Text>
+              <Text style={styles.selectAllBtn}>{allSelected ? t('profile:dataDeletion.deselectAll') : t('profile:dataDeletion.selectAll')}</Text>
             </TouchableOpacity>
           </View>
 
           {DELETION_CATEGORIES.map((category) => {
             const isSelected = selectedCategories.has(category.id);
             const isDeleted = deletedCategories.has(category.id);
+            const categoryTitle = t(`profile:dataDeletion.categories.${category.id}.0`);
+            const categoryDescription = t(`profile:dataDeletion.categories.${category.id}.1`);
             return (
               <TouchableOpacity
                 key={category.id}
@@ -225,9 +232,9 @@ export default function DataDeletionScreen() {
                 </View>
                 <View style={styles.categoryInfo}>
                   <Text style={[styles.categoryTitle, isDeleted && styles.categoryTitleDeleted]}>
-                    {isDeleted ? `${category.title} — Deleted` : category.title}
+                    {isDeleted ? `${categoryTitle} - ${t('profile:dataDeletion.deleted')}` : categoryTitle}
                   </Text>
-                  <Text style={styles.categoryDesc}>{category.description}</Text>
+                  <Text style={styles.categoryDesc}>{categoryDescription}</Text>
                 </View>
                 {!isDeleted && (
                   <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
@@ -240,16 +247,16 @@ export default function DataDeletionScreen() {
         </Animated.View>
 
         <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>Need help?</Text>
+          <Text style={styles.infoTitle}>{t('profile:dataDeletion.needHelp')}</Text>
           <Text style={styles.infoText}>
-            If you want to delete your account entirely, including any server-side data, please contact us at:
+            {t('profile:dataDeletion.helpText')}
           </Text>
           <View style={styles.emailCard}>
-            <Text style={styles.emailLabel}>Email</Text>
+            <Text style={styles.emailLabel}>{t('profile:dataDeletion.email')}</Text>
             <Text style={styles.emailValue}>privacy@bpdcompanion.app</Text>
           </View>
           <Text style={styles.infoTextSmall}>
-            Account deletion requests are processed within 30 days. You will receive a confirmation email when complete.
+            {t('profile:dataDeletion.processing')}
           </Text>
         </View>
 
@@ -271,7 +278,10 @@ export default function DataDeletionScreen() {
               <>
                 <Trash2 size={18} color={Colors.white} />
                 <Text style={styles.deleteBtnText}>
-                  Delete {selectedCategories.size} Categor{selectedCategories.size === 1 ? 'y' : 'ies'}
+                  {t(
+                    selectedCategories.size === 1 ? 'profile:dataDeletion.deleteButton' : 'profile:dataDeletion.deleteButton_plural',
+                    { count: selectedCategories.size },
+                  )}
                 </Text>
               </>
             )}

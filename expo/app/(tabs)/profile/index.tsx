@@ -19,6 +19,7 @@ import {
   ChevronRight,
   Crown,
   FileText,
+  Globe2,
   HelpCircle,
   Lock,
   LogOut,
@@ -48,7 +49,6 @@ import {
   getAndroidActivePeriodFromProductIdentifier,
   getIosActivePeriodFromProductIdentifier,
   getMembershipManagementRoute,
-  getMembershipStatusCopy,
 } from '@/services/subscription/membershipPrimaryActionModel';
 import {
   CommunityProfile,
@@ -57,6 +57,8 @@ import {
   validateUsername,
   normalizeUsername,
 } from '@/services/community/communityProfileService';
+import { useLanguage } from '@/hooks/useLanguage';
+import { useTranslation } from 'react-i18next';
 
 const OWNER_QA_EMAIL = 'valmontmarketing@gmail.com';
 const AVATAR_COLORS = ['#2E2A72', '#3B82F6', '#14B8A6', '#67E8F9', '#059669'];
@@ -71,30 +73,36 @@ type SettingsRowProps = {
   destructive?: boolean;
 };
 
+function translateCommunityProfileError(message: string, translate: (key: string) => string): string {
+  if (/at least 3 characters/i.test(message)) return translate('profile:community.errors.tooShort');
+  if (/20 characters or fewer/i.test(message)) return translate('profile:community.errors.tooLong');
+  if (/letters, numbers, and underscores/i.test(message)) return translate('profile:community.errors.invalidCharacters');
+  if (/already taken/i.test(message)) return translate('profile:community.errors.taken');
+  return message;
+}
+
 function getDaysUntil(timestamp: number | null | undefined): number {
   if (!timestamp) return 0;
   return Math.max(0, Math.ceil((timestamp - Date.now()) / (24 * 60 * 60 * 1000)));
 }
 
-function formatMembershipDate(timestamp: number | null | undefined): string | null {
+function formatMembershipDate(timestamp: number | null | undefined, language?: string): string | null {
   if (!timestamp) return null;
   const date = new Date(timestamp);
   if (Number.isNaN(date.getTime())) return null;
-  return date.toLocaleDateString(undefined, {
+  return date.toLocaleDateString(language === 'es' ? 'es' : undefined, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
   });
 }
 
-function titleCase(value: string): string {
-  return value.charAt(0).toUpperCase() + value.slice(1);
-}
-
 export default function ProfileScreen() {
   const router = useRouter();
   const { profile, updateNotifications, updatePrivacy } = useProfile();
   const { theme, colors: palette, setTheme } = useAppTheme();
+  const { language, setLanguage } = useLanguage();
+  const { t } = useTranslation(['common', 'navigation', 'profile', 'subscription']);
   const { openManualReviewPrompt } = useReviewPrompt();
   const {
     isPremium,
@@ -142,7 +150,7 @@ export default function ProfileScreen() {
     }
   }, []);
 
-  const profileEmail = user?.email || 'Not signed in';
+  const profileEmail = user?.email || t('profile:notSignedIn');
   const isOwnerQa = __DEV__ && user?.email?.toLowerCase() === OWNER_QA_EMAIL;
   const isExpoGo = Constants.appOwnership === 'expo';
   const activePeriodForStatus = Platform.OS === 'android'
@@ -177,7 +185,7 @@ export default function ProfileScreen() {
     const normalized = normalizeUsername(communityUsername);
     const validation = validateUsername(normalized);
     if (validation) {
-      setCommunityProfileError(validation);
+      setCommunityProfileError(translateCommunityProfileError(validation, t));
       return;
     }
     setIsSavingCommunityProfile(true);
@@ -212,66 +220,97 @@ export default function ProfileScreen() {
         }
       }
       setCommunityProfileSaved(true);
-      setNotice('Saved');
+      setNotice(t('profile:community.saved'));
     } catch (error) {
-      setCommunityProfileError(error instanceof Error ? error.message : 'Could not save community profile.');
+      setCommunityProfileError(error instanceof Error ? translateCommunityProfileError(error.message, t) : t('profile:community.saveError'));
     } finally {
       setIsSavingCommunityProfile(false);
     }
-  }, [communityAvatarColor, communityDisplayName, communityUsername, user]);
+  }, [communityAvatarColor, communityDisplayName, communityUsername, t, user]);
   const trialDaysRemaining = getDaysUntil(subscriptionState.trialEndsAt);
-  const profileMembershipCopy = useMemo(() => getMembershipStatusCopy({
-    hasStoreAccess: isEntitlementActive,
-    isEntitlementActive,
-    isTrialActive: subscriptionState.isTrialActive,
-    currentPeriod: activePeriodForStatus,
-    activeExpirationDateLabel: formatMembershipDate(subscriptionState.expiresAt),
-    activeWillRenew,
-    billingIssueDateLabel: formatMembershipDate(activeBillingIssueDetectedAt),
-    inactiveExpirationDateLabel: formatMembershipDate(inactiveExpirationAt),
-    trialDaysRemaining,
-    shouldShowTrialCopy: false,
-  }), [
+  const planLabel = activePeriodForStatus ? t(`subscription:plans.${activePeriodForStatus}`) : t('profile:membership.membershipTitle');
+  const activeExpirationDateLabel = formatMembershipDate(subscriptionState.expiresAt, language);
+  const billingIssueDateLabel = formatMembershipDate(activeBillingIssueDetectedAt, language);
+  const inactiveExpirationDateLabel = formatMembershipDate(inactiveExpirationAt, language);
+
+  const statusLabel = useMemo(() => {
+    if (isExpoGo && !isEntitlementActive) return t('profile:membership.membershipTitle');
+    if (activeBillingIssueDetectedAt && isEntitlementActive) return t('subscription:status.billingIssue');
+    if (isEntitlementActive && subscriptionState.isTrialActive) return t('subscription:status.trialActiveTitle', { plan: planLabel });
+    if (isEntitlementActive && activeWillRenew === false) return t('subscription:status.membershipCancelledTitle', { plan: planLabel });
+    if (isEntitlementActive) return t('subscription:status.membershipActiveTitle', { plan: planLabel });
+    if (inactiveExpirationAt) return t('subscription:status.membershipExpired');
+    return t('profile:membership.startTitle');
+  }, [
     activeBillingIssueDetectedAt,
-    activePeriodForStatus,
     activeWillRenew,
     inactiveExpirationAt,
     isEntitlementActive,
-    subscriptionState.expiresAt,
+    isExpoGo,
+    planLabel,
     subscriptionState.isTrialActive,
-    trialDaysRemaining,
+    t,
   ]);
-
-  const statusLabel = useMemo(() => {
-    if (isExpoGo && !isEntitlementActive) return 'Membership';
-    if (isEntitlementActive) return profileMembershipCopy.title;
-    if (inactiveExpirationAt) return profileMembershipCopy.title;
-    return 'Subscription required';
-  }, [inactiveExpirationAt, isEntitlementActive, isExpoGo, profileMembershipCopy.title]);
 
   const statusDescription = useMemo(() => {
     if (isExpoGo && !isEntitlementActive) {
-      return 'View membership plans, restore purchases, or manage access.';
+      return t('profile:membership.expoLocalDescription');
     }
-    if (isEntitlementActive) return profileMembershipCopy.body;
-    if (inactiveExpirationAt) return profileMembershipCopy.body;
-    return 'Start your membership to use BPD Companion after onboarding.';
-  }, [inactiveExpirationAt, isEntitlementActive, isExpoGo, profileMembershipCopy.body]);
+    if (activeBillingIssueDetectedAt && isEntitlementActive) {
+      return t('subscription:status.billing', {
+        plan: planLabel,
+        dateText: billingIssueDateLabel ? ` ${language === 'es' ? 'el' : 'on'} ${billingIssueDateLabel}` : '',
+      });
+    }
+    if (isEntitlementActive && subscriptionState.isTrialActive) {
+      if (trialDaysRemaining === 1) return t('subscription:status.trialOneDay', { plan: planLabel });
+      if (trialDaysRemaining > 1) return t('subscription:status.trialDays', { plan: planLabel, count: trialDaysRemaining });
+      return t('subscription:status.trial', { plan: planLabel, date: activeExpirationDateLabel ?? t('subscription:status.renewalDate') });
+    }
+    if (isEntitlementActive && activeWillRenew === false) {
+      return activeExpirationDateLabel
+        ? t('subscription:status.cancelled', { plan: planLabel, date: activeExpirationDateLabel })
+        : t('subscription:status.cancelledNoDate', { plan: planLabel });
+    }
+    if (isEntitlementActive) {
+      return activeExpirationDateLabel
+        ? t('subscription:status.renews', { plan: planLabel, date: activeExpirationDateLabel })
+        : t('subscription:status.activeNoDate', { plan: planLabel });
+    }
+    if (inactiveExpirationAt) {
+      return t('subscription:status.expired', { date: inactiveExpirationDateLabel ?? t('subscription:status.renewalDate') });
+    }
+    return t('subscription:status.startMembershipBody');
+  }, [
+    activeBillingIssueDetectedAt,
+    activeExpirationDateLabel,
+    activeWillRenew,
+    billingIssueDateLabel,
+    inactiveExpirationAt,
+    inactiveExpirationDateLabel,
+    isEntitlementActive,
+    isExpoGo,
+    language,
+    planLabel,
+    subscriptionState.isTrialActive,
+    t,
+    trialDaysRemaining,
+  ]);
 
   const handleResetPassword = useCallback(() => {
     if (!user?.email) {
-      Alert.alert('Email required', 'Sign in with an email address to reset your password.');
+      Alert.alert(t('profile:account.emailRequiredTitle'), t('profile:account.emailRequiredMessage'));
       return;
     }
     const sendReset = async () => {
       setNotice(null);
       try {
         await resetPassword(user.email);
-        setNotice(`Password reset email sent to ${user.email}.`);
+        setNotice(t('profile:account.resetSent', { email: user.email }));
       } catch (error) {
         Alert.alert(
-          'Reset failed',
-          error instanceof Error ? error.message : 'We could not send a password reset email.',
+          t('profile:account.resetFailedTitle'),
+          error instanceof Error ? error.message : t('profile:account.resetFailedMessage'),
         );
       }
     };
@@ -279,22 +318,22 @@ export default function ProfileScreen() {
       void sendReset();
       return;
     }
-    Alert.alert('Send password reset?', `We will email reset instructions to ${user.email}.`, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Send', onPress: () => void sendReset() },
+    Alert.alert(t('profile:account.sendResetTitle'), t('profile:account.sendResetMessage', { email: user.email }), [
+      { text: t('common:cancel'), style: 'cancel' },
+      { text: t('profile:account.send'), onPress: () => void sendReset() },
     ]);
-  }, [resetPassword, user?.email]);
+  }, [resetPassword, t, user?.email]);
 
   const handleRestore = useCallback(() => {
     setNotice(null);
     restore()
       .then((active) => {
-        setNotice(active ? 'Subscription restored. Membership is active.' : 'No active membership was found.');
+        setNotice(active ? t('profile:membership.restoreActive') : t('profile:membership.restoreInactive'));
       })
       .catch(() => {
-        Alert.alert('Restore purchase', 'Membership options are loading. Please try again in a moment.');
+        Alert.alert(t('profile:membership.restoreLoadingTitle'), t('profile:membership.restoreLoadingMessage'));
       });
-  }, [restore]);
+  }, [restore, t]);
 
   const handleManageSubscription = useCallback(() => {
     setNotice(null);
@@ -341,34 +380,34 @@ export default function ProfileScreen() {
   const handleReplayTutorial = useCallback(() => {
     resetTodayTutorial()
       .then(() => {
-        setNotice('App tutorial ready to replay.');
+        setNotice(t('profile:appearance.tutorialReady'));
         router.push({
           pathname: '/(tabs)/(home)',
           params: { tutorial: '1' },
         } as never);
       })
-      .catch((error) => Alert.alert('Could not replay tutorial', error instanceof Error ? error.message : 'Please try again.'));
-  }, [router]);
+      .catch((error) => Alert.alert(t('profile:appearance.tutorialFailedTitle'), error instanceof Error ? error.message : t('profile:accountControl.tryAgain')));
+  }, [router, t]);
 
   const handleSignOut = useCallback(() => {
     const doSignOut = async () => {
       try {
         await signOut();
       } catch (error) {
-        Alert.alert('Logout failed', error instanceof Error ? error.message : 'Please try again.');
+        Alert.alert(t('profile:accountControl.logoutFailedTitle'), error instanceof Error ? error.message : t('profile:accountControl.tryAgain'));
       }
     };
     if (Platform.OS === 'web') {
-      if (typeof window !== 'undefined' && window.confirm('Log out of BPD Companion?')) {
+      if (typeof window !== 'undefined' && window.confirm(t('profile:accountControl.logoutConfirmWeb'))) {
         void doSignOut();
       }
       return;
     }
-    Alert.alert('Log out?', 'You can sign back in anytime.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Log out', style: 'destructive', onPress: () => void doSignOut() },
+    Alert.alert(t('profile:accountControl.logoutTitle'), t('profile:accountControl.logoutMessage'), [
+      { text: t('common:cancel'), style: 'cancel' },
+      { text: t('profile:accountControl.logout'), style: 'destructive', onPress: () => void doSignOut() },
     ]);
-  }, [signOut]);
+  }, [signOut, t]);
 
   const renderSettingsRow = useCallback(({
     icon,
@@ -430,8 +469,8 @@ export default function ProfileScreen() {
             <BrandLogo size={42} />
           </View>
           <View style={styles.headerCopy}>
-            <Text style={styles.eyebrow}>Account</Text>
-            <Text style={[styles.headerTitle, { color: palette.text }]}>Profile & settings</Text>
+            <Text style={styles.eyebrow}>{t('profile:header.eyebrow')}</Text>
+            <Text style={[styles.headerTitle, { color: palette.text }]}>{t('profile:header.title')}</Text>
           </View>
         </Animated.View>
 
@@ -441,7 +480,7 @@ export default function ProfileScreen() {
               <User size={22} color={palette.primary} />
             </View>
             <View style={styles.accountText}>
-              <Text style={[styles.accountLabel, { color: palette.textMuted }]}>Signed in as</Text>
+              <Text style={[styles.accountLabel, { color: palette.textMuted }]}>{t('profile:header.signedInAs')}</Text>
               <Text style={[styles.accountEmail, { color: palette.text }]} numberOfLines={1}>{profileEmail}</Text>
             </View>
           </View>
@@ -460,30 +499,30 @@ export default function ProfileScreen() {
         {restoreError ? <Text style={styles.errorText}>{restoreError}</Text> : null}
 
         <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-          <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>SUBSCRIPTION</Text>
+          <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>{t('profile:sections.subscription')}</Text>
           <View style={[styles.card, { backgroundColor: palette.card, borderColor: palette.borderLight }]}>
             {renderSettingsRow({
               icon: <Crown size={17} color={Colors.primary} />,
               title: subscriptionState.isTrialActive || isEntitlementActive
-                ? 'Manage Membership'
+                ? t('profile:membership.manageTitle')
                 : isExpoGo
-                  ? 'Membership'
-                  : 'Start your membership',
+                  ? t('profile:membership.membershipTitle')
+                  : t('profile:membership.startTitle'),
               description: subscriptionState.isTrialActive
-                ? 'Your 3-day trial is active. Manage your membership anytime.'
+                ? t('profile:membership.trialDescription')
                 : isEntitlementActive
-                ? 'View plans, renewal details, and membership access.'
+                ? t('profile:membership.activeDescription')
                 : isExpoGo
-                  ? 'View monthly and yearly membership plans.'
-                  : 'View monthly and yearly membership plans.',
+                  ? t('profile:membership.plansDescription')
+                  : t('profile:membership.plansDescription'),
               onPress: handleManageSubscription,
               testID: 'manage-subscription-btn',
             })}
             <View style={[styles.divider, { backgroundColor: palette.borderLight }]} />
             {renderSettingsRow({
               icon: <RefreshCw size={17} color={Colors.brandTeal} />,
-              title: isRestoring ? 'Restoring purchases...' : 'Restore purchases',
-              description: 'Recover an active App Store or Google Play subscription.',
+              title: isRestoring ? t('profile:membership.restoringTitle') : t('profile:membership.restoreTitle'),
+              description: t('profile:membership.restoreDescription'),
               onPress: handleRestore,
               testID: 'restore-purchases-btn',
             })}
@@ -491,18 +530,18 @@ export default function ProfileScreen() {
         </Animated.View>
 
         <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-          <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>ACCOUNT</Text>
+          <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>{t('profile:sections.account')}</Text>
           <View style={[styles.card, { backgroundColor: palette.card, borderColor: palette.borderLight }]}>
             {renderSettingsRow({
               icon: <Mail size={17} color={Colors.accent} />,
-              title: 'Email',
+              title: t('profile:account.email'),
               description: profileEmail,
             })}
             <View style={[styles.divider, { backgroundColor: palette.borderLight }]} />
             {renderSettingsRow({
               icon: <Lock size={17} color={Colors.primary} />,
-              title: 'Change password',
-              description: 'Send a secure password reset email.',
+              title: t('profile:account.changePassword'),
+              description: t('profile:account.changePasswordDescription'),
               onPress: handleResetPassword,
               testID: 'reset-password-btn',
             })}
@@ -510,25 +549,25 @@ export default function ProfileScreen() {
         </Animated.View>
 
         <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-          <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>COMMUNITY PROFILE</Text>
+          <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>{t('profile:sections.communityProfile')}</Text>
           <View style={[styles.card, styles.communityProfileCard, { backgroundColor: palette.card, borderColor: palette.borderLight }]}>
             <View style={styles.communityProfileTop}>
               <View style={[styles.communityAvatarPreview, { backgroundColor: communityAvatarColor }]}>
                 <Text style={styles.communityAvatarText}>
-                  {(communityDisplayName || communityUsername || 'You').slice(0, 2).toUpperCase()}
+                  {(communityDisplayName || communityUsername || t('profile:you')).slice(0, 2).toUpperCase()}
                 </Text>
               </View>
               <View style={styles.communityProfileCopy}>
                 <Text style={[styles.rowTitle, { color: palette.text }]}>
-                  {communityProfile ? `@${communityProfile.username}` : 'Set up community profile'}
+                  {communityProfile ? `@${communityProfile.username}` : t('profile:community.setup')}
                 </Text>
                 <Text style={[styles.rowDescription, { color: palette.textSecondary }]}>
-                  Community shows your username or display name, never your email.
+                  {t('profile:community.description')}
                 </Text>
               </View>
             </View>
 
-            <Text style={[styles.inputLabel, { color: palette.textSecondary }]}>Username</Text>
+            <Text style={[styles.inputLabel, { color: palette.textSecondary }]}>{t('profile:community.username')}</Text>
             <TextInput
               style={[styles.profileInput, { color: palette.text, backgroundColor: palette.surface, borderColor: palette.borderLight }]}
               value={communityUsername}
@@ -537,16 +576,16 @@ export default function ProfileScreen() {
                 setCommunityProfileError(null);
                 setCommunityProfileSaved(false);
               }}
-              placeholder="username"
+              placeholder={t('profile:community.usernamePlaceholder')}
               placeholderTextColor={palette.textMuted}
               autoCapitalize="none"
               autoCorrect={false}
               maxLength={20}
               testID="community-username-input"
             />
-            <Text style={[styles.inputHelp, { color: palette.textMuted }]}>3-20 characters. Letters, numbers, and underscores only.</Text>
+            <Text style={[styles.inputHelp, { color: palette.textMuted }]}>{t('profile:community.usernameHelp')}</Text>
 
-            <Text style={[styles.inputLabel, { color: palette.textSecondary }]}>Display name optional</Text>
+            <Text style={[styles.inputLabel, { color: palette.textSecondary }]}>{t('profile:community.displayName')}</Text>
             <TextInput
               style={[styles.profileInput, { color: palette.text, backgroundColor: palette.surface, borderColor: palette.borderLight }]}
               value={communityDisplayName}
@@ -554,13 +593,13 @@ export default function ProfileScreen() {
                 setCommunityDisplayName(value);
                 setCommunityProfileSaved(false);
               }}
-              placeholder="What people can call you"
+              placeholder={t('profile:community.displayNamePlaceholder')}
               placeholderTextColor={palette.textMuted}
               maxLength={40}
               testID="community-display-name-input"
             />
 
-            <Text style={[styles.inputLabel, { color: palette.textSecondary }]}>Avatar color</Text>
+            <Text style={[styles.inputLabel, { color: palette.textSecondary }]}>{t('profile:community.avatarColor')}</Text>
             <View style={styles.avatarColorRow}>
               {AVATAR_COLORS.map((color) => (
                 <TouchableOpacity
@@ -589,19 +628,22 @@ export default function ProfileScreen() {
               testID="save-community-profile-btn"
             >
               <Text style={styles.saveCommunityButtonText}>
-                {isSavingCommunityProfile ? 'Saving...' : communityProfileSaved ? 'Saved' : communityProfile ? 'Save community profile' : 'Create community profile'}
+                {isSavingCommunityProfile ? t('profile:community.saving') : communityProfileSaved ? t('profile:community.saved') : communityProfile ? t('profile:community.save') : t('profile:community.create')}
               </Text>
             </TouchableOpacity>
           </View>
         </Animated.View>
 
         <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-          <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>NOTIFICATIONS</Text>
+          <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>{t('profile:sections.notifications')}</Text>
           <View style={[styles.card, { backgroundColor: palette.card, borderColor: palette.borderLight }]}>
             {renderSettingsRow({
               icon: <Bell size={17} color={Colors.brandTeal} />,
-              title: 'Notification settings',
-              description: `${titleCase(profile.notifications.frequency ?? 'balanced')} frequency · ${profile.notifications.quietHoursEnabled ? 'Quiet hours on' : 'Quiet hours off'}`,
+              title: t('profile:notifications.settings'),
+              description: t('profile:notifications.summary', {
+                frequency: t(`profile:notifications.frequencies.${profile.notifications.frequency ?? 'balanced'}`),
+                quietHours: profile.notifications.quietHoursEnabled ? t('profile:notifications.quietOn') : t('profile:notifications.quietOff'),
+              }),
               onPress: () => router.push('/profile/notification-preferences' as never),
               testID: 'notification-preferences-btn',
             })}
@@ -611,8 +653,8 @@ export default function ProfileScreen() {
                 <Bell size={17} color={Colors.accent} />
               </View>
               <View style={styles.rowText}>
-                <Text style={[styles.rowTitle, { color: palette.text }]}>Daily check-in reminder</Text>
-                <Text style={[styles.rowDescription, { color: palette.textSecondary }]}>A gentle prompt to keep the habit alive.</Text>
+                <Text style={[styles.rowTitle, { color: palette.text }]}>{t('profile:notifications.dailyReminder')}</Text>
+                <Text style={[styles.rowDescription, { color: palette.textSecondary }]}>{t('profile:notifications.dailyReminderDescription')}</Text>
               </View>
               <Switch
                 value={profile.notifications.dailyCheckInReminder}
@@ -625,21 +667,57 @@ export default function ProfileScreen() {
         </Animated.View>
 
         <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-          <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>APPEARANCE</Text>
+          <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>{t('profile:sections.appearance')}</Text>
           <View style={[styles.card, { backgroundColor: palette.card, borderColor: palette.borderLight }]}>
+            <View style={styles.themeHeader}>
+              <View style={styles.rowIcon}>
+                <Globe2 size={17} color={Colors.brandTeal} />
+              </View>
+              <View style={styles.rowText}>
+                <Text style={[styles.rowTitle, { color: palette.text }]}>{t('profile:appearance.language')}</Text>
+                <Text style={[styles.rowDescription, { color: palette.textSecondary }]}>
+                  {language === 'es' ? t('common:spanish') : t('common:english')}
+                </Text>
+              </View>
+            </View>
+            <View style={[styles.segmentedControl, { backgroundColor: palette.surface }]}>
+              {[
+                { id: 'en', label: t('common:english') },
+                { id: 'es', label: t('common:spanish') },
+              ].map((option) => {
+                const active = language === option.id;
+                return (
+                  <TouchableOpacity
+                    key={option.id}
+                    style={[styles.segmentButton, { backgroundColor: palette.surface, borderColor: palette.border }, active && { backgroundColor: palette.primary, borderColor: palette.primary }]}
+                    onPress={() => {
+                      handleHaptic();
+                      void setLanguage(option.id as 'en' | 'es');
+                    }}
+                    activeOpacity={0.8}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: active }}
+                    testID={`profile-language-${option.id}`}
+                  >
+                    <Text style={[styles.segmentText, { color: palette.textSecondary }, active && { color: palette.white }]}>{option.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <View style={[styles.divider, { backgroundColor: palette.borderLight }]} />
             <View style={styles.themeHeader}>
               <View style={styles.rowIcon}>
                 <Sun size={17} color={Colors.primary} />
               </View>
               <View style={styles.rowText}>
-                <Text style={[styles.rowTitle, { color: palette.text }]}>Theme preference</Text>
-                <Text style={[styles.rowDescription, { color: palette.textSecondary }]}>Choose a bright or dark interface.</Text>
+                <Text style={[styles.rowTitle, { color: palette.text }]}>{t('profile:appearance.theme')}</Text>
+                <Text style={[styles.rowDescription, { color: palette.textSecondary }]}>{t('profile:appearance.themeDescription')}</Text>
               </View>
             </View>
             <View style={[styles.segmentedControl, { backgroundColor: palette.surface }]}>
               {[
-                { id: 'light', label: 'Light', icon: Sun },
-                { id: 'dark', label: 'Dark', icon: Moon },
+                { id: 'light', label: t('profile:appearance.light'), icon: Sun },
+                { id: 'dark', label: t('profile:appearance.dark'), icon: Moon },
               ].map((option) => {
                 const Icon = option.icon;
                 const active = theme === option.id;
@@ -663,8 +741,8 @@ export default function ProfileScreen() {
             <View style={[styles.divider, { backgroundColor: palette.borderLight }]} />
             {renderSettingsRow({
               icon: <Sparkles size={17} color={Colors.brandTeal} />,
-              title: 'Replay app tutorial',
-              description: 'Review Today, Companion, Tools, Insights, Community, and Profile settings.',
+              title: t('profile:appearance.replayTutorial'),
+              description: t('profile:appearance.replayTutorialDescription'),
               onPress: handleReplayTutorial,
               testID: 'replay-onboarding-tutorial-btn',
             })}
@@ -727,15 +805,15 @@ export default function ProfileScreen() {
         ) : null}
 
         <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-          <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>PRIVACY & SAFETY</Text>
+          <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>{t('profile:sections.privacySafety')}</Text>
           <View style={[styles.card, { backgroundColor: palette.card, borderColor: palette.borderLight }]}>
             <View style={styles.settingsRow}>
               <View style={styles.rowIcon}>
                 <Shield size={17} color={Colors.primary} />
               </View>
               <View style={styles.rowText}>
-                <Text style={[styles.rowTitle, { color: palette.text }]}>Share context with AI Companion</Text>
-                <Text style={[styles.rowDescription, { color: palette.textSecondary }]}>Allow the AI to reference your saved patterns.</Text>
+                <Text style={[styles.rowTitle, { color: palette.text }]}>{t('profile:privacy.shareContext')}</Text>
+                <Text style={[styles.rowDescription, { color: palette.textSecondary }]}>{t('profile:privacy.shareContextDescription')}</Text>
               </View>
               <Switch
                 value={profile.privacy.shareInsightsWithCompanion}
@@ -747,16 +825,16 @@ export default function ProfileScreen() {
             <View style={[styles.divider, { backgroundColor: palette.borderLight }]} />
             {renderSettingsRow({
               icon: <AlertTriangle size={17} color={Colors.danger} />,
-              title: 'Medical disclaimer / crisis resources',
-              description: 'Read safety guidance and find urgent support options.',
+              title: t('profile:privacy.medicalDisclaimer'),
+              description: t('profile:privacy.medicalDisclaimerDescription'),
               onPress: () => router.push('/mental-health-disclaimer' as never),
               testID: 'medical-disclaimer-btn',
             })}
             <View style={[styles.divider, { backgroundColor: palette.borderLight }]} />
             {renderSettingsRow({
               icon: <Shield size={17} color={Colors.danger} />,
-              title: 'Crisis support settings',
-              description: 'Emergency contacts and crisis support preferences.',
+              title: t('profile:privacy.crisisSettings'),
+              description: t('profile:privacy.crisisSettingsDescription'),
               onPress: () => router.push('/profile/crisis-settings' as never),
               testID: 'crisis-settings-btn',
             })}
@@ -764,36 +842,36 @@ export default function ProfileScreen() {
         </Animated.View>
 
         <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-          <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>LEGAL & HELP</Text>
+          <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>{t('profile:sections.legalHelp')}</Text>
           <View style={[styles.card, { backgroundColor: palette.card, borderColor: palette.borderLight }]}>
             {renderSettingsRow({
               icon: <Shield size={17} color={Colors.brandTeal} />,
-              title: 'Privacy Policy',
-              description: 'How your information is protected and used.',
+              title: t('profile:legal.privacyPolicy'),
+              description: t('profile:legal.privacyPolicyDescription'),
               onPress: () => router.push('/privacy-policy' as never),
               testID: 'privacy-policy-btn',
             })}
             <View style={[styles.divider, { backgroundColor: palette.borderLight }]} />
             {renderSettingsRow({
               icon: <FileText size={17} color={Colors.primary} />,
-              title: 'Terms of Use',
-              description: 'Subscription, account, and app usage terms.',
+              title: t('profile:legal.terms'),
+              description: t('profile:legal.termsDescription'),
               onPress: () => router.push('/terms-of-service' as never),
               testID: 'terms-of-use-btn',
             })}
             <View style={[styles.divider, { backgroundColor: palette.borderLight }]} />
             {renderSettingsRow({
               icon: <HelpCircle size={17} color={Colors.accent} />,
-              title: 'Contact support',
-              description: 'Get help, report a problem, or send feedback.',
+              title: t('profile:legal.support'),
+              description: t('profile:legal.supportDescription'),
               onPress: () => router.push('/support-feedback' as never),
               testID: 'contact-support-btn',
             })}
             <View style={[styles.divider, { backgroundColor: palette.borderLight }]} />
             {renderSettingsRow({
               icon: <Star size={17} color={Colors.brandTeal} />,
-              title: 'Rate BPD Companion',
-              description: 'Share an honest review if the app has been helpful.',
+              title: t('profile:legal.rate'),
+              description: t('profile:legal.rateDescription'),
               onPress: openManualReviewPrompt,
               testID: 'rate-app-btn',
             })}
@@ -802,12 +880,12 @@ export default function ProfileScreen() {
 
         {isAuthenticated ? (
           <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-            <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>ACCOUNT CONTROL</Text>
+            <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>{t('profile:sections.accountControl')}</Text>
             <View style={[styles.card, { backgroundColor: palette.card, borderColor: palette.borderLight }]}>
               {renderSettingsRow({
                 icon: <Trash2 size={17} color={Colors.danger} />,
-                title: 'Delete account',
-                description: 'Request account and personal data deletion.',
+                title: t('profile:accountControl.delete'),
+                description: t('profile:accountControl.deleteDescription'),
                 onPress: () => router.push('/data-deletion' as never),
                 testID: 'delete-account-btn',
                 destructive: true,
@@ -815,8 +893,8 @@ export default function ProfileScreen() {
               <View style={[styles.divider, { backgroundColor: palette.borderLight }]} />
               {renderSettingsRow({
                 icon: <LogOut size={17} color={Colors.danger} />,
-                title: 'Logout',
-                description: 'Sign out of this device.',
+                title: t('profile:accountControl.logout'),
+                description: t('profile:accountControl.logoutDescription'),
                 onPress: handleSignOut,
                 testID: 'logout-btn',
                 destructive: true,

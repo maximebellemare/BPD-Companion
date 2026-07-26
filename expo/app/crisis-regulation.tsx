@@ -30,6 +30,7 @@ import {
   Shield,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import { useTranslation } from 'react-i18next';
 import Colors from '@/constants/colors';
 import { RegulationStep, BreathingDuration, UrgeSurfingState, HelpNotTextState } from '@/types/crisis';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
@@ -40,10 +41,7 @@ import {
   GROUNDING_STEPS,
   CALM_NEXT_ACTIONS,
   DELAY_OPTIONS,
-  getEntryMessage,
-  getUrgeCompassion,
   getIntensityLabel,
-  getDelayEncouragement,
   createRegulationSession,
 } from '@/services/crisis/crisisRegulationService';
 
@@ -66,6 +64,7 @@ const BREATHE_HOLD = 4000;
 const BREATHE_OUT = 6000;
 
 export default function CrisisRegulationScreen() {
+  const { t } = useTranslation('safety');
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { trackEvent, trackFlowStart } = useAnalytics();
@@ -76,7 +75,7 @@ export default function CrisisRegulationScreen() {
   }, [trackFlowStart, trackEvent]);
 
   const [currentStep, setCurrentStep] = useState<RegulationStep>('entry');
-  const [entryMessage] = useState<string>(() => getEntryMessage());
+  const [entryMessageIndex] = useState<number>(() => Math.floor(Math.random() * 3));
   const [breathDuration, setBreathDuration] = useState<BreathingDuration>(60);
   const [breathTimer, setBreathTimer] = useState<number>(60);
   const [breathPhase, setBreathPhase] = useState<'inhale' | 'hold' | 'exhale'>('inhale');
@@ -84,7 +83,7 @@ export default function CrisisRegulationScreen() {
   const [groundingIndex, setGroundingIndex] = useState<number>(0);
   const [groundingDone, setGroundingDone] = useState<Set<string>>(new Set<string>());
   const [urgeSurfing, setUrgeSurfing] = useState<UrgeSurfingState>({ selectedUrge: null, intensity: 5 });
-  const [compassionMessage] = useState<string>(() => getUrgeCompassion());
+  const [compassionIndex] = useState<number>(() => Math.floor(Math.random() * 5));
   const [helpNotText, setHelpNotText] = useState<HelpNotTextState>({ draftText: '', selectedDelay: null, draftSaved: false });
   const [session] = useState(() => createRegulationSession());
 
@@ -226,10 +225,14 @@ export default function CrisisRegulationScreen() {
   };
 
   const breathLabel = useMemo(() => {
-    if (breathPhase === 'inhale') return 'Breathe in...';
-    if (breathPhase === 'hold') return 'Hold...';
-    return 'Breathe out...';
-  }, [breathPhase]);
+    if (breathPhase === 'inhale') return t('crisisMode.breathLabels.inhale');
+    if (breathPhase === 'hold') return t('crisisMode.breathLabels.hold');
+    return t('crisisMode.breathLabels.exhale');
+  }, [breathPhase, t]);
+  const entryMessages = t('regulation.entryMessages', { returnObjects: true }) as string[];
+  const compassionMessages = t('regulation.compassion', { returnObjects: true }) as string[];
+  const entryMessage = entryMessages[entryMessageIndex % entryMessages.length] ?? '';
+  const compassionMessage = compassionMessages[compassionIndex % compassionMessages.length] ?? '';
 
   const renderEntry = () => (
     <View style={styles.stepContent}>
@@ -246,10 +249,10 @@ export default function CrisisRegulationScreen() {
         testID="start-calming"
       >
         <Wind size={20} color={Colors.white} />
-        <Text style={styles.primaryCtaText}>Start calming now</Text>
+        <Text style={styles.primaryCtaText}>{t('regulation.startCalming')}</Text>
       </TouchableOpacity>
 
-      <Text style={styles.orText}>or choose what you need</Text>
+      <Text style={styles.orText}>{t('regulation.orChoose')}</Text>
 
       <View style={styles.entryChoices}>
         {ENTRY_CHOICES.map(choice => {
@@ -265,7 +268,7 @@ export default function CrisisRegulationScreen() {
               <View style={styles.entryChoiceIcon}>
                 <IconComp size={20} color="#14B8A6" />
               </View>
-              <Text style={styles.entryChoiceLabel}>{choice.label}</Text>
+              <Text style={styles.entryChoiceLabel}>{t(`regulation.entryChoices.${choice.id}`)}</Text>
               <ArrowRight size={14} color={Colors.textMuted} />
             </TouchableOpacity>
           );
@@ -278,8 +281,8 @@ export default function CrisisRegulationScreen() {
     <View style={styles.stepContent}>
       {!breathStarted ? (
         <>
-          <Text style={styles.sectionTitle}>Choose your pace</Text>
-          <Text style={styles.sectionSubtitle}>How long would you like to breathe?</Text>
+          <Text style={styles.sectionTitle}>{t('regulation.choosePace')}</Text>
+          <Text style={styles.sectionSubtitle}>{t('regulation.durationQuestion')}</Text>
 
           <View style={styles.durationRow}>
             {BREATHING_DURATIONS.map(d => (
@@ -302,7 +305,7 @@ export default function CrisisRegulationScreen() {
             activeOpacity={0.8}
             testID="start-breathing"
           >
-            <Text style={styles.startBreathText}>Begin breathing</Text>
+            <Text style={styles.startBreathText}>{t('regulation.beginBreathing')}</Text>
           </TouchableOpacity>
         </>
       ) : (
@@ -317,7 +320,7 @@ export default function CrisisRegulationScreen() {
             </View>
           </View>
 
-          <Text style={styles.breatheHint}>In for 4... Hold for 4... Out for 6...</Text>
+          <Text style={styles.breatheHint}>{t('regulation.breathHint')}</Text>
 
           {breathTimer === 0 && (
             <View style={styles.breatheDoneRow}>
@@ -326,7 +329,7 @@ export default function CrisisRegulationScreen() {
                 onPress={() => goToStep('grounding')}
                 activeOpacity={0.8}
               >
-                <Text style={styles.continueBtnText}>Continue to grounding</Text>
+                <Text style={styles.continueBtnText}>{t('regulation.continueGrounding')}</Text>
                 <ArrowRight size={16} color={Colors.white} />
               </TouchableOpacity>
               <TouchableOpacity
@@ -334,7 +337,7 @@ export default function CrisisRegulationScreen() {
                 onPress={() => goToStep('calm_next')}
                 activeOpacity={0.7}
               >
-                <Text style={styles.secondaryBtnText}>I feel calmer now</Text>
+                <Text style={styles.secondaryBtnText}>{t('regulation.feelCalmer')}</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -349,8 +352,8 @@ export default function CrisisRegulationScreen() {
 
     return (
       <View style={styles.stepContent}>
-        <Text style={styles.sectionTitle}>Ground yourself</Text>
-        <Text style={styles.sectionSubtitle}>Reconnect with the present, one sense at a time</Text>
+        <Text style={styles.sectionTitle}>{t('regulation.groundTitle')}</Text>
+        <Text style={styles.sectionSubtitle}>{t('regulation.groundSubtitle')}</Text>
 
         <View style={styles.groundDots}>
           {GROUNDING_STEPS.map((s, i) => (
@@ -367,9 +370,9 @@ export default function CrisisRegulationScreen() {
 
         <Animated.View style={[styles.groundCard, { transform: [{ scale: groundPulse }] }]}>
           <Text style={[styles.groundCount, { color: step.color }]}>{step.count}</Text>
-          <Text style={styles.groundInstruction}>{step.instruction}</Text>
+          <Text style={styles.groundInstruction}>{t(`regulation.groundingSteps.${step.id}.0`)}</Text>
           <Text style={[styles.groundSense, { color: step.color }]}>
-            {step.sense.toUpperCase()}
+            {t(`regulation.groundingSteps.${step.id}.1`)}
           </Text>
 
           <TouchableOpacity
@@ -391,13 +394,13 @@ export default function CrisisRegulationScreen() {
             {done ? (
               <Check size={18} color={Colors.white} />
             ) : (
-              <Text style={styles.groundDoneBtnText}>Done</Text>
+              <Text style={styles.groundDoneBtnText}>{t('regulation.done')}</Text>
             )}
           </TouchableOpacity>
         </Animated.View>
 
         <Text style={styles.groundProgress}>
-          {groundingDone.size} of {GROUNDING_STEPS.length} completed
+          {t('regulation.progress', { done: groundingDone.size, total: GROUNDING_STEPS.length })}
         </Text>
 
         <View style={styles.groundNav}>
@@ -408,7 +411,7 @@ export default function CrisisRegulationScreen() {
               activeOpacity={0.7}
             >
               <ChevronLeft size={16} color={Colors.textSecondary} />
-              <Text style={styles.groundNavText}>Previous</Text>
+              <Text style={styles.groundNavText}>{t('regulation.previous')}</Text>
             </TouchableOpacity>
           )}
           <View style={{ flex: 1 }} />
@@ -418,7 +421,7 @@ export default function CrisisRegulationScreen() {
               onPress={() => { haptic(); setGroundingIndex(prev => prev + 1); }}
               activeOpacity={0.7}
             >
-              <Text style={styles.groundNavText}>Next</Text>
+              <Text style={styles.groundNavText}>{t('regulation.next')}</Text>
               <ArrowRight size={16} color={Colors.textSecondary} />
             </TouchableOpacity>
           ) : (
@@ -427,7 +430,7 @@ export default function CrisisRegulationScreen() {
               onPress={() => goToStep('calm_next')}
               activeOpacity={0.8}
             >
-              <Text style={styles.continueBtnText}>Next step</Text>
+              <Text style={styles.continueBtnText}>{t('regulation.nextStep')}</Text>
               <ArrowRight size={16} color={Colors.white} />
             </TouchableOpacity>
           )}
@@ -441,8 +444,8 @@ export default function CrisisRegulationScreen() {
 
     return (
       <View style={styles.stepContent}>
-        <Text style={styles.sectionTitle}>Notice the urge</Text>
-        <Text style={styles.sectionSubtitle}>What urge feels strongest right now?</Text>
+        <Text style={styles.sectionTitle}>{t('regulation.urgeTitle')}</Text>
+        <Text style={styles.sectionSubtitle}>{t('regulation.urgeSubtitle')}</Text>
 
         <View style={styles.urgeGrid}>
           {REGULATION_URGES.map(urge => {
@@ -458,7 +461,7 @@ export default function CrisisRegulationScreen() {
                 activeOpacity={0.7}
               >
                 <Text style={styles.urgeEmoji}>{urge.emoji}</Text>
-                <Text style={[styles.urgeLabel, selected && styles.urgeLabelSelected]}>{urge.label}</Text>
+                <Text style={[styles.urgeLabel, selected && styles.urgeLabelSelected]}>{t(`regulation.urges.${urge.id}`)}</Text>
                 {selected && (
                   <View style={styles.urgeCheck}>
                     <Check size={10} color={Colors.white} />
@@ -472,7 +475,7 @@ export default function CrisisRegulationScreen() {
         {selectedUrge && (
           <View style={styles.urgeIntensitySection}>
             <Text style={styles.urgeIntensityLabel}>
-              How intense is this? <Text style={styles.urgeIntensityValue}>{urgeSurfing.intensity}/10 — {getIntensityLabel(urgeSurfing.intensity)}</Text>
+              {t('regulation.intensity')} <Text style={styles.urgeIntensityValue}>{urgeSurfing.intensity}/10 - {t(`regulation.intensityLabels.${getIntensityLabel(urgeSurfing.intensity)}`)}</Text>
             </Text>
 
             <View style={styles.intensityTrack}>
@@ -506,7 +509,7 @@ export default function CrisisRegulationScreen() {
                 activeOpacity={0.7}
               >
                 <Wind size={16} color="#14B8A6" />
-                <Text style={styles.urgeActionText}>Breathe first</Text>
+                <Text style={styles.urgeActionText}>{t('regulation.breatheFirst')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.urgeActionBtn}
@@ -514,7 +517,7 @@ export default function CrisisRegulationScreen() {
                 activeOpacity={0.7}
               >
                 <Eye size={16} color="#14B8A6" />
-                <Text style={styles.urgeActionText}>Ground me</Text>
+                <Text style={styles.urgeActionText}>{t('regulation.groundMe')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.urgeActionBtn}
@@ -522,7 +525,7 @@ export default function CrisisRegulationScreen() {
                 activeOpacity={0.7}
               >
                 <Clock size={16} color="#67E8F9" />
-                <Text style={styles.urgeActionText}>Delay action</Text>
+                <Text style={styles.urgeActionText}>{t('regulation.delayAction')}</Text>
               </TouchableOpacity>
             </View>
 
@@ -531,7 +534,7 @@ export default function CrisisRegulationScreen() {
               onPress={() => goToStep('calm_next')}
               activeOpacity={0.8}
             >
-              <Text style={styles.continueBtnText}>See calmer next steps</Text>
+              <Text style={styles.continueBtnText}>{t('regulation.calmerNext')}</Text>
               <ArrowRight size={16} color={Colors.white} />
             </TouchableOpacity>
           </View>
@@ -545,16 +548,16 @@ export default function CrisisRegulationScreen() {
       <View style={styles.notTextIcon}>
         <MessageCircle size={28} color="#67E8F9" />
       </View>
-      <Text style={styles.sectionTitle}>Help me not text yet</Text>
+      <Text style={styles.sectionTitle}>{t('regulation.helpNotTextTitle')}</Text>
       <Text style={styles.sectionSubtitle}>
-        You can save a draft without sending. Come back when you're calmer.
+        {t('regulation.helpNotTextSubtitle')}
       </Text>
 
       <View style={styles.draftSection}>
-        <Text style={styles.draftLabel}>Write it here instead (optional)</Text>
+        <Text style={styles.draftLabel}>{t('regulation.draftLabel')}</Text>
         <TextInput
           style={styles.draftInput}
-          placeholder="What do you want to say? Get it out here safely..."
+          placeholder={t('regulation.draftPlaceholder')}
           placeholderTextColor={Colors.textMuted}
           multiline
           value={helpNotText.draftText}
@@ -573,19 +576,19 @@ export default function CrisisRegulationScreen() {
             testID="save-draft"
           >
             <Save size={16} color={Colors.white} />
-            <Text style={styles.saveDraftText}>Save draft safely</Text>
+            <Text style={styles.saveDraftText}>{t('regulation.saveDraft')}</Text>
           </TouchableOpacity>
         )}
         {helpNotText.draftSaved && (
           <View style={styles.draftSavedBadge}>
             <Check size={16} color={Colors.success} />
-            <Text style={styles.draftSavedText}>Draft saved. You can return to it later.</Text>
+            <Text style={styles.draftSavedText}>{t('regulation.draftSaved')}</Text>
           </View>
         )}
       </View>
 
-      <Text style={styles.delayTitle}>Set a pause before sending</Text>
-      <Text style={styles.delaySubtitle}>Come back after the timer — the urge often fades</Text>
+      <Text style={styles.delayTitle}>{t('regulation.pauseTitle')}</Text>
+      <Text style={styles.delaySubtitle}>{t('regulation.pauseSubtitle')}</Text>
 
       <View style={styles.delayRow}>
         {DELAY_OPTIONS.map(opt => (
@@ -616,7 +619,7 @@ export default function CrisisRegulationScreen() {
         <View style={styles.delayEncouragement}>
           <Clock size={16} color="#67E8F9" />
           <Text style={styles.delayEncouragementText}>
-            {getDelayEncouragement(helpNotText.selectedDelay)}
+            {t(`regulation.delayEncouragement.${helpNotText.selectedDelay}`)}
           </Text>
         </View>
       )}
@@ -628,14 +631,14 @@ export default function CrisisRegulationScreen() {
           activeOpacity={0.8}
         >
           <Wind size={16} color={Colors.white} />
-          <Text style={styles.continueBtnText}>Breathe while waiting</Text>
+          <Text style={styles.continueBtnText}>{t('regulation.breatheWaiting')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.secondaryBtn}
           onPress={() => goToStep('calm_next')}
           activeOpacity={0.7}
         >
-          <Text style={styles.secondaryBtnText}>See other options</Text>
+          <Text style={styles.secondaryBtnText}>{t('regulation.otherOptions')}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -646,10 +649,10 @@ export default function CrisisRegulationScreen() {
       <View style={styles.calmNextHeader}>
         <Check size={24} color={Colors.success} />
         <Text style={styles.calmNextTitle}>
-          You've slowed down. That takes real strength.
+          {t('regulation.calmNextTitle')}
         </Text>
         <Text style={styles.calmNextSubtitle}>
-          Choose a calmer next step, or close this whenever you're ready.
+          {t('regulation.calmNextSubtitle')}
         </Text>
       </View>
 
@@ -675,8 +678,8 @@ export default function CrisisRegulationScreen() {
                 <IconComp size={20} color={action.color} />
               </View>
               <View style={styles.calmNextInfo}>
-                <Text style={styles.calmNextLabel}>{action.label}</Text>
-                <Text style={styles.calmNextDesc}>{action.desc}</Text>
+                <Text style={styles.calmNextLabel}>{t(`regulation.calmNextActions.${action.id}.0`)}</Text>
+                <Text style={styles.calmNextDesc}>{t(`regulation.calmNextActions.${action.id}.1`)}</Text>
               </View>
               <ArrowRight size={14} color={Colors.textMuted} />
             </TouchableOpacity>
@@ -690,7 +693,7 @@ export default function CrisisRegulationScreen() {
         activeOpacity={0.7}
         testID="feel-better"
       >
-        <Text style={styles.feelBetterText}>I'm feeling better now</Text>
+        <Text style={styles.feelBetterText}>{t('regulation.feelBetter')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -725,7 +728,7 @@ export default function CrisisRegulationScreen() {
             <View style={styles.topBtn} />
           )}
 
-          <Text style={styles.topTitle}>Crisis Regulation</Text>
+          <Text style={styles.topTitle}>{t('regulation.title')}</Text>
 
           <TouchableOpacity
             style={styles.topBtn}
@@ -737,7 +740,7 @@ export default function CrisisRegulationScreen() {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.topSubtitle}>One step at a time. You're safe here.</Text>
+        <Text style={styles.topSubtitle}>{t('regulation.subtitle')}</Text>
 
         <ScrollView
           contentContainerStyle={styles.scrollContent}

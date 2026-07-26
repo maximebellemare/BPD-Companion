@@ -1,0 +1,298 @@
+{
+  "checkInToday": "Registrar hoy",
+  "complete": "Registro de hoy completado",
+  "viewInsights": "Ver ideas de hoy",
+  "intensityQuestion": "¿Qué tan intenso se siente ahora?",
+  "intensityLow": "1 = muy manejable",
+  "intensityHigh": "10 = abrumador",
+  "custom": {
+    "trigger": "Escribe qué desencadenó esto",
+    "emotion": "Escribe lo que sientes",
+    "sensation": "Escribe dónde lo sientes",
+    "urge": "Escribe el impulso",
+    "notes": "Lo que necesites decir..."
+  },
+  "actions": {
+    "back": "Atrás",
+    "done": "Listo",
+    "save": "Guardar",
+    "next": "Siguiente",
+    "lastHint": "Toca una herramienta para probarla, o Listo para cerrar",
+    "notesHint": "Esto se guardará en tu diario",
+    "skipHint": "Puedes saltarlo; elige lo que se sienta correcto",
+    "talkThrough": "Hablarlo",
+    "companionHigh": "Recibe apoyo para calmarte con Companion",
+    "companionProcess": "Procesa lo que estás sintiendo con Companion"
+  },
+  "options": {
+    "emotions": {
+      "e1": "Ansiedad",
+      "e2": "Enojo",
+      "e3": "Tristeza",
+      "e4": "Vacío",
+      "e5": "Vergüenza",
+      "e6": "Soledad",
+      "e7": "Rechazo",
+      "e8": "Abandono",
+      "e9": "Celos",
+      "e10": "Entumecimiento emocional",
+      "e11": "Abrumamiento",
+      "e12": "Calma",
+      "e13": "Algo más"
+    },
+    "triggers": {
+      "t1": "Respuesta demorada",
+      "t2": "Cambio de tono",
+      "t3": "Sentirme ignorado/a",
+      "t4": "Crítica",
+      "t5": "Conflicto",
+      "t6": "Vergüenza",
+      "t7": "Soledad",
+      "t8": "Sueño",
+      "t9": "Trabajo/escuela",
+      "t10": "Familia",
+      "t11": "Dinero",
+      "t12": "Algo más"
+    },
+    "body": {
+      "b1": "Pecho",
+      "b2": "Estómago",
+      "b3": "Garganta",
+      "b4": "Cabeza",
+      "b5": "Mandíbula",
+      "b6": "Hombros",
+      "b7": "Manos",
+      "b8": "Todo el cuerpo / en todas partes",
+      "b9": "No lo sé",
+      "b10": "En otro lugar"
+    },
+    "urges": {
+      "u1": "Escribir otra vez",
+      "u2": "Llamar repetidamente",
+      "u3": "Discutir",
+      "u4": "Alejarme",
+      "u5": "Disculparme demasiado",
+      "u6": "Revisar redes sociales",
+      "u7": "Pedir seguridad",
+      "u8": "Gastar dinero",
+      "u9": "Beber/usar sustancias",
+      "u10": "Terminar la relación",
+      "u11": "Decir algo hiriente",
+      "u12": "No lo sé",
+      "u13": "Algo más"
+    },
+    "relationships": {
+      "partner": "Pareja",
+      "parent": "Madre/padre",
+      "friend": "Amistad",
+      "ex": "Ex",
+      "coworker": "Compañero/a de trabajo",
+      "other": "Otra persona"
+    }
+  },
+  "steps": {
+    "triggersTitle": "¿Qué desencadenó esto?",
+    "triggersSubtitle": "Selecciona todo lo que aplique. Sin juicio.",
+    "relationshipsTitle": "¿A quién involucró?",
+    "relationshipsSubtitle": "Opcional. Esto ayuda a que las ideas de relación sean más específicas.",
+    "emotionsTitle": "¿Qué estás sintiendo?",
+    "emotionsSubtitle": "Nombrarlo ayuda a bajarle intensidad. Elige lo que encaje.",
+    "bodyTitle": "¿Dónde lo sientes?",
+    "bodySubtitle": "Tu cuerpo tiene información. Observa dónde aparece.",
+    "urgesTitle": "¿Qué impulsos aparecen?",
+    "urgesSubtitle": "Está bien tener impulsos. Nombrarlos te da más poder.",
+    "intensityTitle": "¿Qué tan intenso se siente ahora?",
+    "intensitySubtitle": "1 = muy manejable · 10 = abrumador",
+    "notesTitle": "¿Algo más?",
+    "notesSubtitle": "Opcional. Escribe lo que necesites sacar.",
+    "suggestionsTitle": "Aquí para ti",
+    "suggestionsSubtitle": "Según lo que compartiste, esto puede ayudarte ahora."
+  },
+  "intensityLabels": {
+    "manageable": "Manejable",
+    "difficult": "Difícil",
+    "veryIntense": "Muy intenso",
+    "overwhelming": "Abrumador"
+  },
+  "home": {
+    "today": "Hoy",
+    "subtitle": "Una señal honesta basta para empezar.",
+    "quickCheckIn": "Registro rápido",
+    "checkInTitle": "¿Cómo te sientes ahora mismo?",
+    "completedTitle": "Registro de hoy completado ✓",
+    "notesHeader": "Registro rápido de hoy",
+    "whatFeelsClosest": "¿Qué se siente más cercano?",
+    "whatInfluenced": "¿Qué influyó en esto?",
+    "optionalChoose": "Opcional. Elige todo lo que encaje.",
+    "customInfluence": "Escribe qué influyó en esto",
+    "anyoneInvolved": "¿Alguien estuvo involucrado?",
+    "contextHint": "Opcional. Puede ser solo tú, otra persona o una situación.",
+    "customContext": "Escribe quién o qué contexto",
+    "recommendedNextStep": "Siguiente paso recomendado",
+    "medicationDue": "Medicamento pendiente",
+    "appointmentToday": "Cita hoy",
+    "upcomingAppointment": "Próxima cita",
+    "quietWin": "Logro silencioso",
+    "greetings": {
+      "stillUp": "¿Sigues despierto/a?",
+      "morning": "Buenos días",
+      "afternoon": "Buenas tardes",
+      "evening": "Buenas noches",
+      "windingDown": "¿Bajando el ritmo?"
+    },
+    "saved": {
+      "created": "Registro de hoy guardado.",
+      "updated": "Registro de hoy actualizado."
+    },
+    "actions": {
+      "calmMeDown": "Ayúdame a calmarme",
+      "companion": "Companion",
+      "dontSendIt": "No lo envíes",
+      "taken": "Tomado",
+      "talkToCompanion": "Hablar con Companion",
+      "viewInsights": "Ver Insights",
+      "editCheckIn": "Editar registro",
+      "saveCheckIn": "Guardar registro",
+      "saveFirst": "Guardar registro primero",
+      "gotIt": "Entendido",
+      "continue": "Continuar"
+    },
+    "spiral": {
+      "kicker": "Detección de espiral",
+      "title": "Hemos visto patrones parecidos antes.",
+      "body": "Esto se parece a un patrón que antes llevó a malestar. No es seguro, pero bajar la velocidad ahora puede ayudar.",
+      "evidence": "Señales: {{signals}}. Confianza: {{confidence}}%."
+    },
+    "detailLabels": {
+      "emotion": "Emoción",
+      "strength": "Fuerza",
+      "intensity": "Intensidad",
+      "influence": "Influencia",
+      "context": "Contexto",
+      "time": "Hora"
+    },
+    "empty": {
+      "notAdded": "No agregado",
+      "noInfluence": "Sin influencia registrada",
+      "noContext": "Sin contexto registrado"
+    },
+    "intensityLabels": {
+      "slight": "Leve",
+      "noticeable": "Notable",
+      "strong": "Fuerte",
+      "veryStrong": "Muy fuerte",
+      "mild": "Leve",
+      "moderate": "Moderada",
+      "intense": "Intensa",
+      "veryIntense": "Muy intensa"
+    },
+    "emotions": {
+      "calm": "Calma",
+      "hopeful": "Esperanza",
+      "proud": "Orgullo",
+      "grateful": "Gratitud",
+      "happy": "Alegría",
+      "connected": "Conexión",
+      "motivated": "Motivación",
+      "okay": "Estoy bien",
+      "anxious": "Ansiedad",
+      "angry": "Enojo",
+      "sad": "Tristeza",
+      "empty": "Vacío",
+      "ashamed": "Vergüenza",
+      "rejected": "Rechazo",
+      "abandoned": "Abandono",
+      "overwhelmed": "Abrumamiento",
+      "numb": "Entumecimiento emocional",
+      "lonely": "Soledad",
+      "triggered": "Detonado/a",
+      "other": "Otro/personalizado"
+    },
+    "triggers": {
+      "abandonment_fear": "Miedo al abandono",
+      "relationship_conflict": "Conflicto de relación",
+      "delayed_reply": "Respuesta demorada",
+      "feeling_ignored": "Sentirme ignorado/a",
+      "criticism": "Crítica",
+      "loneliness": "Soledad",
+      "shame": "Vergüenza",
+      "work": "Trabajo/escuela",
+      "family": "Familia",
+      "money": "Dinero",
+      "sleep": "Sueño",
+      "good_sleep": "Dormí bien",
+      "exercise": "Ejercicio",
+      "supportive_conversation": "Conversación de apoyo",
+      "felt_connected": "Me sentí conectado/a",
+      "completed_something": "Completé algo",
+      "time_outside": "Tiempo al aire libre",
+      "therapy_session": "Terapia/sesión",
+      "medication_routine": "Rutina de medicamentos",
+      "self_care": "Autocuidado",
+      "work_progress": "Avance en trabajo",
+      "proud_moment": "Algo que me enorgullece",
+      "other": "Otro/personalizado"
+    },
+    "contexts": {
+      "none": "Nadie / solo yo",
+      "partner": "Pareja",
+      "friend": "Amistad",
+      "family": "Familia",
+      "work_school": "Trabajo/escuela",
+      "community": "Comunidad",
+      "other": "Otro/personalizado"
+    },
+    "relationships": {
+      "partner": "Pareja",
+      "parent": "Madre/padre",
+      "friend": "Amistad",
+      "ex": "Ex",
+      "coworker": "Compañero/a de trabajo",
+      "other": "Otra persona"
+    },
+    "recommendations": {
+      "calm": {
+        "title": "Empieza calmando tu cuerpo",
+        "body": "Cuando las emociones se sienten intensas, BPD Companion sugiere una herramienta de anclaje antes de reflexionar.",
+        "cta": "Empezar Ayúdame a calmarme"
+      },
+      "pause": {
+        "title": "Pausa antes de reaccionar",
+        "body": "Revisa el mensaje o la respuesta antes de enviarlo.",
+        "cta": "Abrir No lo envíes"
+      },
+      "reflect": {
+        "title": "Nombra lo que hay debajo",
+        "body": "Unas pocas palabras pueden convertir una sensación vaga en algo que puedes cuidar.",
+        "cta": "Agregar una reflexión"
+      },
+      "positive": {
+        "title": "Observa qué ayudó",
+        "savedBody": "Tu registro está guardado. Los momentos positivos y estables ayudan a revelar qué te sostiene.",
+        "unsavedBody": "Guarda qué influyó en esto para que tus futuras ideas puedan detectar qué ayuda."
+      },
+      "default": {
+        "savedTitle": "Tu insight se está construyendo",
+        "unsavedTitle": "Mantenlo simple",
+        "savedBody": "Tu registro está guardado. Las entradas pequeñas revelan patrones con el tiempo.",
+        "unsavedBody": "Guarda este registro. Las entradas pequeñas y honestas hacen que la app sea más útil con el tiempo."
+      }
+    },
+    "smallInsight": {
+      "title": "Insight pequeño",
+      "moreCheckins": "Completa más registros para desbloquear tu primer patrón emocional.",
+      "average": "Tus registros recientes promedian {{average}}/10 de intensidad. Sigue registrándote para aclarar este patrón."
+    },
+    "tutorial": {
+      "title": "Cómo ayuda BPD Companion",
+      "steps": [
+        "Hoy: guarda un registro emocional rápido",
+        "Companion: habla sobre lo que pasó",
+        "Herramientas: cálmate, pausa o reflexiona antes de reaccionar",
+        "Insights: observa cómo los patrones se vuelven más claros",
+        "Comunidad: conecta con apoyo entre pares",
+        "Perfil: gestiona membresía y ajustes"
+      ]
+    }
+  }
+}

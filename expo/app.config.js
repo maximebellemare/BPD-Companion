@@ -31,7 +31,8 @@ module.exports = ({ config }) => {
   return {
     ...expo,
     plugins: [
-      ...withoutPlugin(expo.plugins, 'react-native-fbsdk-next'),
+      ...withoutPlugin(withoutPlugin(expo.plugins, 'react-native-fbsdk-next'), 'expo-localization'),
+      'expo-localization',
       [
         'react-native-fbsdk-next',
         {

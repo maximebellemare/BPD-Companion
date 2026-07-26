@@ -17,10 +17,12 @@ import { ArrowLeft, Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
 import { useAppTheme } from '@/providers/ThemeProvider';
+import { useTranslation } from 'react-i18next';
 
 export default function SignInScreen() {
   const router = useRouter();
   const { colors } = useAppTheme();
+  const { t } = useTranslation(['auth', 'common']);
   const { signIn } = useAuth();
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
@@ -32,11 +34,11 @@ export default function SignInScreen() {
     setError(null);
     const trimmed = email.trim().toLowerCase();
     if (!trimmed || !password) {
-      setError('Please enter your email and password.');
+      setError(t('auth:signIn.missing'));
       return;
     }
     if (!/^\S+@\S+\.\S+$/.test(trimmed)) {
-      setError('Please enter a valid email.');
+      setError(t('auth:signIn.invalidEmail'));
       return;
     }
     setSubmitting(true);
@@ -44,13 +46,13 @@ export default function SignInScreen() {
       await signIn({ email: trimmed, password });
       if (Platform.OS !== 'web') void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Sign in failed';
+      const msg = e instanceof Error ? e.message : t('auth:signIn.failed');
       setError(msg);
       if (Platform.OS !== 'web') void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
       setSubmitting(false);
     }
-  }, [email, password, signIn]);
+  }, [email, password, signIn, t]);
 
   const handleForgot = useCallback(() => {
     router.push({
@@ -74,13 +76,13 @@ export default function SignInScreen() {
             <ArrowLeft size={22} color={Colors.brandNavy} />
           </TouchableOpacity>
 
-          <Text style={[styles.title, { color: colors.text }]}>Welcome back</Text>
+          <Text style={[styles.title, { color: colors.text }]}>{t('auth:signIn.title')}</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            Continue with your Companion, tools, and saved emotional map.
+            {t('auth:signIn.subtitle')}
           </Text>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Email</Text>
+            <Text style={styles.label}>{t('common:email')}</Text>
             <View style={styles.inputWrap}>
               <Mail size={18} color={Colors.textMuted} />
               <TextInput
@@ -99,7 +101,7 @@ export default function SignInScreen() {
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Password</Text>
+            <Text style={styles.label}>{t('common:password')}</Text>
             <View style={styles.inputWrap}>
               <Lock size={18} color={Colors.textMuted} />
               <TextInput
@@ -124,7 +126,7 @@ export default function SignInScreen() {
           </View>
 
           <TouchableOpacity onPress={handleForgot} style={styles.forgot} testID="forgot">
-            <Text style={styles.forgotText}>Forgot password?</Text>
+            <Text style={styles.forgotText}>{t('auth:signIn.forgot')}</Text>
           </TouchableOpacity>
 
           {error ? (
@@ -143,7 +145,7 @@ export default function SignInScreen() {
             {submitting ? (
               <ActivityIndicator color={Colors.white} />
             ) : (
-              <Text style={styles.primaryText}>Sign in</Text>
+              <Text style={styles.primaryText}>{t('auth:signIn.submit')}</Text>
             )}
           </TouchableOpacity>
 
@@ -153,7 +155,7 @@ export default function SignInScreen() {
             testID="switch-to-signup"
           >
             <Text style={styles.switchText}>
-              New here? <Text style={styles.switchLink}>Create an account</Text>
+              {t('auth:signIn.switchPrefix')} <Text style={styles.switchLink}>{t('auth:signIn.switchAction')}</Text>
             </Text>
           </TouchableOpacity>
         </ScrollView>

@@ -19,6 +19,8 @@ import { assessInputSafety, checkOutputSafety, augmentResponseWithSafety, buildS
 import { SafetyAssessment } from '@/types/aiSafety';
 import { CompanionContextSummary } from '@/types/ai';
 import { getPrimaryCrisisResourceText } from '@/services/safety/crisisResources';
+import { getAiLanguageInstruction, i18n } from '@/lib/i18n';
+import { normalizeLanguageTag } from '@/lib/i18n/languageStorage';
 
 const QUICK_ACTIONS_BY_MODE: Record<CompanionMode, string[]> = {
   calm: ['Ground me', 'Safety mode'],
@@ -276,6 +278,12 @@ Most concrete pattern: ${concreteSignal.concretePattern}
 Best next question: ${concreteSignal.bestQuestion}
 
 You must respond to this concrete signal first. Do not pivot to abstract interpretations.`);
+  }
+
+  const aiLanguageInstruction = getAiLanguageInstruction(normalizeLanguageTag(i18n.language) ?? 'en');
+  if (aiLanguageInstruction) {
+    parts.push('');
+    parts.push(`[LANGUAGE PREFERENCE]\n${aiLanguageInstruction}`);
   }
 
   if (companionContextSummary?.highIntensity && reasoning.urgencyLevel === 'high') {

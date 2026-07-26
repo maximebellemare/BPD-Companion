@@ -1,0 +1,18 @@
+{
+  "language": "Idioma",
+  "english": "English",
+  "spanish": "Español",
+  "back": "Atrás",
+  "continue": "Continuar",
+  "save": "Guardar",
+  "saving": "Guardando",
+  "cancel": "Cancelar",
+  "tryAgain": "Intentar de nuevo",
+  "loading": "Cargando...",
+  "email": "Correo electrónico",
+  "password": "Contraseña",
+  "name": "Nombre",
+  "privacyPolicy": "Política de privacidad",
+  "termsOfService": "Términos de servicio",
+  "notTherapy": "BPD Companion ofrece apoyo educativo, no consejo médico, apoyo de crisis ni un reemplazo de la terapia."
+}

@@ -1,0 +1,17 @@
+{
+  "fallbackTitle": "BPD Companion",
+  "fallbackBody": "A moment of support is here for you.",
+  "daily_checkin": [
+    { "title": "A moment for you", "body": "Take a moment to check in with yourself." },
+    { "title": "How are you today?", "body": "A quick check-in can bring clarity to your day." }
+  ],
+  "weekly_reflection": [
+    { "title": "Your weekly reflection is ready", "body": "Look back on this week with compassion and curiosity." }
+  ],
+  "relationship_support": [
+    { "title": "A gentle pause", "body": "You might benefit from slowing down before responding." }
+  ],
+  "calm_followup": [
+    { "title": "How are you now?", "body": "Things felt intense earlier. A calmer space is here when you need it." }
+  ]
+}

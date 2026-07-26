@@ -33,6 +33,7 @@ import { useOnboarding } from '@/providers/OnboardingProvider';
 import { useAppTheme } from '@/providers/ThemeProvider';
 import { useReviewPrompt } from '@/providers/ReviewPromptProvider';
 import { createAccessFlowTimer } from '@/services/performance/accessFlowTiming';
+import { useTranslation } from 'react-i18next';
 import {
   DEFAULT_ONBOARDING_PROFILE,
   OnboardingProfile,
@@ -110,30 +111,6 @@ const SUCCESS: Choice[] = [
   { label: 'Understanding my triggers', value: 'understanding_triggers' },
   { label: 'Building healthy habits', value: 'building_healthy_habits' },
   { label: 'Other', value: 'other' },
-];
-
-const BENEFITS = [
-  'Unlimited AI Companion',
-  'Unlimited check-ins',
-  'CBT Thought Record',
-  'DBT tools',
-  'Calm Me Down and Pause Before You Send',
-  'Trigger understanding',
-  'Emotional map',
-  'Relationship support',
-  'Reflection tools',
-  'Community',
-  'Progress tracking',
-  'Future updates included',
-];
-
-const TRANSFORMATION_POINTS = [
-  'Calmer during arguments instead of reacting instantly',
-  'Able to understand why your mood changed today',
-  'Aware of triggers before they spiral',
-  'More confident before sending difficult messages',
-  'Less alone and less judged',
-  'Supported every day, not only during crisis moments',
 ];
 
 const TOTAL_STEPS = 7;
@@ -219,6 +196,15 @@ function sentenceList(items: string[]): string {
   return `${items[0].toLowerCase()}, ${items[1].toLowerCase()}, and ${items[2].toLowerCase()}`;
 }
 
+function focusTranslationKey(item: string): string | null {
+  if (item === 'Relationship stability') return 'focus.relationship';
+  if (item === 'Emotional regulation') return 'focus.regulation';
+  if (item === 'Pausing before reacting') return 'focus.pause';
+  if (item === 'Understanding triggers') return 'focus.triggers';
+  if (item === 'Daily steadiness') return 'focus.steadiness';
+  return null;
+}
+
 function buildProfile(
   reasons: string[],
   situations: string[],
@@ -288,6 +274,7 @@ export default function OnboardingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
+  const { t } = useTranslation(['onboarding', 'common']);
   const { completeOnboarding } = useOnboarding();
   const { trackEvent } = useAnalytics();
   const { maybeShowReviewPrompt } = useReviewPrompt();
@@ -299,7 +286,7 @@ export default function OnboardingScreen() {
   const [customSituation, setCustomSituation] = useState<string>('');
   const [customSuccess, setCustomSuccess] = useState<string>('');
   const [isCompleting, setIsCompleting] = useState<boolean>(false);
-  const [completionText, setCompletionText] = useState<string>('Saving your personalization');
+  const [completionText, setCompletionText] = useState<string>(() => t('onboarding:completion.saving'));
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const slideAnim = useRef(new Animated.Value(0)).current;
   const progressAnim = useRef(new Animated.Value(1 / TOTAL_STEPS)).current;
@@ -308,8 +295,24 @@ export default function OnboardingScreen() {
     () => getFocus(reasons, situations, success, [customReason, customSituation, customSuccess]),
     [customReason, customSituation, customSuccess, reasons, situations, success],
   );
-  const selectedReasonLabels = useMemo(() => buildLabels(reasons, REASONS, customReason), [customReason, reasons]);
-  const selectedSituationLabels = useMemo(() => buildLabels(situations, SITUATIONS, customSituation), [customSituation, situations]);
+  const localizedReasonLabels = useMemo(
+    () => [
+      ...reasons
+        .filter(value => value !== 'other')
+        .map(value => t(`onboarding:options.${value}`, { defaultValue: REASONS.find(option => option.value === value)?.label ?? value })),
+      ...(cleanCustom(customReason) ? [cleanCustom(customReason)] : []),
+    ],
+    [customReason, reasons, t],
+  );
+  const localizedSituationLabels = useMemo(
+    () => [
+      ...situations
+        .filter(value => value !== 'other')
+        .map(value => t(`onboarding:options.${value}`, { defaultValue: SITUATIONS.find(option => option.value === value)?.label ?? value })),
+      ...(cleanCustom(customSituation) ? [cleanCustom(customSituation)] : []),
+    ],
+    [customSituation, situations, t],
+  );
 
   useEffect(() => {
     void trackEvent('onboarding_started', { version: VERSION });
@@ -358,7 +361,7 @@ export default function OnboardingScreen() {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     setIsCompleting(true);
-    setCompletionText('Preparing your membership options');
+    setCompletionText(t('onboarding:completion.preparing'));
     const timer = createAccessFlowTimer('onboarding');
     const profile = buildProfile(reasons, situations, success, customReason, customSituation, customSuccess, skipped);
     try {
@@ -376,10 +379,10 @@ export default function OnboardingScreen() {
       router.replace('/upgrade' as never);
     } catch (error) {
       console.log('[Onboarding] completion failed:', error);
-      Alert.alert('Could not finish setup', 'Please check your connection and try again.');
+      Alert.alert(t('onboarding:completion.errorTitle'), t('onboarding:completion.errorBody'));
       setIsCompleting(false);
     }
-  }, [completeOnboarding, customReason, customSituation, customSuccess, isCompleting, maybeShowReviewPrompt, reasons, router, situations, success, trackEvent]);
+  }, [completeOnboarding, customReason, customSituation, customSuccess, isCompleting, maybeShowReviewPrompt, reasons, router, situations, success, t, trackEvent]);
 
   const canContinue = useMemo(() => {
     if (currentStep === 1) return reasons.length > 0 && (!reasons.includes('other') || reasons.length > 1 || cleanCustom(customReason).length > 0);
@@ -412,7 +415,7 @@ export default function OnboardingScreen() {
         <BrandLogo size={74} />
         <ActivityIndicator size="small" color={colors.brandTeal} style={styles.transitionSpinner} />
         <Text style={[styles.transitionTitle, { color: colors.text }]}>{completionText}</Text>
-        <Text style={[styles.transitionText, { color: colors.textSecondary }]}>Your answers are being saved securely.</Text>
+        <Text style={[styles.transitionText, { color: colors.textSecondary }]}>{t('onboarding:completion.secure')}</Text>
       </View>
     );
   }
@@ -424,7 +427,9 @@ export default function OnboardingScreen() {
           <View style={[styles.progressTrack, { backgroundColor: colors.borderLight }]}>
             <Animated.View style={[styles.progressFill, { width: progressWidth, backgroundColor: colors.brandTeal }]} />
           </View>
-          <Text style={[styles.progressText, { color: colors.primary }]}>{currentStep + 1} / {TOTAL_STEPS}</Text>
+          <Text style={[styles.progressText, { color: colors.primary }]}>
+            {t('onboarding:progress', { current: currentStep + 1, total: TOTAL_STEPS })}
+          </Text>
         </View>
       </View>
 
@@ -438,49 +443,49 @@ export default function OnboardingScreen() {
             <WelcomeStep colors={colors} />
           ) : currentStep === 1 ? (
             <ChoiceStep
-              eyebrow="Personalize"
-              title="What brought you here today?"
-              subtitle="Choose anything that fits. You can change direction later."
+              eyebrow={t('onboarding:steps.personalize')}
+              title={t('onboarding:questions.reasonsTitle')}
+              subtitle={t('onboarding:questions.reasonsSubtitle')}
               options={REASONS}
               selected={reasons}
               onToggle={(value) => toggleChoice('reasons', value)}
               customValue={customReason}
               onCustomChange={setCustomReason}
-              customPlaceholder="Tell us what brought you here"
+              customPlaceholder={t('onboarding:questions.reasonsOther')}
               colors={colors}
             />
           ) : currentStep === 2 ? (
             <ChoiceStep
-              eyebrow="Hard moments"
-              title="What situations are hardest for you?"
-              subtitle="This helps BPD Companion understand where support should show up first."
+              eyebrow={t('onboarding:steps.hardMoments')}
+              title={t('onboarding:questions.situationsTitle')}
+              subtitle={t('onboarding:questions.situationsSubtitle')}
               options={SITUATIONS}
               selected={situations}
               onToggle={(value) => toggleChoice('situations', value)}
               customValue={customSituation}
               onCustomChange={setCustomSituation}
-              customPlaceholder="Name the situation"
+              customPlaceholder={t('onboarding:questions.situationsOther')}
               colors={colors}
             />
           ) : currentStep === 3 ? (
             <ChoiceStep
-              eyebrow="Your direction"
-              title="What would success look like in 3 months?"
-              subtitle="Pick the changes that would feel meaningful."
+              eyebrow={t('onboarding:steps.goals')}
+              title={t('onboarding:questions.successTitle')}
+              subtitle={t('onboarding:questions.successSubtitle')}
               options={SUCCESS}
               selected={success}
               onToggle={(value) => toggleChoice('success', value)}
               customValue={customSuccess}
               onCustomChange={setCustomSuccess}
-              customPlaceholder="Describe your version of success"
+              customPlaceholder={t('onboarding:questions.successOther')}
               colors={colors}
             />
           ) : currentStep === 4 ? (
             <FocusStep focus={focus} colors={colors} />
           ) : currentStep === 5 ? (
             <HowItHelpsStep
-              reasons={selectedReasonLabels}
-              situations={selectedSituationLabels}
+              reasons={localizedReasonLabels}
+              situations={localizedSituationLabels}
               focus={focus}
               colors={colors}
             />
@@ -494,7 +499,7 @@ export default function OnboardingScreen() {
         {currentStep > 0 ? (
           <TouchableOpacity onPress={goBack} style={styles.backButton} activeOpacity={0.75} testID="onboarding-back">
             <ChevronLeft size={18} color={colors.primary} />
-            <Text style={[styles.backText, { color: colors.primary }]}>Back</Text>
+            <Text style={[styles.backText, { color: colors.primary }]}>{t('common:back')}</Text>
           </TouchableOpacity>
         ) : (
           <View style={styles.backPlaceholder} />
@@ -508,7 +513,7 @@ export default function OnboardingScreen() {
           testID="onboarding-continue"
         >
           <Text style={styles.nextText}>
-            {currentStep === TOTAL_STEPS - 1 ? 'Start 3-Day Free Trial' : currentStep === 0 ? 'Begin' : 'Continue'}
+            {currentStep === TOTAL_STEPS - 1 ? t('onboarding:membership.primary') : currentStep === 0 ? t('common:continue') : t('common:continue')}
           </Text>
           <ChevronRight size={18} color={Colors.white} />
         </TouchableOpacity>
@@ -518,16 +523,17 @@ export default function OnboardingScreen() {
 }
 
 function WelcomeStep({ colors }: { colors: ReturnType<typeof useAppTheme>['colors'] }) {
+  const { t } = useTranslation('onboarding');
   return (
     <View>
       <View style={[styles.logoCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
         <BrandLogo size={120} animated />
       </View>
       <Text style={[styles.title, { color: colors.text }]}>
-        BPD Companion was built for people living with Borderline Personality Disorder.
+        {t('welcome.headline')}
       </Text>
       <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-        We’ll personalize your experience in less than 2 minutes.
+        {t('welcome.subtext')}
       </Text>
     </View>
   );
@@ -556,6 +562,7 @@ function ChoiceStep({
   customPlaceholder: string;
   colors: ReturnType<typeof useAppTheme>['colors'];
 }) {
+  const { t } = useTranslation('onboarding');
   const showCustom = selected.includes('other');
   return (
     <View>
@@ -579,7 +586,9 @@ function ChoiceStep({
               activeOpacity={0.8}
               testID={`onboarding-choice-${option.value}`}
             >
-              <Text style={[styles.choiceText, { color: isSelected ? Colors.white : colors.text }]}>{option.label}</Text>
+              <Text style={[styles.choiceText, { color: isSelected ? Colors.white : colors.text }]}>
+                {t(`options.${option.value}`, { defaultValue: option.label })}
+              </Text>
               {isSelected ? <Check size={17} color={Colors.white} /> : null}
             </TouchableOpacity>
           );
@@ -600,27 +609,34 @@ function ChoiceStep({
           />
         </View>
       ) : null}
-      <Text style={[styles.helperText, { color: colors.textMuted }]}>Select at least one.</Text>
+      <Text style={[styles.helperText, { color: colors.textMuted }]}>{t('questions.selectAtLeastOne')}</Text>
     </View>
   );
 }
 
 function FocusStep({ focus, colors }: { focus: string[]; colors: ReturnType<typeof useAppTheme>['colors'] }) {
+  const { t } = useTranslation('onboarding');
   return (
     <View>
-      <Text style={[styles.eyebrow, { color: colors.brandTeal }]}>Your focus</Text>
-      <Text style={[styles.title, { color: colors.text }]}>Based on your answers, your personalized focus is:</Text>
+      <Text style={[styles.eyebrow, { color: colors.brandTeal }]}>{t('steps.focus')}</Text>
+      <Text style={[styles.title, { color: colors.text }]}>{t('focus.intro')}</Text>
       <View style={styles.focusStack}>
         {focus.map((item, index) => (
           <View key={item} style={[styles.focusCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
             <Text style={[styles.focusLabel, { color: colors.textMuted }]}>
-              {index === 0 ? 'Primary Focus' : index === 1 ? 'Secondary Focus' : 'Third Focus'}
+              {index === 0 ? t('focus.primary') : index === 1 ? t('focus.secondary') : t('focus.third')}
             </Text>
-            <Text style={[styles.focusText, { color: colors.text }]}>{item}</Text>
+            <Text style={[styles.focusText, { color: colors.text }]}>
+              {focusTranslationKey(item)
+                ? t(focusTranslationKey(item) as string)
+                : item.startsWith('Support with ')
+                  ? t('focus.supportWith', { answer: item.replace('Support with ', '') })
+                  : item}
+            </Text>
           </View>
         ))}
       </View>
-      <Text style={[styles.reassurance, { color: colors.textSecondary }]}>BPD Companion can help with this.</Text>
+      <Text style={[styles.reassurance, { color: colors.textSecondary }]}>{t('focus.helps')}</Text>
     </View>
   );
 }
@@ -636,40 +652,43 @@ function HowItHelpsStep({
   focus: string[];
   colors: ReturnType<typeof useAppTheme>['colors'];
 }) {
+  const { t } = useTranslation('onboarding');
   const struggleText = sentenceList([...reasons, ...situations].slice(0, 3));
   const focusText = sentenceList(focus);
   const cards = [
     {
       icon: MessageCircle,
       title: 'AI Companion',
-      text: `Talk through ${struggleText} before the moment turns into a crisis.`,
+      text: t('helps.companion', { items: struggleText }),
     },
     {
       icon: BarChart3,
-      title: 'Daily check-ins',
-      text: `Track what happens so patterns around ${focusText} become easier to see.`,
+      title: t('helps.checkinsTitle'),
+      text: t('helps.checkins', { items: focusText }),
     },
     {
       icon: Shield,
-      title: 'Pause tools',
-      text: 'Use guided tools to slow down before texting, arguing, or reacting.',
+      title: t('helps.toolsTitle'),
+      text: t('helps.tools'),
     },
     {
       icon: Sparkles,
-      title: 'Personalized insights',
-      text: 'See plain-language reflections based on your entries, not generic advice.',
+      title: t('helps.insightsTitle'),
+      text: t('helps.insights'),
     },
     {
       icon: Users,
       title: 'Community',
-      text: 'Feel less alone with peer support that is separate from crisis or medical care.',
+      text: t('helps.community'),
     },
   ];
 
   return (
     <View>
-      <Text style={[styles.eyebrow, { color: colors.brandTeal }]}>How it helps</Text>
-      <Text style={[styles.title, { color: colors.text }]}>Your support should fit what you’re actually facing.</Text>
+      <Text style={[styles.eyebrow, { color: colors.brandTeal }]}>{t('steps.howHelps')}</Text>
+      <Text style={[styles.title, { color: colors.text }]}>
+        {t('helps.headline', { items: struggleText })}
+      </Text>
       <View style={styles.helpStack}>
         {cards.map(card => {
           const Icon = card.icon;
@@ -695,26 +714,29 @@ function MembershipIntroStep({
 }: {
   colors: ReturnType<typeof useAppTheme>['colors'];
 }) {
+  const { t } = useTranslation('onboarding');
+  const transformationPoints = t('membership.transformations', { returnObjects: true }) as string[];
+  const benefits = t('membership.benefits', { returnObjects: true }) as string[];
   return (
     <View>
       <View style={[styles.membershipHero, { backgroundColor: colors.primaryLight, borderColor: colors.borderLight }]}>
         <HeartHandshake size={32} color={colors.primary} />
-        <Text style={[styles.membershipTitle, { color: colors.text }]}>Imagine feeling...</Text>
+        <Text style={[styles.membershipTitle, { color: colors.text }]}>{t('membership.transformTitle')}</Text>
         <Text style={[styles.membershipSubtitle, { color: colors.textSecondary }]}>
-          Small daily support can change how you move through difficult moments.
+          {t('membership.subheadline')}
         </Text>
       </View>
       <View style={styles.benefitStack}>
-        {TRANSFORMATION_POINTS.map(point => (
+        {transformationPoints.map(point => (
           <View key={point} style={[styles.benefitRow, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
             <Sparkles size={17} color={colors.brandTeal} />
             <Text style={[styles.benefitText, { color: colors.text }]}>{point}</Text>
           </View>
         ))}
       </View>
-      <Text style={[styles.membershipIncludesTitle, { color: colors.text }]}>Your membership includes:</Text>
+      <Text style={[styles.membershipIncludesTitle, { color: colors.text }]}>{t('membership.includesTitle')}</Text>
       <View style={styles.benefitStack}>
-        {BENEFITS.map(benefit => (
+        {benefits.map(benefit => (
           <View key={benefit} style={[styles.benefitRow, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
             <Check size={17} color={colors.brandTeal} />
             <Text style={[styles.benefitText, { color: colors.text }]}>{benefit}</Text>
@@ -722,7 +744,7 @@ function MembershipIntroStep({
         ))}
       </View>
       <Text style={[styles.cancelText, { color: colors.textMuted }]}>
-        Cancel anytime before your 3-day trial ends. You won’t be charged until your trial is over.
+        {t('membership.trialNote')}
       </Text>
     </View>
   );

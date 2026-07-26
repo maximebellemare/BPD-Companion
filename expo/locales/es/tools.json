@@ -1,0 +1,285 @@
+{
+  "homeTitle": "¿Qué necesitas ahora mismo?",
+  "homeSubtitle": "Elige el momento en el que estás. BPD Companion te llevará a una acción útil.",
+  "suggested": "Sugerido",
+  "moreSupport": "Más apoyo",
+  "secondary": {
+    "medications": {
+      "title": "Medicamentos",
+      "description": "Registra horarios, dosis, notas y las dosis tomadas hoy."
+    },
+    "appointments": {
+      "title": "Citas",
+      "description": "Organiza terapia, psiquiatría, consultas médicas y grupos."
+    },
+    "community": {
+      "title": "Comunidad",
+      "description": "Lee y comparte con personas que entienden. Apoyo entre pares, no apoyo de crisis ni consejo médico."
+    },
+    "skillLibrary": "Biblioteca de habilidades",
+    "library": {
+      "bpdAcademy": {
+        "title": "Academia TLP",
+        "description": "Lecciones de 2 a 5 minutos para momentos reales"
+      },
+      "relationshipSimulator": {
+        "title": "Simulador de relaciones",
+        "description": "Practica conversaciones difíciles de forma segura"
+      },
+      "rewriteMessage": {
+        "title": "Reescribir el mensaje",
+        "description": "Practica comunicación calmada y clara"
+      },
+      "spotDistortion": {
+        "title": "Detectar la distorsión",
+        "description": "Identifica lectura mental, catastrofización y más"
+      },
+      "emotionalDetective": {
+        "title": "Detective emocional",
+        "description": "Practica encontrar cadenas de desencadenante → resultado"
+      },
+      "dbt": {
+        "title": "Academia de habilidades DBT",
+        "description": "Escenarios de práctica para la vida real"
+      },
+      "grounding": {
+        "title": "Ayúdame a calmarme",
+        "description": "Flujo de alivio de 2 minutos"
+      },
+      "cbtThoughtRecord": {
+        "title": "Registro de pensamiento CBT",
+        "description": "Cuestiona un pensamiento automático doloroso"
+      }
+    }
+  },
+  "calmTitle": "Calmarme ahora",
+  "calmDescription": "Para emociones intensas, pánico o abrumamiento. Empieza Ayúdame a calmarme.",
+  "calmAction": "Ayúdame a calmarme",
+  "pauseTitle": "Pausar antes de reaccionar",
+  "pauseDescription": "Para mensajes, discusiones o impulsos. Crea un pequeño espacio antes de actuar.",
+  "pauseAction": "Pausar primero",
+  "triggerTitle": "Entender un desencadenante",
+  "triggerDescription": "Mapea lo que pasó en desencadenante, emoción, miedo e impulso.",
+  "triggerAction": "Descubrir la cadena",
+  "reflectTitle": "Reflexionar y aprender",
+  "reflectDescription": "Después de que algo pasó, extrae la lección y qué intentar después.",
+  "reflectAction": "Encontrar la lección",
+  "structured": {
+    "progress": "{{current}} de {{total}}",
+    "purposeLabel": "Esta herramienta responde",
+    "completionThoughtTitle": "Registro de pensamiento guardado.",
+    "completionReflectionTitle": "Reflexión guardada.",
+    "completionBody": "Se agregó a tu mapa emocional para que Companion e Insights puedan usarla más adelante.",
+    "savedSummary": "Resumen guardado",
+    "viewRecords": "Ver en Insights / Registros",
+    "talkToCompanion": "Hablar con Companion sobre esto",
+    "backToTools": "Volver a Herramientas",
+    "startAgain": "Reflexionar sobre otra cosa",
+    "pastRecords": "Registros anteriores",
+    "thoughtRecord": "Registro de pensamiento",
+    "intensity": "intensidad",
+    "askCompanion": "Pedir ayuda a Companion con este paso",
+    "saved": "Guardado",
+    "saveReflection": "Guardar reflexión",
+    "next": "Siguiente",
+    "notRecorded": "No registrado",
+    "notSure": "Todavía no estoy seguro/a."
+  },
+  "reflect": {
+    "eyebrow": "Reflexionar y aprender",
+    "title": "Extrae la lección",
+    "subtitle": "Esto es para después de que algo pasó. Observa qué ayudó, qué lo hizo más difícil y qué quieres intentar la próxima vez.",
+    "purpose": "¿Qué puedo aprender de esto?",
+    "steps": {
+      "event": { "label": "Evento", "question": "¿Qué pasó?", "placeholder": "Describe brevemente la situación..." },
+      "lesson": { "label": "Lección", "question": "¿Qué aprendiste?", "placeholder": "Ejemplo: Necesito pausar antes de pedir seguridad..." },
+      "different": { "label": "Próxima vez", "question": "¿Qué harías diferente la próxima vez?", "placeholder": "Ejemplo: Esperar 20 minutos, usar No lo envíes, preguntar directamente..." },
+      "helped": { "label": "Ayudó", "question": "¿Qué ayudó?", "placeholder": "Ejemplo: Respirar, alejarme, hablar con Companion..." },
+      "worse": { "label": "Lo hizo más difícil", "question": "¿Qué empeoró las cosas?", "placeholder": "Ejemplo: Revisar mi teléfono repetidamente, enviar mensajes rápido..." },
+      "emotion": { "label": "Emoción", "question": "¿Qué emoción importó más en esta reflexión?", "placeholder": "Ejemplo: ansiedad, vergüenza, enojo, tristeza..." },
+      "intensity": { "label": "Intensidad", "question": "¿Qué tan intenso fue en el punto más alto?", "placeholder": "Elige 1-10" }
+    },
+    "summary": {
+      "whatHappened": "Qué pasó: {{value}}",
+      "learned": "Lo que aprendí: {{value}}",
+      "different": "La próxima vez quiero intentar: {{value}}",
+      "helped": "Qué ayudó: {{value}}",
+      "worse": "Qué empeoró las cosas: {{value}}"
+    },
+    "companionPrompt": "Ayúdame a convertir esta reflexión en una lección práctica.\nQué pasó: {{whatHappened}}\nLo que aprendí: {{learned}}\nLo que haría diferente: {{different}}\nQué ayudó: {{helped}}\nQué lo empeoró: {{worse}}\nPor favor mantenlo breve y ayúdame a elegir un experimento para la próxima vez."
+  },
+  "trigger": {
+    "eyebrow": "Entender el desencadenante",
+    "title": "Descubre la cadena emocional",
+    "subtitle": "Baja la velocidad del momento: desencadenante → significado → miedo → impulso. Esto es para entender qué pasó emocionalmente.",
+    "purpose": "¿Qué tocó este momento dentro de mí?",
+    "steps": {
+      "whatHappened": { "label": "Desencadenante", "question": "¿Qué pasó?", "placeholder": "Ejemplo: Respondió con una sola palabra después de esperar todo el día..." },
+      "meaning": { "label": "Significado", "question": "¿Qué significó para ti en ese momento?", "placeholder": "Ejemplo: Sentí que hice algo mal o que se estaba alejando..." },
+      "fear": { "label": "Miedo", "question": "¿De qué tenías miedo?", "placeholder": "Ejemplo: Que se fuera, me rechazara o dejara de importarle..." },
+      "emotion": { "label": "Emoción", "question": "¿Qué emoción apareció?", "placeholder": "Ejemplo: ansiedad, enojo, vergüenza, tristeza, vacío..." },
+      "intensity": { "label": "Intensidad", "question": "¿Qué tan intenso se sintió?", "placeholder": "Elige 1-10" },
+      "urge": { "label": "Impulso", "question": "¿Qué impulso apareció?", "placeholder": "Ejemplo: escribir de nuevo, retirarme, discutir, disculparme, revisar redes..." },
+      "action": { "label": "Acción", "question": "¿Qué hiciste?", "placeholder": "Ejemplo: Envié otro mensaje, me quedé callado/a, me distraje..." },
+      "outcome": { "label": "Resultado", "question": "¿Qué pasó después?", "placeholder": "Ejemplo: Sentí alivio por un minuto y luego más ansiedad..." }
+    },
+    "summary": {
+      "trigger": "Desencadenante: {{value}}",
+      "meaning": "Significado: {{value}}",
+      "fear": "Miedo: {{value}}",
+      "emotion": "Emoción: {{value}}",
+      "urge": "Impulso: {{value}}",
+      "action": "Acción: {{value}}",
+      "outcome": "Resultado: {{value}}",
+      "possiblePattern": "Posible patrón: {{value}}",
+      "patternWithFear": "{{trigger}} tocó {{fear}}.",
+      "patternFallback": "Sigue registrándolo para ver el patrón con más claridad.",
+      "suggestedNextStep": "Siguiente paso sugerido: elige una acción para calmarte o demorar antes de reaccionar más."
+    },
+    "companionPrompt": "Ayúdame a entender este desencadenante usando la línea emocional.\nQué pasó: {{whatHappened}}\nQué significó para mí: {{meaning}}\nMiedo: {{fear}}\nEmoción: {{emotion}}\nImpulso: {{urge}}\nAcción: {{action}}\nResultado: {{outcome}}\nPor favor resume el posible miedo, el posible patrón y un siguiente paso."
+  },
+  "calm": {
+    "headerTitle": "Ayúdame a calmarme",
+    "headerSubtitle": "Elige un reinicio breve",
+    "kicker": "Reinicio de 1, 2 o 5 minutos",
+    "title": "Ayúdame a calmarme",
+    "body": "Vamos a bajar el ritmo de tu respiración, anclar tus sentidos y nombrar qué puede estar impulsando la urgencia.",
+    "supportItems": ["Respiración guiada", "Anclaje guiado", "Flujo para calmarte"],
+    "chooseLength": "Elige la duración",
+    "durationDescriptions": { "60": "Reinicio rápido", "120": "Recomendado", "300": "Calma más profunda" },
+    "durationAccessibility": "Elegir sesión de {{label}} para calmarme, {{description}}",
+    "intensityBefore": "¿Qué tan intenso se siente ahora?",
+    "intensityAfter": "¿Dónde está tu intensidad ahora?",
+    "start": "Empezar",
+    "steps": {
+      "breathe": "Paso 1 de 4 · respira",
+      "anchor": "Paso 2 de 4 · anclaje",
+      "pattern": "Paso 3 de 4 · personalizar",
+      "after": "Paso 4 de 4 · después"
+    },
+    "breath": { "inhale": "Inhala", "hold": "Sostén", "exhale": "Exhala" },
+    "cycle": "Ciclo {{current}} de {{total}}. {{cue}}",
+    "exhaleCue": "Deja que la exhalación sea lenta y completa.",
+    "followCue": "Sigue la guía y mantenlo suave.",
+    "skipBreathing": "Saltar respiración",
+    "anchorTitle": "Vuelve a este momento",
+    "anchors": [
+      "Presiona los pies contra el piso y nota qué te sostiene.",
+      "Busca una línea recta, un color suave y un objeto que no se esté moviendo.",
+      "Coloca una mano en un lugar estable. Hazle saber a tu cuerpo que esto es este momento, no todos los momentos."
+    ],
+    "didThis": "Ya lo hice",
+    "patternTitle": "Nombra la ola sin obedecerla",
+    "support": {
+      "relationship": "El estrés en una relación puede hacer que la urgencia se sienta como peligro. Ahora mismo, tu única tarea es ayudar al cuerpo a bajar.",
+      "abandonment": "El miedo a que te dejen puede sentirse inmediato y convincente. No tienes que resolver la relación en este minuto exacto.",
+      "shame": "La vergüenza puede hacer que todo tu ser se sienta como el problema. Ahora estamos separando el sentimiento de quién eres.",
+      "conflict": "El conflicto puede dejar tu sistema nervioso preparado para el impacto. Deja que tu cuerpo baje antes de decidir qué hacer.",
+      "default": "Esto es una ola. Puede ser intensa sin ser permanente. Vamos a atravesar los próximos minutos juntos."
+    },
+    "basedOnEntries": "Según tus registros",
+    "patternBoth": "{{emotion}} suele aparecer alrededor de {{trigger}}.",
+    "patternTrigger": "{{trigger}} ha aparecido en tus check-ins recientes.",
+    "patternEmotion": "{{emotion}} ha aparecido en tus check-ins recientes.",
+    "patternFallback": "Personalizaré esto más a medida que hagas check-ins y reflexiones.",
+    "statement": "“Puedo sentir esto con mucha fuerza y aun así esperar antes de actuar.”",
+    "checkIntensity": "Revisar mi intensidad",
+    "afterBody": "No necesitas estar perfectamente calmado/a. Bajar un punto también cuenta.",
+    "finish": "Terminar",
+    "completeShift_one": "Bajaste {{count}} punto.",
+    "completeShift_other": "Bajaste {{count}} puntos.",
+    "completeNoShift": "Te quedaste con el momento.",
+    "completeBody": "Esa es la práctica: bajar el cuerpo, nombrar la ola y elegir el siguiente paso desde un lugar más estable.",
+    "talkTitle": "Hablarlo",
+    "talkBody": "Deja que Companion te ayude a decidir qué hacer después.",
+    "pauseTitle": "No lo envíes todavía",
+    "pauseBody": "Revisa un mensaje antes de reaccionar.",
+    "okay": "Estoy bien por ahora",
+    "intensityLabels": {
+      "calmer": "Un poco más manejable",
+      "activated": "Todavía activado/a",
+      "intense": "Muy intenso",
+      "overwhelming": "Abrumador"
+    }
+  },
+  "dontSend": {
+    "eyebrow": "No lo envíes",
+    "title": "Pausa antes de enviar",
+    "subtitle": "Pega el mensaje. Te ayudaremos a aclarar el resultado que quieres y responder desde un lugar más estable.",
+    "inputTitle": "Pega el mensaje aquí",
+    "placeholder": "Pega el mensaje aquí...",
+    "recipientQuestion": "¿Para quién es?",
+    "outcomeQuestion": "¿Qué resultado quieres realmente?",
+    "outcomeHint": "Elige primero el resultado para que la reescritura sea regulada y efectiva.",
+    "instructionQuestion": "Ajustar la reescritura (opcional)",
+    "analyze": "Analizar antes de enviar",
+    "noBlock": "Esto nunca te impedirá enviar. Te da una pausa, una revisión del patrón y una opción más tranquila.",
+    "reactiveTitle": "Esto puede venir de una reacción",
+    "groundedTitle": "Esto se ve bastante estable",
+    "scoreBody": "Estado emocional probable: {{state}} · Riesgo de impulsividad: {{risk}}",
+    "sections": {
+      "hearing": "Lo que estoy notando",
+      "intensity": "Intensidad emocional",
+      "risk": "Por qué este nivel de riesgo",
+      "consequences": "Posibles consecuencias",
+      "pattern": "Revisión del patrón",
+      "noticing": "Lo que estoy observando",
+      "rewrites": "Versiones más calmadas",
+      "waiting": "Sugerencia de espera"
+    },
+    "estimatedIntensity": "Estimado en {{intensity}}/10. Estado emocional probable: {{state}}.",
+    "copied": "Copiado",
+    "copy": "Copiar versión",
+    "saved": "Guardado",
+    "saveDraft": "Guardar borrador pausado",
+    "saveExplanation": "Guardar borrador pausado conserva el original y la reescritura elegida como no enviada para que puedas revisarlo luego en el historial de mensajes.",
+    "discuss": "Hablar con Companion",
+    "recipients": {
+      "partner": "Pareja",
+      "parent": "Madre/padre",
+      "friend": "Amistad",
+      "ex": "Ex",
+      "coworker": "Compañero/a de trabajo",
+      "other": "Otra persona"
+    },
+    "outcomes": {
+      "express_hurt": "Expresar dolor",
+      "set_boundary": "Poner un límite",
+      "start_conversation": "Iniciar una conversación",
+      "get_response": "Recibir una respuesta",
+      "end_relationship": "Terminar la relación",
+      "vent_only": "Solo desahogarme"
+    },
+    "instructions": {
+      "more_direct": "Más directo",
+      "less_direct": "Menos directo",
+      "more_compassionate": "Más compasivo",
+      "more_assertive": "Más firme",
+      "shorter": "Más corto",
+      "longer": "Más largo"
+    },
+    "risk": {
+      "low": "Bajo",
+      "medium": "Medio",
+      "high": "Alto",
+      "very_high": "Muy alto"
+    },
+    "signals": {
+      "threatening language": "lenguaje amenazante",
+      "personal attack": "ataque personal",
+      "hostility": "hostilidad",
+      "repeated accusations": "acusaciones repetidas",
+      "urgency or pressure": "urgencia o presión",
+      "contempt or cutoff language": "desprecio o corte brusco",
+      "high activation in tone": "tono muy activado",
+      "emotional venting": "descarga emocional"
+    },
+    "waiting": {
+      "5 min": "5 min",
+      "20 min": "20 min",
+      "1 hour": "1 hora",
+      "Tomorrow": "Mañana"
+    },
+    "companionPrompt": "Usé No lo envíes y quiero hablar de esto antes de responder.\n\nMensaje original: {{message}}\n\nIntensidad emocional: {{intensity}}/10\nEstado emocional probable: {{state}}\nRiesgo de impulsividad: {{risk}}\nPor qué: {{reason}}\nPara quién es: {{recipient}}\nResultado deseado: {{outcome}}\nRevisión del patrón: {{patterns}}\n\nOpciones de reescritura: {{rewrites}}\nSugerencia de espera: {{waiting}}\n\nPor favor ayúdame a entender qué necesito realmente y si debería esperar antes de enviar algo."
+  }
+}

@@ -29,9 +29,9 @@ import {
   Wind,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import Colors from '@/constants/colors';
 import { trackEvent, trackToolUsage } from '@/services/analytics/analyticsService';
 import { useAppTheme } from '@/providers/ThemeProvider';
+import { useTranslation } from 'react-i18next';
 
 type HighlightTarget = 'calm' | 'pause' | 'trigger' | 'reflect';
 
@@ -66,102 +66,110 @@ export default function ToolsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
+  const { t } = useTranslation('tools');
   const params = useLocalSearchParams<{ highlight?: string; source?: string }>();
   const highlight = normalizeHighlight(params.highlight ?? params.source);
 
   const mainTools = useMemo<MainTool[]>(() => [
     {
       id: 'calm',
-      title: 'Calm down now',
-      description: 'For intense emotions, panic, or overwhelm. Start Calm Me Down.',
+      title: t('calmTitle'),
+      description: t('calmDescription'),
       route: '/grounding-mode',
-      actionLabel: 'Calm me down',
+      actionLabel: t('calmAction'),
       icon: <Wind size={22} color={colors.brandTeal} />,
     },
     {
       id: 'pause',
-      title: 'Pause before reacting',
-      description: 'For texting, arguing, or impulsive urges. Create a small gap before action.',
+      title: t('pauseTitle'),
+      description: t('pauseDescription'),
       route: '/dont-send-it',
-      actionLabel: 'Pause first',
+      actionLabel: t('pauseAction'),
       icon: <PauseCircle size={22} color={colors.accent} />,
     },
     {
       id: 'trigger',
-      title: 'Understand a trigger',
-      description: 'Map what happened into trigger, emotion, fear, and urge.',
+      title: t('triggerTitle'),
+      description: t('triggerDescription'),
       route: '/understand-trigger',
-      actionLabel: 'Uncover the chain',
+      actionLabel: t('triggerAction'),
       icon: <Brain size={22} color={colors.primary} />,
     },
     {
       id: 'reflect',
-      title: 'Reflect and learn',
-      description: 'After something happened, extract the lesson and what to try next.',
+      title: t('reflectTitle'),
+      description: t('reflectDescription'),
       route: '/reflect-and-learn',
-      actionLabel: 'Find the lesson',
+      actionLabel: t('reflectAction'),
       icon: <BookOpen size={22} color={colors.brandTeal} />,
     },
-  ], [colors]);
+  ], [colors, t]);
 
   const libraryTools = useMemo<LibraryTool[]>(() => [
     {
       id: 'bpd-academy',
-      title: 'BPD Academy',
-      description: 'Tiny 2-5 minute lessons for real moments',
+      title: t('secondary.library.bpdAcademy.title'),
+      description: t('secondary.library.bpdAcademy.description'),
       route: '/bpd-academy',
       icon: <GraduationCap size={18} color={colors.primary} />,
     },
     {
       id: 'relationship-simulator',
-      title: 'Relationship Simulator',
-      description: 'Practice difficult conversations safely',
+      title: t('secondary.library.relationshipSimulator.title'),
+      description: t('secondary.library.relationshipSimulator.description'),
       route: '/relationship-simulator',
       icon: <Users size={18} color={colors.primary} />,
     },
     {
       id: 'rewrite-message',
-      title: 'Rewrite The Message',
-      description: 'Practice calm, clear communication',
+      title: t('secondary.library.rewriteMessage.title'),
+      description: t('secondary.library.rewriteMessage.description'),
       route: '/rewrite-the-message',
       icon: <MessageSquareText size={18} color={colors.brandTeal} />,
     },
     {
       id: 'spot-distortion',
-      title: 'Spot The Distortion',
-      description: 'Identify mind reading, catastrophizing, and more',
+      title: t('secondary.library.spotDistortion.title'),
+      description: t('secondary.library.spotDistortion.description'),
       route: '/spot-the-distortion',
       icon: <Eye size={18} color={colors.primary} />,
     },
     {
       id: 'emotional-detective',
-      title: 'Emotional Detective',
-      description: 'Practice finding trigger → outcome chains',
+      title: t('secondary.library.emotionalDetective.title'),
+      description: t('secondary.library.emotionalDetective.description'),
       route: '/emotional-detective',
       icon: <Search size={18} color={colors.accent} />,
     },
     {
       id: 'dbt',
-      title: 'DBT Skills Academy',
-      description: 'Real-world practice scenarios',
+      title: t('secondary.library.dbt.title'),
+      description: t('secondary.library.dbt.description'),
       route: '/tools/dbt-coach',
       icon: <Shield size={18} color={colors.primary} />,
     },
     {
       id: 'grounding',
-      title: 'Calm Me Down',
-      description: '2-minute relief flow',
+      title: t('secondary.library.grounding.title'),
+      description: t('secondary.library.grounding.description'),
       route: '/grounding-mode',
       icon: <Wind size={18} color={colors.brandTeal} />,
     },
     {
       id: 'cbt-thought-record',
-      title: 'CBT Thought Record',
-      description: 'Challenge a painful automatic thought',
+      title: t('secondary.library.cbtThoughtRecord.title'),
+      description: t('secondary.library.cbtThoughtRecord.description'),
       route: '/cbt-thought-record',
       icon: <PenLine size={18} color={colors.accent} />,
     },
-  ], [colors]);
+  ], [colors, t]);
+
+  const medicationsTitle = t('secondary.medications.title');
+  const medicationsDescription = t('secondary.medications.description');
+  const appointmentsTitle = t('secondary.appointments.title');
+  const appointmentsDescription = t('secondary.appointments.description');
+  const communityTitle = t('secondary.community.title');
+  const communityDescription = t('secondary.community.description');
 
   const handleNav = useCallback((route: string, source: string) => {
     if (Platform.OS !== 'web') {
@@ -182,9 +190,9 @@ export default function ToolsScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.text }]}>What do you need right now?</Text>
+          <Text style={[styles.title, { color: colors.text }]}>{t('homeTitle')}</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            Choose the moment you are in. BPD Companion will take you to one useful action.
+            {t('homeSubtitle')}
           </Text>
         </View>
 
@@ -214,7 +222,7 @@ export default function ToolsScreen() {
                   {isHighlighted && (
                     <View style={[styles.recommendedPill, { backgroundColor: colors.brandTealSoft }]}>
                       <Sparkles size={12} color={colors.brandTeal} />
-                      <Text style={[styles.recommendedText, { color: colors.brandTeal }]}>Suggested</Text>
+                      <Text style={[styles.recommendedText, { color: colors.brandTeal }]}>{t('suggested')}</Text>
                     </View>
                   )}
                 </View>
@@ -230,7 +238,7 @@ export default function ToolsScreen() {
         </View>
 
         <View style={styles.moreSupportHeader}>
-          <Text style={[styles.libraryTitle, { color: colors.text }]}>More support</Text>
+          <Text style={[styles.libraryTitle, { color: colors.text }]}>{t('moreSupport')}</Text>
         </View>
 
         <TouchableOpacity
@@ -238,14 +246,16 @@ export default function ToolsScreen() {
           onPress={() => handleNav('/medications' as never, 'tools_medications')}
           activeOpacity={0.8}
           testID="tools-medications-card"
+          accessibilityRole="button"
+          accessibilityLabel={`${medicationsTitle}. ${medicationsDescription}`}
         >
           <View style={[styles.communityIconWrap, { backgroundColor: colors.primaryLight }]}>
             <Pill size={22} color={colors.primary} />
           </View>
           <View style={styles.communityTextWrap}>
-            <Text style={[styles.communityTitle, { color: colors.text }]}>Medications</Text>
+            <Text style={[styles.communityTitle, { color: colors.text }]}>{medicationsTitle}</Text>
             <Text style={[styles.communityBody, { color: colors.textSecondary }]}>
-              Track medication schedules, doses, notes, and today’s taken doses.
+              {medicationsDescription}
             </Text>
           </View>
           <ChevronRight size={18} color={colors.textMuted} />
@@ -256,14 +266,16 @@ export default function ToolsScreen() {
           onPress={() => handleNav('/appointments' as never, 'tools_appointments')}
           activeOpacity={0.8}
           testID="tools-appointments-card"
+          accessibilityRole="button"
+          accessibilityLabel={`${appointmentsTitle}. ${appointmentsDescription}`}
         >
           <View style={[styles.communityIconWrap, { backgroundColor: colors.brandTealSoft }]}>
             <Calendar size={22} color={colors.brandTeal} />
           </View>
           <View style={styles.communityTextWrap}>
-            <Text style={[styles.communityTitle, { color: colors.text }]}>Appointments</Text>
+            <Text style={[styles.communityTitle, { color: colors.text }]}>{appointmentsTitle}</Text>
             <Text style={[styles.communityBody, { color: colors.textSecondary }]}>
-              Keep therapy, psychiatry, doctor, and group appointments organized.
+              {appointmentsDescription}
             </Text>
           </View>
           <ChevronRight size={18} color={colors.textMuted} />
@@ -274,21 +286,23 @@ export default function ToolsScreen() {
           onPress={() => handleNav('/community' as never, 'tools_community')}
           activeOpacity={0.8}
           testID="tools-community-card"
+          accessibilityRole="button"
+          accessibilityLabel={`${communityTitle}. ${communityDescription}`}
         >
           <View style={[styles.communityIconWrap, { backgroundColor: colors.brandTealSoft }]}>
             <HeartHandshake size={22} color={colors.brandTeal} />
           </View>
           <View style={styles.communityTextWrap}>
-            <Text style={[styles.communityTitle, { color: colors.text }]}>Community</Text>
+            <Text style={[styles.communityTitle, { color: colors.text }]}>{communityTitle}</Text>
             <Text style={[styles.communityBody, { color: colors.textSecondary }]}>
-              Read and share with others who understand. Peer support, not crisis support or medical advice.
+              {communityDescription}
             </Text>
           </View>
           <ChevronRight size={18} color={colors.textMuted} />
         </TouchableOpacity>
 
         <View style={styles.libraryHeader}>
-          <Text style={[styles.libraryTitle, { color: colors.text }]}>Skill library</Text>
+          <Text style={[styles.libraryTitle, { color: colors.text }]}>{t('secondary.skillLibrary')}</Text>
         </View>
 
         <View style={styles.libraryList}>
@@ -299,6 +313,8 @@ export default function ToolsScreen() {
               onPress={() => handleNav(tool.route, `library_${tool.id}`)}
               activeOpacity={0.76}
               testID={`tools-library-${tool.id}`}
+              accessibilityRole="button"
+              accessibilityLabel={`${tool.title}. ${tool.description}`}
             >
               <View style={[styles.libraryIconWrap, { backgroundColor: colors.surface }]}>
                 {tool.icon}

@@ -1,3 +1,6 @@
+import { i18n } from '@/lib/i18n';
+import { normalizeLanguageTag } from '@/lib/i18n/languageStorage';
+
 export interface DontSendItAnalysis {
   emotionalIntensity: number;
   likelyEmotionalState: string;
@@ -103,6 +106,14 @@ const REACTIVE_TERMS = [
   'regret',
   'blocked',
   'ignore me',
+  'siempre',
+  'nunca',
+  'no te importa',
+  'déjame',
+  'dejame',
+  'te odio',
+  'bloqueado',
+  'me ignoras',
 ];
 
 const HOSTILE_TERMS = [
@@ -120,6 +131,15 @@ const HOSTILE_TERMS = [
   'pathetic',
   'worthless',
   'hate you',
+  'idiota',
+  'estúpido',
+  'estupido',
+  'patético',
+  'patetico',
+  'no vales',
+  'te odio',
+  'cállate',
+  'callate',
 ];
 
 const THREAT_PATTERNS = [
@@ -128,14 +148,17 @@ const THREAT_PATTERNS = [
   /\bwatch what happens\b/i,
   /\bi'?m going to (show up|come over|make you|tell everyone)\b/i,
   /\bi hope you (suffer|hurt|pay)\b/i,
+  /\bte vas a arrepentir\b/i,
+  /\bvas a ver\b/i,
+  /\bvoy a (arruinar|humillar|exponer)\b/i,
 ];
 
-const EMOTION_RULES: Array<{ label: string; terms: string[] }> = [
-  { label: 'anger or hurt', terms: ['angry', 'mad', 'furious', 'hate', 'disrespect', 'unfair', 'hurt'] },
-  { label: 'abandonment fear', terms: ['leave', 'leaving', 'abandon', 'ignored', 'no reply', 'reply', 'text back', 'forgot'] },
-  { label: 'shame or self-blame', terms: ['my fault', 'i ruin', 'i messed up', 'sorry for existing', 'too much'] },
-  { label: 'anxiety or urgency', terms: ['right now', 'answer me', 'need to know', 'can not wait', "can't wait", 'please respond'] },
-  { label: 'sadness or rejection', terms: ['rejected', 'unwanted', 'not important', 'alone', 'lonely'] },
+const EMOTION_RULES: { label: string; esLabel: string; terms: string[] }[] = [
+  { label: 'anger or hurt', esLabel: 'enojo o dolor', terms: ['angry', 'mad', 'furious', 'hate', 'disrespect', 'unfair', 'hurt', 'enojado', 'enojada', 'furioso', 'furiosa', 'odio', 'dolió', 'dolio', 'injusto'] },
+  { label: 'abandonment fear', esLabel: 'miedo al abandono', terms: ['leave', 'leaving', 'abandon', 'ignored', 'no reply', 'reply', 'text back', 'forgot', 'abandone', 'abandonar', 'ignora', 'ignorado', 'ignorada', 'responde', 'mensaje', 'se fue'] },
+  { label: 'shame or self-blame', esLabel: 'vergüenza o culpa hacia ti', terms: ['my fault', 'i ruin', 'i messed up', 'sorry for existing', 'too much', 'mi culpa', 'arruino', 'la regué', 'la regue', 'perdón por existir', 'perdon por existir', 'demasiado'] },
+  { label: 'anxiety or urgency', esLabel: 'ansiedad o urgencia', terms: ['right now', 'answer me', 'need to know', 'can not wait', "can't wait", 'please respond', 'ahora mismo', 'respóndeme', 'respondeme', 'necesito saber', 'no puedo esperar'] },
+  { label: 'sadness or rejection', esLabel: 'tristeza o rechazo', terms: ['rejected', 'unwanted', 'not important', 'alone', 'lonely', 'rechazado', 'rechazada', 'no importo', 'solo', 'sola', 'soledad'] },
 ];
 
 function normalize(text: string): string {
@@ -212,16 +235,23 @@ function boostIntensityForSignals(base: number, signals: string[]): number {
   return Math.max(1, Math.min(10, score));
 }
 
-function detectEmotion(message: string): string {
+function isSpanishOutput(): boolean {
+  return normalizeLanguageTag(i18n.language) === 'es';
+}
+
+function detectEmotion(message: string, spanish: boolean): string {
   const lower = message.toLowerCase();
   const matches = EMOTION_RULES
     .map(rule => ({ label: rule.label, count: rule.terms.filter(term => lower.includes(term)).length }))
     .filter(item => item.count > 0)
     .sort((a, b) => b.count - a.count);
-  return matches[0]?.label ?? 'heightened emotion';
+  const match = matches[0];
+  if (!match) return spanish ? 'emoción intensa' : 'heightened emotion';
+  const rule = EMOTION_RULES.find(item => item.label === match.label);
+  return spanish ? rule?.esLabel ?? match.label : match.label;
 }
 
-function emotionDrivers(likelyEmotion: string, hasUrgency: boolean, hasBlame: boolean): string[] {
+function emotionDrivers(likelyEmotion: string, hasUrgency: boolean, hasBlame: boolean, spanish = false): string[] {
   const lower = likelyEmotion.toLowerCase();
   const drivers: string[] = [];
   if (lower.includes('anger') || lower.includes('hurt')) drivers.push('anger');
@@ -229,22 +259,31 @@ function emotionDrivers(likelyEmotion: string, hasUrgency: boolean, hasBlame: bo
   if (lower.includes('abandonment')) drivers.push('abandonment fear');
   if (lower.includes('shame')) drivers.push('shame');
   if (lower.includes('anxiety')) drivers.push('anxiety');
-  if (hasUrgency) drivers.push('urgency');
-  if (hasBlame) drivers.push('blame');
+  if (lower.includes('enojo') || lower.includes('dolor')) drivers.push('enojo');
+  if (lower.includes('rechazo')) drivers.push('rechazo');
+  if (lower.includes('abandono')) drivers.push('miedo al abandono');
+  if (lower.includes('vergüenza')) drivers.push('vergüenza');
+  if (lower.includes('ansiedad')) drivers.push('ansiedad');
+  if (hasUrgency) drivers.push(spanish ? 'urgencia' : 'urgency');
+  if (hasBlame) drivers.push(spanish ? 'culpa' : 'blame');
   return [...new Set(drivers)].slice(0, 3);
 }
 
-function summarizeEmotionalMessage(message: string, likelyEmotion: string): string {
+function summarizeEmotionalMessage(message: string, likelyEmotion: string, spanish: boolean): string {
   const lower = message.toLowerCase();
-  if (lower.includes('reply') || lower.includes('text back') || lower.includes('ignored')) {
+  if (lower.includes('reply') || lower.includes('text back') || lower.includes('ignored') || lower.includes('respond') || lower.includes('ignora')) {
+    if (spanish) return `Esto suena como un mensaje que busca seguridad, contacto o prueba de que todavía importas. Debajo de eso, escucho ${likelyEmotion}.`;
     return `This sounds like a message asking for reassurance, contact, or proof that you still matter. Underneath it, I hear ${likelyEmotion}.`;
   }
-  if (lower.includes('sorry') || lower.includes('my fault') || lower.includes('too much')) {
+  if (lower.includes('sorry') || lower.includes('my fault') || lower.includes('too much') || lower.includes('perdón') || lower.includes('perdon') || lower.includes('mi culpa')) {
+    if (spanish) return `Esto suena como un mensaje que intenta reparar rápido o bajar el miedo de ser demasiado. Debajo de eso, escucho ${likelyEmotion}.`;
     return `This sounds like a message trying to repair quickly or reduce the fear of being too much. Underneath it, I hear ${likelyEmotion}.`;
   }
-  if (lower.includes('disrespect') || lower.includes('unfair') || lower.includes('angry') || lower.includes('hate')) {
+  if (lower.includes('disrespect') || lower.includes('unfair') || lower.includes('angry') || lower.includes('hate') || lower.includes('injust') || lower.includes('enojo') || lower.includes('odio')) {
+    if (spanish) return `Esto suena como un mensaje que intenta proteger tu dignidad después de sentirte herido/a o no tomado/a en cuenta. Debajo de eso, escucho ${likelyEmotion}.`;
     return `This sounds like a message trying to protect your dignity after feeling hurt or dismissed. Underneath it, I hear ${likelyEmotion}.`;
   }
+  if (spanish) return `Esto se siente emocionalmente cargado e importante. Debajo de las palabras, escucho ${likelyEmotion} y una necesidad de ser entendido/a.`;
   return `This sounds emotionally loaded and important. Underneath the words, I hear ${likelyEmotion} and a need to be understood.`;
 }
 
@@ -284,9 +323,10 @@ function buildImpulsivityReason(
   hasBlame: boolean,
   desiredOutcome?: DontSendItDesiredOutcome,
   riskSignals: string[] = [],
+  spanish = false,
 ): string {
-  const drivers = emotionDrivers(likelyEmotion, hasUrgency, hasBlame);
-  const driverText = drivers.length > 0 ? drivers.join(' and ') : 'heightened emotion';
+  const drivers = emotionDrivers(likelyEmotion, hasUrgency, hasBlame, spanish);
+  const driverText = drivers.length > 0 ? drivers.join(spanish ? ' y ' : ' and ') : (spanish ? 'emoción intensa' : 'heightened emotion');
   const signals: string[] = [...riskSignals];
   if (reactiveHits > 0 && signals.length === 0) signals.push('reactive wording');
   if (hasUrgency && !signals.includes('urgency or pressure')) signals.push('urgency');
@@ -295,16 +335,79 @@ function buildImpulsivityReason(
   else if (emotionalIntensity >= 7) signals.push('high emotional intensity');
   if (desiredOutcome === 'vent_only') signals.push('a venting goal rather than a relationship goal');
 
+  if (spanish) {
+    return signals.length > 0
+      ? `Este mensaje parece venir de ${driverText}. Lo marqué así porque noté ${signals.slice(0, 5).join(', ')}. Los mensajes escritos en este estado suelen traer arrepentimiento después.`
+      : `Este mensaje parece relativamente estable, con algo de ${driverText}. Una pausa breve puede ayudar a que coincida con tu objetivo real.`;
+  }
+
   return signals.length > 0
     ? `This message appears driven by ${driverText}. I rated it this way because I noticed ${signals.slice(0, 5).join(', ')}. Messages written in this state are often regretted later.`
     : `This message appears relatively steady, with some ${driverText}. A short pause may still help it match your actual goal.`;
+}
+
+function spanishRewriteOptions(
+  recipient: DontSendItRecipient,
+  desiredOutcome: DontSendItDesiredOutcome,
+  emotionalIntensity: number,
+): DontSendItRewriteOption[] {
+  const isWork = recipient === 'coworker';
+  const relationshipPhrase = isWork ? 'dinámica laboral' : recipient === 'other' ? 'dinámica' : 'relación';
+  const pauseLead = emotionalIntensity >= 7 ? 'Estoy demasiado activado/a para decir esto bien ahora. ' : '';
+  const defaults: Record<DontSendItDesiredOutcome, DontSendItRewriteOption[]> = {
+    vent_only: [
+      { id: 'calm', label: 'Opción A — Calmada', description: 'Mantiene el mensaje privado por ahora.', text: 'Estoy muy activado/a y necesito sacar esto sin enviarlo todavía. Voy a pausar antes de convertirlo en un mensaje.' },
+      { id: 'direct', label: 'Opción B — Directa', description: 'Nombra la pausa con claridad.', text: 'Estoy molesto/a y no estoy listo/a para responder de forma productiva. Me voy a tomar tiempo antes de enviar algo.' },
+      { id: 'boundary', label: 'Opción C — Con límite', description: 'Protege espacio sin escalar.', text: 'Necesito espacio ahora mismo. Voy a volver a esto cuando pueda hablar desde un lugar más estable.' },
+      { id: 'repair', label: 'Opción D — Cuidando la relación', description: 'Evita daño sin dejar de ser honesto/a.', text: 'Estoy molesto/a y no quiero decir algo dañino. Voy a pausar y hablar más tarde.' },
+      { id: 'short', label: 'Opción E — Versión breve', description: 'Mínima y clara.', text: 'Estoy molesto/a. Necesito pausar antes de responder.' },
+    ],
+    express_hurt: [
+      { id: 'calm', label: 'Opción A — Calmada', description: 'Suaviza el inicio.', text: isWork ? 'Quería decir que esto me afectó más de lo que esperaba. Me gustaría hablarlo con calma cuando haya espacio.' : 'Me dolió lo que pasó y quiero decirlo con claridad en vez de reaccionar. ¿Podemos hablar cuando ambos tengamos un poco de espacio?' },
+      { id: 'direct', label: 'Opción B — Directa', description: 'Clara sin atacar.', text: 'Me dolió lo que pasó. Quiero hablarlo directamente, pero no quiero que se convierta en una pelea.' },
+      { id: 'boundary', label: 'Opción C — Con límite', description: 'Nombra la necesidad.', text: 'Estoy dispuesto/a a hablarlo, pero necesito que la conversación se mantenga respetuosa y calmada.' },
+      { id: 'repair', label: 'Opción D — Reparadora', description: 'Mantiene abierta la conexión.', text: 'Me importa que manejemos esto bien. Estoy herido/a y me gustaría que entendamos qué pasó sin escalar.' },
+      { id: 'short', label: 'Opción E — Breve', description: 'Breve y estable.', text: 'Eso me dolió. ¿Podemos hablarlo con calma más tarde?' },
+    ],
+    set_boundary: [
+      { id: 'calm', label: 'Opción A — Calmada', description: 'Firme y con base.', text: isWork ? 'Quiero ser claro/a sobre lo que necesito de ahora en adelante. Estoy abierto/a a hablarlo, pero necesito que la conversación sea respetuosa y enfocada.' : 'Me importa manejar esto bien y también necesito poner un límite. Estoy dispuesto/a a hablar, pero necesito que lo mantengamos respetuoso.' },
+      { id: 'direct', label: 'Opción B — Directa', description: 'Límite claro.', text: 'No estoy bien continuando esta conversación si se vuelve hiriente. Voy a volver cuando podamos hablar con respeto.' },
+      { id: 'boundary', label: 'Opción C — Límite fuerte', description: 'Protege espacio con claridad.', text: 'Necesito detener esto por ahora. Me voy a tomar espacio y podemos retomarlo cuando la conversación pueda mantenerse respetuosa.' },
+      { id: 'repair', label: 'Opción D — Límite con cuidado', description: 'Límite más conexión.', text: 'Quiero reparar esto, pero no puedo hacerlo mientras ambos estamos activados. Me voy a tomar espacio para no empeorarlo.' },
+      { id: 'short', label: 'Opción E — Breve', description: 'Corta y clara.', text: 'Necesito que esta conversación sea respetuosa, o voy a pausarla.' },
+    ],
+    start_conversation: [
+      { id: 'calm', label: 'Opción A — Calmada', description: 'Invita una conversación estable.', text: isWork ? 'Algo de esta situación se me quedó dando vueltas. ¿Hay un buen momento para hablarlo y aclararlo?' : 'Hay algo que me quedó dando vueltas y prefiero hablarlo con calma en vez de asumir. ¿Hay un buen momento para hablar?' },
+      { id: 'direct', label: 'Opción B — Directa', description: 'Simple y clara.', text: 'Me gustaría hablar de lo que pasó. No quiero pelear; quiero entenderlo mejor.' },
+      { id: 'boundary', label: 'Opción C — Con límite', description: 'Marca el tono antes de hablar.', text: 'Estoy abierto/a a hablarlo, pero quiero que lo hagamos con calma y respeto.' },
+      { id: 'repair', label: 'Opción D — Reparadora', description: 'Primero la conexión.', text: 'No quiero que esto se convierta en resentimiento. ¿Podemos hablarlo cuando ambos tengamos espacio?' },
+      { id: 'short', label: 'Opción E — Breve', description: 'Apertura rápida.', text: '¿Podemos hablar de lo que pasó más tarde?' },
+    ],
+    get_response: [
+      { id: 'calm', label: 'Opción A — Calmada', description: 'Pide sin presionar.', text: isWork ? 'Cuando tengas oportunidad, ¿podrías decirme en qué está esto? Me ayudaría tener una actualización breve para organizarme.' : 'Me siento inquieto/a al no recibir respuesta y estoy intentando no reaccionar desde eso. Cuando puedas, ¿me dices dónde estamos?' },
+      { id: 'direct', label: 'Opción B — Directa', description: 'Petición clara.', text: '¿Podrías responderme cuando tengas oportunidad? Prefiero no asumir qué significa el silencio.' },
+      { id: 'boundary', label: 'Opción C — Con límite', description: 'Protege tu sistema nervioso.', text: 'Voy a dejar de revisar el teléfono por un rato. Respóndeme cuando puedas.' },
+      { id: 'repair', label: 'Opción D — Reparadora', description: 'Nombra cuidado e incertidumbre.', text: 'Me importa esta conversación y el silencio me está activando mucho. ¿Puedes responder cuando tengas espacio?' },
+      { id: 'short', label: 'Opción E — Breve', description: 'Empujón pequeño.', text: '¿Me puedes avisar cuando tengas oportunidad?' },
+    ],
+    end_relationship: [
+      { id: 'calm', label: 'Opción A — Calmada', description: 'Mejor después de pausar.', text: `${pauseLead}He pensado en esto y no creo que continuar esta ${relationshipPhrase} sea lo correcto para mí. Quiero terminarlo con respeto.` },
+      { id: 'direct', label: 'Opción B — Directa', description: 'Final claro.', text: 'No quiero continuar esta relación. Lo digo con claridad y respeto.' },
+      { id: 'boundary', label: 'Opción C — Con límite', description: 'Termina con un límite.', text: 'Estoy terminando esta relación y necesito espacio después de este mensaje. No voy a discutirlo mientras las emociones estén altas.' },
+      { id: 'repair', label: 'Opción D — Menos final', description: 'Si no estás seguro/a.', text: 'Estoy muy molesto/a y necesito espacio. No quiero tomar una decisión final mientras estoy tan activado/a.' },
+      { id: 'short', label: 'Opción E — Breve', description: 'Breve y firme.', text: 'No creo que continuar esto sea lo correcto para mí. Necesito terminarlo con respeto.' },
+    ],
+  };
+  return defaults[desiredOutcome];
 }
 
 function baseRewriteOptions(
   recipient: DontSendItRecipient,
   desiredOutcome: DontSendItDesiredOutcome,
   emotionalIntensity: number,
+  spanish = false,
 ): DontSendItRewriteOption[] {
+  if (spanish) return spanishRewriteOptions(recipient, desiredOutcome, emotionalIntensity);
   const isWork = recipient === 'coworker';
   const relationshipPhrase = recipient === 'coworker'
     ? 'work dynamic'
@@ -367,17 +470,49 @@ function contentAwareRewriteOptions(
   desiredOutcome: DontSendItDesiredOutcome,
   emotionalIntensity: number,
   riskSignals: string[],
+  spanish = false,
 ): DontSendItRewriteOption[] {
-  const lower = message.toLowerCase();
   const isWork = recipient === 'coworker';
-  const isAngry = riskSignals.includes('hostility') || riskSignals.includes('personal attack') || /\b(fuck|hate|angry|mad|furious|shut up)\b/i.test(message);
-  const isAccusatory = riskSignals.includes('repeated accusations') || /\byou (always|never|don'?t care|ignored|lied|made me)\b/i.test(message);
-  const isAnxious = /\b(reply|text back|answer me|ignored|no reply|where are you|please respond|need to know)\b/i.test(message);
-  const isNeedyOrReassuranceSeeking = /\b(do you still|are we okay|please don'?t leave|tell me you|need you|if you cared)\b/i.test(message);
+  const isAngry = riskSignals.includes('hostility') || riskSignals.includes('personal attack') || /\b(fuck|hate|angry|mad|furious|shut up|odio|enojad[oa]|furios[oa]|c[aá]llate)\b/i.test(message);
+  const isAccusatory = riskSignals.includes('repeated accusations') || /\b(you (always|never|don'?t care|ignored|lied|made me)|t[úu] (siempre|nunca)|no te importa|me ignoras|mentiste|me hiciste)\b/i.test(message);
+  const isAnxious = /\b(reply|text back|answer me|ignored|no reply|where are you|please respond|need to know|resp[oó]ndeme|cont[eé]stame|me ignoras|sin respuesta|d[oó]nde est[aá]s|necesito saber)\b/i.test(message);
+  const isNeedyOrReassuranceSeeking = /\b(do you still|are we okay|please don'?t leave|tell me you|need you|if you cared|todav[ií]a me|estamos bien|no me dejes|dime que|te necesito|si te importara)\b/i.test(message);
   const isEnding = desiredOutcome === 'end_relationship';
 
   if (!isAngry && !isAccusatory && !isAnxious && !isNeedyOrReassuranceSeeking && !isEnding) {
-    return baseRewriteOptions(recipient, desiredOutcome, emotionalIntensity);
+    return baseRewriteOptions(recipient, desiredOutcome, emotionalIntensity, spanish);
+  }
+
+  if (spanish) {
+    const relationNoun = isWork ? 'esto' : 'nosotros';
+    const calmDirect = isAngry
+      ? 'Estoy muy molesto/a y no quiero convertir eso en un ataque. Necesito un poco de tiempo antes de hablar de esto con claridad.'
+      : isAnxious
+        ? 'Me siento inquieto/a al no recibir respuesta. Cuando puedas, dime dónde estamos.'
+        : 'Quiero hablar de esto con claridad, sin culpar ni escalar.';
+    const warmRepair = isAngry
+      ? `Me importa cómo esto afecta a ${relationNoun}, así que voy a pausar en vez de enviar esto mientras estoy enojado/a. Me gustaría hablar cuando esté más estable.`
+      : isNeedyOrReassuranceSeeking
+        ? 'Me siento inseguro/a y estoy intentando no ponerte presión. Cuando tengas espacio, agradecería un poco de seguridad.'
+        : 'Me importa manejar esto bien. ¿Podemos hablar de lo que pasó cuando ambos tengamos espacio?';
+    const boundary = isEnding
+      ? 'No quiero tomar una decisión final mientras estoy tan activado/a. Me voy a tomar espacio y volveré a esto cuando tenga claridad.'
+      : isAccusatory
+        ? 'No estoy bien con lo que pasó, pero quiero hablarlo sin acusaciones. Necesito que la conversación se mantenga respetuosa.'
+        : 'Necesito pausar esta conversación por ahora. Volveré cuando pueda responder con más calma.';
+    const short = isAnxious
+      ? '¿Me puedes avisar cuando tengas oportunidad? Estoy intentando no asumir.'
+      : isAngry
+        ? 'Estoy demasiado molesto/a para responder bien. Voy a pausar y volver más tarde.'
+        : 'Quiero hablar de esto con calma cuando haya espacio.';
+
+    return [
+      { id: 'calm', label: 'Opción A — Calmada / directa', description: 'Nombra el problema sin atacar.', text: calmDirect },
+      { id: 'repair', label: 'Opción B — Cálida / cuidadosa', description: 'Protege la conexión sin dejar de ser honesto/a.', text: warmRepair },
+      { id: 'boundary', label: 'Opción C — Enfocada en límites', description: 'Crea espacio sin escalar.', text: boundary },
+      { id: 'short', label: 'Opción D — Texto breve', description: 'Lo bastante breve para enviar como mensaje.', text: short },
+      { id: 'direct', label: 'Opción E — Petición clara', description: 'Convierte la emoción en una petición concreta.', text: isWork ? '¿Podemos aclarar qué pasó y qué tiene que pasar después?' : '¿Podemos hablar de lo que pasó sin convertirlo en una pelea?' },
+    ];
   }
 
   const relationNoun = isWork ? 'this' : 'us';
@@ -414,13 +549,14 @@ function contentAwareRewriteOptions(
 function applyRewriteInstruction(
   option: DontSendItRewriteOption,
   instruction?: DontSendItRewriteInstruction | null,
+  spanish = false,
 ): DontSendItRewriteOption {
   if (!instruction) return option;
   const transformations: Record<DontSendItRewriteInstruction, string> = {
-    more_direct: 'I want to be direct: ',
-    less_direct: 'I’m trying to say this carefully: ',
-    more_compassionate: 'I care about how this lands, and ',
-    more_assertive: 'I need to be clear: ',
+    more_direct: spanish ? 'Quiero ser directo/a: ' : 'I want to be direct: ',
+    less_direct: spanish ? 'Estoy intentando decir esto con cuidado: ' : 'I’m trying to say this carefully: ',
+    more_compassionate: spanish ? 'Me importa cómo llega esto, y ' : 'I care about how this lands, and ',
+    more_assertive: spanish ? 'Necesito ser claro/a: ' : 'I need to be clear: ',
     shorter: '',
     longer: '',
   };
@@ -431,13 +567,15 @@ function applyRewriteInstruction(
   if (instruction === 'longer') {
     return {
       ...option,
-      text: `${option.text} I’m trying to respond in a way that is honest, respectful, and less likely to create regret later.`,
+      text: spanish
+        ? `${option.text} Estoy intentando responder de una forma honesta, respetuosa y con menos probabilidad de traer arrepentimiento después.`
+        : `${option.text} I’m trying to respond in a way that is honest, respectful, and less likely to create regret later.`,
     };
   }
   return { ...option, text: `${transformations[instruction]}${option.text}` };
 }
 
-function buildPatternCheck(message: string, context?: DontSendItContext): string[] {
+function buildPatternCheck(message: string, context?: DontSendItContext, spanish = false): string[] {
   const lower = message.toLowerCase();
   const checks: string[] = [];
   const joinedConversations = (context?.previousConversationTexts ?? []).join(' ').toLowerCase();
@@ -456,24 +594,26 @@ function buildPatternCheck(message: string, context?: DontSendItContext): string
   const relationshipSignal = joinedPatterns.includes('relationship') || joinedPatterns.includes('partner') || joinedPatterns.includes('conflict');
 
   if (abandonmentSignal || joinedPatterns.includes('abandon')) {
-    checks.push('This resembles moments where abandonment fear or uncertainty may be driving the urge to reach for reassurance.');
+    checks.push(spanish ? 'Esto se parece a momentos donde el miedo al abandono o la incertidumbre pueden estar impulsando la necesidad de buscar seguridad.' : 'This resembles moments where abandonment fear or uncertainty may be driving the urge to reach for reassurance.');
   }
   if (rejectionSignal || joinedPatterns.includes('rejection') || joinedPatterns.includes('rejected')) {
-    checks.push('This may connect to rejection sensitivity: the message is trying to reduce the sting of feeling unwanted or dismissed.');
+    checks.push(spanish ? 'Esto puede conectarse con sensibilidad al rechazo: el mensaje intenta bajar el dolor de sentirse no querido/a o no tomado/a en cuenta.' : 'This may connect to rejection sensitivity: the message is trying to reduce the sting of feeling unwanted or dismissed.');
   }
   if (relationshipSignal || lower.includes('you')) {
-    checks.push('This appears relationship-linked, so tone may matter as much as the content.');
+    checks.push(spanish ? 'Esto parece vinculado a una relación, así que el tono puede importar tanto como el contenido.' : 'This appears relationship-linked, so tone may matter as much as the content.');
   }
   if (regretSignal || /\b(always|never|done|blocked|hate)\b/i.test(message)) {
-    checks.push('This resembles situations where you later felt regret or wanted a chance to say it differently.');
+    checks.push(spanish ? 'Esto se parece a situaciones donde después sentiste arrepentimiento o quisiste decirlo de otra manera.' : 'This resembles situations where you later felt regret or wanted a chance to say it differently.');
   }
   if ((context?.recentTriggers ?? []).length > 0 || (context?.recentEmotions ?? []).length > 0) {
-    checks.push(`Based on recent entries, ${[...(context?.recentTriggers ?? []), ...(context?.recentEmotions ?? [])].slice(0, 2).join(' and ')} may be part of the current emotional pattern.`);
+    checks.push(spanish
+      ? `Según registros recientes, ${[...(context?.recentTriggers ?? []), ...(context?.recentEmotions ?? [])].slice(0, 2).join(' y ')} puede ser parte del patrón emocional actual.`
+      : `Based on recent entries, ${[...(context?.recentTriggers ?? []), ...(context?.recentEmotions ?? [])].slice(0, 2).join(' and ')} may be part of the current emotional pattern.`);
   }
 
   return checks.length > 0
     ? checks.slice(0, 4)
-    : ['There is not enough saved pattern data yet, so this check is based mainly on the words in this draft.'];
+    : [spanish ? 'Todavía no hay suficientes datos de patrones guardados, así que esta revisión se basa principalmente en las palabras de este borrador.' : 'There is not enough saved pattern data yet, so this check is based mainly on the words in this draft.'];
 }
 
 function chooseWaitingPeriod(
@@ -489,7 +629,15 @@ function chooseWaitingPeriod(
   return '5 min';
 }
 
-function waitingCopy(period: DontSendItAnalysis['suggestedWaitingPeriod'], intensity: number): string {
+function waitingCopy(period: DontSendItAnalysis['suggestedWaitingPeriod'], intensity: number, spanish = false): string {
+  if (spanish) {
+    if (period === '1 hour') return 'Espera 1 hora si puedes. Haz algo físico o de anclaje, luego vuelve a leer la versión más calmada antes de decidir.';
+    if (period === '20 min') return 'Espera 20 minutos. Deja pasar la primera ola emocional y luego revisa si esto todavía dice lo que quieres decir.';
+    if (period === 'Tomorrow') return 'Consúltalo mañana. Esto es para mensajes que podrían cambiar la relación.';
+    return intensity >= 4
+      ? 'Espera 5 minutos y léelo una vez más. Una pausa pequeña todavía puede cambiar el tono.'
+      : 'Espera 5 minutos y envíalo solo si todavía se siente claro y respetuoso.';
+  }
   if (period === '1 hour') return 'Wait 1 hour if you can. Do something physical or grounding, then reread the calmer version before deciding.';
   if (period === '20 min') return 'Wait 20 minutes. Let the first emotional wave pass, then check whether this still says what you mean.';
   if (period === 'Tomorrow') return 'Sleep on it and decide tomorrow. This is for messages that could change the relationship.';
@@ -502,14 +650,15 @@ export function analyzeDontSendItMessage(
   message: string,
   context?: DontSendItContext,
 ): DontSendItAnalysis {
+  const spanish = isSpanishOutput();
   const trimmed = normalize(message);
   const riskSignals = extractRiskSignals(trimmed);
   const emotionalIntensity = boostIntensityForSignals(estimateIntensity(trimmed), riskSignals);
-  const likelyEmotionalState = detectEmotion(trimmed);
+  const likelyEmotionalState = detectEmotion(trimmed, spanish);
   const reactiveHits = countMatches(trimmed, REACTIVE_TERMS);
   const appearsReactive = emotionalIntensity >= 6 || reactiveHits > 0 || riskSignals.length > 0 || /!{2,}|[A-Z]{5,}/.test(trimmed);
-  const hasBlame = /\byou\b/i.test(trimmed) && /\b(always|never|made me|your fault|you don't|you do not)\b/i.test(trimmed);
-  const hasUrgency = /\b(now|right now|immediately|answer me|text me back|reply)\b/i.test(trimmed);
+  const hasBlame = /\b(you|t[úu]|te)\b/i.test(trimmed) && /\b(always|never|made me|your fault|you don't|you do not|siempre|nunca|me hiciste|tu culpa|no te importa)\b/i.test(trimmed);
+  const hasUrgency = /\b(now|right now|immediately|answer me|text me back|reply|ahora|ahora mismo|inmediatamente|resp[oó]ndeme|cont[eé]stame|responde)\b/i.test(trimmed);
   const recipient = context?.recipient ?? 'other';
   const desiredOutcome = context?.desiredOutcome;
   const impulsivityRisk = getImpulsivityRisk(emotionalIntensity, reactiveHits, hasUrgency, riskSignals);
@@ -520,38 +669,42 @@ export function analyzeDontSendItMessage(
     desiredOutcome ?? 'start_conversation',
     emotionalIntensity,
     riskSignals,
+    spanish,
   )
-    .map(option => applyRewriteInstruction(option, context?.rewriteInstruction));
+    .map(option => applyRewriteInstruction(option, context?.rewriteInstruction, spanish));
 
   const whatImNoticing = [
     appearsReactive
-      ? 'The message appears reactive, which means it may be coming from urgency rather than your clearest self.'
-      : 'The message does not look highly reactive, but a short pause may still help it land better.',
+      ? (spanish ? 'El mensaje parece reactivo, lo que significa que puede venir de la urgencia y no de tu parte más clara.' : 'The message appears reactive, which means it may be coming from urgency rather than your clearest self.')
+      : (spanish ? 'El mensaje no se ve muy reactivo, pero una pausa breve todavía puede ayudar a que llegue mejor.' : 'The message does not look highly reactive, but a short pause may still help it land better.'),
   ];
 
   if (hasBlame) {
-    whatImNoticing.push('There is some blame language that could make the other person defend themselves instead of hearing you.');
+    whatImNoticing.push(spanish ? 'Hay algo de lenguaje de culpa que podría hacer que la otra persona se defienda en vez de escucharte.' : 'There is some blame language that could make the other person defend themselves instead of hearing you.');
   }
   if (hasUrgency) {
-    whatImNoticing.push('There is urgency in the message, which can make the conversation feel pressured.');
+    whatImNoticing.push(spanish ? 'Hay urgencia en el mensaje, y eso puede hacer que la conversación se sienta presionada.' : 'There is urgency in the message, which can make the conversation feel pressured.');
   }
   if (desiredOutcome) {
-    whatImNoticing.push(`Your goal is to ${DONT_SEND_IT_OUTCOME_LABELS[desiredOutcome].toLowerCase()}, so the rewrite focuses on effectiveness instead of emotional release.`);
+    const outcomeLabel = spanish ? i18n.t(`tools:dontSend.outcomes.${desiredOutcome}`).toLowerCase() : DONT_SEND_IT_OUTCOME_LABELS[desiredOutcome].toLowerCase();
+    whatImNoticing.push(spanish
+      ? `Tu objetivo es ${outcomeLabel}, así que la reescritura se enfoca en efectividad en vez de descarga emocional.`
+      : `Your goal is to ${outcomeLabel}, so the rewrite focuses on effectiveness instead of emotional release.`);
   }
 
   const possibleConsequences = [
     appearsReactive
-      ? 'It may escalate the conversation or make repair harder later.'
-      : 'It may still land more strongly than you intend if the other person is defensive.',
+      ? (spanish ? 'Puede escalar la conversación o hacer más difícil reparar después.' : 'It may escalate the conversation or make repair harder later.')
+      : (spanish ? 'Aún podría llegar más fuerte de lo que intentas si la otra persona está a la defensiva.' : 'It may still land more strongly than you intend if the other person is defensive.'),
     hasBlame
-      ? 'The other person may focus on defending themselves instead of understanding the hurt underneath.'
-      : 'The other person may hear the feeling, but the message could be clearer with one calm need.',
+      ? (spanish ? 'La otra persona puede enfocarse en defenderse en vez de entender el dolor debajo.' : 'The other person may focus on defending themselves instead of understanding the hurt underneath.')
+      : (spanish ? 'La otra persona puede escuchar el sentimiento, pero el mensaje podría ser más claro con una necesidad tranquila.' : 'The other person may hear the feeling, but the message could be clearer with one calm need.'),
     emotionalIntensity >= 7
-      ? 'You may feel relief for a moment, then regret if the message does not match what you truly wanted.'
-      : 'Waiting may help you decide whether this says what you actually want to communicate.',
+      ? (spanish ? 'Podrías sentir alivio por un momento y luego arrepentirte si el mensaje no coincide con lo que realmente querías.' : 'You may feel relief for a moment, then regret if the message does not match what you truly wanted.')
+      : (spanish ? 'Esperar puede ayudarte a decidir si esto dice lo que de verdad quieres comunicar.' : 'Waiting may help you decide whether this says what you actually want to communicate.'),
   ];
   if (desiredOutcome === 'vent_only') {
-    possibleConsequences.unshift('If the real goal is to vent, sending it may create a conversation you do not actually want right now.');
+    possibleConsequences.unshift(spanish ? 'Si el objetivo real es desahogarte, enviarlo puede crear una conversación que en realidad no quieres ahora.' : 'If the real goal is to vent, sending it may create a conversation you do not actually want right now.');
   }
 
   return {
@@ -567,16 +720,17 @@ export function analyzeDontSendItMessage(
       hasBlame,
       desiredOutcome,
       riskSignals,
+      spanish,
     ),
     riskSignals,
-    whatImHearing: summarizeEmotionalMessage(trimmed, likelyEmotionalState),
+    whatImHearing: summarizeEmotionalMessage(trimmed, likelyEmotionalState, spanish),
     whatImNoticing,
     possibleConsequences,
     potentialImpact: possibleConsequences,
-    patternCheck: buildPatternCheck(trimmed, context),
+    patternCheck: buildPatternCheck(trimmed, context, spanish),
     calmerVersion: rewriteOptions[0]?.text ?? '',
     rewriteOptions,
     suggestedWaitingPeriod,
-    waitingSuggestion: waitingCopy(suggestedWaitingPeriod, emotionalIntensity),
+    waitingSuggestion: waitingCopy(suggestedWaitingPeriod, emotionalIntensity, spanish),
   };
 }

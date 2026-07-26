@@ -47,6 +47,7 @@ import {
   hasSeenTodayTutorial,
   markTodayTutorialSeen,
 } from '@/services/habits/tutorialAndRewardsService';
+import { useTranslation } from 'react-i18next';
 
 type EmotionOption = {
   id: string;
@@ -155,12 +156,12 @@ function triggerLabelsToIds(triggers: Trigger[]): string[] {
 }
 
 function getContextFromNotes(notes?: string): string {
-  const match = (notes ?? '').match(/(?:^|\n)Context:\s*(.+)$/i);
+  const match = (notes ?? '').match(/(?:^|\n)(?:Context|Contexto):\s*(.+)$/i);
   return match?.[1]?.trim() ?? '';
 }
 
-function buildCheckInNotes(contextLabel: string): string {
-  return ['Quick Today check-in', contextLabel ? `Context: ${contextLabel}` : '']
+function buildCheckInNotes(contextLabel: string, headerLabel: string, contextPrefix: string): string {
+  return [headerLabel, contextLabel ? `${contextPrefix}: ${contextLabel}` : '']
     .filter(Boolean)
     .join('\n');
 }
@@ -182,26 +183,26 @@ function getEmotionToneFromLabels(labels: string[]): 'positive' | 'difficult' {
   return getEmotionTone(ids);
 }
 
-function getGreeting(): string {
+function getGreetingKey(): string {
   const hour = new Date().getHours();
-  if (hour < 6) return 'Still up?';
-  if (hour < 12) return 'Good morning';
-  if (hour < 17) return 'Good afternoon';
-  if (hour < 21) return 'Good evening';
-  return 'Winding down?';
+  if (hour < 6) return 'stillUp';
+  if (hour < 12) return 'morning';
+  if (hour < 17) return 'afternoon';
+  if (hour < 21) return 'evening';
+  return 'windingDown';
 }
 
-function getIntensityLabel(intensity: number, tone: 'positive' | 'difficult'): string {
+function getIntensityLabelKey(intensity: number, tone: 'positive' | 'difficult'): string {
   if (tone === 'positive') {
-    if (intensity <= 3) return 'Slight';
-    if (intensity <= 6) return 'Noticeable';
-    if (intensity <= 8) return 'Strong';
-    return 'Very strong';
+    if (intensity <= 3) return 'slight';
+    if (intensity <= 6) return 'noticeable';
+    if (intensity <= 8) return 'strong';
+    return 'veryStrong';
   }
-  if (intensity <= 3) return 'Mild';
-  if (intensity <= 6) return 'Moderate';
-  if (intensity <= 8) return 'Intense';
-  return 'Very intense';
+  if (intensity <= 3) return 'mild';
+  if (intensity <= 6) return 'moderate';
+  if (intensity <= 8) return 'intense';
+  return 'veryIntense';
 }
 
 function getDistressLevel(intensity: number) {
@@ -227,6 +228,7 @@ export default function HomeScreen() {
   const todayAppointments = appointmentContext?.todayAppointments ?? [];
   const nextAppointment = appointmentContext?.nextAppointment ?? null;
   const { trackEvent } = useAnalytics();
+  const { t } = useTranslation('today');
   const { maybeShowReviewPrompt } = useReviewPrompt();
   const {
     detection: spiralDetection,
@@ -302,7 +304,7 @@ export default function HomeScreen() {
     ]).start();
   }, [fadeAnim, slideAnim]);
 
-  const greeting = useMemo(() => getGreeting(), []);
+  const greeting = useMemo(() => t(`home.greetings.${getGreetingKey()}`), [t]);
   const todaysCheckIn = useMemo(() => {
     const now = Date.now();
     return [...journalEntries]
@@ -371,68 +373,92 @@ export default function HomeScreen() {
     () => todayAppointments.find(appointment => !appointment.completed) ?? nextAppointment,
     [nextAppointment, todayAppointments],
   );
+  const translateEmotionOption = useCallback((option: EmotionOption) => (
+    t(`home.emotions.${option.id}`, { defaultValue: option.label })
+  ), [t]);
+  const translateTriggerOption = useCallback((option: TriggerOption) => (
+    t(`home.triggers.${option.id}`, { defaultValue: option.label })
+  ), [t]);
+  const translateContextOption = useCallback((option: ContextOption) => (
+    t(`home.contexts.${option.id}`, { defaultValue: option.label })
+  ), [t]);
+  const translateContextLabel = useCallback((label: string) => {
+    const option = CONTEXT_OPTIONS.find(item => item.label.toLowerCase() === label.toLowerCase());
+    return option ? translateContextOption(option) : label;
+  }, [translateContextOption]);
+  const translateEmotionLabel = useCallback((label: string) => {
+    const option = EMOTION_OPTIONS.find(item => item.label.toLowerCase() === label.toLowerCase());
+    return option ? translateEmotionOption(option) : label;
+  }, [translateEmotionOption]);
+  const translateTriggerLabel = useCallback((label: string) => {
+    const option = TRIGGER_OPTIONS.find(item => item.label.toLowerCase() === label.toLowerCase());
+    return option ? translateTriggerOption(option) : label;
+  }, [translateTriggerOption]);
+  const translateRelationshipTag = useCallback((tag: string) => (
+    t(`home.relationships.${tag}`, { defaultValue: RELATIONSHIP_TAG_OPTIONS.find(option => option.value === tag)?.label ?? tag })
+  ), [t]);
 
   const recommendation = useMemo(() => {
     if (highIntensity) {
       return {
-        title: 'Start by calming your body',
-        body: 'When emotions feel intense, BPD Companion suggests a grounding tool before reflection.',
-        cta: 'Start Calm Me Down',
+        title: t('home.recommendations.calm.title'),
+        body: t('home.recommendations.calm.body'),
+        cta: t('home.recommendations.calm.cta'),
         route: '/grounding-mode',
         icon: Wind,
       };
     }
     if (recommendationEmotionIds.some(id => ['angry', 'triggered', 'rejected', 'abandoned'].includes(id))) {
       return {
-        title: 'Pause before reacting',
-        body: 'Check the message or reply before you send it.',
-        cta: 'Open Don’t Send It',
+        title: t('home.recommendations.pause.title'),
+        body: t('home.recommendations.pause.body'),
+        cta: t('home.recommendations.pause.cta'),
         route: '/dont-send-it',
         icon: MessageSquareText,
       };
     }
     if (recommendationEmotionIds.some(id => ['empty', 'sad', 'numb', 'lonely', 'ashamed'].includes(id))) {
       return {
-        title: 'Name what is underneath',
-        body: 'A few words can help turn a vague feeling into something you can care for.',
-        cta: 'Add a reflection',
+        title: t('home.recommendations.reflect.title'),
+        body: t('home.recommendations.reflect.body'),
+        cta: t('home.recommendations.reflect.cta'),
         route: '/check-in?source=today',
         icon: Edit3,
       };
     }
     if (emotionTone === 'positive') {
       return {
-        title: 'Notice what helped',
+        title: t('home.recommendations.positive.title'),
         body: hasCompletedToday
-          ? 'Your check-in is saved. Positive and steady moments help reveal what supports you.'
-          : 'Save what influenced this so your future insights can spot what helps.',
-        cta: hasCompletedToday ? 'View Insights' : 'Save check-in first',
+          ? t('home.recommendations.positive.savedBody')
+          : t('home.recommendations.positive.unsavedBody'),
+        cta: hasCompletedToday ? t('home.actions.viewInsights') : t('home.actions.saveFirst'),
         route: hasCompletedToday ? '/(tabs)/insights' : null,
         icon: Target,
       };
     }
     return {
-      title: hasCompletedToday ? 'Your insight is building' : 'Keep it simple',
+      title: hasCompletedToday ? t('home.recommendations.default.savedTitle') : t('home.recommendations.default.unsavedTitle'),
       body: hasCompletedToday
-        ? 'Your check-in is saved. Small entries are what reveal patterns over time.'
-        : 'Save this check-in. Small, honest entries are what make the app more useful over time.',
-      cta: hasCompletedToday ? 'View Insights' : 'Save check-in first',
+        ? t('home.recommendations.default.savedBody')
+        : t('home.recommendations.default.unsavedBody'),
+      cta: hasCompletedToday ? t('home.actions.viewInsights') : t('home.actions.saveFirst'),
       route: hasCompletedToday ? '/(tabs)/insights' : null,
       icon: Target,
     };
-  }, [emotionTone, hasCompletedToday, highIntensity, recommendationEmotionIds]);
+  }, [emotionTone, hasCompletedToday, highIntensity, recommendationEmotionIds, t]);
 
   const smallInsight = useMemo(() => {
     if (checkInCount < 7) {
-      return 'Complete more check-ins to unlock your first emotional pattern.';
+      return t('home.smallInsight.moreCheckins');
     }
 
     const recent = journalEntries.slice(0, 7);
     const averageIntensity = recent.length
       ? Math.round(recent.reduce((sum, entry) => sum + entry.checkIn.intensityLevel, 0) / recent.length)
       : intensity;
-    return `Your recent check-ins average ${averageIntensity}/10 intensity. Keep checking in to make this pattern clearer.`;
-  }, [checkInCount, intensity, journalEntries]);
+    return t('home.smallInsight.average', { average: averageIntensity });
+  }, [checkInCount, intensity, journalEntries, t]);
 
   const handleHaptic = useCallback((style: Haptics.ImpactFeedbackStyle = Haptics.ImpactFeedbackStyle.Light) => {
     if (Platform.OS !== 'web') {
@@ -523,9 +549,10 @@ export default function HomeScreen() {
       });
     }
 
+    const selectedContextOption = CONTEXT_OPTIONS.find(option => option.id === selectedContextId);
     const selectedContextLabel = selectedContextId === 'other'
       ? customContext.trim()
-      : CONTEXT_OPTIONS.find(option => option.id === selectedContextId)?.label ?? '';
+      : (selectedContextOption ? translateContextOption(selectedContextOption) : '');
 
     const existingId = isEditingCheckIn && todaysCheckIn ? todaysCheckIn.id : `today_${now}`;
     const entry: JournalEntry = {
@@ -539,7 +566,7 @@ export default function HomeScreen() {
         urges: [],
         bodySensations: [],
         intensityLevel: intensity,
-        notes: buildCheckInNotes(selectedContextLabel),
+        notes: buildCheckInNotes(selectedContextLabel, t('home.notesHeader'), t('home.detailLabels.context')),
         relationshipTags: selectedRelationshipTags,
       },
       relationshipTags: selectedRelationshipTags,
@@ -559,7 +586,7 @@ export default function HomeScreen() {
       trigger_count: selectedTriggers.length,
       relationship_tag_count: selectedRelationshipTags.length,
     });
-    setSavedNotice(isEditingCheckIn ? 'Today’s check-in updated.' : 'Today’s check-in saved.');
+    setSavedNotice(isEditingCheckIn ? t('home.saved.updated') : t('home.saved.created'));
     setIsEditingCheckIn(false);
     if (!wasEditing) {
       void maybeShowReviewPrompt('after_first_tracking', {
@@ -573,7 +600,7 @@ export default function HomeScreen() {
         ].filter(Boolean).join(' '),
       });
     }
-  }, [addJournalEntry, customContext, customEmotion, customTrigger, emotionTone, intensity, isEditingCheckIn, maybeShowReviewPrompt, selectedContextId, selectedEmotionIds, selectedRelationshipTags, selectedTriggerIds, setDistressLevel, todaysCheckIn, trackEvent, updateJournalEntry]);
+  }, [addJournalEntry, customContext, customEmotion, customTrigger, emotionTone, intensity, isEditingCheckIn, maybeShowReviewPrompt, selectedContextId, selectedEmotionIds, selectedRelationshipTags, selectedTriggerIds, setDistressLevel, t, todaysCheckIn, trackEvent, translateContextOption, updateJournalEntry]);
 
   const handleEditCheckIn = useCallback(() => {
     if (!todaysCheckIn) return;
@@ -657,9 +684,9 @@ export default function HomeScreen() {
       >
         <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
           <View style={styles.header}>
-            <Text style={[styles.eyebrow, { color: colors.brandTeal }]}>Today</Text>
+            <Text style={[styles.eyebrow, { color: colors.brandTeal }]}>{t('home.today')}</Text>
             <Text style={[styles.greeting, { color: colors.text }]}>{greeting}</Text>
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>One honest signal is enough to start.</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{t('home.subtitle')}</Text>
           </View>
 
           {showSpiralWarning ? (
@@ -669,8 +696,8 @@ export default function HomeScreen() {
                   <Wind size={18} color={colors.primary} />
                 </View>
                 <View style={styles.spiralWarningTextWrap}>
-                  <Text style={[styles.cardKicker, { color: colors.brandTeal }]}>Spiral detection</Text>
-                  <Text style={[styles.spiralWarningTitle, { color: colors.text }]}>We’ve seen similar patterns before.</Text>
+                  <Text style={[styles.cardKicker, { color: colors.brandTeal }]}>{t('home.spiral.kicker')}</Text>
+                  <Text style={[styles.spiralWarningTitle, { color: colors.text }]}>{t('home.spiral.title')}</Text>
                 </View>
                 <TouchableOpacity
                   style={[styles.spiralDismissButton, { backgroundColor: colors.surface }]}
@@ -682,11 +709,11 @@ export default function HomeScreen() {
                 </TouchableOpacity>
               </View>
               <Text style={[styles.spiralWarningBody, { color: colors.textSecondary }]}>
-                This resembles a pattern that previously led to distress. This is not certain, but slowing down now may help.
+                {t('home.spiral.body')}
               </Text>
               {topSpiralSignals ? (
                 <Text style={[styles.spiralEvidence, { color: colors.primary }]}>
-                  Signals: {topSpiralSignals}. Confidence: {Math.round(spiralDetection.confidenceScore * 100)}%.
+                  {t('home.spiral.evidence', { signals: topSpiralSignals, confidence: Math.round(spiralDetection.confidenceScore * 100) })}
                 </Text>
               ) : null}
               <View style={styles.spiralActionRow}>
@@ -700,7 +727,7 @@ export default function HomeScreen() {
                   testID="spiral-action-calm"
                 >
                   <Wind size={15} color={Colors.white} />
-                  <Text style={styles.spiralPrimaryActionText}>Calm Me Down</Text>
+                  <Text style={styles.spiralPrimaryActionText}>{t('home.actions.calmMeDown')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.spiralActionButtonSecondary, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}
@@ -712,7 +739,7 @@ export default function HomeScreen() {
                   testID="spiral-action-companion"
                 >
                   <MessageCircle size={15} color={colors.primary} />
-                  <Text style={[styles.spiralSecondaryActionText, { color: colors.primary }]}>Companion</Text>
+                  <Text style={[styles.spiralSecondaryActionText, { color: colors.primary }]}>{t('home.actions.companion')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.spiralActionButtonSecondary, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}
@@ -724,7 +751,7 @@ export default function HomeScreen() {
                   testID="spiral-action-dont-send"
                 >
                   <MessageSquareText size={15} color={colors.primary} />
-                  <Text style={[styles.spiralSecondaryActionText, { color: colors.primary }]}>Don’t Send It</Text>
+                  <Text style={[styles.spiralSecondaryActionText, { color: colors.primary }]}>{t('home.actions.dontSendIt')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -741,7 +768,7 @@ export default function HomeScreen() {
                 <Pill size={18} color={colors.primary} />
               </View>
               <View style={styles.medicationDueTextWrap}>
-                <Text style={[styles.cardKicker, { color: colors.brandTeal }]}>Medication due</Text>
+                <Text style={[styles.cardKicker, { color: colors.brandTeal }]}>{t('home.medicationDue')}</Text>
                 <Text style={[styles.medicationDueTitle, { color: colors.text }]} numberOfLines={1}>
                   {nextDueMedication.medication.name}{nextDueMedication.medication.dosage ? ` · ${nextDueMedication.medication.dosage}` : ''}
                 </Text>
@@ -752,7 +779,7 @@ export default function HomeScreen() {
               {nextDueMedication.logged ? (
                 <View style={[styles.medicationLoggedPill, { backgroundColor: colors.successLight }]}>
                   <Check size={13} color={colors.success} />
-                  <Text style={[styles.medicationLoggedText, { color: colors.success }]}>Taken</Text>
+                  <Text style={[styles.medicationLoggedText, { color: colors.success }]}>{t('home.actions.taken')}</Text>
                 </View>
               ) : (
                 <TouchableOpacity
@@ -765,7 +792,7 @@ export default function HomeScreen() {
                   activeOpacity={0.82}
                   testID="today-medication-mark-taken"
                 >
-                  <Text style={styles.medicationTakenText}>Taken</Text>
+                  <Text style={styles.medicationTakenText}>{t('home.actions.taken')}</Text>
                 </TouchableOpacity>
               )}
             </TouchableOpacity>
@@ -783,7 +810,7 @@ export default function HomeScreen() {
               </View>
               <View style={styles.appointmentTextWrap}>
                 <Text style={[styles.cardKicker, { color: colors.brandTeal }]}>
-                  {todayAppointments.some(item => item.id === highlightedAppointment.id) ? 'Appointment today' : 'Upcoming appointment'}
+                  {todayAppointments.some(item => item.id === highlightedAppointment.id) ? t('home.appointmentToday') : t('home.upcomingAppointment')}
                 </Text>
                 <Text style={[styles.appointmentTitle, { color: colors.text }]} numberOfLines={1}>
                   {highlightedAppointment.providerName}
@@ -803,36 +830,36 @@ export default function HomeScreen() {
                   <Check size={18} color={colors.success} />
                 </View>
                 <View style={styles.completedHeaderText}>
-                  <Text style={[styles.cardKicker, { color: colors.brandTeal }]}>Quick check-in</Text>
-                  <Text style={[styles.cardTitle, { color: colors.text }]}>Today’s check-in complete ✓</Text>
+                  <Text style={[styles.cardKicker, { color: colors.brandTeal }]}>{t('home.quickCheckIn')}</Text>
+                  <Text style={[styles.cardTitle, { color: colors.text }]}>{t('home.completedTitle')}</Text>
                 </View>
               </View>
 
               <View style={styles.completedDetails}>
                 <View style={[styles.completedDetailRow, { borderColor: colors.borderLight }]}>
-                  <Text style={[styles.completedLabel, { color: colors.textSecondary }]}>Emotion</Text>
+                  <Text style={[styles.completedLabel, { color: colors.textSecondary }]}>{t('home.detailLabels.emotion')}</Text>
                   <Text style={[styles.completedValue, { color: colors.text }]}>
-                    {displayEmotionLabels.length ? displayEmotionLabels.join(', ') : 'Not added'}
+                    {displayEmotionLabels.length ? displayEmotionLabels.map(translateEmotionLabel).join(', ') : t('home.empty.notAdded')}
                   </Text>
                 </View>
                 <View style={[styles.completedDetailRow, { borderColor: colors.borderLight }]}>
-                  <Text style={[styles.completedLabel, { color: colors.textSecondary }]}>{emotionTone === 'positive' ? 'Strength' : 'Intensity'}</Text>
-                  <Text style={[styles.completedValue, { color: colors.text }]}>{displayIntensity}/10 · {getIntensityLabel(displayIntensity, emotionTone)}</Text>
+                  <Text style={[styles.completedLabel, { color: colors.textSecondary }]}>{emotionTone === 'positive' ? t('home.detailLabels.strength') : t('home.detailLabels.intensity')}</Text>
+                  <Text style={[styles.completedValue, { color: colors.text }]}>{displayIntensity}/10 · {t(`home.intensityLabels.${getIntensityLabelKey(displayIntensity, emotionTone)}`)}</Text>
                 </View>
                 <View style={[styles.completedDetailRow, { borderColor: colors.borderLight }]}>
-                  <Text style={[styles.completedLabel, { color: colors.textSecondary }]}>Influence</Text>
+                  <Text style={[styles.completedLabel, { color: colors.textSecondary }]}>{t('home.detailLabels.influence')}</Text>
                   <Text style={[styles.completedValue, { color: colors.text }]}>
-                    {displayTriggerLabels.length ? displayTriggerLabels.join(', ') : 'No influence recorded'}
+                    {displayTriggerLabels.length ? displayTriggerLabels.map(translateTriggerLabel).join(', ') : t('home.empty.noInfluence')}
                   </Text>
                 </View>
                 <View style={[styles.completedDetailRow, { borderColor: colors.borderLight }]}>
-                  <Text style={[styles.completedLabel, { color: colors.textSecondary }]}>Context</Text>
+                  <Text style={[styles.completedLabel, { color: colors.textSecondary }]}>{t('home.detailLabels.context')}</Text>
                   <Text style={[styles.completedValue, { color: colors.text }]}>
-                    {displayContextLabel || displayRelationshipTagLabels.join(', ') || 'No context recorded'}
+                    {displayContextLabel ? translateContextLabel(displayContextLabel) : displayRelationshipTagLabels.map(translateRelationshipTag).join(', ') || t('home.empty.noContext')}
                   </Text>
                 </View>
                 <View style={[styles.completedDetailRow, { borderColor: colors.borderLight }]}>
-                  <Text style={[styles.completedLabel, { color: colors.textSecondary }]}>Time</Text>
+                  <Text style={[styles.completedLabel, { color: colors.textSecondary }]}>{t('home.detailLabels.time')}</Text>
                   <Text style={[styles.completedValue, { color: colors.text }]}>{formatCheckInTime(todaysCheckIn.timestamp)}</Text>
                 </View>
               </View>
@@ -846,8 +873,8 @@ export default function HomeScreen() {
                 <Heart size={19} color={Colors.primary} />
               </View>
               <View style={styles.cardHeaderText}>
-                <Text style={[styles.cardKicker, { color: colors.brandTeal }]}>Quick check-in</Text>
-                <Text style={[styles.cardTitle, { color: colors.text }]}>How are you feeling right now?</Text>
+                <Text style={[styles.cardKicker, { color: colors.brandTeal }]}>{t('home.quickCheckIn')}</Text>
+                <Text style={[styles.cardTitle, { color: colors.text }]}>{t('home.checkInTitle')}</Text>
               </View>
             </View>
 
@@ -855,10 +882,10 @@ export default function HomeScreen() {
               <Text style={[styles.intensityValue, { color: colors.primary }]}>{intensity}</Text>
               <View style={styles.intensityCopy}>
                 <Text style={[styles.intensityLabel, { color: colors.text }]}>
-                  How intense does this feel right now?
+                  {t('intensityQuestion')}
                 </Text>
                 <Text style={[styles.intensityHint, { color: colors.textSecondary }]}>
-                  1 = very manageable · 10 = overwhelming
+                  {t('intensityLow')} · {t('intensityHigh')}
                 </Text>
               </View>
             </View>
@@ -884,7 +911,7 @@ export default function HomeScreen() {
               })}
             </View>
 
-            <Text style={[styles.inputLabel, { color: colors.text }]}>What feels closest?</Text>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>{t('home.whatFeelsClosest')}</Text>
             <View style={styles.chipGrid}>
               {EMOTION_OPTIONS.map(emotion => {
                 const active = selectedEmotionIds.includes(emotion.id);
@@ -897,7 +924,7 @@ export default function HomeScreen() {
                     testID={`emotion-${emotion.id}`}
                   >
                     {active ? <Check size={13} color={Colors.white} /> : null}
-                    <Text style={[styles.chipText, { color: colors.textSecondary }, active && { color: colors.white }]}>{emotion.label}</Text>
+                    <Text style={[styles.chipText, { color: colors.textSecondary }, active && { color: colors.white }]}>{translateEmotionOption(emotion)}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -910,7 +937,7 @@ export default function HomeScreen() {
                   setCustomEmotion(text);
                   setSavedNotice(null);
                 }}
-                placeholder="Write what you feel"
+                placeholder={t('custom.emotion')}
                 placeholderTextColor={colors.textMuted}
                 style={[
                   styles.customEmotionInput,
@@ -925,8 +952,8 @@ export default function HomeScreen() {
               />
             ) : null}
 
-            <Text style={[styles.inputLabel, { color: colors.text }]}>What influenced this?</Text>
-            <Text style={[styles.optionalHint, { color: colors.textSecondary }]}>Optional. Choose anything that fits.</Text>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>{t('home.whatInfluenced')}</Text>
+            <Text style={[styles.optionalHint, { color: colors.textSecondary }]}>{t('home.optionalChoose')}</Text>
             <View style={styles.chipGrid}>
               {availableInfluenceOptions.map(trigger => {
                 const active = selectedTriggerIds.includes(trigger.id);
@@ -939,7 +966,7 @@ export default function HomeScreen() {
                     testID={`trigger-${trigger.id}`}
                   >
                     {active ? <Check size={13} color={Colors.white} /> : null}
-                    <Text style={[styles.chipText, { color: colors.textSecondary }, active && { color: colors.white }]}>{trigger.label}</Text>
+                    <Text style={[styles.chipText, { color: colors.textSecondary }, active && { color: colors.white }]}>{translateTriggerOption(trigger)}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -952,7 +979,7 @@ export default function HomeScreen() {
                   setCustomTrigger(text);
                   setSavedNotice(null);
                 }}
-                placeholder="Write what influenced this"
+                placeholder={t('home.customInfluence')}
                 placeholderTextColor={colors.textMuted}
                 style={[
                   styles.customEmotionInput,
@@ -967,8 +994,8 @@ export default function HomeScreen() {
               />
             ) : null}
 
-            <Text style={[styles.inputLabel, { color: colors.text }]}>Was anyone involved?</Text>
-            <Text style={[styles.optionalHint, { color: colors.textSecondary }]}>Optional. This can be just you, another person, or a setting.</Text>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>{t('home.anyoneInvolved')}</Text>
+            <Text style={[styles.optionalHint, { color: colors.textSecondary }]}>{t('home.contextHint')}</Text>
             <View style={styles.chipGrid}>
               {CONTEXT_OPTIONS.map(option => {
                 const active = selectedContextId === option.id;
@@ -981,7 +1008,7 @@ export default function HomeScreen() {
                     testID={`context-${option.id}`}
                   >
                     {active ? <Check size={13} color={Colors.white} /> : null}
-                    <Text style={[styles.chipText, { color: colors.textSecondary }, active && { color: colors.white }]}>{option.label}</Text>
+                    <Text style={[styles.chipText, { color: colors.textSecondary }, active && { color: colors.white }]}>{translateContextOption(option)}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -994,7 +1021,7 @@ export default function HomeScreen() {
                   setCustomContext(text);
                   setSavedNotice(null);
                 }}
-                placeholder="Write who or what context"
+                placeholder={t('home.customContext')}
                 placeholderTextColor={colors.textMuted}
                 style={[
                   styles.customEmotionInput,
@@ -1024,7 +1051,7 @@ export default function HomeScreen() {
                 <RecommendationIcon size={18} color={Colors.primary} />
               </View>
               <View style={styles.recommendationTextWrap}>
-                <Text style={[styles.recommendationKicker, { color: colors.brandTeal }]}>Recommended next step</Text>
+                <Text style={[styles.recommendationKicker, { color: colors.brandTeal }]}>{t('home.recommendedNextStep')}</Text>
                 <Text style={[styles.recommendationTitle, { color: colors.text }]}>{recommendation.title}</Text>
                 <Text style={[styles.recommendationBody, { color: colors.textSecondary }]}>{recommendation.body}</Text>
                 <Text style={[styles.recommendationCta, { color: colors.primary }]}>{recommendation.cta}</Text>
@@ -1042,7 +1069,7 @@ export default function HomeScreen() {
                 testID="today-talk-to-companion"
               >
                 <MessageCircle size={16} color={Colors.white} />
-                <Text style={styles.completedPrimaryActionText}>Talk to Companion</Text>
+                <Text style={styles.completedPrimaryActionText}>{t('home.actions.talkToCompanion')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.completedSecondaryButton, { backgroundColor: colors.card, borderColor: colors.borderLight }]}
@@ -1051,7 +1078,7 @@ export default function HomeScreen() {
                 testID="today-view-insights"
               >
                 <Target size={16} color={colors.primary} />
-                <Text style={[styles.completedSecondaryActionText, { color: colors.primary }]}>View Insights</Text>
+                <Text style={[styles.completedSecondaryActionText, { color: colors.primary }]}>{t('home.actions.viewInsights')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.completedSecondaryButton, { backgroundColor: colors.card, borderColor: colors.borderLight }]}
@@ -1060,7 +1087,7 @@ export default function HomeScreen() {
                 testID="today-edit-check-in"
               >
                 <Edit3 size={16} color={colors.primary} />
-                <Text style={[styles.completedSecondaryActionText, { color: colors.primary }]}>Edit check-in</Text>
+                <Text style={[styles.completedSecondaryActionText, { color: colors.primary }]}>{t('home.actions.editCheckIn')}</Text>
               </TouchableOpacity>
             </View>
           ) : null}
@@ -1071,7 +1098,7 @@ export default function HomeScreen() {
                 <Heart size={18} color={Colors.brandTeal} />
               </View>
               <View style={styles.insightTextWrap}>
-                <Text style={[styles.cardKicker, { color: colors.brandTeal }]}>Small insight</Text>
+                <Text style={[styles.cardKicker, { color: colors.brandTeal }]}>{t('home.smallInsight.title')}</Text>
                 <Text style={[styles.insightText, { color: colors.text }]}>{smallInsight}</Text>
               </View>
             </View>
@@ -1091,10 +1118,10 @@ export default function HomeScreen() {
           {highIntensity ? <Wind size={18} color={Colors.white} /> : <Target size={18} color={Colors.white} />}
           <Text style={styles.primaryCtaText}>
             {hasCompletedToday
-              ? (highIntensity || recommendationEmotionIds.some(id => ['angry', 'triggered', 'rejected', 'abandoned', 'overwhelmed'].includes(id)) ? 'Talk to Companion' : 'View Insights')
+              ? (highIntensity || recommendationEmotionIds.some(id => ['angry', 'triggered', 'rejected', 'abandoned', 'overwhelmed'].includes(id)) ? t('home.actions.talkToCompanion') : t('home.actions.viewInsights'))
               : savedNotice && !isEditingCheckIn
-                ? 'View Insights'
-              : 'Save check-in'}
+                ? t('home.actions.viewInsights')
+              : t('home.actions.saveCheckIn')}
           </Text>
           <ArrowRight size={18} color={Colors.white} />
         </TouchableOpacity>
@@ -1109,15 +1136,8 @@ export default function HomeScreen() {
       <Modal transparent animationType="fade" visible={showTutorial} onRequestClose={() => setShowTutorial(false)}>
         <View style={styles.modalOverlay}>
           <View style={[styles.tutorialCard, { backgroundColor: colors.card }]}>
-            <Text style={[styles.tutorialTitle, { color: colors.text }]}>How BPD Companion helps</Text>
-            {[
-              'Today: save one quick emotional check-in',
-              'Companion: talk through what happened',
-              'Tools: calm down, pause, or reflect before reacting',
-              'Insights: watch patterns become clearer',
-              'Community: connect with peer support',
-              'Profile: manage membership and settings',
-            ].map((item, index) => (
+            <Text style={[styles.tutorialTitle, { color: colors.text }]}>{t('home.tutorial.title')}</Text>
+            {(t('home.tutorial.steps', { returnObjects: true }) as string[]).map((item, index) => (
               <View key={item} style={styles.tutorialStep}>
                 <View style={[styles.tutorialStepNumber, { backgroundColor: colors.primaryLight }]}>
                   <Text style={[styles.tutorialStepNumberText, { color: colors.primary }]}>{index + 1}</Text>
@@ -1133,7 +1153,7 @@ export default function HomeScreen() {
               }}
               testID="today-tutorial-got-it"
             >
-              <Text style={styles.tutorialButtonText}>Got it</Text>
+              <Text style={styles.tutorialButtonText}>{t('home.actions.gotIt')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -1142,7 +1162,7 @@ export default function HomeScreen() {
       <Modal transparent animationType="fade" visible={!!achievement} onRequestClose={() => setAchievement(null)}>
         <View style={styles.modalOverlay}>
           <View style={[styles.achievementCard, { backgroundColor: colors.card }]}>
-            <Text style={[styles.achievementKicker, { color: colors.brandTeal }]}>Quiet win</Text>
+            <Text style={[styles.achievementKicker, { color: colors.brandTeal }]}>{t('home.quietWin')}</Text>
             <Text style={[styles.achievementTitle, { color: colors.text }]}>{achievement?.title}</Text>
             <Text style={[styles.achievementBody, { color: colors.textSecondary }]}>{achievement?.body}</Text>
             <TouchableOpacity
@@ -1150,7 +1170,7 @@ export default function HomeScreen() {
               onPress={() => setAchievement(null)}
               testID="dismiss-achievement"
             >
-              <Text style={styles.tutorialButtonText}>Continue</Text>
+              <Text style={styles.tutorialButtonText}>{t('home.actions.continue')}</Text>
             </TouchableOpacity>
           </View>
         </View>

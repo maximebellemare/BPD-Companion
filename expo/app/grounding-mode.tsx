@@ -28,6 +28,7 @@ import { useAppTheme } from '@/providers/ThemeProvider';
 import type { CalmAudioDurationSeconds } from '@/services/calm/calmAudioService';
 import { saveCalmMeDownSession } from '@/services/calm/calmSessionService';
 import type { JournalEntry } from '@/types';
+import { useTranslation } from 'react-i18next';
 
 type CalmPhase = 'start' | 'breathe' | 'anchor' | 'pattern' | 'after' | 'complete';
 type BreathPhase = 'inhale' | 'hold' | 'exhale';
@@ -38,37 +39,18 @@ const BREATH_PHASE_SECONDS: Record<BreathPhase, number> = {
   exhale: 8,
 };
 const BREATH_CYCLE_SECONDS = BREATH_PHASE_SECONDS.inhale + BREATH_PHASE_SECONDS.hold + BREATH_PHASE_SECONDS.exhale;
-const CALM_DURATIONS: Array<{ seconds: CalmAudioDurationSeconds; label: string; description: string }> = [
-  { seconds: 60, label: '1 min', description: 'Quick reset' },
-  { seconds: 120, label: '2 min', description: 'Recommended' },
-  { seconds: 300, label: '5 min', description: 'Deeper calm' },
+const CALM_DURATIONS: { seconds: CalmAudioDurationSeconds; label: string }[] = [
+  { seconds: 60, label: '1 min' },
+  { seconds: 120, label: '2 min' },
+  { seconds: 300, label: '5 min' },
 ];
-const ANCHORS = [
-  'Press your feet into the floor and notice what is holding you up.',
-  'Look for one straight line, one soft color, and one object that is not moving.',
-  'Place one hand somewhere steady. Let your body know this is this moment, not every moment.',
-];
-
-const TRIGGER_SUPPORT: Record<string, string> = {
-  relationship: 'Relationship stress can make urgency feel like danger. Right now, your only job is to slow the body down.',
-  abandonment: 'Fear of being left can feel immediate and convincing. You do not have to solve the relationship in this exact minute.',
-  shame: 'Shame can make your whole self feel like the problem. Right now, we are separating the feeling from who you are.',
-  conflict: 'Conflict can keep your nervous system braced for impact. Let your body come down before you decide what to do.',
-  default: 'This is a wave. It can be intense without being permanent. We will move through the next two minutes together.',
-};
-
-function getIntensityLabel(value: number): string {
-  if (value <= 3) return 'A little calmer';
-  if (value <= 6) return 'Still activated';
-  if (value <= 8) return 'Very intense';
-  return 'Overwhelming';
-}
+type CalmSupportKey = 'relationship' | 'abandonment' | 'shame' | 'conflict' | 'default';
 
 function getTopLabel(counts: Record<string, number>): string | null {
   return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
 }
 
-function inferSupportKey(entries: JournalEntry[], triggerCounts: Record<string, number>): keyof typeof TRIGGER_SUPPORT {
+function inferSupportKey(entries: JournalEntry[], triggerCounts: Record<string, number>): CalmSupportKey {
   const top = getTopLabel(triggerCounts)?.toLowerCase() ?? '';
   const recentText = entries
     .slice(0, 5)
@@ -93,11 +75,11 @@ export default function CalmMeDownScreen() {
   const insets = useSafeAreaInsets();
   const { trackEvent } = useAnalytics();
   const { colors } = useAppTheme();
+  const { t } = useTranslation('tools');
   const { journalEntries, triggerPatterns } = useApp();
   const [phase, setPhase] = useState<CalmPhase>('start');
   const [beforeIntensity, setBeforeIntensity] = useState(8);
   const [afterIntensity, setAfterIntensity] = useState(5);
-  const [breathLabel, setBreathLabel] = useState('Breathe in');
   const [breathPhase, setBreathPhase] = useState<BreathPhase>('inhale');
   const [breathCycle, setBreathCycle] = useState(1);
   const [calmDuration, setCalmDuration] = useState<CalmAudioDurationSeconds>(120);
@@ -119,11 +101,11 @@ export default function CalmMeDownScreen() {
   const topTrigger = useMemo(() => getTopLabel(triggerPatterns.triggerCounts), [triggerPatterns.triggerCounts]);
   const topEmotion = useMemo(() => getTopLabel(triggerPatterns.emotionCounts), [triggerPatterns.emotionCounts]);
   const patternLine = useMemo(() => {
-    if (topTrigger && topEmotion) return `${topEmotion} often shows up around ${topTrigger}.`;
-    if (topTrigger) return `${topTrigger} has shown up in your recent check-ins.`;
-    if (topEmotion) return `${topEmotion} has shown up in your recent check-ins.`;
-    return 'I will personalize this more as you check in and reflect.';
-  }, [topEmotion, topTrigger]);
+    if (topTrigger && topEmotion) return t('calm.patternBoth', { emotion: topEmotion, trigger: topTrigger });
+    if (topTrigger) return t('calm.patternTrigger', { trigger: topTrigger });
+    if (topEmotion) return t('calm.patternEmotion', { emotion: topEmotion });
+    return t('calm.patternFallback');
+  }, [t, topEmotion, topTrigger]);
 
   useEffect(() => {
     trackEvent('calm_me_down_opened');
@@ -152,9 +134,6 @@ export default function CalmMeDownScreen() {
 
   const cuePhase = useCallback((nextPhase: BreathPhase) => {
     setBreathPhase(nextPhase);
-    if (nextPhase === 'inhale') setBreathLabel('Inhale');
-    if (nextPhase === 'hold') setBreathLabel('Hold');
-    if (nextPhase === 'exhale') setBreathLabel('Exhale');
     haptic(nextPhase === 'exhale' ? Haptics.ImpactFeedbackStyle.Medium : Haptics.ImpactFeedbackStyle.Light);
   }, [haptic]);
 
@@ -252,6 +231,13 @@ export default function CalmMeDownScreen() {
     return `${minutes}:${rest.toString().padStart(2, '0')}`;
   }, []);
 
+  const getIntensityLabel = useCallback((value: number): string => {
+    if (value <= 3) return t('calm.intensityLabels.calmer');
+    if (value <= 6) return t('calm.intensityLabels.activated');
+    if (value <= 8) return t('calm.intensityLabels.intense');
+    return t('calm.intensityLabels.overwhelming');
+  }, [t]);
+
   const IntensitySelector = ({ value, onChange }: { value: number; onChange: (value: number) => void }) => (
     <View style={styles.scaleGrid}>
       {Array.from({ length: 10 }).map((_, index) => {
@@ -285,18 +271,14 @@ export default function CalmMeDownScreen() {
       <View style={[styles.iconBubble, { backgroundColor: colors.brandTealSoft }]}>
         <Heart size={28} color={colors.brandTeal} />
       </View>
-      <Text style={[styles.kicker, { color: colors.brandTeal }]}>1, 2, or 5 minute reset</Text>
-      <Text style={[styles.title, { color: colors.text }]}>Calm Me Down</Text>
+      <Text style={[styles.kicker, { color: colors.brandTeal }]}>{t('calm.kicker')}</Text>
+      <Text style={[styles.title, { color: colors.text }]}>{t('calm.title')}</Text>
       <Text style={[styles.bodyText, { color: colors.textSecondary }]}>
-        We will slow your breathing, anchor your senses, and name what may be driving the urgency.
+        {t('calm.body')}
       </Text>
 
       <View style={styles.supportList}>
-        {[
-          'Guided breathing',
-          'Guided grounding',
-          'Calm Me Down flow',
-        ].map(item => (
+        {(t('calm.supportItems', { returnObjects: true }) as string[]).map(item => (
           <View key={item} style={[styles.supportItem, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
             <Check size={14} color={colors.brandTeal} />
             <Text style={[styles.supportItemText, { color: colors.text }]}>{item}</Text>
@@ -305,10 +287,11 @@ export default function CalmMeDownScreen() {
       </View>
 
       <View style={[styles.miniCard, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Choose your length</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('calm.chooseLength')}</Text>
         <View style={styles.durationGrid}>
           {CALM_DURATIONS.map((duration) => {
             const selected = calmDuration === duration.seconds;
+            const description = t(`calm.durationDescriptions.${duration.seconds}`);
             return (
               <TouchableOpacity
                 key={duration.seconds}
@@ -326,14 +309,14 @@ export default function CalmMeDownScreen() {
                 }}
                 activeOpacity={0.82}
                 accessibilityRole="button"
-                accessibilityLabel={`Choose ${duration.label} Calm Me Down session, ${duration.description}`}
+                accessibilityLabel={t('calm.durationAccessibility', { label: duration.label, description })}
                 accessibilityState={{ selected }}
               >
                 <Text style={[styles.durationLabel, { color: selected ? colors.white : colors.text }]}>
                   {duration.label}
                 </Text>
                 <Text style={[styles.durationDescription, { color: selected ? colors.white : colors.textSecondary }]}>
-                  {duration.description}
+                  {description}
                 </Text>
               </TouchableOpacity>
             );
@@ -342,13 +325,13 @@ export default function CalmMeDownScreen() {
       </View>
 
       <View style={[styles.miniCard, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>How intense is it right now?</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('calm.intensityBefore')}</Text>
         <Text style={[styles.intensityLabel, { color: colors.textSecondary }]}>{beforeIntensity}/10 · {getIntensityLabel(beforeIntensity)}</Text>
         <IntensitySelector value={beforeIntensity} onChange={setBeforeIntensity} />
       </View>
 
       <TouchableOpacity style={[styles.primaryButton, { backgroundColor: colors.primary }]} onPress={startFlow} activeOpacity={0.85}>
-        <Text style={[styles.primaryButtonText, { color: colors.white }]}>Start Calm Me Down</Text>
+        <Text style={[styles.primaryButtonText, { color: colors.white }]}>{t('calm.start')}</Text>
         <ArrowRight size={18} color={colors.white} />
       </TouchableOpacity>
     </Animated.View>
@@ -356,7 +339,7 @@ export default function CalmMeDownScreen() {
 
   const renderBreathing = () => (
     <View style={styles.centerStage}>
-      <Text style={[styles.kicker, { color: colors.brandTeal }]}>Step 1 of 4 · breathe</Text>
+      <Text style={[styles.kicker, { color: colors.brandTeal }]}>{t('calm.steps.breathe')}</Text>
       <Animated.View
         style={[
           styles.breathCircle,
@@ -369,12 +352,16 @@ export default function CalmMeDownScreen() {
       >
         <Wind size={44} color={colors.white} />
       </Animated.View>
-      <Text style={[styles.breathLabel, { color: colors.text }]}>{breathLabel}</Text>
+      <Text style={[styles.breathLabel, { color: colors.text }]}>{t(`calm.breath.${breathPhase}`)}</Text>
       <Text style={[styles.breathTimer, { color: colors.primary }]}>
         {formatRemaining(breathSecondsRemaining)}
       </Text>
       <Text style={[styles.bodyText, { color: colors.textSecondary }]}>
-        Cycle {Math.min(breathCycle, totalBreathCycles)} of {totalBreathCycles}. {breathPhase === 'exhale' ? 'Let the exhale be slow and complete.' : 'Follow the cue and keep it gentle.'}
+        {t('calm.cycle', {
+          current: Math.min(breathCycle, totalBreathCycles),
+          total: totalBreathCycles,
+          cue: breathPhase === 'exhale' ? t('calm.exhaleCue') : t('calm.followCue'),
+        })}
       </Text>
       <View style={styles.progressRow}>
         {Array.from({ length: totalBreathCycles }).map((_, index) => (
@@ -390,7 +377,7 @@ export default function CalmMeDownScreen() {
         ))}
       </View>
       <TouchableOpacity style={styles.textButton} onPress={() => goNext('anchor')}>
-        <Text style={[styles.textButtonText, { color: colors.primary }]}>Skip breathing</Text>
+        <Text style={[styles.textButtonText, { color: colors.primary }]}>{t('calm.skipBreathing')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -400,16 +387,16 @@ export default function CalmMeDownScreen() {
       <View style={[styles.iconBubble, { backgroundColor: colors.primaryLight }]}>
         <ShieldCheck size={28} color={colors.primary} />
       </View>
-      <Text style={[styles.kicker, { color: colors.brandTeal }]}>Step 2 of 4 · anchor</Text>
-      <Text style={[styles.title, { color: colors.text }]}>Come back to right now</Text>
-      {ANCHORS.map((anchor, index) => (
+      <Text style={[styles.kicker, { color: colors.brandTeal }]}>{t('calm.steps.anchor')}</Text>
+      <Text style={[styles.title, { color: colors.text }]}>{t('calm.anchorTitle')}</Text>
+      {(t('calm.anchors', { returnObjects: true }) as string[]).map((anchor, index) => (
         <View key={anchor} style={[styles.anchorRow, { borderColor: colors.borderLight }]}>
           <Text style={[styles.anchorNumber, { color: colors.brandTeal }]}>{index + 1}</Text>
           <Text style={[styles.anchorText, { color: colors.text }]}>{anchor}</Text>
         </View>
       ))}
       <TouchableOpacity style={[styles.primaryButton, { backgroundColor: colors.primary }]} onPress={() => goNext('pattern')}>
-        <Text style={[styles.primaryButtonText, { color: colors.white }]}>I did this</Text>
+        <Text style={[styles.primaryButtonText, { color: colors.white }]}>{t('calm.didThis')}</Text>
         <ChevronRight size={18} color={colors.white} />
       </TouchableOpacity>
     </View>
@@ -420,22 +407,22 @@ export default function CalmMeDownScreen() {
       <View style={[styles.iconBubble, { backgroundColor: colors.brandTealSoft }]}>
         <Sparkles size={28} color={colors.brandTeal} />
       </View>
-      <Text style={[styles.kicker, { color: colors.brandTeal }]}>Step 3 of 4 · personalize</Text>
-      <Text style={[styles.title, { color: colors.text }]}>Name the wave without obeying it</Text>
+      <Text style={[styles.kicker, { color: colors.brandTeal }]}>{t('calm.steps.pattern')}</Text>
+      <Text style={[styles.title, { color: colors.text }]}>{t('calm.patternTitle')}</Text>
       <Text style={[styles.bodyText, { color: colors.textSecondary }]}>
-        {TRIGGER_SUPPORT[supportKey]}
+        {t(`calm.support.${supportKey}`)}
       </Text>
       <View style={[styles.patternCard, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
-        <Text style={[styles.patternLabel, { color: colors.textSecondary }]}>Based on your entries</Text>
+        <Text style={[styles.patternLabel, { color: colors.textSecondary }]}>{t('calm.basedOnEntries')}</Text>
         <Text style={[styles.patternText, { color: colors.text }]}>{patternLine}</Text>
       </View>
       <View style={[styles.statementCard, { backgroundColor: colors.primaryLight, borderColor: colors.borderLight }]}>
         <Text style={[styles.statementText, { color: colors.primary }]}>
-          “I can feel this strongly and still wait before I act.”
+          {t('calm.statement')}
         </Text>
       </View>
       <TouchableOpacity style={[styles.primaryButton, { backgroundColor: colors.primary }]} onPress={() => goNext('after')}>
-        <Text style={[styles.primaryButtonText, { color: colors.white }]}>Check my intensity</Text>
+        <Text style={[styles.primaryButtonText, { color: colors.white }]}>{t('calm.checkIntensity')}</Text>
         <ChevronRight size={18} color={colors.white} />
       </TouchableOpacity>
     </View>
@@ -446,15 +433,15 @@ export default function CalmMeDownScreen() {
       <View style={[styles.iconBubble, { backgroundColor: colors.successLight }]}>
         <Check size={28} color={colors.success} />
       </View>
-      <Text style={[styles.kicker, { color: colors.brandTeal }]}>Step 4 of 4 · after</Text>
-      <Text style={[styles.title, { color: colors.text }]}>Where is your intensity now?</Text>
+      <Text style={[styles.kicker, { color: colors.brandTeal }]}>{t('calm.steps.after')}</Text>
+      <Text style={[styles.title, { color: colors.text }]}>{t('calm.intensityAfter')}</Text>
       <Text style={[styles.bodyText, { color: colors.textSecondary }]}>
-        You do not need to be perfectly calm. A one-point shift still counts.
+        {t('calm.afterBody')}
       </Text>
       <Text style={[styles.intensityLabel, { color: colors.textSecondary }]}>{afterIntensity}/10 · {getIntensityLabel(afterIntensity)}</Text>
       <IntensitySelector value={afterIntensity} onChange={setAfterIntensity} />
       <TouchableOpacity style={[styles.primaryButton, { backgroundColor: colors.primary }]} onPress={finish}>
-        <Text style={[styles.primaryButtonText, { color: colors.white }]}>Finish</Text>
+        <Text style={[styles.primaryButtonText, { color: colors.white }]}>{t('calm.finish')}</Text>
         <Check size={18} color={colors.white} />
       </TouchableOpacity>
     </View>
@@ -468,31 +455,31 @@ export default function CalmMeDownScreen() {
           <Heart size={28} color={colors.success} />
         </View>
         <Text style={[styles.title, { color: colors.text }]}>
-          {shift > 0 ? `You came down ${shift} point${shift === 1 ? '' : 's'}.` : 'You stayed with the moment.'}
+          {shift > 0 ? t('calm.completeShift', { count: shift }) : t('calm.completeNoShift')}
         </Text>
         <Text style={[styles.bodyText, { color: colors.textSecondary }]}>
-          That is the practice: slow the body, name the wave, choose the next step from a steadier place.
+          {t('calm.completeBody')}
         </Text>
         <View style={styles.nextActions}>
           <TouchableOpacity style={[styles.nextCard, { backgroundColor: colors.surface, borderColor: colors.borderLight }]} onPress={() => router.push('/(tabs)/companion' as never)}>
             <MessageCircle size={20} color={colors.primary} />
             <View style={styles.nextText}>
-              <Text style={[styles.nextTitle, { color: colors.text }]}>Talk it through</Text>
-              <Text style={[styles.nextBody, { color: colors.textSecondary }]}>Let Companion help you decide what to do next.</Text>
+              <Text style={[styles.nextTitle, { color: colors.text }]}>{t('calm.talkTitle')}</Text>
+              <Text style={[styles.nextBody, { color: colors.textSecondary }]}>{t('calm.talkBody')}</Text>
             </View>
             <ChevronRight size={18} color={colors.textMuted} />
           </TouchableOpacity>
           <TouchableOpacity style={[styles.nextCard, { backgroundColor: colors.surface, borderColor: colors.borderLight }]} onPress={() => router.push('/dont-send-it' as never)}>
             <ShieldCheck size={20} color={colors.brandTeal} />
             <View style={styles.nextText}>
-              <Text style={[styles.nextTitle, { color: colors.text }]}>Do not send it yet</Text>
-              <Text style={[styles.nextBody, { color: colors.textSecondary }]}>Check a message before reacting.</Text>
+              <Text style={[styles.nextTitle, { color: colors.text }]}>{t('calm.pauseTitle')}</Text>
+              <Text style={[styles.nextBody, { color: colors.textSecondary }]}>{t('calm.pauseBody')}</Text>
             </View>
             <ChevronRight size={18} color={colors.textMuted} />
           </TouchableOpacity>
         </View>
         <TouchableOpacity style={[styles.secondaryButton, { borderColor: colors.borderLight }]} onPress={close}>
-          <Text style={[styles.secondaryButtonText, { color: colors.text }]}>I’m okay for now</Text>
+          <Text style={[styles.secondaryButtonText, { color: colors.text }]}>{t('calm.okay')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -502,8 +489,8 @@ export default function CalmMeDownScreen() {
     <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom, backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <View>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Calm Me Down</Text>
-          <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Choose a short reset</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>{t('calm.headerTitle')}</Text>
+          <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>{t('calm.headerSubtitle')}</Text>
         </View>
         <TouchableOpacity style={[styles.closeButton, { backgroundColor: colors.card, borderColor: colors.borderLight }]} onPress={close}>
           <X size={20} color={colors.textSecondary} />

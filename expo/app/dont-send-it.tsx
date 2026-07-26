@@ -29,10 +29,6 @@ import { useApp } from '@/providers/AppProvider';
 import { useAICompanion } from '@/providers/AICompanionProvider';
 import {
   analyzeDontSendItMessage,
-  DONT_SEND_IT_OUTCOME_LABELS,
-  DONT_SEND_IT_INSTRUCTION_LABELS,
-  DONT_SEND_IT_RECIPIENT_LABELS,
-  DONT_SEND_IT_RISK_LABELS,
   DontSendItAnalysis,
   DontSendItDesiredOutcome,
   DontSendItRewriteInstruction,
@@ -40,6 +36,7 @@ import {
   DontSendItRecipient,
 } from '@/services/messages/dontSendItService';
 import { trackEvent } from '@/services/analytics/analyticsService';
+import { useTranslation } from 'react-i18next';
 
 const RECIPIENT_OPTIONS: DontSendItRecipient[] = [
   'partner',
@@ -90,6 +87,7 @@ export default function DontSendItScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
+  const { t } = useTranslation('tools');
   const { addMessageDraft, triggerPatterns } = useApp();
   const { conversations, companionMemorySystem, companionContextSummary } = useAICompanion();
   const params = useLocalSearchParams<{ draft?: string }>();
@@ -191,24 +189,18 @@ export default function DontSendItScreen() {
 
   const handleDiscuss = useCallback(() => {
     if (!analysis) return;
-    const prompt = [
-      'I used Don’t Send It and want to talk through this before I respond.',
-      '',
-      `Original message: ${message.trim()}`,
-      '',
-      `Emotional intensity: ${analysis.emotionalIntensity}/10`,
-      `Likely emotional state: ${analysis.likelyEmotionalState}`,
-      `Impulsivity risk: ${DONT_SEND_IT_RISK_LABELS[analysis.impulsivityRisk]}`,
-      `Why: ${analysis.impulsivityReason}`,
-      `Who this is for: ${DONT_SEND_IT_RECIPIENT_LABELS[recipient]}`,
-      `Desired outcome: ${desiredOutcome ? DONT_SEND_IT_OUTCOME_LABELS[desiredOutcome] : 'Not selected'}`,
-      `Pattern check: ${analysis.patternCheck.join(' ')}`,
-      '',
-      `Rewrite options: ${analysis.rewriteOptions.map(option => `${option.label}: ${option.text}`).join(' | ')}`,
-      `Waiting suggestion: ${analysis.suggestedWaitingPeriod}`,
-      '',
-      'Please help me understand what I actually need and whether I should wait before sending anything.',
-    ].join('\n');
+    const prompt = t('dontSend.companionPrompt', {
+      message: message.trim(),
+      intensity: analysis.emotionalIntensity,
+      state: analysis.likelyEmotionalState,
+      risk: t(`dontSend.risk.${analysis.impulsivityRisk}`),
+      reason: analysis.impulsivityReason,
+      recipient: t(`dontSend.recipients.${recipient}`),
+      outcome: desiredOutcome ? t(`dontSend.outcomes.${desiredOutcome}`) : t('structured.notRecorded'),
+      patterns: analysis.patternCheck.join(' '),
+      rewrites: analysis.rewriteOptions.map(option => `${option.label}: ${option.text}`).join(' | '),
+      waiting: t(`dontSend.waiting.${analysis.suggestedWaitingPeriod}`),
+    });
     void trackEvent('dont_send_it_discuss_companion', {
       intensity: analysis.emotionalIntensity,
       impulsivity_risk: analysis.impulsivityRisk,
@@ -217,7 +209,7 @@ export default function DontSendItScreen() {
       pathname: '/(tabs)/companion/chat',
       params: { initialMessage: prompt },
     } as never);
-  }, [analysis, desiredOutcome, message, recipient, router]);
+  }, [analysis, desiredOutcome, message, recipient, router, t]);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}>
@@ -233,10 +225,10 @@ export default function DontSendItScreen() {
             <ArrowLeft size={20} color={colors.text} />
           </TouchableOpacity>
           <View style={styles.headerTextWrap}>
-            <Text style={[styles.eyebrow, { color: colors.brandTeal }]}>Don’t Send It</Text>
-            <Text style={[styles.title, { color: colors.text }]}>Pause before you send</Text>
+            <Text style={[styles.eyebrow, { color: colors.brandTeal }]}>{t('dontSend.eyebrow')}</Text>
+            <Text style={[styles.title, { color: colors.text }]}>{t('dontSend.title')}</Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Paste the message. We’ll help you clarify the outcome you want and respond from a steadier place.
+              {t('dontSend.subtitle')}
             </Text>
           </View>
         </View>
@@ -246,7 +238,7 @@ export default function DontSendItScreen() {
             <View style={[styles.inputIcon, { backgroundColor: colors.primaryLight }]}>
               <MessageSquareText size={20} color={colors.primary} />
             </View>
-            <Text style={[styles.inputTitle, { color: colors.text }]}>Paste the message here</Text>
+            <Text style={[styles.inputTitle, { color: colors.text }]}>{t('dontSend.inputTitle')}</Text>
           </View>
           <TextInput
             value={message}
@@ -254,7 +246,7 @@ export default function DontSendItScreen() {
               setMessage(text);
               setAnalysis(null);
             }}
-            placeholder="Paste the message here..."
+            placeholder={t('dontSend.placeholder')}
             placeholderTextColor={colors.textMuted}
             style={[
               styles.messageInput,
@@ -270,7 +262,7 @@ export default function DontSendItScreen() {
             testID="dont-send-input"
           />
 
-          <Text style={[styles.choiceLabel, { color: colors.text }]}>Who is this for?</Text>
+          <Text style={[styles.choiceLabel, { color: colors.text }]}>{t('dontSend.recipientQuestion')}</Text>
           <View style={styles.typeSelector}>
             {RECIPIENT_OPTIONS.map((option) => {
               const selected = recipient === option;
@@ -292,14 +284,14 @@ export default function DontSendItScreen() {
                   testID={`dont-send-recipient-${option}`}
                 >
                   <Text style={[styles.typeChipText, { color: selected ? Colors.white : colors.textSecondary }]}>
-                    {DONT_SEND_IT_RECIPIENT_LABELS[option]}
+                    {t(`dontSend.recipients.${option}`)}
                   </Text>
                 </TouchableOpacity>
               );
             })}
           </View>
 
-          <Text style={[styles.choiceLabel, { color: colors.text }]}>What outcome do you actually want?</Text>
+          <Text style={[styles.choiceLabel, { color: colors.text }]}>{t('dontSend.outcomeQuestion')}</Text>
           <View style={styles.typeSelector}>
             {OUTCOME_OPTIONS.map((option) => {
               const selected = desiredOutcome === option;
@@ -321,7 +313,7 @@ export default function DontSendItScreen() {
                   testID={`dont-send-outcome-${option}`}
                 >
                   <Text style={[styles.typeChipText, { color: selected ? Colors.white : colors.textSecondary }]}>
-                    {DONT_SEND_IT_OUTCOME_LABELS[option]}
+                    {t(`dontSend.outcomes.${option}`)}
                   </Text>
                 </TouchableOpacity>
               );
@@ -329,11 +321,11 @@ export default function DontSendItScreen() {
           </View>
           {!desiredOutcome ? (
             <Text style={[styles.outcomeHint, { color: colors.textSecondary }]}>
-              Choose the outcome first so the rewrite can be emotionally regulated and effective.
+              {t('dontSend.outcomeHint')}
             </Text>
           ) : null}
 
-          <Text style={[styles.choiceLabel, { color: colors.text }]}>Adjust the rewrite (optional)</Text>
+          <Text style={[styles.choiceLabel, { color: colors.text }]}>{t('dontSend.instructionQuestion')}</Text>
           <View style={styles.typeSelector}>
             {INSTRUCTION_OPTIONS.map((option) => {
               const selected = rewriteInstruction === option;
@@ -355,7 +347,7 @@ export default function DontSendItScreen() {
                   testID={`dont-send-instruction-${option}`}
                 >
                   <Text style={[styles.typeChipText, { color: selected ? Colors.white : colors.textSecondary }]}>
-                    {DONT_SEND_IT_INSTRUCTION_LABELS[option]}
+                    {t(`dontSend.instructions.${option}`)}
                   </Text>
                 </TouchableOpacity>
               );
@@ -369,10 +361,10 @@ export default function DontSendItScreen() {
             testID="dont-send-analyze"
           >
             <Shield size={17} color={Colors.white} />
-            <Text style={styles.primaryButtonText}>Analyze before sending</Text>
+            <Text style={styles.primaryButtonText}>{t('dontSend.analyze')}</Text>
           </TouchableOpacity>
           <Text style={[styles.noBlockText, { color: colors.textSecondary }]}>
-            This will never block you from sending. It gives you a pause, a pattern check, and a calmer option.
+            {t('dontSend.noBlock')}
           </Text>
         </View>
 
@@ -384,41 +376,41 @@ export default function DontSendItScreen() {
               </View>
               <View style={styles.scoreTextWrap}>
                 <Text style={[styles.scoreTitle, { color: colors.text }]}>
-                  {analysis.appearsReactive ? 'This may be reactive' : 'This looks mostly grounded'}
+                  {analysis.appearsReactive ? t('dontSend.reactiveTitle') : t('dontSend.groundedTitle')}
                 </Text>
                 <Text style={[styles.scoreBody, { color: colors.textSecondary }]}>
-                  Likely emotional state: {analysis.likelyEmotionalState} · Impulsivity risk: {DONT_SEND_IT_RISK_LABELS[analysis.impulsivityRisk]}
+                  {t('dontSend.scoreBody', { state: analysis.likelyEmotionalState, risk: t(`dontSend.risk.${analysis.impulsivityRisk}`) })}
                 </Text>
               </View>
             </View>
 
-            <SectionCard title="💙 What I’m noticing">
+            <SectionCard title={`💙 ${t('dontSend.sections.hearing')}`}>
               <Text style={[styles.rewriteText, { color: colors.text }]}>{analysis.whatImHearing}</Text>
             </SectionCard>
 
-            <SectionCard title="🔥 Emotion intensity">
+            <SectionCard title={`🔥 ${t('dontSend.sections.intensity')}`}>
               <View style={styles.bulletRow}>
                 <Sparkles size={14} color={intensityColor} />
                 <Text style={[styles.bulletText, { color: colors.textSecondary }]}>
-                  Estimated at {analysis.emotionalIntensity}/10. Likely emotional state: {analysis.likelyEmotionalState}.
+                  {t('dontSend.estimatedIntensity', { intensity: analysis.emotionalIntensity, state: analysis.likelyEmotionalState })}
                 </Text>
               </View>
             </SectionCard>
 
-            <SectionCard title="Why this risk level">
+            <SectionCard title={t('dontSend.sections.risk')}>
               <Text style={[styles.rewriteText, { color: colors.text }]}>{analysis.impulsivityReason}</Text>
               {analysis.riskSignals.length > 0 ? (
                 <View style={styles.signalList}>
                   {analysis.riskSignals.map((signal) => (
                     <View key={signal} style={[styles.signalPill, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
-                      <Text style={[styles.signalText, { color: colors.textSecondary }]}>{signal}</Text>
+                      <Text style={[styles.signalText, { color: colors.textSecondary }]}>{t(`dontSend.signals.${signal}`, { defaultValue: signal })}</Text>
                     </View>
                   ))}
                 </View>
               ) : null}
             </SectionCard>
 
-            <SectionCard title="⚠️ Possible consequences">
+            <SectionCard title={`⚠️ ${t('dontSend.sections.consequences')}`}>
               {analysis.possibleConsequences.map((item) => (
                 <View key={item} style={styles.bulletRow}>
                   <AlertTriangle size={14} color={colors.accent} />
@@ -427,7 +419,7 @@ export default function DontSendItScreen() {
               ))}
             </SectionCard>
 
-            <SectionCard title="🔍 Pattern check">
+            <SectionCard title={`🔍 ${t('dontSend.sections.pattern')}`}>
               {analysis.patternCheck.map((item) => (
                 <View key={item} style={styles.bulletRow}>
                   <Sparkles size={14} color={colors.brandTeal} />
@@ -436,7 +428,7 @@ export default function DontSendItScreen() {
               ))}
             </SectionCard>
 
-            <SectionCard title="What I’m noticing">
+            <SectionCard title={t('dontSend.sections.noticing')}>
               {analysis.whatImNoticing.map((item) => (
                 <View key={item} style={styles.bulletRow}>
                   <Sparkles size={14} color={colors.brandTeal} />
@@ -445,7 +437,7 @@ export default function DontSendItScreen() {
               ))}
             </SectionCard>
 
-            <SectionCard title="✏️ Calmer versions">
+            <SectionCard title={`✏️ ${t('dontSend.sections.rewrites')}`}>
               <View style={styles.rewriteOptions}>
                 {analysis.rewriteOptions.map((option) => {
                   const copied = copiedOptionId === option.id;
@@ -466,7 +458,7 @@ export default function DontSendItScreen() {
                           testID={`dont-send-copy-${option.id}`}
                         >
                           {copied ? <Check size={15} color={Colors.white} /> : <Copy size={15} color={Colors.white} />}
-                          <Text style={styles.optionCopyText}>{copied ? 'Copied' : '📋 Copy Version'}</Text>
+                          <Text style={styles.optionCopyText}>{copied ? t('dontSend.copied') : t('dontSend.copy')}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           style={[styles.optionSaveButton, { backgroundColor: colors.card, borderColor: colors.borderLight }]}
@@ -475,7 +467,7 @@ export default function DontSendItScreen() {
                           testID={`dont-send-save-${option.id}`}
                         >
                           {saved ? <Check size={15} color={colors.primary} /> : <Save size={15} color={colors.primary} />}
-                          <Text style={[styles.optionSaveText, { color: colors.primary }]}>{saved ? 'Saved' : 'Save paused draft'}</Text>
+                          <Text style={[styles.optionSaveText, { color: colors.primary }]}>{saved ? t('dontSend.saved') : t('dontSend.saveDraft')}</Text>
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -483,11 +475,11 @@ export default function DontSendItScreen() {
                 })}
               </View>
               <Text style={[styles.saveExplanation, { color: colors.textSecondary }]}>
-                Save paused draft stores the original and selected rewrite as not sent so you can review it later in message history.
+                {t('dontSend.saveExplanation')}
               </Text>
             </SectionCard>
 
-            <SectionCard title="⏳ Waiting suggestion">
+            <SectionCard title={`⏳ ${t('dontSend.sections.waiting')}`}>
               <View style={styles.waitingRow}>
                 {WAITING_OPTIONS.map((option) => {
                   const selected = analysis.suggestedWaitingPeriod === option;
@@ -503,7 +495,7 @@ export default function DontSendItScreen() {
                       ]}
                     >
                       <Text style={[styles.waitingChipText, { color: selected ? colors.primary : colors.textSecondary }]}>
-                        {option}
+                        {t(`dontSend.waiting.${option}`)}
                       </Text>
                     </View>
                   );
@@ -523,7 +515,7 @@ export default function DontSendItScreen() {
                 testID="dont-send-discuss"
               >
                 <Sparkles size={16} color={Colors.white} />
-                <Text style={styles.resultActionPrimaryText}>Discuss with Companion</Text>
+                <Text style={styles.resultActionPrimaryText}>{t('dontSend.discuss')}</Text>
               </TouchableOpacity>
             </View>
           </View>

@@ -42,18 +42,19 @@ import { createAccessFlowTimer } from '@/services/performance/accessFlowTiming';
 import { computePaywallLoadingState } from '@/services/subscription/paywallLoadingModel';
 import {
   getAndroidActivePeriodFromProductIdentifier,
-  getAndroidPlanChangeTimingMessage,
   getIosActivePeriodFromProductIdentifier,
-  getIosPlanChangeTimingMessage,
   getInitialManageSelectedPlanId,
   getMembershipPrimaryAction,
-  getMembershipStatusCopy,
 } from '@/services/subscription/membershipPrimaryActionModel';
 import { openSubscriptionManagement } from '@/services/subscription/manageSubscriptionService';
 import {
   shouldRefreshMembershipPricingOnAppStateChange,
   shouldRefreshMembershipPricingOnManageOpen,
 } from '@/services/subscription/membershipPricingRefreshModel';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '@/hooks/useLanguage';
+import { formatDateForLanguage } from '@/lib/i18n';
+import type { SubscriptionPlan, SubscriptionPeriod } from '@/types/subscription';
 
 const TESTIMONIALS = [
   {
@@ -71,6 +72,25 @@ const TESTIMONIALS = [
   {
     text: "Seeing response paths before sending changed how I communicate completely.",
     label: 'Response simulation',
+  },
+];
+
+const TESTIMONIALS_ES = [
+  {
+    text: 'La herramienta para reescribir me evitó enviar algo de lo que me habría arrepentido mucho.',
+    label: 'Seguridad al comunicar',
+  },
+  {
+    text: 'Las reflexiones semanales me ayudaron a ver patrones que no podía ver por mi cuenta.',
+    label: 'Conciencia de patrones',
+  },
+  {
+    text: 'Que la IA recordara mis desencadenantes hizo que se sintiera como apoyo real.',
+    label: 'Apoyo personalizado',
+  },
+  {
+    text: 'Ver opciones de respuesta antes de enviar cambió por completo cómo me comunico.',
+    label: 'Simulación de respuestas',
   },
 ];
 
@@ -146,19 +166,133 @@ const MEMBERSHIP_FEATURES = [
   },
 ];
 
-function formatMembershipDate(timestamp: number | null | undefined): string | null {
-  if (!timestamp) return null;
-  const date = new Date(timestamp);
-  if (Number.isNaN(date.getTime())) return null;
-  return date.toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
+function getLocalizedPlanName(t: (key: string, options?: Record<string, unknown>) => string, period: SubscriptionPeriod | null | undefined): string | null {
+  if (period === 'monthly') return t('plans.monthly');
+  if (period === 'yearly') return t('plans.yearly');
+  return null;
+}
+
+function getLocalizedPrimaryActionLabel(
+  t: (key: string, options?: Record<string, unknown>) => string,
+  primaryAction: ReturnType<typeof getMembershipPrimaryAction>,
+  selectedPlan: SubscriptionPlan | undefined,
+  shouldShowTrialCopy: boolean,
+): string {
+  const plan = getLocalizedPlanName(t, selectedPlan?.period) ?? selectedPlan?.name ?? '';
+  if (primaryAction.kind === 'continue') return t('actions.continue');
+  if (primaryAction.kind === 'manage') return t('actions.manage');
+  if (primaryAction.kind === 'scheduled') return t('actions.scheduled', { plan });
+  if (primaryAction.kind === 'switch') return t('actions.switch', { plan });
+  if (primaryAction.kind === 'purchase') return shouldShowTrialCopy ? t('actions.purchaseTrial') : t('actions.purchaseMembership');
+  return t('actions.loading');
+}
+
+function getMembershipFeatureTranslationKey(id: string): string {
+  if (id === 'cbt-dbt') return 'cbtDbt';
+  return id;
+}
+
+function getLocalizedStatusCopy(params: {
+  t: (key: string, options?: Record<string, unknown>) => string;
+  hasStoreAccess: boolean;
+  isEntitlementActive: boolean;
+  isTrialActive: boolean;
+  currentPeriod: SubscriptionPeriod | null;
+  pendingTargetPeriod?: SubscriptionPeriod | null;
+  pendingEffectiveDateLabel?: string | null;
+  activeExpirationDateLabel?: string | null;
+  activeWillRenew?: boolean | null;
+  billingIssueDateLabel?: string | null;
+  inactiveExpirationDateLabel?: string | null;
+  trialDaysRemaining: number;
+  shouldShowTrialCopy: boolean;
+  isSubscriptionManagement?: boolean;
+  isMembershipLoading?: boolean;
+}): { title: string; body: string; heroTitle: string; plansTitle: string } {
+  const t = params.t;
+  const currentPlanLabel = getLocalizedPlanName(t, params.currentPeriod);
+  const pendingTargetLabel = getLocalizedPlanName(t, params.pendingTargetPeriod);
+  const heroTitle = params.hasStoreAccess || (params.isSubscriptionManagement && params.isMembershipLoading)
+    ? t('status.yourMembership')
+    : params.shouldShowTrialCopy
+      ? t('status.startTrialHero')
+      : t('status.startMembershipHero');
+  const plansTitle = params.hasStoreAccess || params.isSubscriptionManagement ? t('status.managePlan') : t('status.choosePlan');
+
+  if (params.isSubscriptionManagement && params.isMembershipLoading && !params.hasStoreAccess) {
+    return { heroTitle, plansTitle, title: t('status.checkingTitle'), body: t('status.checkingBody') };
+  }
+
+  if (params.hasStoreAccess && currentPlanLabel && pendingTargetLabel) {
+    const date = params.pendingEffectiveDateLabel ?? params.activeExpirationDateLabel ?? t('status.renewalDate', { defaultValue: 'your renewal date' });
+    return {
+      heroTitle,
+      plansTitle,
+      title: params.isTrialActive ? t('status.trialActiveTitle', { plan: currentPlanLabel }) : t('status.membershipActiveTitle', { plan: currentPlanLabel }),
+      body: t('status.pending', { source: currentPlanLabel, target: pendingTargetLabel, date }),
+    };
+  }
+
+  if (params.hasStoreAccess && currentPlanLabel) {
+    if (params.billingIssueDateLabel) {
+      return {
+        heroTitle,
+        plansTitle,
+        title: t('status.billingIssue'),
+        body: t('status.billing', { plan: currentPlanLabel, dateText: ` ${params.billingIssueDateLabel}` }),
+      };
+    }
+    if (params.activeWillRenew === false) {
+      return {
+        heroTitle,
+        plansTitle,
+        title: t('status.membershipCancelledTitle', { plan: currentPlanLabel }),
+        body: params.activeExpirationDateLabel
+          ? t('status.cancelled', { plan: currentPlanLabel, date: params.activeExpirationDateLabel })
+          : t('status.cancelledNoDate', { plan: currentPlanLabel }),
+      };
+    }
+    return {
+      heroTitle,
+      plansTitle,
+      title: params.isTrialActive ? t('status.trialActiveTitle', { plan: currentPlanLabel }) : t('status.membershipActiveTitle', { plan: currentPlanLabel }),
+      body: params.isTrialActive
+        ? params.activeExpirationDateLabel
+          ? t('status.trial', { plan: currentPlanLabel, date: params.activeExpirationDateLabel })
+          : params.trialDaysRemaining === 1
+            ? t('status.trialOneDay', { plan: currentPlanLabel })
+            : t('status.trialDays', { plan: currentPlanLabel, count: params.trialDaysRemaining })
+        : params.activeExpirationDateLabel
+          ? t('status.renews', { plan: currentPlanLabel, date: params.activeExpirationDateLabel })
+          : t('status.activeNoDate', { plan: currentPlanLabel }),
+    };
+  }
+
+  if (params.isEntitlementActive) {
+    return { heroTitle, plansTitle, title: t('status.membershipActive'), body: t('status.fullAccess') };
+  }
+
+  if (params.inactiveExpirationDateLabel) {
+    return {
+      heroTitle,
+      plansTitle,
+      title: t('status.membershipExpired'),
+      body: t('status.expired', { date: params.inactiveExpirationDateLabel }),
+    };
+  }
+
+  return {
+    heroTitle,
+    plansTitle,
+    title: params.shouldShowTrialCopy ? t('status.startTrialTitle') : t('status.startMembershipTitle'),
+    body: params.shouldShowTrialCopy ? t('status.startTrialBody') : t('status.startMembershipBody'),
+  };
 }
 
 export default function UpgradeScreen() {
   const router = useRouter();
+  const { t } = useTranslation('subscription');
+  const { language } = useLanguage();
   const isExpoGo = Constants.appOwnership === 'expo';
   const { anchor, mode } = useLocalSearchParams<{ anchor?: string; mode?: string }>();
   const insets = useSafeAreaInsets();
@@ -411,25 +545,25 @@ export default function UpgradeScreen() {
     if (primaryAction.kind === 'manage') {
       void openSubscriptionManagement(Platform.OS, Linking, activeProductIdentifier, activeManagementUrl).then((result) => {
         if (!result.opened) {
-          Alert.alert('Manage subscription', 'Open your App Store or Google Play subscription settings to manage your membership.');
+          Alert.alert(t('manageTitle'), t('manageFallback'));
         }
       }).catch(() => {
-        Alert.alert('Manage subscription', 'Open your App Store or Google Play subscription settings to manage your membership.');
+        Alert.alert(t('manageTitle'), t('manageFallback'));
       });
       return;
     }
     if (!selected) return;
     if (!isNativePurchases) {
-      Alert.alert('Membership options are loading', 'Please try again in a moment.');
+      Alert.alert(t('loadingAlertTitle'), t('loadingAlertBody'));
       return;
     }
     if (selected.isFallbackPrice || offeringStatus !== 'ready') {
-      Alert.alert('Membership options are loading', 'Please try again in a moment.');
+      Alert.alert(t('loadingAlertTitle'), t('loadingAlertBody'));
       return;
     }
     trackEvent('upgrade_clicked', { plan_id: selectedPlanId });
     subscribe(selected);
-  }, [activeManagementUrl, activePeriodForPrimaryAction, activeProductIdentifier, hasStoreAccess, isExpoGo, pendingPlanChange?.targetPeriod, router, selectedPlanId, subscribe, trackEvent, plans, offeringStatus, isNativePurchases]);
+  }, [activeManagementUrl, activePeriodForPrimaryAction, activeProductIdentifier, hasStoreAccess, isExpoGo, pendingPlanChange?.targetPeriod, router, selectedPlanId, subscribe, t, trackEvent, plans, offeringStatus, isNativePurchases]);
 
   const handleClose = useCallback(() => {
     if (isExpoGo) {
@@ -437,11 +571,11 @@ export default function UpgradeScreen() {
       return;
     }
     if (!hasStoreAccess) {
-      setRestoreNotice('Start your 3-day free trial to enter BPD Companion.');
+      setRestoreNotice(t('closeRequiresTrial'));
       return;
     }
     router.back();
-  }, [hasStoreAccess, isExpoGo, router]);
+  }, [hasStoreAccess, isExpoGo, router, t]);
 
   const handleRestore = useCallback(() => {
     handleHaptic();
@@ -453,16 +587,16 @@ export default function UpgradeScreen() {
     restore()
       .then((active) => {
         if (active) {
-          setRestoreNotice('Subscription restored. Membership access is active.');
+          setRestoreNotice(t('restoreActive'));
           navigateToAppOnce();
           return;
         }
-        setRestoreNotice('No active membership was found for this store account.');
+        setRestoreNotice(t('restoreNone'));
       })
       .catch((error) => {
-        setRestoreNotice(error instanceof Error ? error.message : 'Restore could not be completed. Please try again.');
+        setRestoreNotice(error instanceof Error ? error.message : t('restoreFailed'));
       });
-  }, [handleHaptic, isExpoGo, restore, router, navigateToAppOnce]);
+  }, [handleHaptic, isExpoGo, restore, router, navigateToAppOnce, t]);
 
   const handleRetryMembershipOptions = useCallback(() => {
     handleHaptic();
@@ -511,68 +645,64 @@ export default function UpgradeScreen() {
   const canUsePrimaryCta = primaryAction.kind === 'continue' ||
     primaryAction.kind === 'manage' ||
     (primaryAction.requiresPurchasablePlan && canSubscribe);
-  const pendingEffectiveDateLabel = formatMembershipDate(pendingPlanChange?.effectiveAt ?? null);
+  const pendingEffectiveDateLabel = formatDateForLanguage(pendingPlanChange?.effectiveAt ?? null, language);
   const trialDaysRemaining = state.trialEndsAt
     ? Math.max(0, Math.ceil((state.trialEndsAt - Date.now()) / (24 * 60 * 60 * 1000)))
     : 0;
-  const statusCopy = getMembershipStatusCopy({
+  const statusCopy = getLocalizedStatusCopy({
+    t,
     hasStoreAccess: hasStoreAccessForPresentation,
     isEntitlementActive: isEntitlementActive || hasEntitlementBackedActivePlan,
     isTrialActive: state.isTrialActive,
     currentPeriod: activePeriodForPrimaryAction,
     pendingTargetPeriod: pendingPlanChange?.targetPeriod ?? null,
     pendingEffectiveDateLabel,
-    activeExpirationDateLabel: formatMembershipDate(state.expiresAt),
+    activeExpirationDateLabel: formatDateForLanguage(state.expiresAt, language),
     activeWillRenew,
-    billingIssueDateLabel: formatMembershipDate(activeBillingIssueDetectedAt),
-    inactiveExpirationDateLabel: formatMembershipDate(inactiveExpirationAt),
+    billingIssueDateLabel: formatDateForLanguage(activeBillingIssueDetectedAt, language),
+    inactiveExpirationDateLabel: formatDateForLanguage(inactiveExpirationAt, language),
     trialDaysRemaining,
     shouldShowTrialCopy,
     isSubscriptionManagement,
     isMembershipLoading: isLoading,
   });
-  const planChangeTimingMessage = Platform.OS === 'ios'
-    ? getIosPlanChangeTimingMessage({
-        platform: Platform.OS,
-        hasStoreAccess: hasStoreAccessForPresentation,
-        activePeriod: activePeriodForPrimaryAction,
-        selectedPeriod: selectedPlan?.period ?? null,
-      })
-    : getAndroidPlanChangeTimingMessage({
-        platform: Platform.OS,
-        hasStoreAccess: hasStoreAccessForPresentation,
-        activePeriod: activePeriodForPrimaryAction,
-        selectedPeriod: selectedPlan?.period ?? null,
-        effectiveDateLabel: formatMembershipDate(state.expiresAt),
-        pendingTargetPeriod: pendingPlanChange?.targetPeriod ?? null,
-      });
-  const statusMessage = useMemo(() => {
-    if (paywallLoadingState.message) return paywallLoadingState.message;
-    if (offeringStatus === 'preview') return isNativePurchases ? null : 'Preparing your personalized membership...';
+  const planChangeTimingMessage = useMemo(() => {
+    const activeLabel = getLocalizedPlanName(t, activePeriodForPrimaryAction);
+    const selectedLabel = getLocalizedPlanName(t, selectedPlan?.period);
+    if (!hasStoreAccessForPresentation || !activeLabel || !selectedLabel || activePeriodForPrimaryAction === selectedPlan?.period) {
+      return null;
+    }
+    if (pendingPlanChange?.targetPeriod === selectedPlan?.period) return null;
+    if (Platform.OS === 'ios') {
+      if (activePeriodForPrimaryAction === 'monthly' && selectedPlan?.period === 'yearly') return t('planChange.iosMonthlyToYearly');
+      if (activePeriodForPrimaryAction === 'yearly' && selectedPlan?.period === 'monthly') return t('planChange.iosYearlyToMonthly');
+      return t('planChange.iosGeneric');
+    }
+    if (Platform.OS === 'android') {
+      const date = formatDateForLanguage(state.expiresAt, language);
+      return date
+        ? t('planChange.androidDated', { source: activeLabel, target: selectedLabel, date })
+        : t('planChange.androidGeneric', { source: activeLabel, target: selectedLabel });
+    }
     return null;
-  }, [isNativePurchases, offeringStatus, paywallLoadingState.message]);
+  }, [activePeriodForPrimaryAction, hasStoreAccessForPresentation, language, pendingPlanChange?.targetPeriod, selectedPlan?.period, state.expiresAt, t]);
+  const statusMessage = useMemo(() => {
+    if (paywallLoadingState.message) return paywallLoadingState.canShowRetry ? t('unavailableTitle') : t('loadingTitle');
+    if (offeringStatus === 'preview') return isNativePurchases ? null : t('loadingTitle');
+    return null;
+  }, [isNativePurchases, offeringStatus, paywallLoadingState.canShowRetry, paywallLoadingState.message, t]);
 
   const anchorMessage = useMemo(() => {
-    const map: Record<string, string> = {
-      weekly_reflection: 'Continue with deeper weekly reflection insights',
-      therapist_report: 'Keep a complete history of your therapy reports',
-      unlimited_ai: 'Continue with unlimited AI companion support',
-      relationship_analysis: 'Continue with relationship pattern support',
-      emotional_profile: 'Discover deeper emotional pattern intelligence',
-      secure_rewrite: 'Continue with calm, self-respecting rewrites',
-      message_simulation: 'See likely outcomes before you send',
-      message_health_scoring: 'Get detailed message health analysis',
-      communication_insights: 'Discover your communication patterns',
-      unlimited_rewrites: 'Continue with unlimited message rewrites',
-    };
     if (!anchor) return '';
-    return map[anchor] ?? 'Continue with deeper support tools';
-  }, [anchor]);
+    return t(`anchors.${anchor}`, { defaultValue: t('anchors.fallback') });
+  }, [anchor, t]);
 
   const shimmerOpacity = shimmerAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [0.7, 1],
   });
+  const visibleTestimonials = language === 'es' ? TESTIMONIALS_ES : TESTIMONIALS;
+  const primaryActionLabel = getLocalizedPrimaryActionLabel(t, primaryAction, selectedPlan, shouldShowTrialCopy);
   return (
     <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -595,7 +725,7 @@ export default function UpgradeScreen() {
             {statusCopy.heroTitle}
           </Text>
           <Text style={[styles.heroSubtitle, { color: colors.textSecondary }]}>
-            Everything is unlocked from day one: Companion, check-ins, tools, Community, insights, and progress tracking.
+            {t('heroSubtitle')}
           </Text>
         </Animated.View>
 
@@ -614,7 +744,7 @@ export default function UpgradeScreen() {
         <Animated.View
           style={[styles.featuresSection, { opacity: fadeAnim }]}
         >
-          <Text style={[styles.comparisonTitle, { color: colors.text }]}>What membership helps with</Text>
+          <Text style={[styles.comparisonTitle, { color: colors.text }]}>{t('whatHelpsWith')}</Text>
           {PAYWALL_VALUE_ITEMS.map((item, index) => {
             const IconComponent = item.icon;
             return (
@@ -637,8 +767,8 @@ export default function UpgradeScreen() {
                   <IconComponent size={16} color={Colors.primary} />
                 </View>
                 <View style={styles.insightEngineTextWrap}>
-                  <Text style={styles.insightEngineTitle}>{item.title}</Text>
-                  <Text style={styles.insightEngineDesc}>{item.description}</Text>
+                  <Text style={styles.insightEngineTitle}>{t(`valueItems.${item.id}Title`)}</Text>
+                  <Text style={styles.insightEngineDesc}>{t(`valueItems.${item.id}Description`)}</Text>
                 </View>
                 <View style={styles.featureCheck}>
                   <Check size={11} color={Colors.brandTeal} />
@@ -653,32 +783,25 @@ export default function UpgradeScreen() {
             <Sparkles size={14} color={Colors.primary} />
             <Text style={styles.personalizationText}>
               {personalization.isRelationshipActivated
-                ? "Relationship stress seems active lately. Membership keeps Companion, Don't Send It, and relationship support available."
+                ? t('personalization.relationship')
                 : personalization.recentDistressAvg >= 6
-                  ? 'It seems like an intense week. Membership keeps calming tools and Companion support available when you need them.'
-                  : 'Membership helps you keep practicing: understand the pattern, pause the reaction, choose the next step.'}
+                  ? t('personalization.intense')
+                  : t('personalization.practice')}
             </Text>
           </Animated.View>
         )}
 
         <Animated.View style={[styles.testimonialCard, { opacity: fadeAnim }]}>
           <Animated.View style={{ opacity: testimonialFade }} key={testimonialIndex}>
-            <Text style={styles.testimonialText}>{`"${TESTIMONIALS[testimonialIndex].text}"`}</Text>
-            <Text style={styles.testimonialLabel}>{TESTIMONIALS[testimonialIndex].label}</Text>
+            <Text style={styles.testimonialText}>{`"${visibleTestimonials[testimonialIndex].text}"`}</Text>
+            <Text style={styles.testimonialLabel}>{visibleTestimonials[testimonialIndex].label}</Text>
           </Animated.View>
         </Animated.View>
 
         <Animated.View style={[styles.freeVsPremiumSection, { opacity: fadeAnim }]}>
-          <Text style={[styles.comparisonTitle, { color: colors.text }]}>Full access includes</Text>
+          <Text style={[styles.comparisonTitle, { color: colors.text }]}>{t('fullAccessIncludes')}</Text>
           <View style={styles.freeList}>
-            {[
-              'No daily limits',
-              'Unlimited AI Companion',
-              'Unlimited check-ins and emotional tracking',
-              'Unlimited tools for reflection, CBT, DBT, calming, and communication',
-              'Personalized insights, saved patterns, and emotional map',
-              'Community and crisis-safe support language',
-            ].map((item, i) => (
+            {(t('includes', { returnObjects: true }) as string[]).map((item, i) => (
               <View key={i} style={styles.freeRow}>
                 <Check size={13} color={Colors.success} />
                 <Text style={styles.freeRowText}>{item}</Text>
@@ -687,11 +810,11 @@ export default function UpgradeScreen() {
           </View>
           {shouldShowTrialCopy ? (
             <Text style={styles.trialClarifier}>
-              Cancel anytime before your 3-day trial ends. You won’t be charged until your trial is over.
+              {t('trialClarifier')}
             </Text>
           ) : (
             <Text style={styles.trialClarifier}>
-              Cancel anytime from your App Store or Google Play subscription settings.
+              {t('settingsClarifier')}
             </Text>
           )}
         </Animated.View>
@@ -705,7 +828,7 @@ export default function UpgradeScreen() {
               <Text style={styles.anchorHighlightText}>{anchorMessage}</Text>
             </View>
           ) : null}
-          <Text style={styles.comparisonTitle}>Also included</Text>
+          <Text style={styles.comparisonTitle}>{t('alsoIncluded')}</Text>
           {MEMBERSHIP_FEATURES.map((feature, index) => {
             const IconComponent = feature.icon;
             return (
@@ -728,8 +851,8 @@ export default function UpgradeScreen() {
                   <IconComponent size={16} color={Colors.primary} />
                 </View>
                 <View style={styles.featureTextWrap}>
-                  <Text style={styles.featureTitle}>{feature.title}</Text>
-                  <Text style={styles.featureDesc}>{feature.description}</Text>
+                  <Text style={styles.featureTitle}>{t(`features.${getMembershipFeatureTranslationKey(feature.id)}Title`)}</Text>
+                  <Text style={styles.featureDesc}>{t(`features.${getMembershipFeatureTranslationKey(feature.id)}Description`)}</Text>
                 </View>
                 <View style={styles.featureCheck}>
                   <Crown size={11} color={Colors.brandTeal} />
@@ -752,7 +875,7 @@ export default function UpgradeScreen() {
                   activeOpacity={0.75}
                   testID="retry-membership-options-btn"
                 >
-                  <Text style={styles.retryOptionsText}>Try again</Text>
+                  <Text style={styles.retryOptionsText}>{t('tryAgain')}</Text>
                 </TouchableOpacity>
               ) : null}
             </View>
@@ -780,20 +903,20 @@ export default function UpgradeScreen() {
                   >
                     {plan.popular && (
                       <View style={styles.popularBadge}>
-                        <Text style={styles.popularBadgeText}>Best Value</Text>
+                        <Text style={styles.popularBadgeText}>{t('bestValue')}</Text>
                       </View>
                     )}
                     {isScheduledPlan ? (
                       <View style={styles.scheduledBadge}>
-                        <Text style={styles.scheduledBadgeText}>Scheduled</Text>
+                        <Text style={styles.scheduledBadgeText}>{t('scheduled')}</Text>
                       </View>
                     ) : null}
                     <Text style={[styles.planName, isSelected && styles.planNameSelected]}>
-                      {plan.name}
+                      {getLocalizedPlanName(t, plan.period) ?? plan.name}
                     </Text>
                     {isCurrentPlan ? (
                       <Text style={[styles.planCurrentText, isSelected && styles.planCurrentTextSelected]}>
-                        Current plan
+                        {t('currentPlan')}
                       </Text>
                     ) : null}
                     <Text style={[styles.planPrice, isSelected && styles.planPriceSelected]}>
@@ -819,12 +942,12 @@ export default function UpgradeScreen() {
           ) : (
             <View style={styles.emptyPlansCard}>
               <Text style={styles.emptyPlansTitle}>
-                {paywallLoadingState.canShowRetry ? 'Membership options unavailable' : 'Loading membership options'}
+                {paywallLoadingState.canShowRetry ? t('unavailableTitle') : t('loadingTitle')}
               </Text>
               <Text style={styles.emptyPlansText}>
                 {paywallLoadingState.canShowRetry
-                  ? 'Please try again. You can still restore an existing subscription.'
-                  : 'Membership options are loading. Please try again in a moment. You can still restore an existing subscription.'}
+                  ? t('unavailableBody')
+                  : t('loadingBody')}
               </Text>
               {paywallLoadingState.canShowRetry ? (
                 <TouchableOpacity
@@ -833,7 +956,7 @@ export default function UpgradeScreen() {
                   activeOpacity={0.75}
                   testID="empty-plans-retry-btn"
                 >
-                  <Text style={styles.emptyPlansRetryText}>Try again</Text>
+                  <Text style={styles.emptyPlansRetryText}>{t('tryAgain')}</Text>
                 </TouchableOpacity>
               ) : null}
             </View>
@@ -856,7 +979,7 @@ export default function UpgradeScreen() {
           >
             <Crown size={18} color={Colors.white} />
             <Text style={styles.ctaButtonText}>
-              {isSubscribing ? 'Processing...' : primaryAction.label}
+              {isSubscribing ? t('processing') : primaryActionLabel}
             </Text>
           </TouchableOpacity>
 
@@ -868,12 +991,12 @@ export default function UpgradeScreen() {
             <Shield size={13} color={Colors.textMuted} />
             <Text style={styles.trustText}>
               {shouldShowTrialCopy
-                ? '3-day free trial for eligible new subscribers · Cancel anytime'
-                : 'Cancel anytime'}
+                ? t('trialEligible')
+                : t('cancelAnytime')}
             </Text>
           </View>
           <TouchableOpacity onPress={handleRestore} style={styles.restoreBtn} testID="restore-btn" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-            <Text style={styles.restoreText}>{isRestoring ? 'Restoring...' : 'Restore purchase'}</Text>
+            <Text style={styles.restoreText}>{isRestoring ? t('restoring') : t('restore')}</Text>
           </TouchableOpacity>
         </View>
         {restoreError ? <Text style={styles.inlineErrorText}>{restoreError}</Text> : null}
@@ -881,15 +1004,15 @@ export default function UpgradeScreen() {
 
         <View style={styles.disclaimerSection}>
           <Text style={styles.disclaimerText}>
-            Payment will be charged to your Apple ID account at confirmation of purchase. Subscription automatically renews unless canceled at least 24 hours before the end of the current period. Your account will be charged for renewal within 24 hours prior to the end of the current period. You can manage and cancel your subscription in your App Store account settings. This is a companion app, not a replacement for therapy or medical advice.
+            {t('disclaimer')}
           </Text>
           <View style={styles.legalLinksRow}>
             <TouchableOpacity onPress={() => router.push('/terms-of-service')} testID="terms-link">
-              <Text style={styles.legalLinkText}>Terms of Service</Text>
+              <Text style={styles.legalLinkText}>{t('common:termsOfService', { ns: 'common' })}</Text>
             </TouchableOpacity>
             <Text style={styles.legalLinkDot}>·</Text>
             <TouchableOpacity onPress={() => router.push('/privacy-policy')} testID="privacy-link">
-              <Text style={styles.legalLinkText}>Privacy Policy</Text>
+              <Text style={styles.legalLinkText}>{t('common:privacyPolicy', { ns: 'common' })}</Text>
             </TouchableOpacity>
           </View>
         </View>

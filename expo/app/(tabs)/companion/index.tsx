@@ -19,6 +19,7 @@ import { useAnalytics } from '@/providers/AnalyticsProvider';
 import { useAppTheme } from '@/providers/ThemeProvider';
 import { useAuth } from '@/providers/AuthProvider';
 import { useCompanionSpeechInput } from '@/hooks/useCompanionSpeechInput';
+import { useTranslation } from 'react-i18next';
 
 const QUICK_PROMPTS = [
   {
@@ -68,6 +69,17 @@ const GREETING_VARIATIONS = [
   'When did this start?',
 ];
 
+const GREETING_VARIATIONS_ES = [
+  '¿Cómo van las cosas hoy?',
+  '¿Qué ha estado en tu mente últimamente?',
+  '¿Cómo te sientes ahora mismo?',
+  '¿Qué se siente más importante hablar?',
+  '¿Dónde quieres empezar?',
+  '¿Qué emoción se siente más fuerte?',
+  '¿Qué necesitas ayudar a bajar de ritmo?',
+  '¿Qué momento sigues repitiendo?',
+];
+
 function getDisplayName(name?: string | null, email?: string | null): string {
   const raw = name?.trim() || email?.split('@')[0] || '';
   if (!raw) return '';
@@ -78,6 +90,7 @@ export default function CompanionScreen() {
   const router = useRouter();
   const { colors } = useAppTheme();
   const { trackEvent } = useAnalytics();
+  const { t, i18n } = useTranslation('companion');
   const { user } = useAuth();
   const {
     startNewConversation,
@@ -103,8 +116,8 @@ export default function CompanionScreen() {
   }, []);
   const speechInput = useCompanionSpeechInput({ onTranscript: applySpeechTranscript });
   const inputPlaceholder = speechInput.isAvailable
-    ? 'Write a few words or use the mic. You can edit before sending.'
-    : 'Write a few words. You can edit before sending.';
+    ? t('placeholderWithMic')
+    : t('placeholder');
 
   const memorySummaries = useMemo(() => {
     const summaries: string[] = [];
@@ -117,26 +130,27 @@ export default function CompanionScreen() {
     }
 
     if (trigger?.label) {
-      summaries.push(`Common trigger: ${trigger.label}`);
+      summaries.push(t('memoryLabels.commonTrigger', { value: trigger.label }));
     }
     if (emotion) {
-      summaries.push(`Recent emotion: ${emotion}`);
+      summaries.push(t('memoryLabels.recentEmotion', { value: emotion }));
     }
     if (loop && !safeEmotionalGps?.userPatternSummary) {
-      summaries.push(`Recurring loop: ${loop.trigger} -> ${loop.emotion}`);
+      summaries.push(t('memoryLabels.recurringLoop', { trigger: loop.trigger, emotion: loop.emotion }));
     }
 
     return summaries.slice(0, 3);
-  }, [safeEmotionalGps, safeMajorTriggers, safeRecentEmotions]);
+  }, [safeEmotionalGps, safeMajorTriggers, safeRecentEmotions, t]);
 
   const greeting = useMemo(() => {
     const recentEmotion = safeRecentEmotions[0];
     if (companionContextSummary?.currentIntensity !== null && recentEmotion) {
-      return `I remember ${recentEmotion.toLowerCase()} came up recently. Does today feel connected to that, or is this a different feeling?`;
+      return t('memoryLabels.recentEmotionGreeting', { emotion: recentEmotion.toLowerCase() });
     }
-    const index = new Date().getDate() % GREETING_VARIATIONS.length;
-    return `${firstName ? `Hi ${firstName}. ` : 'Hi. '}${GREETING_VARIATIONS[index]}`;
-  }, [companionContextSummary?.currentIntensity, safeRecentEmotions, firstName]);
+    const variations = i18n.language?.startsWith('es') ? GREETING_VARIATIONS_ES : GREETING_VARIATIONS;
+    const index = new Date().getDate() % variations.length;
+    return firstName ? t('greetingWithName', { name: firstName, question: variations[index] }) : t('greetingFallback');
+  }, [companionContextSummary?.currentIntensity, safeRecentEmotions, firstName, i18n.language, t]);
 
   const beginConversation = useCallback((message: string) => {
     const trimmed = message.trim();
@@ -193,9 +207,9 @@ export default function CompanionScreen() {
         <View style={styles.header}>
           <BrandLogo size={44} />
           <View style={styles.headerTextWrap}>
-              <Text style={[styles.headerTitle, { color: colors.text }]}>Companion</Text>
+              <Text style={[styles.headerTitle, { color: colors.text }]}>{t('title')}</Text>
               <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
-              A calm place to understand what happened, what you feel, and what tends to happen next.
+              {t('subtitle')}
             </Text>
           </View>
         </View>
@@ -206,7 +220,7 @@ export default function CompanionScreen() {
               <MessageCircle size={20} color={colors.primary} />
             </View>
             <View style={styles.cardHeaderText}>
-              <Text style={[styles.cardTitle, { color: colors.text }]}>What’s going on right now?</Text>
+              <Text style={[styles.cardTitle, { color: colors.text }]}>{t('cardTitle')}</Text>
               <Text style={[styles.greetingText, { color: colors.textSecondary }]}>{greeting}</Text>
             </View>
           </View>
@@ -243,7 +257,7 @@ export default function CompanionScreen() {
                 activeOpacity={0.75}
                 testID="companion-home-mic-button"
                 accessibilityRole="button"
-                accessibilityLabel={speechInput.isListening ? 'Stop voice input' : 'Start voice input'}
+                accessibilityLabel={speechInput.isListening ? t('stopVoice') : t('startVoice')}
                 accessibilityState={{ selected: speechInput.isListening }}
               >
                 {speechInput.isListening ? (
@@ -277,7 +291,7 @@ export default function CompanionScreen() {
             activeOpacity={0.86}
             testID="talk-it-through-button"
           >
-            <Text style={styles.primaryButtonText}>Talk it through</Text>
+            <Text style={styles.primaryButtonText}>{t('talkItThrough')}</Text>
             <ArrowRight size={18} color={Colors.white} />
           </TouchableOpacity>
         </View>
@@ -288,8 +302,8 @@ export default function CompanionScreen() {
               <Brain size={19} color={colors.brandTeal} />
             </View>
             <View style={styles.cardHeaderText}>
-              <Text style={[styles.cardKicker, { color: colors.brandTeal }]}>Emotional GPS</Text>
-              <Text style={[styles.cardTitle, { color: colors.text }]}>What I’m learning about you</Text>
+              <Text style={[styles.cardKicker, { color: colors.brandTeal }]}>{t('gps')}</Text>
+              <Text style={[styles.cardTitle, { color: colors.text }]}>{t('learning')}</Text>
             </View>
           </View>
           {memorySummaries.length > 0 ? (
@@ -303,7 +317,7 @@ export default function CompanionScreen() {
             </View>
           ) : (
             <Text style={[styles.emptyMemoryText, { color: colors.textSecondary }]}>
-              I’ll learn your patterns as you check in and reflect.
+              {t('emptyMemory')}
             </Text>
           )}
         </View>
@@ -318,10 +332,10 @@ export default function CompanionScreen() {
             <MessageSquareText size={19} color={colors.accent} />
           </View>
           <View style={styles.dontSendTextWrap}>
-            <Text style={[styles.cardKicker, { color: colors.accent }]}>Pause before sending</Text>
-            <Text style={[styles.cardTitle, { color: colors.text }]}>Don’t Send It</Text>
+            <Text style={[styles.cardKicker, { color: colors.accent }]}>{t('pauseKicker')}</Text>
+            <Text style={[styles.cardTitle, { color: colors.text }]}>{t("chat.quickActions.Don't Send It")}</Text>
             <Text style={[styles.dontSendBody, { color: colors.textSecondary }]}>
-              Paste the message first. Companion will help check tone, patterns, and a calmer version.
+              {t('pauseBody')}
             </Text>
           </View>
           <ChevronRight size={18} color={colors.textMuted} />
@@ -329,7 +343,7 @@ export default function CompanionScreen() {
 
         {safeRecentConversations.length > 0 && (
           <View style={styles.recentSection}>
-            <Text style={[styles.sectionTitle, { color: colors.brandNavy }]}>Recent conversations</Text>
+            <Text style={[styles.sectionTitle, { color: colors.brandNavy }]}>{t('recent')}</Text>
             <View style={styles.recentList}>
               {safeRecentConversations.slice(0, 3).map((conversation) => {
                 const safeMessages = Array.isArray(conversation.messages) ? conversation.messages : [];
@@ -347,10 +361,10 @@ export default function CompanionScreen() {
                   </View>
                   <View style={styles.recentTextWrap}>
                     <Text style={[styles.recentTitle, { color: colors.text }]} numberOfLines={1}>
-                      {conversation.title || 'Conversation'}
+                      {conversation.title || t('conversation')}
                     </Text>
                     <Text style={[styles.recentPreview, { color: colors.textSecondary }]} numberOfLines={1}>
-                      {conversation.preview || latestMessage?.content || 'Continue where you left off'}
+                      {conversation.preview || latestMessage?.content || t('continueConversation')}
                     </Text>
                   </View>
                   <ChevronRight size={17} color={colors.textMuted} />
@@ -361,18 +375,18 @@ export default function CompanionScreen() {
         )}
 
         <View style={styles.promptSection}>
-          <Text style={[styles.sectionTitle, { color: colors.brandNavy }]}>Quick prompts</Text>
+          <Text style={[styles.sectionTitle, { color: colors.brandNavy }]}>{t('quickPrompts')}</Text>
           <View style={styles.promptList}>
             {QUICK_PROMPTS.map((prompt) => (
               <TouchableOpacity
                 key={prompt.id}
                 style={[styles.promptCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}
-                onPress={() => beginConversation(prompt.prompt)}
+                onPress={() => beginConversation(t(`promptMessages.${prompt.id}`, { defaultValue: prompt.prompt }))}
                 activeOpacity={0.76}
                 testID={`companion-prompt-${prompt.id}`}
               >
                 <Sparkles size={15} color={colors.brandTeal} />
-                <Text style={[styles.promptTitle, { color: colors.text }]}>{prompt.title}</Text>
+                <Text style={[styles.promptTitle, { color: colors.text }]}>{t(`prompt${prompt.id.charAt(0).toUpperCase()}${prompt.id.slice(1)}`, { defaultValue: prompt.title })}</Text>
                 <ChevronRight size={17} color={colors.textMuted} />
               </TouchableOpacity>
             ))}

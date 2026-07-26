@@ -33,6 +33,7 @@ import {
   Square,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import { useTranslation } from 'react-i18next';
 import Colors from '@/constants/colors';
 import { useAICompanion } from '@/providers/AICompanionProvider';
 import { useEntitlements } from '@/hooks/useEntitlements';
@@ -49,11 +50,11 @@ import {
 import { useCompanionSpeechInput } from '@/hooks/useCompanionSpeechInput';
 
 const STARTER_CHIPS = [
-  { id: 's1', label: 'I feel abandoned', icon: '💔', prompt: 'I feel abandoned. Help me slow down and understand what this is touching in me.' },
-  { id: 's2', label: 'I want to text them again', icon: '📱', prompt: 'I want to text them again. Help me name what happened, what I feel, and what I usually do next.' },
-  { id: 's3', label: 'I feel empty', icon: '🌫️', prompt: 'I feel empty and disconnected. Sit with me and help me name what might be happening.' },
-  { id: 's4', label: 'I might say something I regret', icon: '🔥', prompt: 'I am angry and might say something I regret. Help me identify what happened right before the anger.' },
-  { id: 's5', label: 'Help me understand this trigger', icon: '🔍', prompt: 'Help me trace this trigger: what happened, what it meant to me, what fear showed up, and what urge came next.' },
+  { id: 's1', icon: '💔' },
+  { id: 's2', icon: '📱' },
+  { id: 's3', icon: '🌫️' },
+  { id: 's4', icon: '🔥' },
+  { id: 's5', icon: '🔍' },
 ];
 
 type ContextSuggestionChip = {
@@ -62,7 +63,7 @@ type ContextSuggestionChip = {
   prompt: string;
 };
 
-function buildContextSuggestions(messages: AIMessage[]): ContextSuggestionChip[] {
+function buildContextSuggestions(messages: AIMessage[], translate: (key: string, options?: Record<string, unknown>) => string): ContextSuggestionChip[] {
   const safeMessages = Array.isArray(messages) ? messages : [];
   const lastUserMessage = [...safeMessages].reverse().find(message => message?.role === 'user')?.content ?? '';
   const lower = lastUserMessage.toLowerCase();
@@ -73,27 +74,27 @@ function buildContextSuggestions(messages: AIMessage[]): ContextSuggestionChip[]
   };
 
   if (/(girlfriend|boyfriend|partner|wife|husband|date|relationship|reply|answered|text|message|ignored|left on read)/.test(lower)) {
-    add('facts', 'What happened?', 'Help me start with the facts of what happened.');
-    add('emotion', 'Name the emotion', 'Help me name the strongest emotion right now.');
-    add('urge', 'What do I want to do?', 'Help me name what I feel pulled to do next.');
+    add('facts', translate('chat.contextSuggestions.factsLabel', { defaultValue: 'What happened?' }), translate('chat.contextSuggestions.factsPrompt', { defaultValue: 'Help me start with the facts of what happened.' }));
+    add('emotion', translate('chat.contextSuggestions.emotionLabel', { defaultValue: 'Name the emotion' }), translate('chat.contextSuggestions.emotionPrompt', { defaultValue: 'Help me name the strongest emotion right now.' }));
+    add('urge', translate('chat.contextSuggestions.urgeLabel', { defaultValue: 'What do I want to do?' }), translate('chat.contextSuggestions.urgePrompt', { defaultValue: 'Help me name what I feel pulled to do next.' }));
   }
   if (/(angry|mad|rage|furious|snap|yell|fight|argument|conflict)/.test(lower)) {
-    add('body-first', 'Calm my body first', 'Help me calm my body before I decide what to say or do.');
-    add('before-anger', 'What happened first?', 'Help me identify what happened right before the anger.');
+    add('body-first', translate('chat.contextSuggestions.bodyFirstLabel', { defaultValue: 'Calm my body first' }), translate('chat.contextSuggestions.bodyFirstPrompt', { defaultValue: 'Help me calm my body before I decide what to say or do.' }));
+    add('before-anger', translate('chat.contextSuggestions.beforeAngerLabel', { defaultValue: 'What happened first?' }), translate('chat.contextSuggestions.beforeAngerPrompt', { defaultValue: 'Help me identify what happened right before the anger.' }));
   }
   if (/(abandon|rejected|ignored|not answer|no reply|pulling away|leave me|doesn.t care)/.test(lower)) {
-    add('emotion', 'Name the emotion', 'Help me name the strongest emotion right now.');
-    add('wait', 'What did I notice?', 'Help me name the concrete thing I noticed before the feeling got stronger.');
+    add('emotion', translate('chat.contextSuggestions.emotionLabel', { defaultValue: 'Name the emotion' }), translate('chat.contextSuggestions.emotionPrompt', { defaultValue: 'Help me name the strongest emotion right now.' }));
+    add('wait', translate('chat.contextSuggestions.waitLabel', { defaultValue: 'What did I notice?' }), translate('chat.contextSuggestions.waitPrompt', { defaultValue: 'Help me name the concrete thing I noticed before the feeling got stronger.' }));
   }
   if (/(empty|numb|alone|lonely|disconnected|nothing)/.test(lower)) {
-    add('empty-type', 'What kind of empty?', 'Help me tell whether this feels like numb, lonely, disconnected, bored, or hopeless.');
-    add('when-started', 'When did it start?', 'Help me identify when this feeling started.');
+    add('empty-type', translate('chat.contextSuggestions.emptyTypeLabel', { defaultValue: 'What kind of empty?' }), translate('chat.contextSuggestions.emptyTypePrompt', { defaultValue: 'Help me tell whether this feels like numb, lonely, disconnected, bored, or hopeless.' }));
+    add('when-started', translate('chat.contextSuggestions.whenStartedLabel', { defaultValue: 'When did it start?' }), translate('chat.contextSuggestions.whenStartedPrompt', { defaultValue: 'Help me identify when this feeling started.' }));
   }
   if (/(send|text|reply|email|message|whatsapp|dm|react)/.test(lower)) {
-    add('rewrite', 'Help me rewrite it', 'Help me rewrite what I want to say in a calmer, clearer way.');
+    add('rewrite', translate('chat.contextSuggestions.rewriteLabel', { defaultValue: 'Help me rewrite it' }), translate('chat.contextSuggestions.rewritePrompt', { defaultValue: 'Help me rewrite what I want to say in a calmer, clearer way.' }));
   }
   if (/(pattern|again|always|keeps happening|same thing)/.test(lower)) {
-    add('pattern', 'What usually happens?', 'Help me name what usually happens when this starts.');
+    add('pattern', translate('chat.contextSuggestions.patternLabel', { defaultValue: 'What usually happens?' }), translate('chat.contextSuggestions.patternPrompt', { defaultValue: 'Help me name what usually happens when this starts.' }));
   }
 
   return suggestions.slice(0, 4);
@@ -182,6 +183,7 @@ function FormattedAssistantMessage({ content }: { content: string }) {
 }
 
 function TypingIndicator() {
+  const { t } = useTranslation('companion');
   const dot1 = useRef(new Animated.Value(0.3)).current;
   const dot2 = useRef(new Animated.Value(0.3)).current;
   const dot3 = useRef(new Animated.Value(0.3)).current;
@@ -216,7 +218,7 @@ function TypingIndicator() {
     <View style={styles.typingContainer}>
       <View style={styles.typingLabel}>
         <Sparkles size={12} color={Colors.primary} />
-        <Text style={styles.typingLabelText}>Companion is thinking...</Text>
+        <Text style={styles.typingLabelText}>{t('chat.thinking')}</Text>
       </View>
       <View style={styles.typingBubble}>
         <Animated.View style={[styles.typingDot, { opacity: dot1 }]} />
@@ -233,6 +235,7 @@ interface QuickActionsProps {
 }
 
 const QuickActions = React.memo(({ actions, onAction }: QuickActionsProps) => {
+  const { t } = useTranslation('companion');
   if (!actions || actions.length === 0) return null;
 
   return (
@@ -247,13 +250,14 @@ const QuickActions = React.memo(({ actions, onAction }: QuickActionsProps) => {
             activeOpacity={0.7}
           >
             {config?.icon}
-            <Text style={styles.quickActionText}>{action}</Text>
+            <Text style={styles.quickActionText}>{t(`chat.quickActions.${action}`, { defaultValue: action })}</Text>
           </TouchableOpacity>
         );
       })}
     </View>
   );
 });
+QuickActions.displayName = 'QuickActions';
 
 interface MessageBubbleProps {
   message: AIMessage;
@@ -276,6 +280,7 @@ const MessageBubble = React.memo(({
   onSaveInsight,
   onRateResponse,
 }: MessageBubbleProps) => {
+  const { t } = useTranslation('companion');
   const isUser = message.role === 'user';
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(isUser ? 10 : -10)).current;
@@ -338,13 +343,13 @@ const MessageBubble = React.memo(({
           >
             {isSavedInsight ? <Check size={13} color={Colors.success} /> : <Bookmark size={13} color={Colors.primary} />}
             <Text style={[styles.responseLearningText, isSavedInsight && styles.responseLearningTextActive]}>
-              {isSavedInsight ? 'Insight saved to Insights' : '⭐ Save Insight'}
+              {isSavedInsight ? t('chat.savedInsight') : t('chat.saveInsight')}
             </Text>
           </TouchableOpacity>
           {!isSavedInsight ? (
-            <Text style={styles.responseLearningHint}>Save this conversation insight so it appears in Insights later.</Text>
+            <Text style={styles.responseLearningHint}>{t('chat.saveInsightHint')}</Text>
           ) : null}
-          <Text style={styles.responseFeedbackLabel}>Was this useful?</Text>
+          <Text style={styles.responseFeedbackLabel}>{t('chat.feedback')}</Text>
           <TouchableOpacity
             style={[styles.feedbackIconButton, feedback === 'useful' && styles.feedbackIconButtonActive]}
             onPress={() => onRateResponse(message, 'useful')}
@@ -369,8 +374,10 @@ const MessageBubble = React.memo(({
     </Animated.View>
   );
 });
+MessageBubble.displayName = 'MessageBubble';
 
 function EmptyState({ onPrompt }: { onPrompt: (prompt: string) => void }) {
+  const { t } = useTranslation('companion');
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
 
@@ -398,27 +405,30 @@ function EmptyState({ onPrompt }: { onPrompt: (prompt: string) => void }) {
           </View>
         </View>
       </View>
-      <Text style={styles.emptyTitle}>Start with what feels urgent</Text>
+      <Text style={styles.emptyTitle}>{t('chat.emptyTitle')}</Text>
       <Text style={styles.emptySubtitle}>
-        I can use your recent check-ins, triggers, and goals to help you slow down, reflect, or pause before reacting.
+        {t('chat.emptySubtitle')}
       </Text>
       <View style={styles.emptyDivider}>
         <View style={styles.emptyDividerLine} />
-        <Text style={styles.emptyDividerText}>or start with</Text>
+        <Text style={styles.emptyDividerText}>{t('chat.orStartWith')}</Text>
         <View style={styles.emptyDividerLine} />
       </View>
       <View style={styles.emptyPrompts}>
-        {STARTER_CHIPS.map((chip) => (
+        {STARTER_CHIPS.map((chip, index) => {
+          const starter = t(`chat.starterChips.${index}`, { returnObjects: true }) as [string, string];
+          return (
           <TouchableOpacity
             key={chip.id}
             style={styles.emptyPromptChip}
-            onPress={() => onPrompt(chip.prompt)}
+            onPress={() => onPrompt(starter[1])}
             activeOpacity={0.7}
           >
             <Text style={styles.emptyPromptIcon}>{chip.icon}</Text>
-            <Text style={styles.emptyPromptText}>{chip.label}</Text>
+            <Text style={styles.emptyPromptText}>{starter[0]}</Text>
           </TouchableOpacity>
-        ))}
+          );
+        })}
       </View>
     </Animated.View>
   );
@@ -435,6 +445,7 @@ function ChatMenu({
   onNewChat: () => void;
   onDelete: () => void;
 }) {
+  const { t } = useTranslation('companion');
   if (!visible) return null;
 
   return (
@@ -446,11 +457,11 @@ function ChatMenu({
       <View style={styles.menuContainer}>
         <TouchableOpacity style={styles.menuItem} onPress={() => { onNewChat(); onClose(); }}>
           <Plus size={16} color={Colors.text} />
-          <Text style={styles.menuItemText}>New conversation</Text>
+          <Text style={styles.menuItemText}>{t('chat.newConversation')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.menuItem} onPress={() => { onDelete(); onClose(); }}>
           <Trash2 size={16} color={Colors.danger} />
-          <Text style={[styles.menuItemText, { color: Colors.danger }]}>Delete conversation</Text>
+          <Text style={[styles.menuItemText, { color: Colors.danger }]}>{t('chat.deleteConversation')}</Text>
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
@@ -467,6 +478,7 @@ interface ModeSelectorProps {
 }
 
 const ModeSelector = React.memo(({ activeMode, manualMode, onSelectMode, visible }: ModeSelectorProps) => {
+  const { t } = useTranslation('companion');
   const [expanded, setExpanded] = useState<boolean>(false);
 
   const handleToggle = useCallback(() => {
@@ -518,7 +530,7 @@ const ModeSelector = React.memo(({ activeMode, manualMode, onSelectMode, visible
           testID="mode-toggle"
         >
           <Text style={styles.modeIndicatorIcon}>🎯</Text>
-          <Text style={styles.modeIndicatorLabelDefault}>Choose support style</Text>
+          <Text style={styles.modeIndicatorLabelDefault}>{t('chat.chooseSupportStyle')}</Text>
         </TouchableOpacity>
       )}
       {expanded && (
@@ -552,7 +564,7 @@ const ModeSelector = React.memo(({ activeMode, manualMode, onSelectMode, visible
               activeOpacity={0.7}
               testID="mode-clear"
             >
-              <Text style={styles.modeClearText}>Auto-detect</Text>
+              <Text style={styles.modeClearText}>{t('chat.autoDetect')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -560,8 +572,10 @@ const ModeSelector = React.memo(({ activeMode, manualMode, onSelectMode, visible
     </View>
   );
 });
+ModeSelector.displayName = 'ModeSelector';
 
 export default function ChatScreen() {
+  const { t } = useTranslation('companion');
   const router = useRouter();
   const searchParams = useLocalSearchParams<{
     prefill?: string;
@@ -725,18 +739,18 @@ export default function ChatScreen() {
     const parts: string[] = [];
     const activeTitle = activeConversation?.title;
     if (activeTitle && activeTitle !== 'New Chat') {
-      parts.push(`Topic: ${activeTitle}`);
+      parts.push(t('chat.contextLabels.topic', { value: activeTitle }));
     }
     if (userMessages.length > 0) {
       const summary = userMessages.slice(-2).join(' ').slice(0, 300);
-      parts.push(`What I was sharing: ${summary}`);
+      parts.push(t('chat.contextLabels.sharing', { value: summary }));
     }
     if (lastAssistant) {
       const snippet = lastAssistant.content.slice(0, 200);
-      parts.push(`Companion noted: ${snippet}`);
+      parts.push(t('chat.contextLabels.noted', { value: snippet }));
     }
     return parts.join('\n');
-  }, [activeConversation]);
+  }, [activeConversation, t]);
 
   const handleQuickAction = useCallback((action: string) => {
     if (Platform.OS !== 'web') {
@@ -750,14 +764,14 @@ export default function ChatScreen() {
       if (targetConversationId !== activeConversationId) {
         setActiveConversationId(targetConversationId);
       }
-      void sendMessage(config.message, targetConversationId);
+      void sendMessage(t(`chat.quickActionMessages.${action}`, { defaultValue: config.message }), targetConversationId);
       return;
     }
 
     if (action === 'Journal this') {
       const context = getConversationContext();
       const prefillNotes = context
-        ? `From companion conversation:\n${context}`
+        ? t('chat.contextLabels.prefill', { context })
         : '';
       router.push({
         pathname: '/check-in',
@@ -776,7 +790,7 @@ export default function ChatScreen() {
       setActiveConversationId(targetConversationId);
     }
     void sendMessage(action, targetConversationId);
-  }, [activeConversationId, sendMessage, router, getConversationContext, setActiveConversationId, startNewConversation]);
+  }, [activeConversationId, sendMessage, router, getConversationContext, setActiveConversationId, startNewConversation, t]);
 
   const handleSaveInsight = useCallback((message: AIMessage) => {
     if (!activeConversation) return;
@@ -831,7 +845,7 @@ export default function ChatScreen() {
   const messages = Array.isArray(activeConversation?.messages) ? activeConversation.messages : [];
   const hasMessages = messages.length > 0;
   const hasMemoryData = (memoryProfile?.recentCheckInCount ?? 0) > 0;
-  const contextSuggestions = useMemo(() => buildContextSuggestions(messages), [messages]);
+  const contextSuggestions = useMemo(() => buildContextSuggestions(messages, t), [messages, t]);
 
   const lastAssistantId = useMemo(() => {
     for (let i = messages.length - 1; i >= 0; i--) {
@@ -869,7 +883,7 @@ export default function ChatScreen() {
           headerTitle: () => (
             <View style={styles.headerTitleContainer}>
               <Text style={styles.headerTitleText} numberOfLines={1}>
-                {activeConversation?.title || 'New Chat'}
+                {activeConversation?.title || t('chat.newConversation')}
               </Text>
               {currentModeConfig ? (
                 <View style={[styles.memoryIndicator, { gap: 4 }]}>
@@ -881,7 +895,7 @@ export default function ChatScreen() {
               ) : hasMemoryData ? (
                 <View style={styles.memoryIndicator}>
                   <Brain size={10} color={Colors.primary} />
-                  <Text style={styles.memoryIndicatorText}>Memory active</Text>
+                  <Text style={styles.memoryIndicatorText}>{t('chat.memoryActive')}</Text>
                 </View>
               ) : null}
             </View>
@@ -915,9 +929,9 @@ export default function ChatScreen() {
           <View style={styles.safetyContextBanner}>
             <Shield size={16} color={Colors.danger} />
             <View style={styles.safetyContextTextWrap}>
-              <Text style={styles.safetyContextTitle}>Immediate support may help</Text>
+              <Text style={styles.safetyContextTitle}>{t('chat.safetyTitle')}</Text>
               <Text style={styles.safetyContextText}>
-                If you may hurt yourself or someone else, contact local emergency services or a crisis line now.
+                {t('chat.safetyText')}
               </Text>
             </View>
           </View>
@@ -972,7 +986,7 @@ export default function ChatScreen() {
               style={styles.textInput}
               value={inputText}
               onChangeText={setInputText}
-              placeholder="Share what's on your mind..."
+              placeholder={t('chat.inputPlaceholder')}
               placeholderTextColor={Colors.textMuted}
               multiline
               maxLength={2000}
@@ -993,7 +1007,7 @@ export default function ChatScreen() {
                 activeOpacity={0.74}
                 testID="companion-mic-button"
                 accessibilityRole="button"
-                accessibilityLabel={speechInput.isListening ? 'Stop voice input' : 'Start voice input'}
+                accessibilityLabel={speechInput.isListening ? t('chat.voiceStop') : t('chat.voiceStart')}
                 accessibilityState={{ selected: speechInput.isListening, disabled: isGenerating }}
               >
                 {speechInput.isListening ? (
@@ -1022,7 +1036,7 @@ export default function ChatScreen() {
           </View>
           {!hasMessages && (
             <Text style={styles.inputHelperText}>
-              Everything here is private and supportive
+              {t('chat.privateHelper')}
             </Text>
           )}
           {speechInput.message && (

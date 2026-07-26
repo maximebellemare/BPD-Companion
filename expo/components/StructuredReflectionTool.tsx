@@ -17,6 +17,7 @@ import { useAppTheme } from '@/providers/ThemeProvider';
 import { useApp } from '@/providers/AppProvider';
 import { JournalEntry } from '@/types';
 import { trackEvent } from '@/services/analytics/analyticsService';
+import { useTranslation } from 'react-i18next';
 
 export type StructuredReflectionStep = {
   id: string;
@@ -59,6 +60,7 @@ export default function StructuredReflectionTool({
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
+  const { t } = useTranslation('tools');
   const accentColor = visualTheme === 'growth'
     ? colors.success
     : visualTheme === 'investigation'
@@ -78,7 +80,7 @@ export default function StructuredReflectionTool({
   const isLast = currentIndex === steps.length - 1;
   const currentValue = responses[currentStep.id] ?? '';
   const canContinue = currentStep.optional || currentValue.trim().length > 0;
-  const progress = `${currentIndex + 1} of ${steps.length}`;
+  const progress = t('structured.progress', { current: currentIndex + 1, total: steps.length });
   const summary = useMemo(() => buildSummary(responses), [buildSummary, responses]);
   const pastRecords = useMemo(
     () => journalEntries.filter(entry => entry.id.startsWith(`j_tool_${eventName}_`)).slice(0, 3),
@@ -100,9 +102,9 @@ export default function StructuredReflectionTool({
 
   const saveEntry = useCallback(() => {
     const now = Date.now();
-    const emotion = responses.emotion || responses.newEmotion || responses.mainEmotion || 'Reflection';
-    const trigger = responses.trigger || responses.situation || responses.whatHappened || 'Reflection';
-    const urge = responses.urge || 'Reflect';
+    const emotion = responses.emotion || responses.newEmotion || responses.mainEmotion || t('structured.completionReflectionTitle');
+    const trigger = responses.trigger || responses.situation || responses.whatHappened || t('structured.completionReflectionTitle');
+    const urge = responses.urge || t('structured.startAgain');
     const intensity = Number(responses.intensity || responses.newIntensity || responses.emotionIntensity || 5);
     const entry: JournalEntry = {
       id: `j_tool_${eventName}_${now}`,
@@ -126,7 +128,7 @@ export default function StructuredReflectionTool({
     if (Platform.OS !== 'web') {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
-  }, [addJournalEntry, eventName, responses, steps.length, summary]);
+  }, [addJournalEntry, eventName, responses, steps.length, summary, t]);
 
   const handleNext = useCallback(() => {
     if (!canContinue) return;
@@ -163,17 +165,17 @@ export default function StructuredReflectionTool({
               <Check size={28} color={colors.success} />
             </View>
             <Text style={[styles.completionTitle, { color: colors.text }]}>
-              {eventName === 'cbt_thought_record' ? 'Thought record saved.' : 'Reflection saved.'}
+              {eventName === 'cbt_thought_record' ? t('structured.completionThoughtTitle') : t('structured.completionReflectionTitle')}
             </Text>
             <Text style={[styles.completionBody, { color: colors.textSecondary }]}>
-              It has been added to your emotional map so Companion and Insights can use it later.
+              {t('structured.completionBody')}
             </Text>
           </View>
 
           <View style={[styles.summaryCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
             <View style={styles.summaryHeader}>
               <FileText size={18} color={colors.primary} />
-              <Text style={[styles.summaryTitle, { color: colors.text }]}>Saved summary</Text>
+              <Text style={[styles.summaryTitle, { color: colors.text }]}>{t('structured.savedSummary')}</Text>
             </View>
             <Text style={[styles.summaryText, { color: colors.textSecondary }]}>{summary}</Text>
           </View>
@@ -184,7 +186,7 @@ export default function StructuredReflectionTool({
               onPress={() => router.push('/(tabs)/insights' as never)}
               activeOpacity={0.86}
             >
-              <Text style={styles.primaryButtonText}>View in Insights / Records</Text>
+              <Text style={styles.primaryButtonText}>{t('structured.viewRecords')}</Text>
               <ArrowRight size={17} color={Colors.white} />
             </TouchableOpacity>
             <TouchableOpacity
@@ -193,7 +195,7 @@ export default function StructuredReflectionTool({
               activeOpacity={0.82}
             >
               <MessageCircle size={17} color={colors.primary} />
-              <Text style={[styles.completionButtonText, { color: colors.primary }]}>Talk to Companion about this</Text>
+              <Text style={[styles.completionButtonText, { color: colors.primary }]}>{t('structured.talkToCompanion')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.completionButton, { backgroundColor: colors.card, borderColor: colors.borderLight }]}
@@ -201,7 +203,7 @@ export default function StructuredReflectionTool({
               activeOpacity={0.82}
             >
               <ArrowLeft size={17} color={colors.primary} />
-              <Text style={[styles.completionButtonText, { color: colors.primary }]}>Back to Tools</Text>
+              <Text style={[styles.completionButtonText, { color: colors.primary }]}>{t('structured.backToTools')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.completionButton, { backgroundColor: colors.card, borderColor: colors.borderLight }]}
@@ -209,7 +211,7 @@ export default function StructuredReflectionTool({
               activeOpacity={0.82}
             >
               <RotateCcw size={17} color={colors.primary} />
-              <Text style={[styles.completionButtonText, { color: colors.primary }]}>Reflect on something else</Text>
+              <Text style={[styles.completionButtonText, { color: colors.primary }]}>{t('structured.startAgain')}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -240,7 +242,7 @@ export default function StructuredReflectionTool({
         </View>
 
         <View style={[styles.purposeCard, { backgroundColor: colors.card, borderColor: accentColor }]}>
-          <Text style={[styles.purposeLabel, { color: colors.textSecondary }]}>This tool answers</Text>
+          <Text style={[styles.purposeLabel, { color: colors.textSecondary }]}>{t('structured.purposeLabel')}</Text>
           <Text style={[styles.purposeText, { color: colors.text }]}>{primaryPurpose}</Text>
         </View>
 
@@ -248,15 +250,15 @@ export default function StructuredReflectionTool({
           <View style={[styles.pastRecordsCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
             <View style={styles.summaryHeader}>
               <FileText size={18} color={colors.primary} />
-              <Text style={[styles.summaryTitle, { color: colors.text }]}>Past Records</Text>
+              <Text style={[styles.summaryTitle, { color: colors.text }]}>{t('structured.pastRecords')}</Text>
             </View>
             {pastRecords.map(record => (
               <View key={record.id} style={[styles.pastRecordRow, { borderColor: colors.borderLight }]}>
                 <Text style={[styles.pastRecordTitle, { color: colors.text }]} numberOfLines={1}>
-                  {record.checkIn.triggers[0]?.label ?? 'Thought record'}
+                  {record.checkIn.triggers[0]?.label ?? t('structured.thoughtRecord')}
                 </Text>
                 <Text style={[styles.pastRecordMeta, { color: colors.textSecondary }]}>
-                  {new Date(record.timestamp).toLocaleDateString()} · intensity {record.checkIn.intensityLevel}/10
+                  {new Date(record.timestamp).toLocaleDateString()} · {t('structured.intensity')} {record.checkIn.intensityLevel}/10
                 </Text>
               </View>
             ))}
@@ -265,7 +267,7 @@ export default function StructuredReflectionTool({
               onPress={() => router.push('/(tabs)/insights' as never)}
               activeOpacity={0.82}
             >
-              <Text style={[styles.secondaryButtonText, { color: colors.primary }]}>View in Insights / Records</Text>
+              <Text style={[styles.secondaryButtonText, { color: colors.primary }]}>{t('structured.viewRecords')}</Text>
             </TouchableOpacity>
           </View>
         ) : null}
@@ -331,7 +333,7 @@ export default function StructuredReflectionTool({
             activeOpacity={0.8}
           >
             <MessageCircle size={15} color={colors.primary} />
-            <Text style={[styles.companionLinkText, { color: colors.primary }]}>Ask Companion to help with this step</Text>
+            <Text style={[styles.companionLinkText, { color: colors.primary }]}>{t('structured.askCompanion')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -345,7 +347,7 @@ export default function StructuredReflectionTool({
           activeOpacity={0.86}
         >
           {isLast ? <Save size={17} color={Colors.white} /> : <ArrowRight size={17} color={Colors.white} />}
-          <Text style={styles.primaryButtonText}>{isLast ? (saved ? 'Saved' : 'Save reflection') : 'Next'}</Text>
+          <Text style={styles.primaryButtonText}>{isLast ? (saved ? t('structured.saved') : t('structured.saveReflection')) : t('structured.next')}</Text>
         </TouchableOpacity>
       </View>
     </View>

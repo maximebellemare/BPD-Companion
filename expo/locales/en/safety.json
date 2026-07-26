@@ -1,0 +1,178 @@
+{
+  "crisisBoundary": "BPD Companion is not crisis support. If you might hurt yourself or someone else, contact local emergency services or a crisis line now.",
+  "notTherapy": "This app supports reflection and skills practice. It does not replace therapy, medical care, or emergency support.",
+  "banner": {
+    "compactCrisis": "You matter. Support is available 24/7.",
+    "compactElevated": "You're going through something heavy. Tools are here for you.",
+    "crisisHeader": "You're not alone right now",
+    "supportHeader": "Support is here for you",
+    "dismiss": "Okay",
+    "immediateDanger": "If you are in immediate danger, call your local emergency number now.",
+    "calmTool": "Calm Me Down",
+    "crisisMode": "Crisis mode",
+    "trustedContactPrompt": "Is there someone you trust that you could reach out to right now?"
+  },
+  "mode": {
+    "title": "You're in a hard moment",
+    "subtitle": "This will pass. Let's keep you safe right now.",
+    "breathe": "Breathe with me",
+    "breathingInstruction": "In... 2... 3... 4... Hold... Out... 2... 3... 4... 5... 6",
+    "resourcesTitle": "Reach out now",
+    "grounding": "Try a grounding exercise",
+    "guided": "Guided Regulation Mode",
+    "reminder": "You've survived every hard moment before this one.\nYou will survive this one too."
+  },
+  "crisisMode": {
+    "title": "Crisis Mode",
+    "subtitle": "One step at a time. You're safe here.",
+    "breathHint": "In for 4... Hold for 4... Out for 6...",
+    "continueGrounding": "Continue to Grounding",
+    "groundingTitle": "5-4-3-2-1 Grounding",
+    "groundingSubtitle": "Reconnect with the present through your senses",
+    "done": "Done",
+    "progress": "{{done}} of {{total}} completed",
+    "previous": "Previous",
+    "next": "Next",
+    "calmTitle": "Calm Support",
+    "calmSubtitle": "Short, simple guidance - one step at a time",
+    "anotherThought": "Another gentle thought",
+    "openCompanion": "Open AI Companion",
+    "delayTitle": "Pause Before Sending",
+    "delaySubtitle": "Give yourself space. You can always send it later.",
+    "setPause": "Set {{minutes}}-minute pause",
+    "pauseSet": "Message pause set for {{minutes}} minutes",
+    "pauseHint": "Use this time to breathe, ground, or just be still.",
+    "crisisLines": "Crisis Lines",
+    "contactReminder": "If you are in immediate danger, call your local emergency number now.\n\nYou've survived every hard moment before this one.\nYou will survive this one too.",
+    "phases": {
+      "breathing": "Breathe",
+      "grounding": "Ground",
+      "ai_calm": "Support",
+      "message_delay": "Pause",
+      "contact_safe": "Reach Out"
+    },
+    "breathLabels": {
+      "inhale": "Breathe in...",
+      "hold": "Hold...",
+      "exhale": "Breathe out..."
+    },
+    "senses": {
+      "sight": "Sight",
+      "touch": "Touch",
+      "sound": "Sound",
+      "smell": "Smell",
+      "taste": "Taste"
+    },
+    "groundingPrompts": {
+      "g1": "Name 5 things you can see right now",
+      "g2": "Name 4 things you can touch or feel",
+      "g3": "Name 3 things you can hear",
+      "g4": "Name 2 things you can smell",
+      "g5": "Name 1 thing you can taste"
+    },
+    "calmResponses": [
+      "You're safe right now. Let's take this one moment at a time.",
+      "This feeling is intense, but it will pass. You've made it through before.",
+      "Right now, nothing needs to be decided. Just breathe.",
+      "You don't have to respond to anything right now. This moment is just for you.",
+      "Your feelings are valid. Let's just slow down together.",
+      "One breath at a time. That's all you need to do right now.",
+      "It's okay to feel overwhelmed. You're already doing something brave by being here.",
+      "Nothing urgent needs your attention right now. Just be here."
+    ]
+  },
+  "regulation": {
+    "title": "Crisis Regulation",
+    "subtitle": "One step at a time. You're safe here.",
+    "entryMessages": [
+      "It seems like things may feel intense right now. Let's make this simple.",
+      "You don't need to solve everything right now. One small step first.",
+      "Let's slow this down together. You're safe here."
+    ],
+    "startCalming": "Start calming now",
+    "orChoose": "or choose what you need",
+    "choosePace": "Choose your pace",
+    "durationQuestion": "How long would you like to breathe?",
+    "beginBreathing": "Begin breathing",
+    "breathHint": "In for 4... Hold for 4... Out for 6...",
+    "continueGrounding": "Continue to grounding",
+    "feelCalmer": "I feel calmer now",
+    "groundTitle": "Ground yourself",
+    "groundSubtitle": "Reconnect with the present, one sense at a time",
+    "done": "Done",
+    "progress": "{{done}} of {{total}} completed",
+    "previous": "Previous",
+    "next": "Next",
+    "nextStep": "Next step",
+    "urgeTitle": "Notice the urge",
+    "urgeSubtitle": "What urge feels strongest right now?",
+    "intensity": "How intense is this?",
+    "breatheFirst": "Breathe first",
+    "groundMe": "Ground me",
+    "delayAction": "Delay action",
+    "calmerNext": "See calmer next steps",
+    "helpNotTextTitle": "Help me not text yet",
+    "helpNotTextSubtitle": "You can save a draft without sending. Come back when you're calmer.",
+    "draftLabel": "Write it here instead (optional)",
+    "draftPlaceholder": "What do you want to say? Get it out here safely...",
+    "saveDraft": "Save draft safely",
+    "draftSaved": "Draft saved. You can return to it later.",
+    "pauseTitle": "Set a pause before sending",
+    "pauseSubtitle": "Come back after the timer - the urge often fades",
+    "breatheWaiting": "Breathe while waiting",
+    "otherOptions": "See other options",
+    "calmNextTitle": "You've slowed down. That takes real strength.",
+    "calmNextSubtitle": "Choose a calmer next step, or close this whenever you're ready.",
+    "feelBetter": "I'm feeling better now",
+    "entryChoices": {
+      "ec1": "Breathe with me",
+      "ec2": "Ground me",
+      "ec3": "Help me not text yet",
+      "ec4": "I have a strong urge"
+    },
+    "urges": {
+      "ru1": "Text them",
+      "ru2": "Call them",
+      "ru3": "Explain everything",
+      "ru4": "Disappear",
+      "ru5": "Lash out",
+      "ru6": "Ask for reassurance",
+      "ru7": "Self-isolate",
+      "ru8": "Over-apologize"
+    },
+    "groundingSteps": {
+      "gs1": ["Name 5 things you can see right now", "SEE"],
+      "gs2": ["Name 4 things you can physically feel", "FEEL"],
+      "gs3": ["Name 3 things you can hear", "HEAR"],
+      "gs4": ["Orient to the room - look left, then right, slowly", "ORIENT"],
+      "gs5": ["Feel your feet on the floor. Press down gently.", "ANCHOR"]
+    },
+    "compassion": [
+      "This urge makes sense. It comes from a real need inside you.",
+      "You can feel this urge without obeying it. It will pass.",
+      "The urge can pass without you obeying it.",
+      "Urges peak and fade. You only need to wait, not act.",
+      "This is your nervous system talking. You can hear it without following it."
+    ],
+    "intensityLabels": {
+      "mild": "mild",
+      "moderate": "moderate",
+      "strong": "strong",
+      "very strong": "very strong",
+      "overwhelming": "overwhelming"
+    },
+    "delayEncouragement": {
+      "2": "Two minutes can change everything. Just breathe.",
+      "5": "Five minutes of space is a gift to yourself.",
+      "10": "Ten minutes is enough for most urges to soften."
+    },
+    "calmNextActions": {
+      "cna1": ["Write in journal", "Put thoughts into words safely"],
+      "cna2": ["Talk to AI Companion", "Process with calm support"],
+      "cna3": ["Simulate responses", "Try different communication options"],
+      "cna4": ["Use secure rewrite", "Craft a calmer message"],
+      "cna5": ["Do another grounding round", "Keep building calm"],
+      "cna6": ["Return in 10 minutes", "Give yourself space"]
+    }
+  }
+}

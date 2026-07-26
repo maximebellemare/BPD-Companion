@@ -30,6 +30,14 @@ const SUICIDAL_IDEATION_PHRASES = [
   'rather be dead',
   'wanna die',
   'want to be dead',
+  'no quiero seguir viviendo',
+  'estoy pensando en suicidarme',
+  'quiero suicidarme',
+  'me quiero morir',
+  'quiero morir',
+  'quiero acabar con mi vida',
+  'quitarme la vida',
+  'suicidarme',
 ];
 
 const SELF_HARM_PHRASES = [
@@ -45,6 +53,12 @@ const SELF_HARM_PHRASES = [
   'hurting myself',
   'want to bleed',
   'harm myself',
+  'quiero hacerme daño',
+  'hacerme daño',
+  'lastimarme',
+  'quiero lastimarme',
+  'autolesionarme',
+  'hacerme dano',
 ];
 
 const HOPELESSNESS_PHRASES = [
@@ -69,6 +83,12 @@ const HOPELESSNESS_PHRASES = [
   'everyone would be better off',
   'burden to everyone',
   'just a burden',
+  'nada importa',
+  'no hay esperanza',
+  'no puedo seguir',
+  'no puedo más',
+  'no puedo mas',
+  'no hay salida',
 ];
 
 const EXTREME_DISTRESS_PHRASES = [
@@ -86,6 +106,13 @@ const EXTREME_DISTRESS_PHRASES = [
   'about to lose it',
   'at my breaking point',
   'breaking point',
+  'no aguanto más',
+  'no aguanto mas',
+  'me estoy derrumbando',
+  'estoy perdiendo la cabeza',
+  'no puedo respirar',
+  'estoy en mi límite',
+  'estoy en mi limite',
 ];
 
 const DISSOCIATION_PHRASES = [
@@ -101,6 +128,13 @@ const DISSOCIATION_PHRASES = [
   'not real',
   'depersonalization',
   'derealization',
+  'nada es real',
+  'siento que nada es real',
+  'no me siento real',
+  'siento que no soy real',
+  'desconectado de mi cuerpo',
+  'desconectada de mi cuerpo',
+  'no siento nada',
 ];
 
 const SEVERE_SELF_HATRED_PHRASES = [
@@ -124,6 +158,14 @@ const SEVERE_SELF_HATRED_PHRASES = [
   'i\'m toxic',
   'everyone hates me',
   'pathetic excuse',
+  'me odio',
+  'soy inútil',
+  'soy inutil',
+  'no valgo nada',
+  'soy una basura',
+  'soy horrible',
+  'me da mucha vergüenza',
+  'me da mucha verguenza',
 ];
 
 const NEGATION_PREFIXES = [
@@ -152,12 +194,12 @@ function detectSignals(text: string): SafetySignal[] {
   const lower = text.toLowerCase();
   const signals: SafetySignal[] = [];
 
-  const phraseGroups: Array<{
+  const phraseGroups: {
     type: SafetySignalType;
     phrases: string[];
     requiresCrisisResource: boolean;
     baseConfidence: number;
-  }> = [
+  }[] = [
     { type: 'suicidal_ideation', phrases: SUICIDAL_IDEATION_PHRASES, requiresCrisisResource: true, baseConfidence: 0.9 },
     { type: 'self_harm', phrases: SELF_HARM_PHRASES, requiresCrisisResource: true, baseConfidence: 0.85 },
     { type: 'hopelessness', phrases: HOPELESSNESS_PHRASES, requiresCrisisResource: false, baseConfidence: 0.7 },

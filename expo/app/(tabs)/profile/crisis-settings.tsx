@@ -12,10 +12,12 @@ import {
 import { Stack, useRouter } from 'expo-router';
 import { Phone, Shield, AlertCircle, Heart } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import { useTranslation } from 'react-i18next';
 import Colors from '@/constants/colors';
 import { useProfile } from '@/providers/ProfileProvider';
 
 export default function CrisisSettingsScreen() {
+  const { t } = useTranslation('profile');
   const router = useRouter();
   const { profile, updateCrisisSupport } = useProfile();
 
@@ -41,13 +43,13 @@ export default function CrisisSettingsScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: 'Crisis Support',
+          title: t('crisisSettings.title'),
           headerStyle: { backgroundColor: Colors.background },
           headerTintColor: Colors.text,
           headerShadowVisible: false,
           headerRight: () => (
             <TouchableOpacity onPress={handleSave} testID="save-crisis-btn">
-              <Text style={styles.saveButton}>Save</Text>
+              <Text style={styles.saveButton}>{t('crisisSettings.save')}</Text>
             </TouchableOpacity>
           ),
         }}
@@ -60,23 +62,23 @@ export default function CrisisSettingsScreen() {
         <View style={styles.infoCard}>
           <Shield size={20} color={Colors.primary} />
           <Text style={styles.infoText}>
-            These settings help the app support you during high-distress moments. Everything stays private on your device.
+            {t('crisisSettings.intro')}
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Emergency Contact</Text>
+          <Text style={styles.sectionTitle}>{t('crisisSettings.emergencyContact')}</Text>
           <View style={styles.inputCard}>
             <View style={[styles.inputIcon, { backgroundColor: Colors.dangerLight }]}>
               <Phone size={18} color={Colors.danger} />
             </View>
             <View style={styles.inputContent}>
-              <Text style={styles.inputLabel}>Phone Number or Name</Text>
+              <Text style={styles.inputLabel}>{t('crisisSettings.phoneOrName')}</Text>
               <TextInput
                 style={styles.textInput}
                 value={emergencyContact}
                 onChangeText={setEmergencyContact}
-                placeholder="e.g., 555-123-4567 or Mom"
+                placeholder={t('crisisSettings.phonePlaceholder')}
                 placeholderTextColor={Colors.textMuted}
                 testID="emergency-contact-input"
               />
@@ -85,18 +87,18 @@ export default function CrisisSettingsScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Crisis Line</Text>
+          <Text style={styles.sectionTitle}>{t('crisisSettings.crisisLine')}</Text>
           <View style={styles.inputCard}>
             <View style={[styles.inputIcon, { backgroundColor: '#FFFFFF' }]}>
               <AlertCircle size={18} color="#3B82F6" />
             </View>
             <View style={styles.inputContent}>
-              <Text style={styles.inputLabel}>Preferred Crisis Line Number</Text>
+              <Text style={styles.inputLabel}>{t('crisisSettings.preferredLine')}</Text>
               <TextInput
                 style={styles.textInput}
                 value={crisisLine}
                 onChangeText={setCrisisLine}
-                placeholder="e.g., local crisis line"
+                placeholder={t('crisisSettings.linePlaceholder')}
                 placeholderTextColor={Colors.textMuted}
                 keyboardType="phone-pad"
                 testID="crisis-line-input"
@@ -104,14 +106,14 @@ export default function CrisisSettingsScreen() {
             </View>
           </View>
           <Text style={styles.helperText}>
-            Safety Mode can also show regional resources automatically when available.
+            {t('crisisSettings.lineHelper')}
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Safety Mode Threshold</Text>
+          <Text style={styles.sectionTitle}>{t('crisisSettings.threshold')}</Text>
           <Text style={styles.sectionSubtitle}>
-            When your distress intensity reaches this level, the app will suggest activating Safety Mode.
+            {t('crisisSettings.thresholdDescription')}
           </Text>
           <View style={styles.thresholdRow}>
             {[6, 7, 8, 9, 10].map((val) => (
@@ -136,9 +138,9 @@ export default function CrisisSettingsScreen() {
         <View style={styles.section}>
           <View style={styles.toggleRow}>
             <View style={styles.toggleContent}>
-              <Text style={styles.toggleTitle}>Safety Mode Reminder</Text>
+              <Text style={styles.toggleTitle}>{t('crisisSettings.reminder')}</Text>
               <Text style={styles.toggleDesc}>
-                Show a gentle reminder when distress is high
+                {t('crisisSettings.reminderDescription')}
               </Text>
             </View>
             <Switch
@@ -153,7 +155,7 @@ export default function CrisisSettingsScreen() {
         <View style={styles.gentleNote}>
           <Heart size={14} color={Colors.textMuted} />
           <Text style={styles.gentleNoteText}>
-            Setting up a safety net is an act of self-love. You deserve support in your hardest moments.
+            {t('crisisSettings.note')}
           </Text>
         </View>
 

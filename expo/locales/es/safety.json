@@ -1,0 +1,178 @@
+{
+  "crisisBoundary": "BPD Companion no es apoyo de crisis. Si podrías hacerte daño o hacerle daño a otra persona, contacta ahora a los servicios locales de emergencia o a una línea de crisis.",
+  "notTherapy": "Esta app apoya la reflexión y la práctica de habilidades. No reemplaza terapia, atención médica ni apoyo de emergencia.",
+  "banner": {
+    "compactCrisis": "Tu vida importa. Hay apoyo disponible 24/7.",
+    "compactElevated": "Estás atravesando algo pesado. Hay herramientas para apoyarte.",
+    "crisisHeader": "No estás solo/a en este momento",
+    "supportHeader": "Hay apoyo para ti",
+    "dismiss": "Entendido",
+    "immediateDanger": "Si estás en peligro inmediato, llama ahora a tu número local de emergencias.",
+    "calmTool": "Ayúdame a calmarme",
+    "crisisMode": "Modo de crisis",
+    "trustedContactPrompt": "¿Hay alguien de confianza a quien podrías contactar ahora?"
+  },
+  "mode": {
+    "title": "Estás en un momento difícil",
+    "subtitle": "Esto va a pasar. Vamos a mantenerte a salvo ahora.",
+    "breathe": "Respira conmigo",
+    "breathingInstruction": "Inhala... 2... 3... 4... Sostén... Exhala... 2... 3... 4... 5... 6",
+    "resourcesTitle": "Busca apoyo ahora",
+    "grounding": "Probar un ejercicio de grounding",
+    "guided": "Modo de regulación guiada",
+    "reminder": "Has sobrevivido cada momento difícil antes de este.\nTambién vas a sobrevivir este."
+  },
+  "crisisMode": {
+    "title": "Modo de crisis",
+    "subtitle": "Un paso a la vez. Estás a salvo aquí.",
+    "breathHint": "Inhala por 4... Sostén por 4... Exhala por 6...",
+    "continueGrounding": "Continuar al anclaje",
+    "groundingTitle": "Anclaje 5-4-3-2-1",
+    "groundingSubtitle": "Reconecta con el presente a través de tus sentidos",
+    "done": "Listo",
+    "progress": "{{done}} de {{total}} completado",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "calmTitle": "Apoyo para calmarte",
+    "calmSubtitle": "Guía breve y simple - un paso a la vez",
+    "anotherThought": "Otro pensamiento suave",
+    "openCompanion": "Abrir Companion",
+    "delayTitle": "Pausa antes de enviar",
+    "delaySubtitle": "Date espacio. Siempre puedes enviarlo después.",
+    "setPause": "Poner pausa de {{minutes}} minutos",
+    "pauseSet": "Pausa de mensaje configurada por {{minutes}} minutos",
+    "pauseHint": "Usa este tiempo para respirar, anclarte o simplemente quedarte quieto/a.",
+    "crisisLines": "Líneas de crisis",
+    "contactReminder": "Si estás en peligro inmediato, llama ahora a tu número local de emergencias.\n\nHas sobrevivido cada momento difícil antes de este.\nTambién vas a sobrevivir este.",
+    "phases": {
+      "breathing": "Respirar",
+      "grounding": "Anclarte",
+      "ai_calm": "Apoyo",
+      "message_delay": "Pausar",
+      "contact_safe": "Contactar"
+    },
+    "breathLabels": {
+      "inhale": "Inhala...",
+      "hold": "Sostén...",
+      "exhale": "Exhala..."
+    },
+    "senses": {
+      "sight": "Vista",
+      "touch": "Tacto",
+      "sound": "Sonido",
+      "smell": "Olfato",
+      "taste": "Gusto"
+    },
+    "groundingPrompts": {
+      "g1": "Nombra 5 cosas que puedes ver ahora",
+      "g2": "Nombra 4 cosas que puedes tocar o sentir",
+      "g3": "Nombra 3 cosas que puedes escuchar",
+      "g4": "Nombra 2 cosas que puedes oler",
+      "g5": "Nombra 1 cosa que puedes saborear"
+    },
+    "calmResponses": [
+      "Estás a salvo en este momento. Vamos un momento a la vez.",
+      "Esta sensación es intensa, pero va a pasar. Ya has atravesado momentos difíciles antes.",
+      "Ahora mismo no hay que decidir nada. Solo respira.",
+      "No tienes que responder nada ahora mismo. Este momento es solo para ti.",
+      "Tus sentimientos son válidos. Bajemos la velocidad juntos/as.",
+      "Una respiración a la vez. Eso es todo lo que necesitas hacer ahora.",
+      "Está bien sentirte abrumado/a. Ya estás haciendo algo valiente al estar aquí.",
+      "Nada urgente necesita tu atención ahora mismo. Solo quédate aquí."
+    ]
+  },
+  "regulation": {
+    "title": "Regulación de crisis",
+    "subtitle": "Un paso a la vez. Estás a salvo aquí.",
+    "entryMessages": [
+      "Parece que todo puede sentirse intenso ahora. Hagámoslo simple.",
+      "No necesitas resolver todo ahora mismo. Primero un paso pequeño.",
+      "Bajemos la velocidad juntos/as. Estás a salvo aquí."
+    ],
+    "startCalming": "Empezar a calmarme ahora",
+    "orChoose": "o elige lo que necesitas",
+    "choosePace": "Elige tu ritmo",
+    "durationQuestion": "¿Cuánto tiempo quieres respirar?",
+    "beginBreathing": "Empezar respiración",
+    "breathHint": "Inhala por 4... Sostén por 4... Exhala por 6...",
+    "continueGrounding": "Continuar al anclaje",
+    "feelCalmer": "Me siento más calmado/a",
+    "groundTitle": "Vuelve al presente",
+    "groundSubtitle": "Reconecta con el presente, un sentido a la vez",
+    "done": "Listo",
+    "progress": "{{done}} de {{total}} completado",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "nextStep": "Siguiente paso",
+    "urgeTitle": "Observa el impulso",
+    "urgeSubtitle": "¿Qué impulso se siente más fuerte ahora?",
+    "intensity": "¿Qué tan intenso es esto?",
+    "breatheFirst": "Respirar primero",
+    "groundMe": "Ayúdame a anclarme",
+    "delayAction": "Retrasar la acción",
+    "calmerNext": "Ver siguientes pasos más calmados",
+    "helpNotTextTitle": "Ayúdame a no escribir todavía",
+    "helpNotTextSubtitle": "Puedes guardar un borrador sin enviarlo. Vuelve cuando estés más calmado/a.",
+    "draftLabel": "Escríbelo aquí en su lugar (opcional)",
+    "draftPlaceholder": "¿Qué quieres decir? Sácalo aquí de forma segura...",
+    "saveDraft": "Guardar borrador de forma segura",
+    "draftSaved": "Borrador guardado. Puedes volver a él después.",
+    "pauseTitle": "Poner una pausa antes de enviar",
+    "pauseSubtitle": "Vuelve después del temporizador - el impulso suele bajar",
+    "breatheWaiting": "Respirar mientras espero",
+    "otherOptions": "Ver otras opciones",
+    "calmNextTitle": "Bajaste la velocidad. Eso requiere mucha fuerza.",
+    "calmNextSubtitle": "Elige un siguiente paso más calmado, o cierra esto cuando estés listo/a.",
+    "feelBetter": "Me siento mejor ahora",
+    "entryChoices": {
+      "ec1": "Respira conmigo",
+      "ec2": "Ayúdame a anclarme",
+      "ec3": "Ayúdame a no escribir todavía",
+      "ec4": "Tengo un impulso fuerte"
+    },
+    "urges": {
+      "ru1": "Escribirle",
+      "ru2": "Llamarle",
+      "ru3": "Explicar todo",
+      "ru4": "Desaparecer",
+      "ru5": "Atacar",
+      "ru6": "Pedir tranquilidad",
+      "ru7": "Aislarme",
+      "ru8": "Disculparme de más"
+    },
+    "groundingSteps": {
+      "gs1": ["Nombra 5 cosas que puedes ver ahora", "VER"],
+      "gs2": ["Nombra 4 cosas que puedes sentir físicamente", "SENTIR"],
+      "gs3": ["Nombra 3 cosas que puedes escuchar", "ESCUCHAR"],
+      "gs4": ["Oriéntate en la habitación - mira a la izquierda y luego a la derecha, lentamente", "ORIENTAR"],
+      "gs5": ["Siente tus pies en el suelo. Presiona suavemente.", "ANCLAR"]
+    },
+    "compassion": [
+      "Este impulso tiene sentido. Viene de una necesidad real dentro de ti.",
+      "Puedes sentir este impulso sin obedecerlo. Va a pasar.",
+      "El impulso puede pasar sin que tengas que obedecerlo.",
+      "Los impulsos suben y bajan. Solo necesitas esperar, no actuar.",
+      "Este es tu sistema nervioso hablando. Puedes escucharlo sin seguirlo."
+    ],
+    "intensityLabels": {
+      "mild": "leve",
+      "moderate": "moderado",
+      "strong": "fuerte",
+      "very strong": "muy fuerte",
+      "overwhelming": "abrumador"
+    },
+    "delayEncouragement": {
+      "2": "Dos minutos pueden cambiarlo todo. Solo respira.",
+      "5": "Cinco minutos de espacio son un regalo para ti.",
+      "10": "Diez minutos suelen bastar para que la mayoría de los impulsos se suavicen."
+    },
+    "calmNextActions": {
+      "cna1": ["Escribir en diario", "Poner pensamientos en palabras de forma segura"],
+      "cna2": ["Hablar con Companion", "Procesar con apoyo calmado"],
+      "cna3": ["Simular respuestas", "Probar distintas opciones de comunicación"],
+      "cna4": ["Usar reescritura segura", "Crear un mensaje más calmado"],
+      "cna5": ["Hacer otra ronda de anclaje", "Seguir construyendo calma"],
+      "cna6": ["Volver en 10 minutos", "Darte espacio"]
+    }
+  }
+}

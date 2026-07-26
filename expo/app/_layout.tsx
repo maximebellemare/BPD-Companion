@@ -23,11 +23,14 @@ import { MovementProvider } from "@/providers/MovementProvider";
 import { JournalProvider } from "@/providers/JournalProvider";
 import { SpiralPreventionProvider } from "@/providers/SpiralPreventionProvider";
 import { ReviewPromptProvider } from "@/providers/ReviewPromptProvider";
+import { LocalizationProvider } from "@/providers/LocalizationProvider";
 import DeferredProviders from "@/components/DeferredProviders";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { ThemeProvider, useAppTheme } from "@/providers/ThemeProvider";
 import { runCareDataNormalizerSmokeTest } from "@/services/care/careDataNormalizer.smoke";
 import { initializeSingular } from "@/lib/singular";
+import "@/lib/i18n";
+import { useTranslation } from "react-i18next";
 const NotificationManagerLazy = Platform.OS !== 'web' 
   ? lazy(() => import("@/components/NotificationManager"))
   : null;
@@ -40,10 +43,11 @@ const queryClient = new QueryClient();
 
 function RootLayoutNav() {
   const { colors } = useAppTheme();
+  const { t } = useTranslation('common');
   return (
     <Stack
       screenOptions={{
-        headerBackTitle: "Back",
+        headerBackTitle: t('back'),
         contentStyle: { backgroundColor: colors.background },
         headerTintColor: colors.brandTeal,
         headerTitleStyle: {
@@ -636,6 +640,7 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <GestureHandlerRootView>
         <ErrorBoundary>
+        <LocalizationProvider>
         <AuthProvider>
         <AppProvider>
         <UserProfileProvider>
@@ -681,6 +686,7 @@ export default function RootLayout() {
         </UserProfileProvider>
         </AppProvider>
         </AuthProvider>
+        </LocalizationProvider>
         </ErrorBoundary>
       </GestureHandlerRootView>
     </QueryClientProvider>

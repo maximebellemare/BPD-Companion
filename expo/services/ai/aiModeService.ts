@@ -115,23 +115,31 @@ const HIGH_DISTRESS_WORDS = [
   'kill myself', 'ending it', 'can\'t do this anymore', 'nothing matters',
   'want to disappear', 'losing my mind', 'spiraling out of control',
   'can\'t breathe', 'everything is falling apart', 'completely alone',
+  'quiero hacerme daño', 'no quiero seguir viviendo', 'estoy pensando en suicidarme',
+  'me quiero morir', 'no puedo seguir', 'no aguanto más', 'no puedo respirar',
 ];
 
 const CALM_WORDS = [
   'calm', 'overwhelm', 'slow down', 'breathe', 'spiraling', 'too much',
   'can\'t stop', 'panic', 'shaking', 'frozen', 'numb', 'shut down',
+  'calma', 'calmar', 'abrumado', 'abrumada', 'respirar', 'pánico', 'panico',
+  'no puedo controlar', 'impulsos', 'nada es real',
 ];
 
 const REFLECTION_WORDS = [
   'pattern', 'notice', 'reflect', 'journal', 'understand', 'what am i',
   'why do i', 'keep doing', 'cycle', 'always', 'making progress',
   'growth', 'what does this mean',
+  'patrón', 'patron', 'reflexionar', 'entender', 'por qué', 'por que',
+  'vergüenza', 'verguenza', 'qué significa', 'que significa',
 ];
 
 const CLARITY_WORDS = [
   'confused', 'don\'t know', 'can\'t tell', 'mixed up', 'overreacting',
   'so many feelings', 'what is happening', 'nothing makes sense',
   'lost', 'foggy', 'unclear', 'which one',
+  'confundido', 'confundida', 'no sé', 'no se', 'muchas emociones',
+  'nada tiene sentido', 'perdido', 'perdida',
 ];
 
 const RELATIONSHIP_WORDS = [
@@ -139,12 +147,17 @@ const RELATIONSHIP_WORDS = [
   'text', 'message', 'send', 'reply', 'fight', 'conflict', 'abandon',
   'left me', 'leaving', 'ghosting', 'not responding', 'tone changed',
   'rejected', 'rewrite',
+  'pareja', 'novio', 'novia', 'relación', 'relacion', 'mensaje', 'enviar',
+  'responder', 'pelea', 'conflicto', 'abandone', 'abandono', 'rechazo',
+  'me ignoró', 'me ignoro', 'no responde',
 ];
 
 const ACTION_WORDS = [
   'what should i do', 'next step', 'help me decide', 'practical',
   'action', 'plan', 'what now', 'immediately', 'right now',
   'how do i', 'give me', 'tell me what to',
+  'qué hago', 'que hago', 'siguiente paso', 'ayúdame a decidir',
+  'ayudame a decidir', 'plan', 'ahora mismo', 'dime qué',
 ];
 
 function scoreKeywords(message: string, keywords: string[]): number {

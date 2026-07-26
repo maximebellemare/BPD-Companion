@@ -17,8 +17,9 @@ import { ArrowLeft, Mail, Lock, User, Eye, EyeOff } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
 import { useAppTheme } from '@/providers/ThemeProvider';
+import { useTranslation } from 'react-i18next';
 
-function getFriendlySignUpError(error: unknown): string {
+function getFriendlySignUpErrorKey(error: unknown): string {
   const raw = error instanceof Error ? error.message : String(error ?? '');
   const message = raw.toLowerCase();
 
@@ -32,7 +33,7 @@ function getFriendlySignUpError(error: unknown): string {
     message.includes('user already') ||
     message.includes('email address is already')
   ) {
-    return 'An account already exists for this email. Try signing in instead.';
+    return 'duplicate';
   }
 
   if (
@@ -40,7 +41,7 @@ function getFriendlySignUpError(error: unknown): string {
     message.includes('too many requests') ||
     message.includes('over_email_send_rate_limit')
   ) {
-    return 'Too many signup attempts. Please wait a moment and try again.';
+    return 'rateLimit';
   }
 
   if (
@@ -48,7 +49,7 @@ function getFriendlySignUpError(error: unknown): string {
     message.includes('email address is invalid') ||
     message.includes('invalid login credentials')
   ) {
-    return 'Please enter a valid email address.';
+    return 'invalidEmail';
   }
 
   if (
@@ -58,7 +59,7 @@ function getFriendlySignUpError(error: unknown): string {
     message.includes('at least 6') ||
     message.includes('too short')
   ) {
-    return 'Please choose a stronger password with at least 6 characters.';
+    return 'weakPassword';
   }
 
   if (
@@ -68,19 +69,20 @@ function getFriendlySignUpError(error: unknown): string {
     message.includes('timeout') ||
     message.includes('internet connection')
   ) {
-    return 'Connection issue. Please try again.';
+    return 'network';
   }
 
   if (message.includes('missing supabase configuration') || message.includes('supabase configuration')) {
-    return 'Account creation is temporarily unavailable. Please try again shortly.';
+    return 'missingConfig';
   }
 
-  return raw || 'Sign up did not complete. Please try again.';
+  return raw ? 'raw' : 'unknown';
 }
 
 export default function SignUpScreen() {
   const router = useRouter();
   const { colors } = useAppTheme();
+  const { t } = useTranslation(['auth', 'common']);
   const { signUp } = useAuth();
   const [displayName, setDisplayName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
@@ -97,15 +99,15 @@ export default function SignUpScreen() {
     const name = displayName.trim();
     const trimmed = email.trim().toLowerCase();
     if (!name) {
-      setError('Please enter your name.');
+      setError(t('auth:signUp.validationName'));
       return;
     }
     if (!trimmed || !/^\S+@\S+\.\S+$/.test(trimmed)) {
-      setError('Please enter a valid email.');
+      setError(t('auth:signUp.validationEmail'));
       return;
     }
     if (password.length < 6) {
-      setError('Password must be at least 6 characters.');
+      setError(t('auth:signUp.validationPassword'));
       return;
     }
     setSubmitting(true);
@@ -116,14 +118,15 @@ export default function SignUpScreen() {
       if (Platform.OS !== 'web') void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (e) {
       if (submitAttemptRef.current !== attemptId) return;
-      setError(getFriendlySignUpError(e));
+      const key = getFriendlySignUpErrorKey(e);
+      setError(key === 'raw' && e instanceof Error ? e.message : t(`auth:signUp.errors.${key}`));
       if (Platform.OS !== 'web') void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
       if (submitAttemptRef.current === attemptId) {
         setSubmitting(false);
       }
     }
-  }, [displayName, email, password, signUp]);
+  }, [displayName, email, password, signUp, t]);
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
@@ -140,20 +143,20 @@ export default function SignUpScreen() {
             <ArrowLeft size={22} color={Colors.brandNavy} />
           </TouchableOpacity>
 
-          <Text style={styles.title}>Create your account</Text>
+          <Text style={styles.title}>{t('auth:signUp.title')}</Text>
           <Text style={styles.subtitle}>
-            Start a private space to understand your patterns, regulate emotions, improve relationships, and build skills that help you pause before reacting.
+            {t('auth:signUp.subtitle')}
           </Text>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Your name</Text>
+            <Text style={styles.label}>{t('auth:signUp.displayName')}</Text>
             <View style={styles.inputWrap}>
               <User size={18} color={Colors.textMuted} />
               <TextInput
                 style={styles.input}
                 value={displayName}
                 onChangeText={setDisplayName}
-                placeholder="How should we call you?"
+                placeholder={t('auth:signUp.displayNamePlaceholder')}
                 placeholderTextColor={Colors.textMuted}
                 autoCapitalize="words"
                 testID="name-input"
@@ -162,7 +165,7 @@ export default function SignUpScreen() {
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Email</Text>
+            <Text style={styles.label}>{t('common:email')}</Text>
             <View style={styles.inputWrap}>
               <Mail size={18} color={Colors.textMuted} />
               <TextInput
@@ -181,14 +184,14 @@ export default function SignUpScreen() {
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Password</Text>
+            <Text style={styles.label}>{t('common:password')}</Text>
             <View style={styles.inputWrap}>
               <Lock size={18} color={Colors.textMuted} />
               <TextInput
                 style={styles.input}
                 value={password}
                 onChangeText={setPassword}
-                placeholder="At least 6 characters"
+                placeholder={t('auth:signUp.passwordPlaceholder')}
                 placeholderTextColor={Colors.textMuted}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
@@ -212,13 +215,13 @@ export default function SignUpScreen() {
           ) : null}
 
           <Text style={styles.terms}>
-            By creating an account you agree to our{' '}
+            {t('auth:signUp.termsPrefix')}{' '}
             <Text style={styles.termsLink} onPress={() => router.push('/terms-of-service' as never)}>
-              Terms
+              {t('common:termsOfService')}
             </Text>
-            {' '}and{' '}
+            {' '}{t('auth:signUp.termsMiddle')}{' '}
             <Text style={styles.termsLink} onPress={() => router.push('/privacy-policy' as never)}>
-              Privacy Policy
+              {t('common:privacyPolicy')}
             </Text>
             .
           </Text>
@@ -233,7 +236,7 @@ export default function SignUpScreen() {
             {submitting ? (
               <ActivityIndicator color={Colors.white} />
             ) : (
-              <Text style={styles.primaryText}>Create account</Text>
+              <Text style={styles.primaryText}>{t('auth:signUp.submit')}</Text>
             )}
           </TouchableOpacity>
 
@@ -243,7 +246,7 @@ export default function SignUpScreen() {
             testID="switch-to-signin"
           >
             <Text style={styles.switchText}>
-              Already have an account? <Text style={styles.switchLink}>Sign in</Text>
+              {t('auth:signUp.switchPrefix')} <Text style={styles.switchLink}>{t('auth:signUp.switchAction')}</Text>
             </Text>
           </TouchableOpacity>
         </ScrollView>

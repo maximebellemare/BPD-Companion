@@ -1,0 +1,170 @@
+{
+  "privacy": {
+    "lastUpdated": "14 de marzo de 2026",
+    "title": "Política de privacidad",
+    "heroTitle": "Tu privacidad importa",
+    "heroDescription": "{{brand}} está diseñada con tu seguridad emocional y privacidad de datos en el centro. Recopilamos solo lo necesario para darte una experiencia significativa.",
+    "lastUpdatedLabel": "Última actualización: {{date}}",
+    "sections": [
+      {
+        "title": "Qué recopilamos",
+        "body": [
+          "Recopilamos información que proporcionas voluntariamente, incluyendo:",
+          "No recopilamos tu nombre real, contactos telefónicos, ubicación ni datos de fuera de esta app, salvo que los proporciones explícitamente."
+        ],
+        "bullets": [
+          "Entradas de diario y datos de check-in",
+          "Estado emocional e información de ánimo",
+          "Borradores de mensajes y patrones de comunicación",
+          "Preferencias y ajustes de perfil",
+          "Analíticas de uso anónimas"
+        ]
+      },
+      {
+        "title": "Cómo protegemos tus datos",
+        "body": [
+          "Todos los datos personales se guardan localmente en tu dispositivo de forma predeterminada. Si la sincronización en la nube está activada, los datos se cifran durante la transmisión y en reposo."
+        ],
+        "bullets": [
+          "Cifrado de extremo a extremo para datos sincronizados",
+          "Sin publicidad de terceros ni venta de datos",
+          "Bloqueo biométrico opcional para acceder a la app",
+          "Publicación anónima en comunidad de forma predeterminada"
+        ]
+      },
+      {
+        "title": "Procesamiento de IA",
+        "body": [
+          "Cuando usas funciones con IA (chat de Companion, análisis de mensajes, insights), tu entrada se procesa por nuestros sistemas de IA para generar respuestas."
+        ],
+        "bullets": [
+          "Las conversaciones con IA no se usan para entrenar modelos",
+          "El procesamiento se realiza de forma segura con conexiones cifradas",
+          "Puedes eliminar el historial de conversaciones con IA en cualquier momento",
+          "La memoria de IA puede borrarse desde los ajustes de tu perfil"
+        ]
+      },
+      {
+        "title": "Eliminación de datos",
+        "body": [
+          "Tienes derecho a eliminar tus datos en cualquier momento. Puedes:",
+          "La eliminación completa de datos puede solicitarse desde los Ajustes de la app o contactando a soporte. La eliminación se procesa en un plazo de 30 días."
+        ],
+        "bullets": [
+          "Eliminar entradas individuales (diarios, mensajes, etc.)",
+          "Borrar la memoria de AI Companion",
+          "Solicitar eliminación completa de cuenta y datos",
+          "Exportar tus datos antes de eliminarlos"
+        ]
+      },
+      {
+        "title": "Contáctanos",
+        "body": [
+          "Si tienes preguntas sobre esta política de privacidad o tus datos, contáctanos:",
+          "Buscamos responder todas las consultas de privacidad en un plazo de 48 horas."
+        ],
+        "bullets": []
+      }
+    ],
+    "email": "Correo",
+    "contactEmail": "support@bpdcompanion.app",
+    "footer": "Al usar {{brand}}, aceptas la recopilación y el uso de información de acuerdo con esta política. Podemos actualizar esta política de vez en cuando y te notificaremos sobre cambios significativos."
+  },
+  "terms": {
+    "lastUpdated": "14 de marzo de 2026",
+    "title": "Términos de servicio",
+    "heroDescription": "Lee estos términos con atención. Al usar {{brand}}, aceptas quedar sujeto/a a estos términos.",
+    "effectiveLabel": "Vigente desde: {{date}}",
+    "sections": [
+      {
+        "title": "Aceptación de términos",
+        "body": [
+          "Al descargar, instalar o usar {{brand}} (\"la App\"), aceptas estos Términos de servicio. Si no aceptas estos términos, no uses la App.",
+          "Debes tener al menos 16 años para usar esta App. Si eres menor de 18 años, deberías pedir a tu madre, padre o tutor/a que revise estos términos contigo."
+        ],
+        "bullets": []
+      },
+      {
+        "title": "Naturaleza de la App",
+        "warning": "{{brand}} es una herramienta compañera de autoayuda. No sustituye tratamiento profesional de salud mental, terapia ni consejo médico.",
+        "body": [
+          "La App proporciona herramientas de conciencia emocional, diario, apoyo de comunicación y autorreflexión. El contenido generado por funciones de IA es solo para fines informativos y reflexivos.",
+          "Si estás en crisis o atravesando una emergencia de salud mental, contacta inmediatamente a los servicios locales de emergencia o a una línea de apoyo en crisis en tu país."
+        ],
+        "bullets": []
+      },
+      {
+        "title": "Cuentas de usuario y datos",
+        "body": [
+          "Eres responsable de mantener la confidencialidad de tu cuenta. Todos los datos que ingresas en la App (entradas de diario, mensajes, check-ins) son tus datos personales."
+        ],
+        "bullets": [
+          "Conservas la propiedad de tu contenido",
+          "Guardamos datos como se describe en nuestra Política de privacidad",
+          "Puedes solicitar la eliminación de datos en cualquier momento",
+          "No compartiremos tus datos personales con terceros para publicidad"
+        ]
+      },
+      {
+        "title": "Suscripciones y pagos",
+        "label": "Compras dentro de la app",
+        "body": [
+          "BPD Companion requiere una membresía activa. Las suscripciones se facturan a través de tu cuenta de App Store o Google Play."
+        ],
+        "bullets": [
+          "Las suscripciones se renuevan automáticamente salvo que se cancelen al menos 24 horas antes del final del periodo actual",
+          "Puedes administrar suscripciones en los ajustes de tu dispositivo",
+          "Apple/Google gestionan los reembolsos según sus políticas",
+          "Las funciones gratuitas, incluyendo el apoyo en crisis, permanecen siempre accesibles"
+        ]
+      },
+      {
+        "title": "Uso aceptable",
+        "body": [
+          "Aceptas no:"
+        ],
+        "bullets": [
+          "Usar la App para dañar, amenazar o acosar a otras personas",
+          "Publicar contenido dañino, abusivo o ilegal en funciones de comunidad",
+          "Intentar aplicar ingeniería inversa o explotar la App",
+          "Usar funciones de IA para generar contenido dañino",
+          "Compartir las credenciales de tu cuenta con otras personas"
+        ]
+      },
+      {
+        "title": "Normas de la comunidad",
+        "body": [
+          "Las funciones de comunidad están diseñadas para apoyo entre pares. Todas las interacciones de comunidad deben ser respetuosas, solidarias y constructivas.",
+          "Nos reservamos el derecho de eliminar contenido o suspender cuentas que infrinjan estas normas."
+        ],
+        "bullets": []
+      },
+      {
+        "title": "Limitación de responsabilidad",
+        "label": "Aviso legal",
+        "body": [
+          "La App se proporciona \"tal cual\", sin garantías de ningún tipo. No somos responsables por decisiones tomadas con base en contenido de la App, sugerencias generadas por IA o interacciones de comunidad.",
+          "En la máxima medida permitida por la ley, no seremos responsables por daños indirectos, incidentales o consecuentes derivados de tu uso de la App."
+        ],
+        "bullets": []
+      },
+      {
+        "title": "Cambios a los términos",
+        "body": [
+          "Podemos actualizar estos términos de vez en cuando. El uso continuado de la App después de cambios constituye aceptación de los términos actualizados. Te notificaremos cambios significativos a través de la App."
+        ],
+        "bullets": []
+      },
+      {
+        "title": "Contacto",
+        "body": [
+          "Para preguntas sobre estos términos:"
+        ],
+        "bullets": []
+      }
+    ],
+    "email": "Correo",
+    "contactEmail": "legal@bpdcompanion.app",
+    "acceptance": "Al usar {{brand}}, reconoces que has leído, entendido y aceptas estos Términos de servicio."
+  }
+}

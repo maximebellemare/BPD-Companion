@@ -1,0 +1,119 @@
+{
+  "progress": "{{current}} / {{total}}",
+  "completion": {
+    "saving": "Guardando tu personalización",
+    "preparing": "Preparando tus opciones de membresía",
+    "secure": "Tus respuestas se están guardando de forma segura.",
+    "errorTitle": "No se pudo terminar la configuración",
+    "errorBody": "Revisa tu conexión e inténtalo de nuevo."
+  },
+  "welcome": {
+    "headline": "BPD Companion fue creado para personas que viven con trastorno límite de la personalidad.",
+    "subtext": "Personalizaremos tu experiencia en menos de 2 minutos."
+  },
+  "steps": {
+    "personalize": "Personalizar",
+    "hardMoments": "Momentos difíciles",
+    "goals": "Tus objetivos",
+    "focus": "Enfoque personalizado",
+    "howHelps": "Cómo ayuda la app",
+    "membership": "Membresía"
+  },
+  "questions": {
+    "reasonsTitle": "¿Qué te trajo aquí hoy?",
+    "reasonsSubtitle": "Elige todo lo que encaje. Puedes cambiar de rumbo después.",
+    "reasonsOther": "Cuéntanos qué te trajo aquí",
+    "situationsTitle": "¿Qué situaciones son más difíciles para ti?",
+    "situationsSubtitle": "Esto ayuda a BPD Companion a entender dónde apoyar primero.",
+    "situationsOther": "Agrega otra situación",
+    "successTitle": "¿Cómo se vería el progreso en 3 meses?",
+    "successSubtitle": "Elige los cambios que se sentirían importantes.",
+    "successOther": "Agrega tu propio objetivo",
+    "selectAtLeastOne": "Selecciona al menos una opción."
+  },
+  "options": {
+    "emotional_overwhelm": "Abrumamiento emocional",
+    "fear_of_abandonment": "Miedo al abandono",
+    "relationship_problems": "Problemas de relación",
+    "mood_swings": "Cambios de ánimo",
+    "anger": "Enojo",
+    "impulsive_behaviours": "Conductas impulsivas",
+    "anxiety": "Ansiedad",
+    "depression": "Depresión",
+    "self_esteem": "Autoestima",
+    "recently_diagnosed": "Me diagnosticaron recientemente",
+    "understand_myself": "Quiero entenderme mejor",
+    "arguments": "Discusiones",
+    "feeling_ignored": "Sentirme ignorado/a",
+    "rejection": "Rechazo",
+    "breakups": "Rupturas",
+    "loneliness": "Soledad",
+    "family": "Familia",
+    "dating": "Citas",
+    "work": "Trabajo",
+    "stress": "Estrés",
+    "better_emotional_control": "Más control emocional",
+    "healthier_relationships": "Relaciones más sanas",
+    "less_anxiety": "Menos ansiedad",
+    "fewer_emotional_crises": "Menos crisis emocionales",
+    "better_communication": "Mejor comunicación",
+    "feeling_calmer": "Sentirme con más calma",
+    "understanding_triggers": "Entender mis desencadenantes",
+    "building_healthy_habits": "Construir hábitos saludables",
+    "other": "Otro"
+  },
+  "focus": {
+    "intro": "Según tus respuestas, tu enfoque personalizado es:",
+    "relationship": "Estabilidad en las relaciones",
+    "regulation": "Regulación emocional",
+    "pause": "Pausar antes de reaccionar",
+    "triggers": "Entender desencadenantes",
+    "steadiness": "Estabilidad diaria",
+    "supportWith": "Apoyo con {{answer}}",
+    "helps": "BPD Companion puede ayudarte con esto.",
+    "primary": "Enfoque principal",
+    "secondary": "Enfoque secundario",
+    "third": "Tercer enfoque"
+  },
+  "helps": {
+    "headline": "BPD Companion puede ayudarte con {{items}}.",
+    "companion": "AI Companion te ayuda a procesar momentos difíciles antes de que se vuelvan crisis.",
+    "checkins": "Los registros diarios ayudan a identificar patrones emocionales.",
+    "tools": "Las herramientas guiadas te ayudan a pausar antes de reaccionar.",
+    "insights": "Las ideas te ayudan a entender desencadenantes y progreso.",
+    "community": "La comunidad ayuda a sentirte menos solo/a.",
+    "checkinsTitle": "Registros diarios",
+    "toolsTitle": "Herramientas para pausar",
+    "insightsTitle": "Ideas personalizadas"
+  },
+  "membership": {
+    "headline": "Comienza tu prueba gratis de 3 días.",
+    "subheadline": "Todo desbloqueado desde el primer día.",
+    "transformTitle": "Imagina sentirte:",
+    "includesTitle": "Tu membresía incluye:",
+    "trialNote": "Cancela cuando quieras antes de que terminen los 3 días de prueba. No se te cobrará hasta que termine la prueba.",
+    "primary": "Comenzar prueba gratis de 3 días",
+    "transformations": [
+      "Más calma durante discusiones en vez de reaccionar al instante",
+      "Poder entender por qué cambió tu ánimo hoy",
+      "Notar desencadenantes antes de que se vuelvan espirales",
+      "Más confianza antes de enviar mensajes difíciles",
+      "Sentirte menos solo/a y menos juzgado/a",
+      "Sentirte acompañado/a todos los días, no solo en momentos de crisis"
+    ],
+    "benefits": [
+      "AI Companion ilimitado",
+      "Registros ilimitados",
+      "Registro de pensamientos CBT",
+      "Herramientas DBT",
+      "Ayúdame a calmarme y No lo envíes",
+      "Comprensión de desencadenantes",
+      "Mapa emocional",
+      "Apoyo en relaciones",
+      "Herramientas de reflexión",
+      "Comunidad",
+      "Seguimiento del progreso",
+      "Actualizaciones futuras incluidas"
+    ]
+  }
+}

@@ -1,0 +1,298 @@
+{
+  "checkInToday": "Check in today",
+  "complete": "Today’s check-in complete",
+  "viewInsights": "View today’s insights",
+  "intensityQuestion": "How intense does this feel right now?",
+  "intensityLow": "1 = very manageable",
+  "intensityHigh": "10 = overwhelming",
+  "custom": {
+    "trigger": "Write what triggered this",
+    "emotion": "Write what you feel",
+    "sensation": "Write where you feel it",
+    "urge": "Write the urge",
+    "notes": "Whatever you need to say..."
+  },
+  "actions": {
+    "back": "Back",
+    "done": "Done",
+    "save": "Save",
+    "next": "Next",
+    "lastHint": "Tap a tool to try it, or Done to close",
+    "notesHint": "This will be saved to your journal",
+    "skipHint": "You can skip — select what feels right",
+    "talkThrough": "Talk this through",
+    "companionHigh": "Get calmer support with AI Companion",
+    "companionProcess": "Process what you’re feeling with AI Companion"
+  },
+  "options": {
+    "emotions": {
+      "e1": "Anxious",
+      "e2": "Angry",
+      "e3": "Sad",
+      "e4": "Empty",
+      "e5": "Ashamed",
+      "e6": "Lonely",
+      "e7": "Rejected",
+      "e8": "Abandoned",
+      "e9": "Jealous",
+      "e10": "Numb",
+      "e11": "Overwhelmed",
+      "e12": "Calm",
+      "e13": "Something else"
+    },
+    "triggers": {
+      "t1": "Delayed reply",
+      "t2": "Tone change",
+      "t3": "Feeling ignored",
+      "t4": "Criticism",
+      "t5": "Conflict",
+      "t6": "Shame",
+      "t7": "Loneliness",
+      "t8": "Sleep",
+      "t9": "Work/school",
+      "t10": "Family",
+      "t11": "Money",
+      "t12": "Something else"
+    },
+    "body": {
+      "b1": "Chest",
+      "b2": "Stomach",
+      "b3": "Throat",
+      "b4": "Head",
+      "b5": "Jaw",
+      "b6": "Shoulders",
+      "b7": "Hands",
+      "b8": "Whole body / everywhere",
+      "b9": "I don’t know",
+      "b10": "Somewhere else"
+    },
+    "urges": {
+      "u1": "Text again",
+      "u2": "Call repeatedly",
+      "u3": "Argue",
+      "u4": "Withdraw",
+      "u5": "Apologize too much",
+      "u6": "Check social media",
+      "u7": "Ask for reassurance",
+      "u8": "Spend money",
+      "u9": "Drink/use substances",
+      "u10": "End the relationship",
+      "u11": "Say something hurtful",
+      "u12": "I don’t know",
+      "u13": "Something else"
+    },
+    "relationships": {
+      "partner": "Partner",
+      "parent": "Parent",
+      "friend": "Friend",
+      "ex": "Ex",
+      "coworker": "Coworker",
+      "other": "Other"
+    }
+  },
+  "steps": {
+    "triggersTitle": "What triggered this?",
+    "triggersSubtitle": "Select all that apply. No judgment here.",
+    "relationshipsTitle": "Who did this involve?",
+    "relationshipsSubtitle": "Optional. This helps relationship insights stay specific.",
+    "emotionsTitle": "What are you feeling?",
+    "emotionsSubtitle": "Name it to tame it. Pick what fits.",
+    "bodyTitle": "Where do you feel it?",
+    "bodySubtitle": "Your body holds wisdom. Notice where.",
+    "urgesTitle": "What urges are coming up?",
+    "urgesSubtitle": "It's okay to have urges. Naming them gives you power.",
+    "intensityTitle": "How intense does this feel right now?",
+    "intensitySubtitle": "1 = very manageable · 10 = overwhelming",
+    "notesTitle": "Anything else?",
+    "notesSubtitle": "Optional. Write anything you need to get out.",
+    "suggestionsTitle": "Here for you",
+    "suggestionsSubtitle": "Based on what you shared, these might help right now."
+  },
+  "intensityLabels": {
+    "manageable": "Manageable",
+    "difficult": "Difficult",
+    "veryIntense": "Very intense",
+    "overwhelming": "Overwhelming"
+  },
+  "home": {
+    "today": "Today",
+    "subtitle": "One honest signal is enough to start.",
+    "quickCheckIn": "Quick check-in",
+    "checkInTitle": "How are you feeling right now?",
+    "completedTitle": "Today’s check-in complete ✓",
+    "notesHeader": "Quick Today check-in",
+    "whatFeelsClosest": "What feels closest?",
+    "whatInfluenced": "What influenced this?",
+    "optionalChoose": "Optional. Choose anything that fits.",
+    "customInfluence": "Write what influenced this",
+    "anyoneInvolved": "Was anyone involved?",
+    "contextHint": "Optional. This can be just you, another person, or a setting.",
+    "customContext": "Write who or what context",
+    "recommendedNextStep": "Recommended next step",
+    "medicationDue": "Medication due",
+    "appointmentToday": "Appointment today",
+    "upcomingAppointment": "Upcoming appointment",
+    "quietWin": "Quiet win",
+    "greetings": {
+      "stillUp": "Still up?",
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening",
+      "windingDown": "Winding down?"
+    },
+    "saved": {
+      "created": "Today’s check-in saved.",
+      "updated": "Today’s check-in updated."
+    },
+    "actions": {
+      "calmMeDown": "Calm Me Down",
+      "companion": "Companion",
+      "dontSendIt": "Don’t Send It",
+      "taken": "Taken",
+      "talkToCompanion": "Talk to Companion",
+      "viewInsights": "View Insights",
+      "editCheckIn": "Edit check-in",
+      "saveCheckIn": "Save check-in",
+      "saveFirst": "Save check-in first",
+      "gotIt": "Got it",
+      "continue": "Continue"
+    },
+    "spiral": {
+      "kicker": "Spiral detection",
+      "title": "We’ve seen similar patterns before.",
+      "body": "This resembles a pattern that previously led to distress. This is not certain, but slowing down now may help.",
+      "evidence": "Signals: {{signals}}. Confidence: {{confidence}}%."
+    },
+    "detailLabels": {
+      "emotion": "Emotion",
+      "strength": "Strength",
+      "intensity": "Intensity",
+      "influence": "Influence",
+      "context": "Context",
+      "time": "Time"
+    },
+    "empty": {
+      "notAdded": "Not added",
+      "noInfluence": "No influence recorded",
+      "noContext": "No context recorded"
+    },
+    "intensityLabels": {
+      "slight": "Slight",
+      "noticeable": "Noticeable",
+      "strong": "Strong",
+      "veryStrong": "Very strong",
+      "mild": "Mild",
+      "moderate": "Moderate",
+      "intense": "Intense",
+      "veryIntense": "Very intense"
+    },
+    "emotions": {
+      "calm": "Calm",
+      "hopeful": "Hopeful",
+      "proud": "Proud",
+      "grateful": "Grateful",
+      "happy": "Happy",
+      "connected": "Connected",
+      "motivated": "Motivated",
+      "okay": "Okay",
+      "anxious": "Anxious",
+      "angry": "Angry",
+      "sad": "Sad",
+      "empty": "Empty",
+      "ashamed": "Ashamed",
+      "rejected": "Rejected",
+      "abandoned": "Abandoned",
+      "overwhelmed": "Overwhelmed",
+      "numb": "Numb",
+      "lonely": "Lonely",
+      "triggered": "Triggered",
+      "other": "Other/custom"
+    },
+    "triggers": {
+      "abandonment_fear": "Fear of abandonment",
+      "relationship_conflict": "Relationship conflict",
+      "delayed_reply": "Delayed reply",
+      "feeling_ignored": "Feeling ignored",
+      "criticism": "Criticism",
+      "loneliness": "Loneliness",
+      "shame": "Shame",
+      "work": "Work/school",
+      "family": "Family",
+      "money": "Money",
+      "sleep": "Sleep",
+      "good_sleep": "Good sleep",
+      "exercise": "Exercise",
+      "supportive_conversation": "Supportive conversation",
+      "felt_connected": "Felt connected",
+      "completed_something": "Completed something",
+      "time_outside": "Time outside",
+      "therapy_session": "Therapy/session",
+      "medication_routine": "Medication routine",
+      "self_care": "Self-care",
+      "work_progress": "Work progress",
+      "proud_moment": "Something I’m proud of",
+      "other": "Other/custom"
+    },
+    "contexts": {
+      "none": "No one / just me",
+      "partner": "Partner",
+      "friend": "Friend",
+      "family": "Family",
+      "work_school": "Work/school",
+      "community": "Community",
+      "other": "Other/custom"
+    },
+    "relationships": {
+      "partner": "Partner",
+      "parent": "Parent",
+      "friend": "Friend",
+      "ex": "Ex",
+      "coworker": "Coworker",
+      "other": "Other"
+    },
+    "recommendations": {
+      "calm": {
+        "title": "Start by calming your body",
+        "body": "When emotions feel intense, BPD Companion suggests a grounding tool before reflection.",
+        "cta": "Start Calm Me Down"
+      },
+      "pause": {
+        "title": "Pause before reacting",
+        "body": "Check the message or reply before you send it.",
+        "cta": "Open Don’t Send It"
+      },
+      "reflect": {
+        "title": "Name what is underneath",
+        "body": "A few words can help turn a vague feeling into something you can care for.",
+        "cta": "Add a reflection"
+      },
+      "positive": {
+        "title": "Notice what helped",
+        "savedBody": "Your check-in is saved. Positive and steady moments help reveal what supports you.",
+        "unsavedBody": "Save what influenced this so your future insights can spot what helps."
+      },
+      "default": {
+        "savedTitle": "Your insight is building",
+        "unsavedTitle": "Keep it simple",
+        "savedBody": "Your check-in is saved. Small entries are what reveal patterns over time.",
+        "unsavedBody": "Save this check-in. Small, honest entries are what make the app more useful over time."
+      }
+    },
+    "smallInsight": {
+      "title": "Small insight",
+      "moreCheckins": "Complete more check-ins to unlock your first emotional pattern.",
+      "average": "Your recent check-ins average {{average}}/10 intensity. Keep checking in to make this pattern clearer."
+    },
+    "tutorial": {
+      "title": "How BPD Companion helps",
+      "steps": [
+        "Today: save one quick emotional check-in",
+        "Companion: talk through what happened",
+        "Tools: calm down, pause, or reflect before reacting",
+        "Insights: watch patterns become clearer",
+        "Community: connect with peer support",
+        "Profile: manage membership and settings"
+      ]
+    }
+  }
+}

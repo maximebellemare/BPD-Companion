@@ -10,14 +10,19 @@ import {
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { X, Heart, AlertTriangle, Phone, Shield, Stethoscope, HandHeart } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import Colors from '@/constants/colors';
 import { BRAND } from '@/constants/branding';
 import { getCrisisResources, getResourceContactText, getResourceUrl } from '@/services/safety/crisisResources';
 
 export default function MentalHealthDisclaimerScreen() {
+  const { t } = useTranslation('profile');
   const router = useRouter();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const crisisResources = getCrisisResources();
+  const whatItIs = t('disclaimer.isItems', { returnObjects: true }) as string[];
+  const whatItIsNot = t('disclaimer.notItems', { returnObjects: true }) as string[];
+  const aiItems = t('disclaimer.aiItems', { returnObjects: true }) as string[];
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -45,7 +50,7 @@ export default function MentalHealthDisclaimerScreen() {
         >
           <X size={20} color={Colors.textSecondary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Mental Health Disclaimer</Text>
+        <Text style={styles.headerTitle}>{t('disclaimer.title')}</Text>
         <View style={styles.closeBtn} />
       </View>
 
@@ -58,31 +63,29 @@ export default function MentalHealthDisclaimerScreen() {
           <View style={styles.heroIconWrap}>
             <Heart size={28} color={Colors.danger} />
           </View>
-          <Text style={styles.heroTitle}>Important Information</Text>
+          <Text style={styles.heroTitle}>{t('disclaimer.heroTitle')}</Text>
           <Text style={styles.heroDesc}>
-            Please read this carefully before using {BRAND.name}
+            {t('disclaimer.heroDescription', { brand: BRAND.name })}
           </Text>
         </Animated.View>
 
         <Animated.View style={[styles.primaryWarning, { opacity: fadeAnim }]}>
           <AlertTriangle size={20} color={Colors.accent} />
           <Text style={styles.primaryWarningText}>
-            {BRAND.name} is a self-help companion app. It is NOT a replacement for professional mental health care, therapy, diagnosis, or medication.
+            {t('disclaimer.primaryWarning', { brand: BRAND.name })}
           </Text>
         </Animated.View>
 
         <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
           <View style={styles.sectionHeader}>
             <Stethoscope size={16} color={Colors.brandTeal} />
-            <Text style={styles.sectionTitle}>What This App Is</Text>
+            <Text style={styles.sectionTitle}>{t('disclaimer.whatItIs')}</Text>
           </View>
           <View style={styles.sectionBody}>
             <View style={styles.checkList}>
-              <Text style={styles.checkItem}>A tool for emotional awareness and self-reflection</Text>
-              <Text style={styles.checkItem}>A companion for practicing communication skills</Text>
-              <Text style={styles.checkItem}>A journaling and mood-tracking space</Text>
-              <Text style={styles.checkItem}>A supplement to professional treatment</Text>
-              <Text style={styles.checkItem}>A space to practice DBT-inspired coping skills</Text>
+              {whatItIs.map(item => (
+                <Text key={item} style={styles.checkItem}>{item}</Text>
+              ))}
             </View>
           </View>
         </Animated.View>
@@ -90,15 +93,13 @@ export default function MentalHealthDisclaimerScreen() {
         <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
           <View style={styles.sectionHeader}>
             <Shield size={16} color={Colors.danger} />
-            <Text style={styles.sectionTitle}>What This App Is Not</Text>
+            <Text style={styles.sectionTitle}>{t('disclaimer.whatItIsNot')}</Text>
           </View>
           <View style={styles.sectionBody}>
             <View style={styles.crossList}>
-              <Text style={styles.crossItem}>Not a therapist or mental health professional</Text>
-              <Text style={styles.crossItem}>Not a diagnostic tool</Text>
-              <Text style={styles.crossItem}>Not a substitute for medication management</Text>
-              <Text style={styles.crossItem}>Not an emergency or crisis service</Text>
-              <Text style={styles.crossItem}>Not qualified to provide clinical advice</Text>
+              {whatItIsNot.map(item => (
+                <Text key={item} style={styles.crossItem}>{item}</Text>
+              ))}
             </View>
           </View>
         </Animated.View>
@@ -106,20 +107,19 @@ export default function MentalHealthDisclaimerScreen() {
         <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
           <View style={styles.sectionHeader}>
             <HandHeart size={16} color="#3B82F6" />
-            <Text style={styles.sectionTitle}>AI-Generated Content</Text>
+            <Text style={styles.sectionTitle}>{t('disclaimer.aiTitle')}</Text>
           </View>
           <View style={styles.sectionBody}>
             <Text style={styles.bodyText}>
-              The AI companion, message analysis, and insight features use artificial intelligence to generate responses. These responses are:
+              {t('disclaimer.aiIntro')}
             </Text>
             <View style={styles.bulletList}>
-              <Text style={styles.bulletItem}>Not clinical advice</Text>
-              <Text style={styles.bulletItem}>Not always accurate or appropriate for your situation</Text>
-              <Text style={styles.bulletItem}>Generated based on patterns, not professional assessment</Text>
-              <Text style={styles.bulletItem}>Meant to support reflection, not replace expert guidance</Text>
+              {aiItems.map(item => (
+                <Text key={item} style={styles.bulletItem}>{item}</Text>
+              ))}
             </View>
             <Text style={styles.bodyText}>
-              Always consult with qualified mental health professionals for clinical decisions.
+              {t('disclaimer.aiFooter')}
             </Text>
           </View>
         </Animated.View>
@@ -127,10 +127,10 @@ export default function MentalHealthDisclaimerScreen() {
         <Animated.View style={[styles.crisisSection, { opacity: fadeAnim }]}>
           <View style={styles.crisisHeader}>
             <Phone size={18} color={Colors.white} />
-            <Text style={styles.crisisTitle}>Crisis Resources</Text>
+            <Text style={styles.crisisTitle}>{t('disclaimer.crisisTitle')}</Text>
           </View>
           <Text style={styles.crisisDesc}>
-            If you or someone you know is in immediate danger or experiencing a mental health crisis, please contact one of these resources:
+            {t('disclaimer.crisisDescription')}
           </Text>
           <View style={styles.resourcesList}>
             {crisisResources.map((resource, index) => (
@@ -151,13 +151,13 @@ export default function MentalHealthDisclaimerScreen() {
             ))}
           </View>
           <Text style={styles.immediateDangerText}>
-            If you are in immediate danger, call your local emergency number now.
+            {t('disclaimer.immediateDanger')}
           </Text>
         </Animated.View>
 
         <View style={styles.footerCard}>
           <Text style={styles.footerText}>
-            We care deeply about your wellbeing. If you're struggling, please reach out to a mental health professional. You deserve real, qualified support.
+            {t('disclaimer.footer')}
           </Text>
         </View>
 

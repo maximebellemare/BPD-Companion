@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Phone, MessageCircle, Heart, Wind, Shield, ChevronRight } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import Colors from '@/constants/colors';
 import { SafetyAssessment } from '@/types/aiSafety';
 import { getInterventionConfig } from '@/services/ai/aiSafetyService';
@@ -25,6 +26,7 @@ export default React.memo(function SafetyInterventionBanner({
   onDismiss,
   compact = false,
 }: SafetyInterventionBannerProps) {
+  const { t } = useTranslation('safety');
   const router = useRouter();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const config = getInterventionConfig(assessment);
@@ -61,8 +63,8 @@ export default React.memo(function SafetyInterventionBanner({
           <Shield size={16} color={Colors.danger} />
           <Text style={styles.compactText}>
             {assessment.level === 'crisis'
-              ? 'You matter. Support is available 24/7.'
-              : 'You\'re going through something heavy. Tools are here for you.'}
+              ? t('banner.compactCrisis')
+              : t('banner.compactElevated')}
           </Text>
         </View>
         {config.showCrisisHotline && (
@@ -95,13 +97,13 @@ export default React.memo(function SafetyInterventionBanner({
           <Heart size={18} color={Colors.danger} />
           <Text style={styles.headerText}>
             {assessment.level === 'crisis'
-              ? 'You\'re not alone right now'
-              : 'Support is here for you'}
+              ? t('banner.crisisHeader')
+              : t('banner.supportHeader')}
           </Text>
         </View>
         {onDismiss && assessment.level !== 'crisis' && (
           <TouchableOpacity onPress={onDismiss} testID="safety-banner-dismiss">
-            <Text style={styles.dismissText}>Okay</Text>
+            <Text style={styles.dismissText}>{t('banner.dismiss')}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -143,7 +145,7 @@ export default React.memo(function SafetyInterventionBanner({
             );
           })}
           <Text style={styles.immediateDangerText}>
-            If you are in immediate danger, call your local emergency number now.
+            {t('banner.immediateDanger')}
           </Text>
         </View>
       )}
@@ -156,7 +158,7 @@ export default React.memo(function SafetyInterventionBanner({
             testID="safety-grounding"
           >
             <Wind size={16} color={Colors.primary} />
-            <Text style={styles.toolLabel}>Calm Me Down</Text>
+            <Text style={styles.toolLabel}>{t('banner.calmTool')}</Text>
             <ChevronRight size={14} color={Colors.textMuted} />
           </TouchableOpacity>
         )}
@@ -168,7 +170,7 @@ export default React.memo(function SafetyInterventionBanner({
             testID="safety-breathing"
           >
             <Shield size={16} color={Colors.primary} />
-            <Text style={styles.toolLabel}>Crisis mode</Text>
+            <Text style={styles.toolLabel}>{t('banner.crisisMode')}</Text>
             <ChevronRight size={14} color={Colors.textMuted} />
           </TouchableOpacity>
         )}
@@ -177,7 +179,7 @@ export default React.memo(function SafetyInterventionBanner({
       {config.showTrustedContactPrompt && (
         <View style={styles.contactPrompt}>
           <Text style={styles.contactText}>
-            Is there someone you trust that you could reach out to right now?
+            {t('banner.trustedContactPrompt')}
           </Text>
         </View>
       )}

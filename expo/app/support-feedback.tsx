@@ -31,27 +31,23 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTranslation } from 'react-i18next';
 import Colors from '@/constants/colors';
 import { BRAND } from '@/constants/branding';
 
 type FeedbackType = 'bug' | 'feature' | 'general' | 'appreciation';
 
-const FEEDBACK_TYPES: { id: FeedbackType; label: string; icon: React.ReactNode; color: string }[] = [
-  { id: 'bug', label: 'Bug Report', icon: <Bug size={18} color={Colors.danger} />, color: Colors.dangerLight },
-  { id: 'feature', label: 'Feature Idea', icon: <Lightbulb size={18} color={Colors.accent} />, color: Colors.accentLight },
-  { id: 'general', label: 'General Feedback', icon: <MessageCircle size={18} color="#3B82F6" />, color: '#FFFFFF' },
-  { id: 'appreciation', label: 'Appreciation', icon: <Heart size={18} color="#3B82F6" />, color: '#FFFFFF' },
-];
-
-const FAQ_ITEMS = [
-  { q: 'Is my data private?', a: 'Yes. All data is stored locally on your device by default. See our Privacy Policy for details.' },
-  { q: 'How do I cancel my subscription?', a: 'You can manage subscriptions through your device settings (App Store or Google Play).' },
-  { q: 'Can I delete my data?', a: 'Yes. Go to Profile > Delete My Data to remove specific categories or all data.' },
-  { q: 'Is the AI a real therapist?', a: 'No. The AI companion is a self-help tool, not a substitute for professional mental health care.' },
+const FEEDBACK_TYPES: { id: FeedbackType; icon: React.ReactNode; color: string }[] = [
+  { id: 'bug', icon: <Bug size={18} color={Colors.danger} />, color: Colors.dangerLight },
+  { id: 'feature', icon: <Lightbulb size={18} color={Colors.accent} />, color: Colors.accentLight },
+  { id: 'general', icon: <MessageCircle size={18} color="#3B82F6" />, color: '#FFFFFF' },
+  { id: 'appreciation', icon: <Heart size={18} color="#3B82F6" />, color: '#FFFFFF' },
 ];
 
 export default function SupportFeedbackScreen() {
+  const { t } = useTranslation(['profile', 'common']);
   const router = useRouter();
+  const faqItems = t('profile:support.faq', { returnObjects: true }) as [string, string][];
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [feedbackType, setFeedbackType] = useState<FeedbackType | null>(null);
   const [feedbackText, setFeedbackText] = useState('');
@@ -70,7 +66,7 @@ export default function SupportFeedbackScreen() {
 
   const handleSubmitFeedback = useCallback(async () => {
     if (!feedbackType || !feedbackText.trim()) {
-      Alert.alert('Missing Information', 'Please select a feedback type and write your message.');
+      Alert.alert(t('profile:support.missingTitle'), t('profile:support.missingMessage'));
       return;
     }
 
@@ -97,11 +93,11 @@ export default function SupportFeedbackScreen() {
       console.log('[Feedback] Submitted');
     } catch (error) {
       console.error('[Feedback] Error submitting:', error);
-      Alert.alert('Error', 'Could not save your feedback. Please try again.');
+      Alert.alert(t('profile:support.errorTitle'), t('profile:support.errorMessage'));
     } finally {
       setIsSubmitting(false);
     }
-  }, [feedbackType, feedbackText, rating]);
+  }, [feedbackType, feedbackText, rating, t]);
 
   const handleEmail = useCallback(() => {
     void Linking.openURL('mailto:support@bpdcompanion.app?subject=BPD%20Companion%20Support');
@@ -122,22 +118,22 @@ export default function SupportFeedbackScreen() {
           <TouchableOpacity style={styles.closeBtn} onPress={() => router.back()} testID="close-btn">
             <X size={20} color={Colors.textSecondary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Support & Feedback</Text>
+          <Text style={styles.headerTitle}>{t('profile:support.title')}</Text>
           <View style={styles.closeBtn} />
         </View>
         <View style={styles.successContainer}>
           <View style={styles.successIconWrap}>
             <Heart size={36} color={Colors.brandTeal} />
           </View>
-          <Text style={styles.successTitle}>Thank You</Text>
+          <Text style={styles.successTitle}>{t('profile:support.thanks')}</Text>
           <Text style={styles.successDesc}>
-            Your feedback helps us make {BRAND.name} better for everyone. We read every message.
+            {t('profile:support.thanksDescription', { brand: BRAND.name })}
           </Text>
           <TouchableOpacity style={styles.successBtn} onPress={resetForm} testID="send-more-btn">
-            <Text style={styles.successBtnText}>Send More Feedback</Text>
+            <Text style={styles.successBtnText}>{t('profile:support.sendMore')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.successBtnSecondary} onPress={() => router.back()} testID="done-btn">
-            <Text style={styles.successBtnSecondaryText}>Done</Text>
+            <Text style={styles.successBtnSecondaryText}>{t('profile:support.done')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -157,7 +153,7 @@ export default function SupportFeedbackScreen() {
         >
           <X size={20} color={Colors.textSecondary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Support & Feedback</Text>
+        <Text style={styles.headerTitle}>{t('profile:support.title')}</Text>
         <View style={styles.closeBtn} />
       </View>
 
@@ -169,14 +165,14 @@ export default function SupportFeedbackScreen() {
       >
         <Animated.View style={{ opacity: fadeAnim }}>
           <View style={styles.quickLinks}>
-            <Text style={styles.sectionLabel}>QUICK LINKS</Text>
+            <Text style={styles.sectionLabel}>{t('profile:support.quickLinks')}</Text>
             <View style={styles.linksGroup}>
               <TouchableOpacity style={styles.linkRow} onPress={handleEmail} testID="email-support-btn">
                 <View style={[styles.linkIcon, { backgroundColor: '#FFFFFF' }]}>
                   <Mail size={16} color="#3B82F6" />
                 </View>
                 <View style={styles.linkInfo}>
-                  <Text style={styles.linkTitle}>Email Support</Text>
+                  <Text style={styles.linkTitle}>{t('profile:support.emailSupport')}</Text>
                   <Text style={styles.linkDesc}>support@bpdcompanion.app</Text>
                 </View>
                 <ExternalLink size={14} color={Colors.textMuted} />
@@ -191,8 +187,8 @@ export default function SupportFeedbackScreen() {
                   <Shield size={16} color={Colors.brandTeal} />
                 </View>
                 <View style={styles.linkInfo}>
-                  <Text style={styles.linkTitle}>Privacy Policy</Text>
-                  <Text style={styles.linkDesc}>How we protect your data</Text>
+                  <Text style={styles.linkTitle}>{t('legal.privacyPolicy')}</Text>
+                  <Text style={styles.linkDesc}>{t('profile:support.privacyDescription')}</Text>
                 </View>
                 <ChevronRight size={14} color={Colors.textMuted} />
               </TouchableOpacity>
@@ -206,8 +202,8 @@ export default function SupportFeedbackScreen() {
                   <FileText size={16} color={Colors.brandNavy} />
                 </View>
                 <View style={styles.linkInfo}>
-                  <Text style={styles.linkTitle}>Terms of Service</Text>
-                  <Text style={styles.linkDesc}>Usage terms and conditions</Text>
+                  <Text style={styles.linkTitle}>{t('legal.terms')}</Text>
+                  <Text style={styles.linkDesc}>{t('profile:support.termsDescription')}</Text>
                 </View>
                 <ChevronRight size={14} color={Colors.textMuted} />
               </TouchableOpacity>
@@ -221,8 +217,8 @@ export default function SupportFeedbackScreen() {
                   <Trash2 size={16} color={Colors.danger} />
                 </View>
                 <View style={styles.linkInfo}>
-                  <Text style={styles.linkTitle}>Delete My Data</Text>
-                  <Text style={styles.linkDesc}>Remove your personal data</Text>
+                  <Text style={styles.linkTitle}>{t('profile:dataDeletion.title')}</Text>
+                  <Text style={styles.linkDesc}>{t('profile:support.deleteDescription')}</Text>
                 </View>
                 <ChevronRight size={14} color={Colors.textMuted} />
               </TouchableOpacity>
@@ -230,9 +226,9 @@ export default function SupportFeedbackScreen() {
           </View>
 
           <View style={styles.feedbackSection}>
-            <Text style={styles.sectionLabel}>SEND FEEDBACK</Text>
+            <Text style={styles.sectionLabel}>{t('profile:support.sendFeedback')}</Text>
 
-            <Text style={styles.feedbackPrompt}>What type of feedback?</Text>
+            <Text style={styles.feedbackPrompt}>{t('profile:support.feedbackType')}</Text>
             <View style={styles.typeGrid}>
               {FEEDBACK_TYPES.map((type) => (
                 <TouchableOpacity
@@ -255,12 +251,12 @@ export default function SupportFeedbackScreen() {
                   <Text style={[
                     styles.typeLabel,
                     feedbackType === type.id && styles.typeLabelActive,
-                  ]}>{type.label}</Text>
+                  ]}>{t(`profile:support.types.${type.id}`)}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            <Text style={styles.feedbackPrompt}>How would you rate your experience?</Text>
+            <Text style={styles.feedbackPrompt}>{t('profile:support.experience')}</Text>
             <View style={styles.ratingRow}>
               {[1, 2, 3, 4, 5].map((star) => (
                 <TouchableOpacity
@@ -283,10 +279,10 @@ export default function SupportFeedbackScreen() {
               ))}
             </View>
 
-            <Text style={styles.feedbackPrompt}>Your message</Text>
+            <Text style={styles.feedbackPrompt}>{t('profile:support.message')}</Text>
             <TextInput
               style={styles.textInput}
-              placeholder="Tell us what's on your mind..."
+              placeholder={t('profile:support.messagePlaceholder')}
               placeholderTextColor={Colors.textMuted}
               value={feedbackText}
               onChangeText={setFeedbackText}
@@ -311,29 +307,29 @@ export default function SupportFeedbackScreen() {
               ) : (
                 <>
                   <Send size={16} color={Colors.white} />
-                  <Text style={styles.submitBtnText}>Send Feedback</Text>
+                  <Text style={styles.submitBtnText}>{t('profile:support.submit')}</Text>
                 </>
               )}
             </TouchableOpacity>
           </View>
 
           <View style={styles.faqSection}>
-            <Text style={styles.sectionLabel}>FREQUENTLY ASKED QUESTIONS</Text>
+            <Text style={styles.sectionLabel}>{t('profile:support.faqTitle')}</Text>
             <View style={styles.faqGroup}>
-              {FAQ_ITEMS.map((item, index) => (
+              {faqItems.map((item, index) => (
                 <TouchableOpacity
                   key={index}
-                  style={[styles.faqRow, index === FAQ_ITEMS.length - 1 && styles.faqRowLast]}
+                  style={[styles.faqRow, index === faqItems.length - 1 && styles.faqRowLast]}
                   onPress={() => setExpandedFaq(expandedFaq === index ? null : index)}
                   activeOpacity={0.7}
                   testID={`faq-${index}`}
                 >
                   <View style={styles.faqHeader}>
                     <HelpCircle size={16} color={Colors.brandTeal} />
-                    <Text style={styles.faqQuestion}>{item.q}</Text>
+                    <Text style={styles.faqQuestion}>{item[0]}</Text>
                   </View>
                   {expandedFaq === index && (
-                    <Text style={styles.faqAnswer}>{item.a}</Text>
+                    <Text style={styles.faqAnswer}>{item[1]}</Text>
                   )}
                 </TouchableOpacity>
               ))}

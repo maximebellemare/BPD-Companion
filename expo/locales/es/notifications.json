@@ -1,0 +1,17 @@
+{
+  "fallbackTitle": "BPD Companion",
+  "fallbackBody": "Hay un momento de apoyo disponible para ti.",
+  "daily_checkin": [
+    { "title": "Un momento para ti", "body": "Tómate un momento para registrar cómo estás." },
+    { "title": "¿Cómo estás hoy?", "body": "Un registro breve puede traer claridad a tu día." }
+  ],
+  "weekly_reflection": [
+    { "title": "Tu reflexión semanal está lista", "body": "Mira tu semana con compasión y curiosidad." }
+  ],
+  "relationship_support": [
+    { "title": "Una pausa suave", "body": "Puede ayudarte bajar el ritmo antes de responder." }
+  ],
+  "calm_followup": [
+    { "title": "¿Cómo estás ahora?", "body": "Antes se sintió intenso. Hay un espacio más calmado cuando lo necesites." }
+  ]
+}

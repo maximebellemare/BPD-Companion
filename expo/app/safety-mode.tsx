@@ -12,11 +12,13 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Phone, MessageCircle, Heart, X, Shield, Zap } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import { useTranslation } from 'react-i18next';
 import Colors from '@/constants/colors';
 import { useApp } from '@/providers/AppProvider';
 import { getCrisisResources, getResourceContactText, getResourceUrl } from '@/services/safety/crisisResources';
 
 export default function SafetyModeScreen() {
+  const { t } = useTranslation('safety');
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { deactivateSafetyMode } = useApp();
@@ -117,9 +119,9 @@ export default function SafetyModeScreen() {
           <Shield size={32} color={Colors.safetyAccent} />
         </View>
 
-        <Text style={styles.title}>You're in a hard moment</Text>
+        <Text style={styles.title}>{t('mode.title')}</Text>
         <Text style={styles.subtitle}>
-          This will pass. Let's keep you safe right now.
+          {t('mode.subtitle')}
         </Text>
 
         <Animated.View
@@ -134,14 +136,14 @@ export default function SafetyModeScreen() {
           <Animated.View style={[styles.breatheCircle, { transform: [{ scale: pulseAnim }] }]}>
             <Heart size={28} color={Colors.white} fill={Colors.white} />
           </Animated.View>
-          <Text style={styles.breatheLabel}>Breathe with me</Text>
+          <Text style={styles.breatheLabel}>{t('mode.breathe')}</Text>
           <Text style={styles.breatheInstruction}>
-            In... 2... 3... 4... Hold... Out... 2... 3... 4... 5... 6
+            {t('mode.breathingInstruction')}
           </Text>
         </Animated.View>
 
         <View style={styles.resourcesSection}>
-          <Text style={styles.resourcesTitle}>Reach out now</Text>
+          <Text style={styles.resourcesTitle}>{t('mode.resourcesTitle')}</Text>
           {crisisResources.map((resource, index) => {
             const IconComponent = index === 0 ? Phone : MessageCircle;
             return (
@@ -164,7 +166,7 @@ export default function SafetyModeScreen() {
             );
           })}
           <Text style={styles.resourceFallbackText}>
-            If you are in immediate danger, call your local emergency number now.
+            {t('banner.immediateDanger')}
           </Text>
         </View>
 
@@ -173,7 +175,7 @@ export default function SafetyModeScreen() {
           onPress={handleGrounding}
           activeOpacity={0.7}
         >
-          <Text style={styles.groundingText}>Try a grounding exercise</Text>
+          <Text style={styles.groundingText}>{t('mode.grounding')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -189,12 +191,11 @@ export default function SafetyModeScreen() {
           testID="guided-regulation-safety"
         >
           <Zap size={18} color={Colors.accent} />
-          <Text style={styles.regulationText}>Guided Regulation Mode</Text>
+          <Text style={styles.regulationText}>{t('mode.guided')}</Text>
         </TouchableOpacity>
 
         <Text style={styles.reminder}>
-          You've survived every hard moment before this one.{'\n'}
-          You will survive this one too.
+          {t('mode.reminder')}
         </Text>
       </Animated.View>
     </View>

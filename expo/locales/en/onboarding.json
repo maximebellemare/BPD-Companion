@@ -1,0 +1,119 @@
+{
+  "progress": "{{current}} / {{total}}",
+  "completion": {
+    "saving": "Saving your personalization",
+    "preparing": "Preparing your membership options",
+    "secure": "Your answers are being saved securely.",
+    "errorTitle": "Could not finish setup",
+    "errorBody": "Please check your connection and try again."
+  },
+  "welcome": {
+    "headline": "BPD Companion was built for people living with Borderline Personality Disorder.",
+    "subtext": "We’ll personalize your experience in less than 2 minutes."
+  },
+  "steps": {
+    "personalize": "Personalize",
+    "hardMoments": "Hard moments",
+    "goals": "Your goals",
+    "focus": "Personalized focus",
+    "howHelps": "How the app helps",
+    "membership": "Membership"
+  },
+  "questions": {
+    "reasonsTitle": "What brought you here today?",
+    "reasonsSubtitle": "Choose anything that fits. You can change direction later.",
+    "reasonsOther": "Tell us what brought you here",
+    "situationsTitle": "What situations are hardest for you?",
+    "situationsSubtitle": "This helps BPD Companion understand where support should show up first.",
+    "situationsOther": "Add another situation",
+    "successTitle": "What would success look like in 3 months?",
+    "successSubtitle": "Pick the changes that would feel meaningful.",
+    "successOther": "Add your own goal",
+    "selectAtLeastOne": "Select at least one."
+  },
+  "options": {
+    "emotional_overwhelm": "Emotional overwhelm",
+    "fear_of_abandonment": "Fear of abandonment",
+    "relationship_problems": "Relationship problems",
+    "mood_swings": "Mood swings",
+    "anger": "Anger",
+    "impulsive_behaviours": "Impulsive behaviours",
+    "anxiety": "Anxiety",
+    "depression": "Depression",
+    "self_esteem": "Self-esteem",
+    "recently_diagnosed": "I was recently diagnosed",
+    "understand_myself": "I want to better understand myself",
+    "arguments": "Arguments",
+    "feeling_ignored": "Feeling ignored",
+    "rejection": "Rejection",
+    "breakups": "Breakups",
+    "loneliness": "Loneliness",
+    "family": "Family",
+    "dating": "Dating",
+    "work": "Work",
+    "stress": "Stress",
+    "better_emotional_control": "Better emotional control",
+    "healthier_relationships": "Healthier relationships",
+    "less_anxiety": "Less anxiety",
+    "fewer_emotional_crises": "Fewer emotional crises",
+    "better_communication": "Better communication",
+    "feeling_calmer": "Feeling calmer",
+    "understanding_triggers": "Understanding my triggers",
+    "building_healthy_habits": "Building healthy habits",
+    "other": "Other"
+  },
+  "focus": {
+    "intro": "Based on your answers, your personalized focus is:",
+    "relationship": "Relationship stability",
+    "regulation": "Emotional regulation",
+    "pause": "Pausing before reacting",
+    "triggers": "Understanding triggers",
+    "steadiness": "Daily steadiness",
+    "supportWith": "Support with {{answer}}",
+    "helps": "BPD Companion can help with this.",
+    "primary": "Primary Focus",
+    "secondary": "Secondary Focus",
+    "third": "Third Focus"
+  },
+  "helps": {
+    "headline": "BPD Companion can help you with {{items}}.",
+    "companion": "AI Companion helps process difficult moments before they become crises.",
+    "checkins": "Daily check-ins help identify emotional patterns.",
+    "tools": "Guided tools help you pause before reacting.",
+    "insights": "Insights help you understand triggers and progress.",
+    "community": "Community helps users feel less alone.",
+    "checkinsTitle": "Daily check-ins",
+    "toolsTitle": "Pause tools",
+    "insightsTitle": "Personalized insights"
+  },
+  "membership": {
+    "headline": "Start your 3-day free trial.",
+    "subheadline": "Everything is unlocked from day one.",
+    "transformTitle": "Imagine feeling:",
+    "includesTitle": "Your membership includes:",
+    "trialNote": "Cancel anytime before your 3-day trial ends. You won’t be charged until your trial is over.",
+    "primary": "Start 3-Day Free Trial",
+    "transformations": [
+      "Calmer during arguments instead of reacting instantly",
+      "Able to understand why your mood changed today",
+      "Aware of triggers before they spiral",
+      "More confident before sending difficult messages",
+      "Less alone and less judged",
+      "Supported every day, not only during crisis moments"
+    ],
+    "benefits": [
+      "Unlimited AI Companion",
+      "Unlimited check-ins",
+      "CBT Thought Record",
+      "DBT tools",
+      "Calm Me Down and Pause Before You Send",
+      "Trigger understanding",
+      "Emotional map",
+      "Relationship support",
+      "Reflection tools",
+      "Community",
+      "Progress tracking",
+      "Future updates included"
+    ]
+  }
+}

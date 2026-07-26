@@ -14,10 +14,14 @@ import Colors from '@/constants/colors';
 import { BRAND } from '@/constants/branding';
 import BrandLogo from '@/components/branding/BrandLogo';
 import { useAppTheme } from '@/providers/ThemeProvider';
+import { useLanguage } from '@/hooks/useLanguage';
+import { useTranslation } from 'react-i18next';
 
 export default function WelcomeScreen() {
   const router = useRouter();
   const { colors } = useAppTheme();
+  const { language, setLanguage } = useLanguage();
+  const { t } = useTranslation(['auth', 'common']);
 
   const handleSignUp = useCallback(() => {
     if (Platform.OS !== 'web') void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -34,7 +38,24 @@ export default function WelcomeScreen() {
       <View style={styles.hero}>
         <View style={styles.badge}>
           <Shield size={14} color={Colors.brandTeal} />
-          <Text style={styles.badgeText} testID="auth-badge">Private account</Text>
+          <Text style={styles.badgeText} testID="auth-badge">{t('auth:welcome.badge')}</Text>
+        </View>
+        <View style={styles.languageRow}>
+          {(['en', 'es'] as const).map((option) => (
+            <TouchableOpacity
+              key={option}
+              style={[styles.languageChip, language === option && styles.languageChipActive]}
+              onPress={() => void setLanguage(option)}
+              activeOpacity={0.75}
+              accessibilityRole="button"
+              accessibilityState={{ selected: language === option }}
+              testID={`language-${option}`}
+            >
+              <Text style={[styles.languageChipText, language === option && styles.languageChipTextActive]}>
+                {option === 'es' ? t('common:spanish') : t('common:english')}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
         <Text style={[styles.title, { color: colors.text }]}>{BRAND.name}</Text>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{BRAND.tagline}</Text>
@@ -45,7 +66,7 @@ export default function WelcomeScreen() {
             <Text style={styles.bpdLetters}>BPD Companion</Text>
           </View>
           <Text style={styles.heroText}>
-            Understand emotional patterns, pause impulsive reactions, and practice regulation skills.
+            {t('auth:welcome.heroText')}
           </Text>
         </View>
       </View>
@@ -56,8 +77,8 @@ export default function WelcomeScreen() {
             <Brain size={18} color={Colors.brandTeal} />
           </View>
           <View style={styles.featureText}>
-            <Text style={styles.featureTitle}>Understand your patterns</Text>
-            <Text style={styles.featureSub}>Track emotions, triggers, fears, urges, and outcomes</Text>
+            <Text style={styles.featureTitle}>{t('auth:welcome.featurePatternsTitle')}</Text>
+            <Text style={styles.featureSub}>{t('auth:welcome.featurePatternsBody')}</Text>
           </View>
         </View>
         <View style={styles.feature}>
@@ -65,13 +86,13 @@ export default function WelcomeScreen() {
             <PauseCircle size={18} color={Colors.brandLilac} />
           </View>
           <View style={styles.featureText}>
-            <Text style={styles.featureTitle}>Pause before reacting</Text>
-            <Text style={styles.featureSub}>Use Companion, Don't Send It, and calming tools in hard moments</Text>
+            <Text style={styles.featureTitle}>{t('auth:welcome.featurePauseTitle')}</Text>
+            <Text style={styles.featureSub}>{t('auth:welcome.featurePauseBody')}</Text>
           </View>
         </View>
         <View style={styles.disclaimerBox}>
           <Text style={styles.disclaimerText}>
-            BPD Companion is educational support, not medical advice, crisis support, or a replacement for therapy.
+            {t('common:notTherapy')}
           </Text>
         </View>
       </View>
@@ -83,7 +104,7 @@ export default function WelcomeScreen() {
           activeOpacity={0.9}
           testID="auth-sign-up"
         >
-          <Text style={styles.primaryButtonText}>Create account</Text>
+          <Text style={styles.primaryButtonText}>{t('auth:welcome.createAccount')}</Text>
           <ArrowRight size={18} color={Colors.white} />
         </TouchableOpacity>
 
@@ -93,7 +114,7 @@ export default function WelcomeScreen() {
           activeOpacity={0.8}
           testID="auth-sign-in"
         >
-          <Text style={styles.secondaryButtonText}>I already have an account</Text>
+          <Text style={styles.secondaryButtonText}>{t('auth:welcome.haveAccount')}</Text>
         </TouchableOpacity>
 
       </View>
@@ -127,6 +148,33 @@ const styles = StyleSheet.create({
     fontWeight: '600' as const,
     color: Colors.brandTeal,
     letterSpacing: 0.2,
+  },
+  languageRow: {
+    flexDirection: 'row',
+    alignSelf: 'flex-start',
+    backgroundColor: Colors.card,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: 3,
+    marginBottom: 16,
+    gap: 4,
+  },
+  languageChip: {
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  languageChipActive: {
+    backgroundColor: Colors.brandTealSoft,
+  },
+  languageChipText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.textMuted,
+  },
+  languageChipTextActive: {
+    color: Colors.brandTeal,
   },
   title: {
     fontSize: 36,

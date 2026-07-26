@@ -1,0 +1,292 @@
+{
+  "notSignedIn": "No has iniciado sesión",
+  "you": "Tú",
+  "sections": {
+    "subscription": "SUSCRIPCIÓN",
+    "account": "CUENTA",
+    "communityProfile": "PERFIL DE COMUNIDAD",
+    "notifications": "NOTIFICACIONES",
+    "appearance": "APARIENCIA",
+    "privacySafety": "PRIVACIDAD Y SEGURIDAD",
+    "legalHelp": "LEGAL Y AYUDA",
+    "accountControl": "CONTROL DE CUENTA"
+  },
+  "header": {
+    "eyebrow": "Cuenta",
+    "title": "Perfil y ajustes",
+    "signedInAs": "Sesión iniciada como"
+  },
+  "membership": {
+    "expoLocalDescription": "Ver planes mensuales y anuales de membresía.",
+    "startTitle": "Empieza tu membresía",
+    "membershipTitle": "Membresía",
+    "manageTitle": "Administrar membresía",
+    "trialDescription": "Tu prueba de 3 días está activa. Puedes administrar tu membresía en cualquier momento.",
+    "activeDescription": "Ver planes, detalles de renovación y acceso de membresía.",
+    "plansDescription": "Ver planes mensuales y anuales de membresía.",
+    "restoreTitle": "Restaurar compras",
+    "restoringTitle": "Restaurando compras...",
+    "restoreDescription": "Recupera una suscripción activa de App Store o Google Play.",
+    "restoreActive": "Suscripción restaurada. La membresía está activa.",
+    "restoreInactive": "No se encontró una membresía activa.",
+    "restoreLoadingTitle": "Restaurar compra",
+    "restoreLoadingMessage": "Las opciones de membresía se están cargando. Inténtalo de nuevo en un momento."
+  },
+  "account": {
+    "email": "Correo electrónico",
+    "changePassword": "Cambiar contraseña",
+    "changePasswordDescription": "Enviar un correo seguro para restablecer tu contraseña.",
+    "emailRequiredTitle": "Correo requerido",
+    "emailRequiredMessage": "Inicia sesión con un correo electrónico para restablecer tu contraseña.",
+    "resetSent": "Correo para restablecer contraseña enviado a {{email}}.",
+    "resetFailedTitle": "No se pudo restablecer",
+    "resetFailedMessage": "No pudimos enviar el correo para restablecer la contraseña.",
+    "sendResetTitle": "¿Enviar restablecimiento de contraseña?",
+    "sendResetMessage": "Enviaremos instrucciones para restablecerla a {{email}}.",
+    "send": "Enviar"
+  },
+  "community": {
+    "setup": "Configurar perfil de comunidad",
+    "description": "La comunidad muestra tu nombre de usuario o nombre visible, nunca tu correo.",
+    "username": "Nombre de usuario",
+    "usernamePlaceholder": "usuario",
+    "usernameHelp": "3-20 caracteres. Solo letras, números y guiones bajos.",
+    "displayName": "Nombre visible opcional",
+    "displayNamePlaceholder": "Cómo pueden llamarte",
+    "avatarColor": "Color de avatar",
+    "saving": "Guardando...",
+    "saved": "Guardado",
+    "save": "Guardar perfil de comunidad",
+    "create": "Crear perfil de comunidad",
+    "saveError": "No se pudo guardar el perfil de comunidad.",
+    "errors": {
+      "tooShort": "El nombre de usuario debe tener al menos 3 caracteres.",
+      "tooLong": "El nombre de usuario debe tener 20 caracteres o menos.",
+      "invalidCharacters": "Usa solo letras, números y guiones bajos. Sin espacios.",
+      "taken": "Ese nombre de usuario ya está en uso. Intenta con otro."
+    }
+  },
+  "notifications": {
+    "settings": "Ajustes de notificaciones",
+    "summary": "Frecuencia {{frequency}} · {{quietHours}}",
+    "quietOn": "Horas tranquilas activadas",
+    "quietOff": "Horas tranquilas desactivadas",
+    "frequencies": {
+      "minimal": "Mínima",
+      "balanced": "Equilibrada",
+      "supportive": "Con más apoyo"
+    },
+    "dailyReminder": "Recordatorio diario de check-in",
+    "dailyReminderDescription": "Un aviso suave para mantener el hábito."
+  },
+  "appearance": {
+    "language": "Idioma",
+    "theme": "Preferencia de tema",
+    "themeDescription": "Elige una interfaz clara u oscura.",
+    "light": "Claro",
+    "dark": "Oscuro",
+    "replayTutorial": "Repetir tutorial de la app",
+    "replayTutorialDescription": "Repasa Hoy, Companion, Herramientas, Insights, Comunidad y ajustes de Perfil.",
+    "tutorialReady": "El tutorial de la app está listo para repetirse.",
+    "tutorialFailedTitle": "No se pudo repetir el tutorial"
+  },
+  "privacy": {
+    "shareContext": "Compartir contexto con AI Companion",
+    "shareContextDescription": "Permitir que la IA use como referencia tus patrones guardados.",
+    "medicalDisclaimer": "Aviso médico / recursos de crisis",
+    "medicalDisclaimerDescription": "Lee orientación de seguridad y encuentra opciones de apoyo urgente.",
+    "crisisSettings": "Ajustes de apoyo en crisis",
+    "crisisSettingsDescription": "Contactos de emergencia y preferencias de apoyo en crisis."
+  },
+  "legal": {
+    "privacyPolicy": "Política de privacidad",
+    "privacyPolicyDescription": "Cómo se protege y usa tu información.",
+    "terms": "Términos de uso",
+    "termsDescription": "Términos de suscripción, cuenta y uso de la app.",
+    "support": "Contactar soporte",
+    "supportDescription": "Obtén ayuda, reporta un problema o envía comentarios.",
+    "rate": "Calificar BPD Companion",
+    "rateDescription": "Comparte una reseña honesta si la app te ha ayudado."
+  },
+  "accountControl": {
+    "delete": "Eliminar cuenta",
+    "deleteDescription": "Solicitar eliminación de cuenta y datos personales.",
+    "logout": "Cerrar sesión",
+    "logoutDescription": "Cerrar sesión en este dispositivo.",
+    "logoutFailedTitle": "No se pudo cerrar sesión",
+    "logoutConfirmWeb": "¿Cerrar sesión en BPD Companion?",
+    "logoutTitle": "¿Cerrar sesión?",
+    "logoutMessage": "Puedes volver a iniciar sesión cuando quieras.",
+    "tryAgain": "Inténtalo de nuevo."
+  },
+  "notificationPreferences": {
+    "title": "Preferencias de notificaciones",
+    "subtitle": "Elige qué recordatorios se sienten adecuados para ti. Están diseñados para apoyar, nunca presionar.",
+    "sections": {
+      "frequency": "FRECUENCIA DE RECORDATORIOS",
+      "daily": "RECORDATORIOS DIARIOS",
+      "weekly": "RECORDATORIOS SEMANALES",
+      "contextual": "APOYO CONTEXTUAL",
+      "membership": "MEMBRESÍA",
+      "smart": "NOTIFICACIONES INTELIGENTES",
+      "quiet": "HORAS TRANQUILAS"
+    },
+    "frequencyHints": {
+      "minimal": "Solo recordatorios esenciales, como el check-in diario y la reflexión semanal.",
+      "balanced": "Recordatorios principales más apoyo contextual suave.",
+      "supportive": "Todos los recordatorios disponibles, incluyendo rachas y avisos para retomar."
+    },
+    "labels": {
+      "reminderTime": "Hora del recordatorio",
+      "morningTime": "Hora de la mañana",
+      "eveningTime": "Hora de la noche",
+      "preferredDay": "Día preferido",
+      "preferredTime": "Hora preferida",
+      "start": "Inicio",
+      "end": "Fin",
+      "to": "a"
+    },
+    "weekdaysShort": ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"],
+    "toggles": {
+      "dailyCheckIn": ["Check-in diario", "Un recordatorio suave para revisar cómo estás"],
+      "morningRitual": ["Ritual de mañana", "Empieza el día con conciencia emocional"],
+      "streakSupport": ["Apoyo de racha", "Ánimo para mantener tu ritmo de check-ins"],
+      "weeklyReflection": ["Reflexión semanal", "Cuando tu resumen semanal esté listo"],
+      "therapistReport": ["Informe para terapia", "Cuando se genere un nuevo informe terapéutico"],
+      "weekendReminders": ["Recordatorios de fin de semana", "Recibe recordatorios también los fines de semana"],
+      "relationshipSupport": ["Apoyo relacional", "Recordatorios suaves para pausar ante detonantes relacionales"],
+      "regulationFollowUps": ["Seguimientos de regulación", "Check-in después de episodios de mucha angustia"],
+      "calmFollowups": ["Seguimientos de calma", "Un check-in suave cuando los momentos intensos empiezan a bajar"],
+      "gentleNudges": ["Avisos suaves", "Recordatorios de apoyo al final del día"],
+      "reengagement": ["Retomar la app", "Un aviso de apoyo si no has entrado en un tiempo"],
+      "membershipInsights": ["Insights de membresía", "Notificaciones más profundas sobre patrones emocionales"],
+      "featureReminders": ["Recordatorios de funciones", "Recordatorios ocasionales sobre funciones avanzadas que exploraste"],
+      "membershipReminders": ["Recordatorios de membresía", "Recordatorios respetuosos sobre los beneficios de la membresía"],
+      "behaviorCheckIns": ["Check-ins suaves", "Un aviso de apoyo si no has entrado en un tiempo"],
+      "distressSupport": ["Apoyo ante angustia", "Avisos de apoyo cuando los patrones emocionales están intensos"],
+      "reflectionPrompts": ["Prompts de reflexión", "Prompts de diario después de sesiones intensas de mensajes"],
+      "progressCelebrations": ["Celebraciones de progreso", "Celebra rachas, insights y crecimiento emocional"],
+      "quietHours": ["Activar horas tranquilas", "Sin notificaciones durante este horario"]
+    },
+    "membershipNote": "Los recordatorios de membresía nunca se envían durante momentos de mucha angustia o crisis.",
+    "smartNote": "Estas notificaciones se adaptan a tu comportamiento y patrones emocionales. Siempre respetan tu estado emocional actual.",
+    "safetyNote": "Nunca enviamos recordatorios que generen culpa, frases con presión ni prompts de membresía durante mucha angustia. Tu seguridad emocional va primero."
+  },
+  "crisisSettings": {
+    "title": "Apoyo en crisis",
+    "save": "Guardar",
+    "intro": "Estos ajustes ayudan a que la app te apoye durante momentos de mucha angustia. Todo se mantiene privado en tu dispositivo.",
+    "emergencyContact": "Contacto de emergencia",
+    "phoneOrName": "Número de teléfono o nombre",
+    "phonePlaceholder": "p. ej., 555-123-4567 o Mamá",
+    "crisisLine": "Línea de crisis",
+    "preferredLine": "Número preferido de línea de crisis",
+    "linePlaceholder": "p. ej., línea de crisis local",
+    "lineHelper": "Modo de seguridad también puede mostrar recursos regionales automáticamente cuando estén disponibles.",
+    "threshold": "Umbral de Modo de seguridad",
+    "thresholdDescription": "Cuando tu intensidad de angustia llegue a este nivel, la app sugerirá activar Modo de seguridad.",
+    "reminder": "Recordatorio de Modo de seguridad",
+    "reminderDescription": "Mostrar un recordatorio suave cuando la angustia sea alta",
+    "note": "Preparar una red de seguridad es un acto de cuidado hacia ti. Mereces apoyo en tus momentos más difíciles."
+  },
+  "dataDeletion": {
+    "title": "Eliminar mis datos",
+    "warningTitle": "La eliminación de datos es permanente",
+    "warningDescription": "Los datos seleccionados se eliminarán permanentemente de este dispositivo. Esto no se puede deshacer.",
+    "selectData": "Selecciona los datos que quieres eliminar",
+    "selectAll": "Seleccionar todo",
+    "deselectAll": "Deseleccionar todo",
+    "deleted": "Eliminado",
+    "deleteButton": "Eliminar {{count}} categoría",
+    "deleteButton_plural": "Eliminar {{count}} categorías",
+    "confirmAllTitle": "¿Eliminar todos los datos?",
+    "confirmSomeTitle": "¿Eliminar los datos seleccionados?",
+    "confirmAllMessage": "Esto eliminará permanentemente todos tus datos de este dispositivo. Esta acción no se puede deshacer.",
+    "confirmSomeMessage": "Esto eliminará permanentemente {{count}} categoría de datos. Esta acción no se puede deshacer.",
+    "confirmSomeMessage_plural": "Esto eliminará permanentemente {{count}} categorías de datos. Esta acción no se puede deshacer.",
+    "deletePermanently": "Eliminar permanentemente",
+    "errorTitle": "Error",
+    "errorMessage": "Algo salió mal al eliminar tus datos. Inténtalo de nuevo.",
+    "needHelp": "¿Necesitas ayuda?",
+    "helpText": "Si quieres eliminar tu cuenta por completo, incluidos los datos del servidor, contáctanos en:",
+    "email": "Correo",
+    "processing": "Las solicitudes de eliminación de cuenta se procesan en un plazo de 30 días. Recibirás un correo de confirmación cuando termine.",
+    "categories": {
+      "journal": ["Entradas de diario", "Todas las entradas de diario, diarios guiados y reflexiones"],
+      "messages": ["Borradores e historial de mensajes", "Todos los borradores, reescrituras, resultados y patrones de comunicación"],
+      "companion": ["Datos de AI Companion", "Historial de conversaciones, memoria del Companion y preferencias aprendidas"],
+      "emotions": ["Datos emocionales", "Check-ins, perfiles emocionales, historial de ánimo e insights"],
+      "profile": ["Perfil y preferencias", "Tus ajustes de perfil, datos de onboarding y todas las preferencias de la app"]
+    }
+  },
+  "support": {
+    "title": "Soporte y comentarios",
+    "quickLinks": "ENLACES RÁPIDOS",
+    "emailSupport": "Soporte por correo",
+    "privacyDescription": "Cómo protegemos tus datos",
+    "termsDescription": "Términos y condiciones de uso",
+    "deleteDescription": "Elimina tus datos personales",
+    "sendFeedback": "ENVIAR COMENTARIOS",
+    "feedbackType": "¿Qué tipo de comentario?",
+    "experience": "¿Cómo calificarías tu experiencia?",
+    "message": "Tu mensaje",
+    "messagePlaceholder": "Cuéntanos qué tienes en mente...",
+    "submit": "Enviar comentarios",
+    "missingTitle": "Falta información",
+    "missingMessage": "Selecciona un tipo de comentario y escribe tu mensaje.",
+    "errorTitle": "Error",
+    "errorMessage": "No se pudo guardar tu comentario. Inténtalo de nuevo.",
+    "thanks": "Gracias",
+    "thanksDescription": "Tus comentarios nos ayudan a mejorar {{brand}} para todas las personas. Leemos cada mensaje.",
+    "sendMore": "Enviar más comentarios",
+    "done": "Listo",
+    "faqTitle": "PREGUNTAS FRECUENTES",
+    "types": {
+      "bug": "Reporte de error",
+      "feature": "Idea de función",
+      "general": "Comentario general",
+      "appreciation": "Agradecimiento"
+    },
+    "faq": [
+      ["¿Mis datos son privados?", "Sí. Todos los datos se guardan localmente en tu dispositivo de forma predeterminada. Consulta nuestra Política de privacidad para más detalles."],
+      ["¿Cómo cancelo mi suscripción?", "Puedes administrar suscripciones desde los ajustes de tu dispositivo (App Store o Google Play)."],
+      ["¿Puedo eliminar mis datos?", "Sí. Ve a Perfil > Eliminar mis datos para borrar categorías específicas o todos los datos."],
+      ["¿La IA es una terapeuta real?", "No. AI Companion es una herramienta de autoayuda, no un sustituto de atención profesional de salud mental."]
+    ]
+  },
+  "disclaimer": {
+    "title": "Aviso de salud mental",
+    "heroTitle": "Información importante",
+    "heroDescription": "Lee esto con atención antes de usar {{brand}}",
+    "primaryWarning": "{{brand}} es una app compañera de autoayuda. No reemplaza atención profesional de salud mental, terapia, diagnóstico ni medicación.",
+    "whatItIs": "Qué es esta app",
+    "whatItIsNot": "Qué no es esta app",
+    "aiTitle": "Contenido generado por IA",
+    "aiIntro": "AI Companion, el análisis de mensajes y las funciones de insights usan inteligencia artificial para generar respuestas. Estas respuestas:",
+    "aiFooter": "Consulta siempre con profesionales calificados de salud mental para decisiones clínicas.",
+    "crisisTitle": "Recursos de crisis",
+    "crisisDescription": "Si tú o alguien que conoces está en peligro inmediato o atraviesa una crisis de salud mental, contacta uno de estos recursos:",
+    "immediateDanger": "Si estás en peligro inmediato, llama ahora a tu número local de emergencias.",
+    "footer": "Nos importa profundamente tu bienestar. Si estás pasando por un momento difícil, busca apoyo de un profesional de salud mental. Mereces apoyo real y calificado.",
+    "isItems": [
+      "Una herramienta para conciencia emocional y autorreflexión",
+      "Un acompañamiento para practicar habilidades de comunicación",
+      "Un espacio de diario y seguimiento del estado de ánimo",
+      "Un complemento al tratamiento profesional",
+      "Un espacio para practicar habilidades inspiradas en DBT"
+    ],
+    "notItems": [
+      "No es terapeuta ni profesional de salud mental",
+      "No es una herramienta de diagnóstico",
+      "No sustituye el manejo de medicación",
+      "No es un servicio de emergencia ni de crisis",
+      "No está calificada para dar consejo clínico"
+    ],
+    "aiItems": [
+      "No son consejo clínico",
+      "No siempre son exactas ni adecuadas para tu situación",
+      "Se generan a partir de patrones, no de una evaluación profesional",
+      "Buscan apoyar la reflexión, no reemplazar orientación experta"
+    ]
+  }
+}

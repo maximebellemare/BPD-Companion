@@ -28,6 +28,7 @@ import {
   Check,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import { useTranslation } from 'react-i18next';
 import Colors from '@/constants/colors';
 import { CrisisModePhase } from '@/types/crisis';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
@@ -36,7 +37,6 @@ import {
   GROUNDING_PROMPTS,
   MESSAGE_DELAY_OPTIONS,
   CRISIS_PHASES,
-  getCalmnessResponse,
 } from '@/services/crisis/crisisModeService';
 import { getCrisisResources, getResourceContactText, getResourceUrl } from '@/services/safety/crisisResources';
 
@@ -54,6 +54,7 @@ const BREATHE_DURATION_OUT = 6000;
 const TOTAL_BREATHE_CYCLE = BREATHE_DURATION_IN + BREATHE_DURATION_HOLD + BREATHE_DURATION_OUT;
 
 export default function CrisisModeScreen() {
+  const { t } = useTranslation('safety');
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { trackEvent, trackFlowStart } = useAnalytics();
@@ -65,7 +66,7 @@ export default function CrisisModeScreen() {
   }, [trackFlowStart, trackEvent]);
 
   const [currentPhase, setCurrentPhase] = useState<CrisisModePhase>('breathing');
-  const [breatheLabel, setBreatheLabel] = useState<string>('Breathe in...');
+  const [breatheLabelKey, setBreatheLabelKey] = useState<'inhale' | 'hold' | 'exhale'>('inhale');
   const [breatheTimer, setBreatheTimer] = useState<number>(60);
   const [groundingStep, setGroundingStep] = useState<number>(0);
   const [groundingCompleted, setGroundingCompleted] = useState<Set<string>>(new Set<string>());
@@ -137,11 +138,11 @@ export default function CrisisModeScreen() {
     const labelInterval = setInterval(() => {
       const elapsed = Date.now() % TOTAL_BREATHE_CYCLE;
       if (elapsed < BREATHE_DURATION_IN) {
-        setBreatheLabel('Breathe in...');
+        setBreatheLabelKey('inhale');
       } else if (elapsed < BREATHE_DURATION_IN + BREATHE_DURATION_HOLD) {
-        setBreatheLabel('Hold...');
+        setBreatheLabelKey('hold');
       } else {
-        setBreatheLabel('Breathe out...');
+        setBreatheLabelKey('exhale');
       }
     }, 500);
 
@@ -287,7 +288,7 @@ export default function CrisisModeScreen() {
               currentPhase === p.phase && styles.phaseChipTextActive,
             ]}
           >
-            {p.label}
+            {t(`crisisMode.phases.${p.phase}`)}
           </Text>
         </TouchableOpacity>
       ))}
@@ -316,10 +317,10 @@ export default function CrisisModeScreen() {
         </Animated.View>
       </View>
 
-      <Text style={styles.breatheLabel}>{breatheLabel}</Text>
+      <Text style={styles.breatheLabel}>{t(`crisisMode.breathLabels.${breatheLabelKey}`)}</Text>
       <Text style={styles.breatheTimer}>{formatTime(breatheTimer)}</Text>
       <Text style={styles.breatheHint}>
-        In for 4... Hold for 4... Out for 6...
+        {t('crisisMode.breathHint')}
       </Text>
 
       <TouchableOpacity
@@ -327,7 +328,7 @@ export default function CrisisModeScreen() {
         onPress={() => switchPhase('grounding')}
         activeOpacity={0.7}
       >
-        <Text style={styles.nextPhaseText}>Continue to Grounding</Text>
+        <Text style={styles.nextPhaseText}>{t('crisisMode.continueGrounding')}</Text>
         <ChevronRight size={18} color={Colors.white} />
       </TouchableOpacity>
     </View>
@@ -340,9 +341,9 @@ export default function CrisisModeScreen() {
 
     return (
       <View style={styles.phaseContent}>
-        <Text style={styles.groundingTitle}>5-4-3-2-1 Grounding</Text>
+        <Text style={styles.groundingTitle}>{t('crisisMode.groundingTitle')}</Text>
         <Text style={styles.groundingSubtitle}>
-          Reconnect with the present through your senses
+          {t('crisisMode.groundingSubtitle')}
         </Text>
 
         <View style={styles.groundingProgress}>
@@ -363,10 +364,10 @@ export default function CrisisModeScreen() {
             <IconComp size={28} color="#3B82F6" />
           </View>
           <Text style={styles.groundingInstruction}>
-            {currentPrompt.instruction}
+            {t(`crisisMode.groundingPrompts.${currentPrompt.id}`)}
           </Text>
           <Text style={styles.groundingSense}>
-            {currentPrompt.sense.charAt(0).toUpperCase() + currentPrompt.sense.slice(1)}
+            {t(`crisisMode.senses.${currentPrompt.sense}`)}
           </Text>
 
           <TouchableOpacity
@@ -380,13 +381,13 @@ export default function CrisisModeScreen() {
             {groundingCompleted.has(currentPrompt.id) ? (
               <Check size={20} color={Colors.white} />
             ) : (
-              <Text style={styles.groundingDoneText}>Done</Text>
+              <Text style={styles.groundingDoneText}>{t('crisisMode.done')}</Text>
             )}
           </TouchableOpacity>
         </View>
 
         <Text style={styles.groundingCount}>
-          {completedCount} of {GROUNDING_PROMPTS.length} completed
+          {t('crisisMode.progress', { done: completedCount, total: GROUNDING_PROMPTS.length })}
         </Text>
 
         <View style={styles.navRow}>
@@ -397,7 +398,7 @@ export default function CrisisModeScreen() {
               activeOpacity={0.7}
             >
               <ChevronLeft size={16} color={Colors.textSecondary} />
-              <Text style={styles.navButtonText}>Previous</Text>
+              <Text style={styles.navButtonText}>{t('crisisMode.previous')}</Text>
             </TouchableOpacity>
           )}
           <View style={{ flex: 1 }} />
@@ -407,7 +408,7 @@ export default function CrisisModeScreen() {
               onPress={() => setGroundingStep(prev => prev + 1)}
               activeOpacity={0.7}
             >
-              <Text style={styles.navButtonText}>Next</Text>
+              <Text style={styles.navButtonText}>{t('crisisMode.next')}</Text>
               <ChevronRight size={16} color={Colors.textSecondary} />
             </TouchableOpacity>
           )}
@@ -417,16 +418,17 @@ export default function CrisisModeScreen() {
   };
 
   const renderAICalmPhase = () => {
-    const response = getCalmnessResponse(calmResponseIndex);
+    const responses = t('crisisMode.calmResponses', { returnObjects: true }) as string[];
+    const response = responses[calmResponseIndex % responses.length] ?? '';
 
     return (
       <View style={styles.phaseContent}>
         <View style={styles.calmIconWrap}>
           <Sparkles size={28} color={Colors.primary} />
         </View>
-        <Text style={styles.calmTitle}>Calm Support</Text>
+        <Text style={styles.calmTitle}>{t('crisisMode.calmTitle')}</Text>
         <Text style={styles.calmSubtitle}>
-          Short, simple guidance — one step at a time
+          {t('crisisMode.calmSubtitle')}
         </Text>
 
         <View style={styles.calmCard}>
@@ -438,7 +440,7 @@ export default function CrisisModeScreen() {
           onPress={handleNextCalm}
           activeOpacity={0.7}
         >
-          <Text style={styles.calmNextText}>Another gentle thought</Text>
+          <Text style={styles.calmNextText}>{t('crisisMode.anotherThought')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -450,7 +452,7 @@ export default function CrisisModeScreen() {
           activeOpacity={0.7}
         >
           <Sparkles size={16} color={Colors.primary} />
-          <Text style={styles.companionLinkText}>Open AI Companion</Text>
+          <Text style={styles.companionLinkText}>{t('crisisMode.openCompanion')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -461,9 +463,9 @@ export default function CrisisModeScreen() {
       <View style={styles.delayIconWrap}>
         <Clock size={28} color={Colors.accent} />
       </View>
-      <Text style={styles.delayTitle}>Pause Before Sending</Text>
+      <Text style={styles.delayTitle}>{t('crisisMode.delayTitle')}</Text>
       <Text style={styles.delaySubtitle}>
-        Give yourself space. You can always send it later.
+        {t('crisisMode.delaySubtitle')}
       </Text>
 
       {!delayConfirmed ? (
@@ -498,7 +500,7 @@ export default function CrisisModeScreen() {
               activeOpacity={0.7}
             >
               <Text style={styles.delayConfirmText}>
-                Set {selectedDelay}-minute pause
+                {t('crisisMode.setPause', { minutes: selectedDelay })}
               </Text>
             </TouchableOpacity>
           )}
@@ -507,10 +509,10 @@ export default function CrisisModeScreen() {
         <View style={styles.delayConfirmedCard}>
           <Check size={24} color={Colors.success} />
           <Text style={styles.delayConfirmedText}>
-            Message pause set for {selectedDelay} minutes
+            {t('crisisMode.pauseSet', { minutes: selectedDelay })}
           </Text>
           <Text style={styles.delayConfirmedHint}>
-            Use this time to breathe, ground, or just be still.
+            {t('crisisMode.pauseHint')}
           </Text>
         </View>
       )}
@@ -523,7 +525,7 @@ export default function CrisisModeScreen() {
 
       <View style={styles.crisisLinesSpacer} />
 
-      <Text style={styles.crisisLinesHeader}>Crisis Lines</Text>
+      <Text style={styles.crisisLinesHeader}>{t('crisisMode.crisisLines')}</Text>
 
       {crisisResources.map((resource, index) => {
         const Icon = index === 0 ? Phone : MessageCircle;
@@ -550,9 +552,7 @@ export default function CrisisModeScreen() {
 
       <View style={styles.contactReminder}>
         <Text style={styles.contactReminderText}>
-          If you are in immediate danger, call your local emergency number now.{'\n\n'}
-          You've survived every hard moment before this one.{'\n'}
-          You will survive this one too.
+          {t('crisisMode.contactReminder')}
         </Text>
       </View>
     </View>
@@ -585,12 +585,12 @@ export default function CrisisModeScreen() {
           >
             <X size={22} color={Colors.textSecondary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Crisis Mode</Text>
+          <Text style={styles.headerTitle}>{t('crisisMode.title')}</Text>
           <View style={styles.headerSpacer} />
         </View>
 
         <Text style={styles.headerSubtitle}>
-          One step at a time. You're safe here.
+          {t('crisisMode.subtitle')}
         </Text>
 
         <ScrollView
@@ -621,7 +621,7 @@ export default function CrisisModeScreen() {
               >
                 <ChevronLeft size={18} color={Colors.textSecondary} />
                 <Text style={styles.footerButtonText}>
-                  {CRISIS_PHASES[currentPhaseIndex - 1].label}
+                  {t(`crisisMode.phases.${CRISIS_PHASES[currentPhaseIndex - 1].phase}`)}
                 </Text>
               </TouchableOpacity>
             )}
@@ -633,7 +633,7 @@ export default function CrisisModeScreen() {
                 activeOpacity={0.7}
               >
                 <Text style={styles.footerButtonText}>
-                  {CRISIS_PHASES[currentPhaseIndex + 1].label}
+                  {t(`crisisMode.phases.${CRISIS_PHASES[currentPhaseIndex + 1].phase}`)}
                 </Text>
                 <ChevronRight size={18} color={Colors.textSecondary} />
               </TouchableOpacity>

@@ -1,0 +1,285 @@
+{
+  "homeTitle": "What do you need right now?",
+  "homeSubtitle": "Choose the moment you are in. BPD Companion will take you to one useful action.",
+  "suggested": "Suggested",
+  "moreSupport": "More support",
+  "secondary": {
+    "medications": {
+      "title": "Medications",
+      "description": "Track medication schedules, doses, notes, and today’s taken doses."
+    },
+    "appointments": {
+      "title": "Appointments",
+      "description": "Keep therapy, psychiatry, doctor, and group appointments organized."
+    },
+    "community": {
+      "title": "Community",
+      "description": "Read and share with others who understand. Peer support, not crisis support or medical advice."
+    },
+    "skillLibrary": "Skill library",
+    "library": {
+      "bpdAcademy": {
+        "title": "BPD Academy",
+        "description": "Tiny 2-5 minute lessons for real moments"
+      },
+      "relationshipSimulator": {
+        "title": "Relationship Simulator",
+        "description": "Practice difficult conversations safely"
+      },
+      "rewriteMessage": {
+        "title": "Rewrite The Message",
+        "description": "Practice calm, clear communication"
+      },
+      "spotDistortion": {
+        "title": "Spot The Distortion",
+        "description": "Identify mind reading, catastrophizing, and more"
+      },
+      "emotionalDetective": {
+        "title": "Emotional Detective",
+        "description": "Practice finding trigger → outcome chains"
+      },
+      "dbt": {
+        "title": "DBT Skills Academy",
+        "description": "Real-world practice scenarios"
+      },
+      "grounding": {
+        "title": "Calm Me Down",
+        "description": "2-minute relief flow"
+      },
+      "cbtThoughtRecord": {
+        "title": "CBT Thought Record",
+        "description": "Challenge a painful automatic thought"
+      }
+    }
+  },
+  "calmTitle": "Calm down now",
+  "calmDescription": "For intense emotions, panic, or overwhelm. Start Calm Me Down.",
+  "calmAction": "Calm me down",
+  "pauseTitle": "Pause before reacting",
+  "pauseDescription": "For texting, arguing, or impulsive urges. Create a small gap before action.",
+  "pauseAction": "Pause first",
+  "triggerTitle": "Understand a trigger",
+  "triggerDescription": "Map what happened into trigger, emotion, fear, and urge.",
+  "triggerAction": "Uncover the chain",
+  "reflectTitle": "Reflect and learn",
+  "reflectDescription": "After something happened, extract the lesson and what to try next.",
+  "reflectAction": "Find the lesson",
+  "structured": {
+    "progress": "{{current}} of {{total}}",
+    "purposeLabel": "This tool answers",
+    "completionThoughtTitle": "Thought record saved.",
+    "completionReflectionTitle": "Reflection saved.",
+    "completionBody": "It has been added to your emotional map so Companion and Insights can use it later.",
+    "savedSummary": "Saved summary",
+    "viewRecords": "View in Insights / Records",
+    "talkToCompanion": "Talk to Companion about this",
+    "backToTools": "Back to Tools",
+    "startAgain": "Reflect on something else",
+    "pastRecords": "Past Records",
+    "thoughtRecord": "Thought record",
+    "intensity": "intensity",
+    "askCompanion": "Ask Companion to help with this step",
+    "saved": "Saved",
+    "saveReflection": "Save reflection",
+    "next": "Next",
+    "notRecorded": "Not recorded",
+    "notSure": "Not sure yet."
+  },
+  "reflect": {
+    "eyebrow": "Reflect & Learn",
+    "title": "Extract the lesson",
+    "subtitle": "This is for after something happened. Notice what helped, what made it harder, and what you want to try next time.",
+    "purpose": "What can I learn from this?",
+    "steps": {
+      "event": { "label": "Event", "question": "What happened?", "placeholder": "Describe the situation briefly..." },
+      "lesson": { "label": "Lesson", "question": "What did you learn?", "placeholder": "Example: I need to pause before asking for reassurance..." },
+      "different": { "label": "Next time", "question": "What would you do differently next time?", "placeholder": "Example: Wait 20 minutes, use Don’t Send It, ask directly..." },
+      "helped": { "label": "Helped", "question": "What helped?", "placeholder": "Example: Breathing, walking away, talking to Companion..." },
+      "worse": { "label": "Harder", "question": "What made things worse?", "placeholder": "Example: Checking my phone repeatedly, sending messages quickly..." },
+      "emotion": { "label": "Emotion", "question": "What emotion mattered most in this reflection?", "placeholder": "Example: Anxiety, shame, anger, sadness..." },
+      "intensity": { "label": "Intensity", "question": "How intense was it at the peak?", "placeholder": "Choose 1-10" }
+    },
+    "summary": {
+      "whatHappened": "What happened: {{value}}",
+      "learned": "What I learned: {{value}}",
+      "different": "Next time I want to try: {{value}}",
+      "helped": "What helped: {{value}}",
+      "worse": "What made things worse: {{value}}"
+    },
+    "companionPrompt": "Help me turn this reflection into one practical lesson.\nWhat happened: {{whatHappened}}\nWhat I learned: {{learned}}\nWhat I would do differently: {{different}}\nWhat helped: {{helped}}\nWhat made it worse: {{worse}}\nPlease keep it short and help me choose one next experiment."
+  },
+  "trigger": {
+    "eyebrow": "Understand the Trigger",
+    "title": "Uncover the emotional chain",
+    "subtitle": "Slow the moment down: trigger → meaning → fear → urge. This is for understanding what happened emotionally.",
+    "purpose": "What did this moment touch in me?",
+    "steps": {
+      "whatHappened": { "label": "Trigger", "question": "What happened?", "placeholder": "Example: They replied with one word after I waited all day..." },
+      "meaning": { "label": "Meaning", "question": "What did it mean to you in that moment?", "placeholder": "Example: It felt like I did something wrong or they were pulling away..." },
+      "fear": { "label": "Fear", "question": "What were you afraid of?", "placeholder": "Example: That they would leave, reject me, or stop caring..." },
+      "emotion": { "label": "Emotion", "question": "What emotion showed up?", "placeholder": "Example: Anxiety, anger, shame, sadness, emptiness..." },
+      "intensity": { "label": "Intensity", "question": "How intense did it feel?", "placeholder": "Choose 1-10" },
+      "urge": { "label": "Urge", "question": "What urge appeared?", "placeholder": "Example: Text again, withdraw, argue, apologize, check social media..." },
+      "action": { "label": "Action", "question": "What did you do?", "placeholder": "Example: I sent another text, stayed quiet, distracted myself..." },
+      "outcome": { "label": "Outcome", "question": "What happened next?", "placeholder": "Example: I felt relief for a minute, then more anxious..." }
+    },
+    "summary": {
+      "trigger": "Trigger: {{value}}",
+      "meaning": "Meaning: {{value}}",
+      "fear": "Fear: {{value}}",
+      "emotion": "Emotion: {{value}}",
+      "urge": "Urge: {{value}}",
+      "action": "Action: {{value}}",
+      "outcome": "Outcome: {{value}}",
+      "possiblePattern": "Possible pattern: {{value}}",
+      "patternWithFear": "{{trigger}} touched {{fear}}.",
+      "patternFallback": "Keep tracking this to see the pattern more clearly.",
+      "suggestedNextStep": "Suggested next step: choose one calming or delaying action before reacting further."
+    },
+    "companionPrompt": "Help me understand this trigger using the emotional timeline.\nWhat happened: {{whatHappened}}\nWhat it meant to me: {{meaning}}\nFear: {{fear}}\nEmotion: {{emotion}}\nUrge: {{urge}}\nAction: {{action}}\nOutcome: {{outcome}}\nPlease summarize the possible fear, possible pattern, and one next step."
+  },
+  "calm": {
+    "headerTitle": "Calm Me Down",
+    "headerSubtitle": "Choose a short reset",
+    "kicker": "1, 2, or 5 minute reset",
+    "title": "Calm Me Down",
+    "body": "We will slow your breathing, anchor your senses, and name what may be driving the urgency.",
+    "supportItems": ["Guided breathing", "Guided grounding", "Calm Me Down flow"],
+    "chooseLength": "Choose your length",
+    "durationDescriptions": { "60": "Quick reset", "120": "Recommended", "300": "Deeper calm" },
+    "durationAccessibility": "Choose {{label}} Calm Me Down session, {{description}}",
+    "intensityBefore": "How intense is it right now?",
+    "intensityAfter": "Where is your intensity now?",
+    "start": "Start Calm Me Down",
+    "steps": {
+      "breathe": "Step 1 of 4 · breathe",
+      "anchor": "Step 2 of 4 · anchor",
+      "pattern": "Step 3 of 4 · personalize",
+      "after": "Step 4 of 4 · after"
+    },
+    "breath": { "inhale": "Inhale", "hold": "Hold", "exhale": "Exhale" },
+    "cycle": "Cycle {{current}} of {{total}}. {{cue}}",
+    "exhaleCue": "Let the exhale be slow and complete.",
+    "followCue": "Follow the cue and keep it gentle.",
+    "skipBreathing": "Skip breathing",
+    "anchorTitle": "Come back to right now",
+    "anchors": [
+      "Press your feet into the floor and notice what is holding you up.",
+      "Look for one straight line, one soft color, and one object that is not moving.",
+      "Place one hand somewhere steady. Let your body know this is this moment, not every moment."
+    ],
+    "didThis": "I did this",
+    "patternTitle": "Name the wave without obeying it",
+    "support": {
+      "relationship": "Relationship stress can make urgency feel like danger. Right now, your only job is to slow the body down.",
+      "abandonment": "Fear of being left can feel immediate and convincing. You do not have to solve the relationship in this exact minute.",
+      "shame": "Shame can make your whole self feel like the problem. Right now, we are separating the feeling from who you are.",
+      "conflict": "Conflict can keep your nervous system braced for impact. Let your body come down before you decide what to do.",
+      "default": "This is a wave. It can be intense without being permanent. We will move through the next two minutes together."
+    },
+    "basedOnEntries": "Based on your entries",
+    "patternBoth": "{{emotion}} often shows up around {{trigger}}.",
+    "patternTrigger": "{{trigger}} has shown up in your recent check-ins.",
+    "patternEmotion": "{{emotion}} has shown up in your recent check-ins.",
+    "patternFallback": "I will personalize this more as you check in and reflect.",
+    "statement": "“I can feel this strongly and still wait before I act.”",
+    "checkIntensity": "Check my intensity",
+    "afterBody": "You do not need to be perfectly calm. A one-point shift still counts.",
+    "finish": "Finish",
+    "completeShift_one": "You came down {{count}} point.",
+    "completeShift_other": "You came down {{count}} points.",
+    "completeNoShift": "You stayed with the moment.",
+    "completeBody": "That is the practice: slow the body, name the wave, choose the next step from a steadier place.",
+    "talkTitle": "Talk it through",
+    "talkBody": "Let Companion help you decide what to do next.",
+    "pauseTitle": "Do not send it yet",
+    "pauseBody": "Check a message before reacting.",
+    "okay": "I’m okay for now",
+    "intensityLabels": {
+      "calmer": "A little calmer",
+      "activated": "Still activated",
+      "intense": "Very intense",
+      "overwhelming": "Overwhelming"
+    }
+  },
+  "dontSend": {
+    "eyebrow": "Don’t Send It",
+    "title": "Pause before you send",
+    "subtitle": "Paste the message. We’ll help you clarify the outcome you want and respond from a steadier place.",
+    "inputTitle": "Paste the message here",
+    "placeholder": "Paste the message here...",
+    "recipientQuestion": "Who is this for?",
+    "outcomeQuestion": "What outcome do you actually want?",
+    "outcomeHint": "Choose the outcome first so the rewrite can be emotionally regulated and effective.",
+    "instructionQuestion": "Adjust the rewrite (optional)",
+    "analyze": "Analyze before sending",
+    "noBlock": "This will never block you from sending. It gives you a pause, a pattern check, and a calmer option.",
+    "reactiveTitle": "This may be reactive",
+    "groundedTitle": "This looks mostly grounded",
+    "scoreBody": "Likely emotional state: {{state}} · Impulsivity risk: {{risk}}",
+    "sections": {
+      "hearing": "What I’m noticing",
+      "intensity": "Emotion intensity",
+      "risk": "Why this risk level",
+      "consequences": "Possible consequences",
+      "pattern": "Pattern check",
+      "noticing": "What I’m noticing",
+      "rewrites": "Calmer versions",
+      "waiting": "Waiting suggestion"
+    },
+    "estimatedIntensity": "Estimated at {{intensity}}/10. Likely emotional state: {{state}}.",
+    "copied": "Copied",
+    "copy": "Copy version",
+    "saved": "Saved",
+    "saveDraft": "Save paused draft",
+    "saveExplanation": "Save paused draft stores the original and selected rewrite as not sent so you can review it later in message history.",
+    "discuss": "Discuss with Companion",
+    "recipients": {
+      "partner": "Partner",
+      "parent": "Parent",
+      "friend": "Friend",
+      "ex": "Ex",
+      "coworker": "Coworker",
+      "other": "Other"
+    },
+    "outcomes": {
+      "express_hurt": "Express hurt",
+      "set_boundary": "Set a boundary",
+      "start_conversation": "Start a conversation",
+      "get_response": "Get a response",
+      "end_relationship": "End the relationship",
+      "vent_only": "Vent only"
+    },
+    "instructions": {
+      "more_direct": "More direct",
+      "less_direct": "Less direct",
+      "more_compassionate": "More compassionate",
+      "more_assertive": "More assertive",
+      "shorter": "Shorter",
+      "longer": "Longer"
+    },
+    "risk": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "very_high": "Very High"
+    },
+    "signals": {
+      "threatening language": "threatening language",
+      "personal attack": "personal attack",
+      "hostility": "hostility",
+      "repeated accusations": "repeated accusations",
+      "urgency or pressure": "urgency or pressure",
+      "contempt or cutoff language": "contempt or cutoff language",
+      "high activation in tone": "high activation in tone",
+      "emotional venting": "emotional venting"
+    },
+    "waiting": {
+      "5 min": "5 min",
+      "20 min": "20 min",
+      "1 hour": "1 hour",
+      "Tomorrow": "Tomorrow"
+    },
+    "companionPrompt": "I used Don’t Send It and want to talk through this before I respond.\n\nOriginal message: {{message}}\n\nEmotional intensity: {{intensity}}/10\nLikely emotional state: {{state}}\nImpulsivity risk: {{risk}}\nWhy: {{reason}}\nWho this is for: {{recipient}}\nDesired outcome: {{outcome}}\nPattern check: {{patterns}}\n\nRewrite options: {{rewrites}}\nWaiting suggestion: {{waiting}}\n\nPlease help me understand what I actually need and whether I should wait before sending anything."
+  }
+}

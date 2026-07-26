@@ -17,10 +17,12 @@ import { ArrowLeft, Mail } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
 import { useAppTheme } from '@/providers/ThemeProvider';
+import { useTranslation } from 'react-i18next';
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
   const { colors } = useAppTheme();
+  const { t } = useTranslation(['auth', 'common']);
   const { resetPassword } = useAuth();
   const [email, setEmail] = useState<string>('');
   const [submitting, setSubmitting] = useState<boolean>(false);
@@ -33,22 +35,22 @@ export default function ForgotPasswordScreen() {
     setMessage(null);
 
     if (!trimmed || !/^\S+@\S+\.\S+$/.test(trimmed)) {
-      setError('Enter the email address for your account.');
+      setError(t('auth:forgot.invalidEmail'));
       return;
     }
 
     setSubmitting(true);
     try {
       await resetPassword(trimmed);
-      const success = `Password reset instructions were sent to ${trimmed}.`;
+      const success = t('auth:forgot.success', { email: trimmed });
       setMessage(success);
-      if (Platform.OS !== 'web') Alert.alert('Check your email', success);
+      if (Platform.OS !== 'web') Alert.alert(t('auth:forgot.alertTitle'), success);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Unable to send reset instructions.');
+      setError(e instanceof Error ? e.message : t('auth:forgot.failed'));
     } finally {
       setSubmitting(false);
     }
-  }, [email, resetPassword]);
+  }, [email, resetPassword, t]);
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
@@ -65,13 +67,13 @@ export default function ForgotPasswordScreen() {
             <ArrowLeft size={22} color={Colors.text} />
           </TouchableOpacity>
 
-          <Text style={[styles.title, { color: colors.text }]}>Reset password</Text>
+          <Text style={[styles.title, { color: colors.text }]}>{t('auth:forgot.title')}</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            Enter your account email and we will send a secure reset link.
+            {t('auth:forgot.subtitle')}
           </Text>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Email</Text>
+            <Text style={styles.label}>{t('common:email')}</Text>
             <View style={styles.inputWrap}>
               <Mail size={18} color={Colors.textMuted} />
               <TextInput
@@ -111,7 +113,7 @@ export default function ForgotPasswordScreen() {
             {submitting ? (
               <ActivityIndicator color={Colors.white} />
             ) : (
-              <Text style={styles.primaryText}>Send reset link</Text>
+              <Text style={styles.primaryText}>{t('auth:forgot.submit')}</Text>
             )}
           </TouchableOpacity>
 
@@ -120,7 +122,7 @@ export default function ForgotPasswordScreen() {
             onPress={() => router.replace('/auth/sign-in')}
             testID="back-to-signin"
           >
-            <Text style={styles.switchText}>Back to sign in</Text>
+            <Text style={styles.switchText}>{t('auth:forgot.backToSignIn')}</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>

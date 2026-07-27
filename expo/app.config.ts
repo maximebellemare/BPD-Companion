@@ -1,29 +1,42 @@
-const appJson = require('./app.json');
+import type { ConfigContext } from 'expo/config';
+import appJsonSource from './app.json';
 
-const META_APP_ID = process.env.EXPO_PUBLIC_META_APP_ID || '1546153426837970';
-const META_CLIENT_TOKEN = process.env.EXPO_PUBLIC_META_CLIENT_TOKEN;
+const META_APP_ID = '1546153426837970';
+const META_CLIENT_TOKEN = process.env.META_CLIENT_TOKEN;
 
-function withoutPlugin(plugins, pluginName) {
-  return (plugins || []).filter((plugin) => {
+type ExpoConfigLike = Record<string, unknown> & {
+  android?: Record<string, unknown>;
+  extra?: Record<string, unknown>;
+  ios?: Record<string, unknown>;
+  plugins?: unknown[];
+};
+
+const appJson = appJsonSource as { expo: ExpoConfigLike };
+
+function withoutPlugin(plugins: unknown, pluginName: string): unknown[] {
+  if (!Array.isArray(plugins)) return [];
+
+  return plugins.filter((plugin) => {
     if (plugin === pluginName) return false;
     return !Array.isArray(plugin) || plugin[0] !== pluginName;
   });
 }
 
-module.exports = ({ config }) => {
+export default ({ config }: ConfigContext) => {
+  const configLike = config as ExpoConfigLike;
   const expo = {
-    ...config,
+    ...configLike,
     ...appJson.expo,
     ios: {
-      ...(config.ios || {}),
+      ...(configLike.ios || {}),
       ...(appJson.expo.ios || {}),
     },
     android: {
-      ...(config.android || {}),
+      ...(configLike.android || {}),
       ...(appJson.expo.android || {}),
     },
     extra: {
-      ...(config.extra || {}),
+      ...(configLike.extra || {}),
       ...(appJson.expo.extra || {}),
     },
   };

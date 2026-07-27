@@ -56,7 +56,7 @@ export async function assertMetaRevenueCatAttributionRegressionScenarios(): Prom
   assert(
     calls.indexOf('setAutoLog:false') < calls.indexOf('initializeSDK') &&
       calls.indexOf('setAdvertiserIdCollection:false') < calls.indexOf('initializeSDK'),
-    'Meta settings are disabled before initializeSDK',
+    'Meta settings are applied before initializeSDK',
   );
   assert(calls.includes('getAnonymousID'), 'Facebook anonymous ID is requested');
   assert(calls.includes('setFBAnonymousID:fb_anon_123'), 'Facebook anonymous ID is sent to RevenueCat');

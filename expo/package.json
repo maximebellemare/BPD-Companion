@@ -8,6 +8,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "lint": "expo lint",
+    "preflight:ios": "node scripts/preflight-ios-production.js",
+    "build:ios:production": "npm run preflight:ios && eas build --platform ios --profile production",
     "preflight:android": "node scripts/preflight-android-production.js",
     "build:android:production": "npm run preflight:android && eas build --platform android --profile production"
   },

@@ -1,4 +1,5 @@
 import { MessageDraft, JournalEntry } from '@/types';
+import { localizedText } from '@/lib/i18n/staticText';
 import {
   RelationshipContext,
   EmotionalState,
@@ -183,8 +184,14 @@ function generateInsights(
       insights.push({
         id: `emotion_${pattern.relationship}`,
         type: 'pattern',
-        title: `${emotionLabel} is your top emotion with ${relLabel}`,
-        description: `You feel ${emotionLabel.toLowerCase()} in ${topEmotion.percentage}% of messages involving your ${relLabel.toLowerCase()}. Recognizing this pattern is the first step to changing it.`,
+        title: localizedText(
+          `${emotionLabel} is your top emotion with ${relLabel}`,
+          `${emotionLabel} es tu emoción principal con ${relLabel}`,
+        ),
+        description: localizedText(
+          `You feel ${emotionLabel.toLowerCase()} in ${topEmotion.percentage}% of messages involving your ${relLabel.toLowerCase()}. Recognizing this pattern is the first step to changing it.`,
+          `Sientes ${emotionLabel.toLowerCase()} en el ${topEmotion.percentage}% de los mensajes relacionados con ${relLabel.toLowerCase()}. Reconocer este patrón es el primer paso para cambiarlo.`,
+        ),
         emoji: EMOTIONAL_STATE_OPTIONS.find(e => e.value === topEmotion.emotion)?.emoji ?? '💭',
         severity: topEmotion.percentage > 60 ? 'important' : 'info',
       });
@@ -196,8 +203,11 @@ function generateInsights(
       insights.push({
         id: `intent_${pattern.relationship}`,
         type: 'pattern',
-        title: `Most common intent: ${intentLabel}`,
-        description: `When messaging your ${relLabel.toLowerCase()}, you most often want to ${intentLabel.toLowerCase()} (${topIntent.percentage}% of the time).`,
+        title: localizedText(`Most common intent: ${intentLabel}`, `Intención más común: ${intentLabel}`),
+        description: localizedText(
+          `When messaging your ${relLabel.toLowerCase()}, you most often want to ${intentLabel.toLowerCase()} (${topIntent.percentage}% of the time).`,
+          `Cuando escribes a ${relLabel.toLowerCase()}, la mayoría de las veces quieres ${intentLabel.toLowerCase()} (${topIntent.percentage}% de las veces).`,
+        ),
         emoji: INTENT_OPTIONS.find(i => i.value === topIntent.intent)?.emoji ?? '💬',
         severity: 'info',
       });
@@ -207,8 +217,11 @@ function generateInsights(
       insights.push({
         id: `conflict_${pattern.relationship}`,
         type: 'trend',
-        title: `Higher conflict rate with ${relLabel}`,
-        description: `${pattern.conflictRate}% of your messages with your ${relLabel.toLowerCase()} have difficult outcomes. This is common with BPD — you're already working on it by being here.`,
+        title: localizedText(`Higher conflict rate with ${relLabel}`, `Mayor tasa de conflicto con ${relLabel}`),
+        description: localizedText(
+          `${pattern.conflictRate}% of your messages with your ${relLabel.toLowerCase()} have difficult outcomes. This is common with BPD — you're already working on it by being here.`,
+          `El ${pattern.conflictRate}% de tus mensajes con ${relLabel.toLowerCase()} tienen resultados difíciles. Esto es común con TLP; ya estás trabajando en ello al estar aquí.`,
+        ),
         emoji: '⚡',
         severity: 'gentle',
       });
@@ -218,8 +231,11 @@ function generateInsights(
       insights.push({
         id: `abandon_${pattern.relationship}`,
         type: 'trigger',
-        title: `Abandonment patterns with ${relLabel}`,
-        description: `You often feel abandoned when messages go unanswered for long periods. This is a very common BPD trigger — your feelings are valid, and awareness helps.`,
+        title: localizedText(`Abandonment patterns with ${relLabel}`, `Patrones de abandono con ${relLabel}`),
+        description: localizedText(
+          `You often feel abandoned when messages go unanswered for long periods. This is a very common BPD trigger — your feelings are valid, and awareness helps.`,
+          'A menudo te sientes abandonado/a cuando los mensajes quedan sin respuesta por mucho tiempo. Este es un detonante muy común en el TLP; tus sentimientos son válidos y la conciencia ayuda.',
+        ),
         emoji: '🥀',
         severity: 'gentle',
       });
@@ -231,8 +247,11 @@ function generateInsights(
         insights.push({
           id: `reassurance_${pattern.relationship}`,
           type: 'pattern',
-          title: `Reassurance seeking with ${relLabel}`,
-          description: `Most rewrites with your ${relLabel.toLowerCase()} involve softer or warmer tones, which often signals reassurance seeking. This awareness can help you communicate more securely.`,
+          title: localizedText(`Reassurance seeking with ${relLabel}`, `Búsqueda de seguridad con ${relLabel}`),
+          description: localizedText(
+            `Most rewrites with your ${relLabel.toLowerCase()} involve softer or warmer tones, which often signals reassurance seeking. This awareness can help you communicate more securely.`,
+            `La mayoría de las reescrituras con ${relLabel.toLowerCase()} usan tonos más suaves o cálidos, lo que suele señalar búsqueda de seguridad. Esta conciencia puede ayudarte a comunicarte con más seguridad.`,
+          ),
           emoji: '🤲',
           severity: 'info',
         });
@@ -248,8 +267,11 @@ function generateInsights(
     insights.push({
       id: 'journal_relationship_triggers',
       type: 'trigger',
-      title: 'Relationship triggers are frequent',
-      description: `${relationshipTriggers} of your check-ins involve relationship triggers. Your relationships are important to you — that's why they affect you deeply.`,
+      title: localizedText('Relationship triggers are frequent', 'Los detonantes relacionales son frecuentes'),
+      description: localizedText(
+        `${relationshipTriggers} of your check-ins involve relationship triggers. Your relationships are important to you — that's why they affect you deeply.`,
+        `${relationshipTriggers} de tus registros incluyen detonantes relacionales. Tus relaciones son importantes para ti; por eso te afectan con tanta profundidad.`,
+      ),
       emoji: '💔',
       severity: relationshipTriggers > 7 ? 'important' : 'gentle',
     });
@@ -275,30 +297,39 @@ function generateSuggestions(
   if (hasAbandonmentPattern) {
     suggestions.push({
       id: 'sug_pause',
-      title: 'Try a pause before responding',
-      description: 'When you notice abandonment feelings rising, a 2-minute pause can help you respond from a calmer place rather than reacting to fear.',
+      title: localizedText('Try a pause before responding', 'Prueba una pausa antes de responder'),
+      description: localizedText(
+        'When you notice abandonment feelings rising, a 2-minute pause can help you respond from a calmer place rather than reacting to fear.',
+        'Cuando notes que sube el miedo al abandono, una pausa de 2 minutos puede ayudarte a responder desde un lugar más calmado en vez de reaccionar al miedo.',
+      ),
       emoji: '⏸️',
-      actionLabel: 'Use pause flow',
+      actionLabel: localizedText('Use pause flow', 'Usar flujo de pausa'),
     });
   }
 
   if (hasHighConflict) {
     suggestions.push({
       id: 'sug_boundary',
-      title: 'Use boundary-style messages',
-      description: 'Your conflict patterns suggest boundaries could help. Boundary messages protect your dignity while keeping the door open.',
+      title: localizedText('Use boundary-style messages', 'Usa mensajes con límites'),
+      description: localizedText(
+        'Your conflict patterns suggest boundaries could help. Boundary messages protect your dignity while keeping the door open.',
+        'Tus patrones de conflicto sugieren que los límites podrían ayudar. Los mensajes con límites protegen tu dignidad sin cerrar la puerta.',
+      ),
       emoji: '🛡️',
-      actionLabel: 'Try boundary rewrite',
+      actionLabel: localizedText('Try boundary rewrite', 'Probar reescritura con límites'),
     });
   }
 
   if (hasAngerPattern) {
     suggestions.push({
       id: 'sug_ground',
-      title: 'Ground before messaging',
-      description: 'When anger drives your messaging, a quick grounding exercise can help you communicate what you actually need instead of reacting.',
+      title: localizedText('Ground before messaging', 'Conéctate antes de escribir'),
+      description: localizedText(
+        'When anger drives your messaging, a quick grounding exercise can help you communicate what you actually need instead of reacting.',
+        'Cuando el enojo guía tus mensajes, un ejercicio rápido de conexión puede ayudarte a comunicar lo que realmente necesitas en vez de reaccionar.',
+      ),
       emoji: '🌿',
-      actionLabel: 'Try grounding',
+      actionLabel: localizedText('Try grounding', 'Probar conexión'),
       actionRoute: '/exercise?id=c1',
     });
   }
@@ -306,19 +337,25 @@ function generateSuggestions(
   if (frequentMessaging) {
     suggestions.push({
       id: 'sug_journal',
-      title: 'Journal before texting',
-      description: 'Writing your feelings in a journal first can help you process emotions before directing them at someone. The relief comes from expressing, not necessarily sending.',
+      title: localizedText('Journal before texting', 'Escribe antes de mandar el mensaje'),
+      description: localizedText(
+        'Writing your feelings in a journal first can help you process emotions before directing them at someone. The relief comes from expressing, not necessarily sending.',
+        'Escribir primero lo que sientes puede ayudarte a procesar emociones antes de dirigirlas hacia alguien. El alivio viene de expresar, no necesariamente de enviar.',
+      ),
       emoji: '📝',
-      actionLabel: 'Open journal',
+      actionLabel: localizedText('Open journal', 'Abrir diario'),
     });
   }
 
   suggestions.push({
     id: 'sug_secure',
-    title: 'Practice secure communication',
-    description: 'The "secure" rewrite style helps you name your vulnerability without demanding the other person fix it. Over time, this builds healthier patterns.',
+    title: localizedText('Practice secure communication', 'Practica comunicación segura'),
+    description: localizedText(
+      'The "secure" rewrite style helps you name your vulnerability without demanding the other person fix it. Over time, this builds healthier patterns.',
+      'El estilo de reescritura segura te ayuda a nombrar tu vulnerabilidad sin exigir que la otra persona la arregle. Con el tiempo, esto construye patrones más sanos.',
+    ),
     emoji: '🌱',
-    actionLabel: 'Learn more',
+    actionLabel: localizedText('Learn more', 'Aprender más'),
   });
 
   return suggestions;

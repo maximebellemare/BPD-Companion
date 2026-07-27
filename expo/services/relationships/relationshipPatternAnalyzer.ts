@@ -1,5 +1,6 @@
 import { JournalEntry, MessageDraft } from '@/types';
 import { AIConversation } from '@/types/ai';
+import { localizedText } from '@/lib/i18n/staticText';
 import {
   RelationshipProfile,
   RelationshipEvent,
@@ -70,7 +71,10 @@ export function buildEventsFromAppData(
           profileId: profile.id,
           type: 'trigger',
           label: trigger.label,
-          detail: `From check-in on ${new Date(entry.timestamp).toLocaleDateString()}`,
+          detail: localizedText(
+            `From check-in on ${new Date(entry.timestamp).toLocaleDateString()}`,
+            `Del registro del ${new Date(entry.timestamp).toLocaleDateString()}`,
+          ),
           intensity: entry.checkIn.intensityLevel,
           timestamp: entry.timestamp,
           sourceType: 'check_in',
@@ -97,8 +101,11 @@ export function buildEventsFromAppData(
         id: `auto_distress_${entry.id}`,
         profileId: profile.id,
         type: 'distress',
-        label: `High distress (${entry.checkIn.intensityLevel}/10)`,
-        detail: entry.checkIn.notes || 'Elevated distress during check-in',
+        label: localizedText(
+          `High distress (${entry.checkIn.intensityLevel}/10)`,
+          `Malestar alto (${entry.checkIn.intensityLevel}/10)`,
+        ),
+        detail: entry.checkIn.notes || localizedText('Elevated distress during check-in', 'Malestar elevado durante el registro'),
         intensity: entry.checkIn.intensityLevel,
         timestamp: entry.timestamp,
         sourceType: 'check_in',
@@ -113,7 +120,7 @@ export function buildEventsFromAppData(
           profileId: profile.id,
           type: 'coping',
           label: tool,
-          detail: 'Used during check-in',
+          detail: localizedText('Used during check-in', 'Usado durante el registro'),
           intensity: 0,
           timestamp: entry.timestamp,
           sourceType: 'check_in',
@@ -130,8 +137,12 @@ export function buildEventsFromAppData(
       id: `auto_rewrite_${draft.id}`,
       profileId: profile.id,
       type: 'message_rewrite',
-      label: draft.rewriteType ? `Rewrite (${draft.rewriteType})` : 'Message draft',
-      detail: draft.paused ? 'Paused before sending' : (draft.sent ? 'Sent' : 'Not sent'),
+      label: draft.rewriteType
+        ? localizedText(`Rewrite (${draft.rewriteType})`, `Reescritura (${draft.rewriteType})`)
+        : localizedText('Message draft', 'Borrador de mensaje'),
+      detail: draft.paused
+        ? localizedText('Paused before sending', 'Pausado antes de enviar')
+        : (draft.sent ? localizedText('Sent', 'Enviado') : localizedText('Not sent', 'No enviado')),
       intensity: 0,
       timestamp: draft.timestamp,
       sourceType: 'message',
@@ -146,7 +157,7 @@ export function buildEventsFromAppData(
       id: `auto_conversation_${conversation.id}`,
       profileId: profile.id,
       type: 'conversation',
-      label: 'Companion conversation',
+      label: localizedText('Companion conversation', 'Conversación con Companion'),
       detail: conversation.preview || conversation.title,
       intensity: 0,
       timestamp: conversation.updatedAt,
@@ -191,8 +202,11 @@ export function generateInsightsForProfile(
       id: `ins_emotion_${profile.id}`,
       profileId: profile.id,
       type: 'emotional',
-      title: `${topEmotion} often appears`,
-      description: `You seem to feel ${topEmotion.toLowerCase()} around ${profile.name} frequently (${count} time${count !== 1 ? 's' : ''} recently). This awareness may help you prepare.`,
+      title: localizedText(`${topEmotion} often appears`, `${topEmotion} aparece con frecuencia`),
+      description: localizedText(
+        `You seem to feel ${topEmotion.toLowerCase()} around ${profile.name} frequently (${count} time${count !== 1 ? 's' : ''} recently). This awareness may help you prepare.`,
+        `Parece que sientes ${topEmotion.toLowerCase()} cerca de ${profile.name} con frecuencia (${count} ${count !== 1 ? 'veces' : 'vez'} recientemente). Esta conciencia puede ayudarte a prepararte.`,
+      ),
       emoji: '💭',
       severity: count >= 5 ? 'important' : 'info',
       frequency: count,
@@ -206,8 +220,11 @@ export function generateInsightsForProfile(
       id: `ins_trigger_${profile.id}`,
       profileId: profile.id,
       type: 'communication',
-      title: `Common trigger: ${topTrigger}`,
-      description: `"${topTrigger}" tends to come up in connection with ${profile.name}. Recognizing this early may help you respond more calmly.`,
+      title: localizedText(`Common trigger: ${topTrigger}`, `Detonante común: ${topTrigger}`),
+      description: localizedText(
+        `"${topTrigger}" tends to come up in connection with ${profile.name}. Recognizing this early may help you respond more calmly.`,
+        `"${topTrigger}" suele aparecer en conexión con ${profile.name}. Reconocerlo temprano puede ayudarte a responder con más calma.`,
+      ),
       emoji: '⚡',
       severity: count >= 4 ? 'gentle' : 'info',
       frequency: count,
@@ -220,8 +237,11 @@ export function generateInsightsForProfile(
       id: `ins_distress_${profile.id}`,
       profileId: profile.id,
       type: 'emotional',
-      title: 'Elevated distress pattern',
-      description: `Your average distress level around ${profile.name} is ${avgIntensity.toFixed(1)}/10. This doesn't mean something is wrong — it means this relationship matters to you.`,
+      title: localizedText('Elevated distress pattern', 'Patrón de malestar elevado'),
+      description: localizedText(
+        `Your average distress level around ${profile.name} is ${avgIntensity.toFixed(1)}/10. This doesn't mean something is wrong — it means this relationship matters to you.`,
+        `Tu nivel promedio de malestar cerca de ${profile.name} es ${avgIntensity.toFixed(1)}/10. Esto no significa que algo esté mal; significa que esta relación te importa.`,
+      ),
       emoji: '📊',
       severity: avgIntensity >= 7 ? 'important' : 'gentle',
       frequency: distressEvents.length,
@@ -235,8 +255,11 @@ export function generateInsightsForProfile(
         id: `ins_pause_${profile.id}`,
         profileId: profile.id,
         type: 'growth',
-        title: 'Pausing before responding',
-        description: `You paused before sending ${pausedCount} time${pausedCount !== 1 ? 's' : ''} with ${profile.name}. That takes real self-awareness and strength.`,
+        title: localizedText('Pausing before responding', 'Pausar antes de responder'),
+        description: localizedText(
+          `You paused before sending ${pausedCount} time${pausedCount !== 1 ? 's' : ''} with ${profile.name}. That takes real self-awareness and strength.`,
+          `Pausaste antes de enviar ${pausedCount} ${pausedCount !== 1 ? 'veces' : 'vez'} con ${profile.name}. Eso requiere autoconciencia y fortaleza reales.`,
+        ),
         emoji: '🌱',
         severity: 'info',
         frequency: pausedCount,
@@ -247,8 +270,11 @@ export function generateInsightsForProfile(
       id: `ins_rewrite_${profile.id}`,
       profileId: profile.id,
       type: 'communication',
-      title: 'Active message support usage',
-      description: `You've used message support ${rewriteEvents.length} time${rewriteEvents.length !== 1 ? 's' : ''} for messages related to ${profile.name}. This shows you're being thoughtful about communication.`,
+      title: localizedText('Active message support usage', 'Uso activo del apoyo para mensajes'),
+      description: localizedText(
+        `You've used message support ${rewriteEvents.length} time${rewriteEvents.length !== 1 ? 's' : ''} for messages related to ${profile.name}. This shows you're being thoughtful about communication.`,
+        `Has usado apoyo para mensajes ${rewriteEvents.length} ${rewriteEvents.length !== 1 ? 'veces' : 'vez'} en mensajes relacionados con ${profile.name}. Esto muestra que estás cuidando tu comunicación.`,
+      ),
       emoji: '✏️',
       severity: 'info',
       frequency: rewriteEvents.length,
@@ -262,8 +288,11 @@ export function generateInsightsForProfile(
       id: `ins_coping_${profile.id}`,
       profileId: profile.id,
       type: 'coping',
-      title: `${topCoping} seems to help`,
-      description: `You've used "${topCoping}" ${count} time${count !== 1 ? 's' : ''} around situations involving ${profile.name}. It may be worth keeping this tool close.`,
+      title: localizedText(`${topCoping} seems to help`, `${topCoping} parece ayudar`),
+      description: localizedText(
+        `You've used "${topCoping}" ${count} time${count !== 1 ? 's' : ''} around situations involving ${profile.name}. It may be worth keeping this tool close.`,
+        `Has usado "${topCoping}" ${count} ${count !== 1 ? 'veces' : 'vez'} en situaciones relacionadas con ${profile.name}. Puede valer la pena tener esta herramienta cerca.`,
+      ),
       emoji: '💚',
       severity: 'info',
       frequency: count,
@@ -275,8 +304,11 @@ export function generateInsightsForProfile(
       id: `ins_positive_${profile.id}`,
       profileId: profile.id,
       type: 'growth',
-      title: 'Positive moments noted',
-      description: `You've recorded ${profile.positiveInteractions.length} positive interaction${profile.positiveInteractions.length !== 1 ? 's' : ''} with ${profile.name}. Holding onto these may help during harder moments.`,
+      title: localizedText('Positive moments noted', 'Momentos positivos registrados'),
+      description: localizedText(
+        `You've recorded ${profile.positiveInteractions.length} positive interaction${profile.positiveInteractions.length !== 1 ? 's' : ''} with ${profile.name}. Holding onto these may help during harder moments.`,
+        `Has registrado ${profile.positiveInteractions.length} interacción${profile.positiveInteractions.length !== 1 ? 'es' : ''} positiva${profile.positiveInteractions.length !== 1 ? 's' : ''} con ${profile.name}. Recordarlas puede ayudar en momentos más difíciles.`,
+      ),
       emoji: '☀️',
       severity: 'info',
       frequency: profile.positiveInteractions.length,
@@ -299,11 +331,14 @@ export function generateInterventionsForProfile(
     interventions.push({
       id: `intv_ground_${profile.id}`,
       profileId: profile.id,
-      title: 'Try grounding before responding',
-      description: `A grounding exercise may help you respond to ${profile.name} from a calmer place.`,
+      title: localizedText('Try grounding before responding', 'Prueba conectar antes de responder'),
+      description: localizedText(
+        `A grounding exercise may help you respond to ${profile.name} from a calmer place.`,
+        `Un ejercicio de conexión puede ayudarte a responderle a ${profile.name} desde un lugar más calmado.`,
+      ),
       emoji: '🌿',
       actionRoute: '/exercise?id=c1',
-      actionLabel: 'Start grounding',
+      actionLabel: localizedText('Start grounding', 'Empezar conexión'),
     });
   }
 
@@ -311,32 +346,41 @@ export function generateInterventionsForProfile(
     interventions.push({
       id: `intv_pause_${profile.id}`,
       profileId: profile.id,
-      title: 'This may be a moment to pause',
-      description: 'A short pause before sending can protect both you and the relationship.',
+      title: localizedText('This may be a moment to pause', 'Este puede ser un momento para pausar'),
+      description: localizedText(
+        'A short pause before sending can protect both you and the relationship.',
+        'Una pausa breve antes de enviar puede protegerte a ti y a la relación.',
+      ),
       emoji: '⏸️',
       actionRoute: '/(tabs)/messages',
-      actionLabel: 'Use pause',
+      actionLabel: localizedText('Use pause', 'Usar pausa'),
     });
   }
 
   interventions.push({
     id: `intv_simulate_${profile.id}`,
     profileId: profile.id,
-    title: 'Simulate your response first',
-    description: `Would it help to explore different ways to respond to ${profile.name}?`,
+    title: localizedText('Simulate your response first', 'Simula tu respuesta primero'),
+    description: localizedText(
+      `Would it help to explore different ways to respond to ${profile.name}?`,
+      `¿Te ayudaría explorar distintas formas de responderle a ${profile.name}?`,
+    ),
     emoji: '🔮',
     actionRoute: '/(tabs)/companion',
-    actionLabel: 'Open AI Companion',
+    actionLabel: localizedText('Open AI Companion', 'Abrir AI Companion'),
   });
 
   interventions.push({
     id: `intv_journal_${profile.id}`,
     profileId: profile.id,
-    title: 'Journal what you feel',
-    description: 'Writing it out may release some of the pressure before you act on it.',
+    title: localizedText('Journal what you feel', 'Escribe lo que sientes'),
+    description: localizedText(
+      'Writing it out may release some of the pressure before you act on it.',
+      'Escribirlo puede liberar parte de la presión antes de actuar.',
+    ),
     emoji: '📝',
     actionRoute: '/check-in',
-    actionLabel: 'Check in',
+    actionLabel: localizedText('Check in', 'Hacer registro'),
   });
 
   return interventions;

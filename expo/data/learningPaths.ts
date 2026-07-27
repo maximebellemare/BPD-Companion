@@ -1,6 +1,7 @@
 import { LearningPath } from '@/types/learningPath';
+import { localizedFields } from '@/lib/i18n/staticText';
 
-export const LEARNING_PATHS: LearningPath[] = [
+const ENGLISH_LEARNING_PATHS: LearningPath[] = [
   {
     id: 'path-emotional-dysregulation',
     title: 'Understanding Emotional Dysregulation',
@@ -92,3 +93,104 @@ export const LEARNING_PATHS: LearningPath[] = [
     tags: ['self_compassion', 'self_worth', 'identity', 'recovery'],
   },
 ];
+
+type LearningPathLocalizedCopy = Pick<LearningPath, 'title' | 'subtitle' | 'description'> & {
+  steps: Record<string, Pick<LearningPath['steps'][number], 'title' | 'description'>>;
+};
+
+const LEARNING_PATH_SPANISH: Record<string, LearningPathLocalizedCopy> = {
+  'path-emotional-dysregulation': {
+    title: 'Entender la desregulación emocional',
+    subtitle: 'Por qué las emociones golpean tan fuerte',
+    description: 'Aprende por qué tus respuestas emocionales se sienten tan intensas, de dónde vienen y cómo empezar a trabajar con ellas en vez de pelear contra ellas.',
+    steps: {
+      'ped-1': { title: 'Por qué las emociones se sienten tan intensas', description: 'Entender la amplificación emocional' },
+      'ped-2': { title: 'El modelo de sensibilidad emocional', description: 'Biología y ambiente se encuentran' },
+      'ped-3': { title: 'La regla emocional de 90 segundos', description: 'Cómo las emociones se mueven a través de ti' },
+      'ped-4': { title: 'Por qué evitarlo lo empeora', description: 'La paradoja de suprimir emociones' },
+      'ped-5': { title: 'Nombrar lo que sientes', description: 'El poder de ponerle nombre a la emoción' },
+      'ped-6': { title: 'Atravesar la ola emocional', description: 'Dejar que las emociones pasen por ti' },
+    },
+  },
+  'path-relationship-triggers': {
+    title: 'Entender los disparadores relacionales',
+    subtitle: 'Por qué la cercanía puede sentirse peligrosa',
+    description: 'Explora por qué las relaciones activan respuestas emocionales profundas, cómo se forman los patrones de apego y cómo construir vínculos más seguros.',
+    steps: {
+      'prt-1': { title: 'El patrón de acercar y alejar', description: 'Por qué alejas lo que más quieres' },
+      'prt-2': { title: 'Apego y TLP', description: 'Cómo los vínculos tempranos moldean las relaciones adultas' },
+      'prt-3': { title: 'Por qué el silencio se siente como rechazo', description: 'Entender la sensibilidad al abandono' },
+      'prt-4': { title: 'Cuando los disparadores vienen del pasado', description: 'Heridas antiguas en relaciones nuevas' },
+      'prt-5': { title: 'Revisar historias relacionales con hechos', description: 'Separar interpretación de realidad' },
+      'prt-6': { title: 'Pedir seguridad', description: 'Expresar necesidades sin alejar a la otra persona' },
+    },
+  },
+  'path-regulation-skills': {
+    title: 'Construir habilidades de regulación emocional',
+    subtitle: 'Herramientas prácticas para días más estables',
+    description: 'Construye un conjunto práctico de habilidades que te ayudan a manejar emociones intensas, reducir la reactividad y crear más estabilidad en la vida diaria.',
+    steps: {
+      'prs-1': { title: 'Nombrar lo que sientes', description: 'La base de la regulación' },
+      'prs-2': { title: 'Anclaje cuando todo gira', description: 'Volver al presente' },
+      'prs-3': { title: 'La habilidad STOP', description: 'Interrumpir patrones reactivos' },
+      'prs-4': { title: 'Acción opuesta', description: 'Actuar contra el impulso' },
+      'prs-5': { title: 'Construir una mañana estable', description: 'Empezar el día con estabilidad' },
+      'prs-6': { title: 'Resumen de habilidades DBT', description: 'Tu kit de regulación' },
+    },
+  },
+  'path-communication-conflict': {
+    title: 'Comunicación y conflicto',
+    subtitle: 'Expresarte sin intensificar',
+    description: 'Aprende a expresar tus necesidades con claridad, poner límites, navegar conflictos y reparar relaciones después de momentos difíciles.',
+    steps: {
+      'pcc-1': { title: 'Por qué escribir mensajes se siente peligroso', description: 'Ansiedad de comunicación y TLP' },
+      'pcc-2': { title: 'La habilidad DEAR MAN', description: 'Pedir lo que necesitas' },
+      'pcc-3': { title: 'Cómo expresar vulnerabilidad', description: 'Abrirte sin ahogarte' },
+      'pcc-4': { title: 'Estilos de conflicto en el TLP', description: 'Entender tus patrones' },
+      'pcc-5': { title: 'Reparar después del conflicto', description: 'Volver después de una ruptura' },
+      'pcc-6': { title: 'Poner límites', description: 'Protegerte sin cerrarte' },
+    },
+  },
+  'path-self-compassion': {
+    title: 'Autocompasión y recuperación de la vergüenza',
+    subtitle: 'Aprender a estar de tu lado',
+    description: 'Explora las raíces de la vergüenza y la autocrítica, aprende a reconstruir la autoestima y desarrolla una relación más amable contigo.',
+    steps: {
+      'psc-1': { title: 'Cuando no sabes quién eres', description: 'Identidad y TLP' },
+      'psc-2': { title: 'Vergüenza vs. culpa', description: 'Entender la diferencia' },
+      'psc-3': { title: 'La autocompasión no es debilidad', description: 'La ciencia de tratarte con amabilidad' },
+      'psc-4': { title: 'Reconstruir la autoestima', description: 'Desde adentro hacia afuera' },
+      'psc-5': { title: 'La recuperación es real', description: 'Evidencia de que las personas sanan' },
+      'psc-6': { title: 'Volver a confiar en ti después del TLP', description: 'Aprender a creer en ti otra vez' },
+    },
+  },
+};
+
+function localizeLearningPath(path: LearningPath): LearningPath {
+  const spanish = LEARNING_PATH_SPANISH[path.id];
+  if (!spanish) {
+    return path;
+  }
+
+  localizedFields(path, {
+    title: { en: path.title, es: spanish.title },
+    subtitle: { en: path.subtitle, es: spanish.subtitle },
+    description: { en: path.description, es: spanish.description },
+  });
+
+  path.steps = path.steps.map((step) => {
+    const spanishStep = spanish.steps[step.id];
+    if (!spanishStep) {
+      return step;
+    }
+
+    return localizedFields(step, {
+      title: { en: step.title, es: spanishStep.title },
+      description: { en: step.description, es: spanishStep.description },
+    }) as LearningPath['steps'][number];
+  });
+
+  return path;
+}
+
+export const LEARNING_PATHS: LearningPath[] = ENGLISH_LEARNING_PATHS.map(localizeLearningPath);

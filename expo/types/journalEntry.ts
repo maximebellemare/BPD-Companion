@@ -1,4 +1,5 @@
 import { Emotion, Trigger } from '@/types';
+import { localizedFields } from '@/lib/i18n/staticText';
 
 export type JournalEntryFormat =
   | 'free_writing'
@@ -102,7 +103,7 @@ export interface JournalStats {
   therapyNoteCount: number;
 }
 
-export const JOURNAL_EMOTIONS: Emotion[] = [
+const ENGLISH_JOURNAL_EMOTIONS: Emotion[] = [
   { id: 'je1', label: 'Anger', emoji: '😤' },
   { id: 'je2', label: 'Shame', emoji: '😞' },
   { id: 'je3', label: 'Fear', emoji: '😰' },
@@ -121,7 +122,32 @@ export const JOURNAL_EMOTIONS: Emotion[] = [
   { id: 'je16', label: 'Pride', emoji: '😊' },
 ];
 
-export const JOURNAL_TAGS: JournalTag[] = [
+const JOURNAL_EMOTION_SPANISH: Record<string, string> = {
+  je1: 'Enojo',
+  je2: 'Vergüenza',
+  je3: 'Miedo',
+  je4: 'Tristeza',
+  je5: 'Soledad',
+  je6: 'Ansiedad de abandono',
+  je7: 'Celos',
+  je8: 'Confusión',
+  je9: 'Esperanza',
+  je10: 'Alivio',
+  je11: 'Vacío',
+  je12: 'Abrumación',
+  je13: 'Culpa',
+  je14: 'Gratitud',
+  je15: 'Calma',
+  je16: 'Orgullo',
+};
+
+export const JOURNAL_EMOTIONS: Emotion[] = ENGLISH_JOURNAL_EMOTIONS.map((emotion) =>
+  localizedFields(emotion, {
+    label: { en: emotion.label, es: JOURNAL_EMOTION_SPANISH[emotion.id] ?? emotion.label },
+  }) as Emotion
+);
+
+const ENGLISH_JOURNAL_TAGS: JournalTag[] = [
   { id: 'jt1', label: 'Therapy', color: '#14B8A6' },
   { id: 'jt2', label: 'Relationship', color: '#67E8F9' },
   { id: 'jt3', label: 'Growth', color: '#14B8A6' },
@@ -132,7 +158,24 @@ export const JOURNAL_TAGS: JournalTag[] = [
   { id: 'jt8', label: 'Identity', color: '#67E8F9' },
 ];
 
-export const FORMAT_CONFIG: Record<JournalEntryFormat, {
+const JOURNAL_TAG_SPANISH: Record<string, string> = {
+  jt1: 'Terapia',
+  jt2: 'Relación',
+  jt3: 'Crecimiento',
+  jt4: 'Disparador',
+  jt5: 'Afrontamiento',
+  jt6: 'Autocuidado',
+  jt7: 'Descubrimiento',
+  jt8: 'Identidad',
+};
+
+export const JOURNAL_TAGS: JournalTag[] = ENGLISH_JOURNAL_TAGS.map((tag) =>
+  localizedFields(tag, {
+    label: { en: tag.label, es: JOURNAL_TAG_SPANISH[tag.id] ?? tag.label },
+  }) as JournalTag
+);
+
+const ENGLISH_FORMAT_CONFIG: Record<JournalEntryFormat, {
   label: string;
   emoji: string;
   description: string;
@@ -187,3 +230,67 @@ export const FORMAT_CONFIG: Record<JournalEntryFormat, {
     placeholder: 'I just realized...',
   },
 };
+
+const FORMAT_CONFIG_SPANISH: Record<JournalEntryFormat, Omit<(typeof ENGLISH_FORMAT_CONFIG)[JournalEntryFormat], 'emoji'>> = {
+  free_writing: {
+    label: 'Escritura libre',
+    description: 'Escribe lo que venga a tu mente',
+    placeholder: 'Déjalo fluir. No necesitas estructura...',
+  },
+  guided_reflection: {
+    label: 'Reflexión guiada',
+    description: 'Reflexión emocional paso a paso',
+    placeholder: 'Sigue las preguntas para reflexionar...',
+  },
+  emotional_event: {
+    label: 'Evento emocional',
+    description: 'Procesa algo que pasó',
+    placeholder: 'Qué pasó y cómo te afectó...',
+  },
+  relationship_conflict: {
+    label: 'Conflicto relacional',
+    description: 'Trabaja un conflicto',
+    placeholder: 'Describe qué pasó en la interacción...',
+  },
+  letter_not_sent: {
+    label: 'Carta no enviada',
+    description: 'Escribe lo que necesitas decir, con seguridad',
+    placeholder: 'Querido/a...',
+  },
+  letter_to_future_self: {
+    label: 'Carta a tu yo futuro',
+    description: 'Envía ánimo hacia adelante',
+    placeholder: 'Querido yo del futuro...',
+  },
+  gratitude: {
+    label: 'Gratitud',
+    description: 'Nota lo que aprecias',
+    placeholder: 'Hoy agradezco...',
+  },
+  breakthrough_insight: {
+    label: 'Descubrimiento importante',
+    description: 'Guarda un momento de claridad',
+    placeholder: 'Acabo de darme cuenta de...',
+  },
+};
+
+export const FORMAT_CONFIG: Record<JournalEntryFormat, {
+  label: string;
+  emoji: string;
+  description: string;
+  placeholder: string;
+}> = Object.fromEntries(
+  Object.entries(ENGLISH_FORMAT_CONFIG).map(([format, config]) => [
+    format,
+    localizedFields({ ...config }, {
+      label: { en: config.label, es: FORMAT_CONFIG_SPANISH[format as JournalEntryFormat].label },
+      description: { en: config.description, es: FORMAT_CONFIG_SPANISH[format as JournalEntryFormat].description },
+      placeholder: { en: config.placeholder, es: FORMAT_CONFIG_SPANISH[format as JournalEntryFormat].placeholder },
+    }),
+  ])
+) as Record<JournalEntryFormat, {
+  label: string;
+  emoji: string;
+  description: string;
+  placeholder: string;
+}>;

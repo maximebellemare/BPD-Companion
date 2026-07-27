@@ -1,6 +1,7 @@
 import { EmotionalPattern } from '@/types/learningPath';
+import { localizedArrayProxy, localizedFields } from '@/lib/i18n/staticText';
 
-export const EMOTIONAL_PATTERNS: EmotionalPattern[] = [
+const ENGLISH_EMOTIONAL_PATTERNS: EmotionalPattern[] = [
   {
     id: 'pattern-rejection-sensitivity',
     title: 'Rejection Sensitivity',
@@ -207,3 +208,244 @@ export const EMOTIONAL_PATTERNS: EmotionalPattern[] = [
     ],
   },
 ];
+
+type EmotionalPatternLocalizedCopy = Pick<
+  EmotionalPattern,
+  | 'title'
+  | 'subtitle'
+  | 'description'
+  | 'howItWorks'
+  | 'commonTriggers'
+  | 'whatItFeelsLike'
+  | 'helpfulStrategies'
+  | 'reflectionQuestions'
+>;
+
+const EMOTIONAL_PATTERN_SPANISH: Record<string, EmotionalPatternLocalizedCopy> = {
+  'pattern-rejection-sensitivity': {
+    title: 'Sensibilidad al rechazo',
+    subtitle: 'Cuando señales pequeñas se sienten como rechazo total',
+    description: 'La sensibilidad al rechazo significa que tu sistema nervioso responde a un posible rechazo como si fuera peligro real. Un mensaje demorado, un cambio de tono o un plan cancelado pueden activar sensaciones de abandono que se sienten totalmente reales, incluso si la otra persona no tenía intención de rechazarte.',
+    howItWorks: 'Tu cerebro aprendió de experiencias tempranas que la desconexión puede ser peligrosa. Por eso escanea constantemente señales de rechazo y enciende la alarma ante el indicio más pequeño. Esa alarma es tan rápida que pasa por alto la parte racional. Sientes el rechazo antes de poder evaluar si es real.',
+    commonTriggers: [
+      'Respuestas demoradas o cortas por mensaje',
+      'Cambios en el tono de voz de alguien',
+      'Planes cancelados o reprogramados',
+      'Alguien que parece distraído',
+      'No ser incluido/a en un grupo',
+      'Favoritismo percibido hacia otras personas',
+      'Señales sociales ambiguas',
+    ],
+    whatItFeelsLike: [
+      'Ansiedad o pánico intenso y repentino',
+      'Una sensación de vacío en el estómago',
+      'Impulso abrumador de escribir o pedir confirmación',
+      'Enojo que aparece de golpe',
+      'Deseo de retirarte por completo',
+      'Sentirte sin valor o no querible',
+      'Pensamientos acelerados sobre qué hiciste mal',
+    ],
+    helpfulStrategies: [
+      'Pausa antes de reaccionar: la alarma no siempre está en lo cierto',
+      'Revisa los hechos: ¿qué sé realmente y qué estoy suponiendo?',
+      'Nota la sensación corporal y ponle nombre',
+      'Pregúntate: "¿Me sentiré así en 24 horas?"',
+      'Usa anclaje antes de tomar decisiones',
+      'Practica acción opuesta cuando el impulso sea retirarte o atacar',
+    ],
+    reflectionQuestions: [
+      '¿Cuándo fue la última vez que te sentiste rechazado/a? ¿Qué pasó realmente y qué interpretaste?',
+      '¿Qué significa el rechazo para ti en un nivel más profundo?',
+      '¿Puedes recordar una vez en que tu alarma de rechazo se equivocó?',
+    ],
+  },
+  'pattern-emotional-escalation': {
+    title: 'Escalada emocional',
+    subtitle: 'Cuando las emociones suben de 0 a 10',
+    description: 'La escalada emocional ocurre cuando un disparador hace que las emociones se intensifiquen rápidamente más allá de lo que la situación parece requerir. Una frustración pequeña se vuelve ira. Un momento de tristeza se vuelve desesperanza. Esto pasa porque tu sistema emocional reacciona más rápido de lo que tu sistema cognitivo puede procesar.',
+    howItWorks: 'La amígdala se activa antes de que la corteza prefrontal tenga tiempo de evaluar la situación. Cada ola emocional se suma a la anterior. Un pensamiento lleva a otro, cada vez más intenso, creando un efecto bola de nieve. Sin intervención, la emoción toma el control.',
+    commonTriggers: [
+      'Sentirte incomprendido/a',
+      'Recibir crítica o corrección',
+      'Cambios inesperados de planes',
+      'Sentirte ignorado/a o descartado/a',
+      'Cansancio físico o hambre',
+      'Rumiar eventos pasados',
+      'Acumulación de pequeños estresores',
+    ],
+    whatItFeelsLike: [
+      'Emociones que golpean como una pared',
+      'Sentirte fuera de control',
+      'Calor corporal, temblores o tensión',
+      'Pensamientos que corren demasiado rápido',
+      'Decir o hacer cosas que luego lamentas',
+      'Sentir que la intensidad nunca va a terminar',
+    ],
+    helpfulStrategies: [
+      'Intervén temprano: mientras antes lo notes, más fácil será manejarlo',
+      'Usa habilidades TIPP para cambiar rápido la química corporal',
+      'Aléjate brevemente de la situación si es posible',
+      'Practica STOP: Detente, respira, observa y procede con atención',
+      'Usa cambio de temperatura, como agua fría en la cara o muñecas',
+      'Espera 10 minutos antes de actuar sobre impulsos intensos',
+    ],
+    reflectionQuestions: [
+      '¿Cuál fue la primera señal pequeña antes de tu última escalada?',
+      '¿Qué siente tu cuerpo cuando las emociones empiezan a subir?',
+      '¿Qué te ha ayudado a bajar la intensidad en el pasado?',
+    ],
+  },
+  'pattern-shame-spiral': {
+    title: 'Espirales de vergüenza',
+    subtitle: 'Cuando un error te hace sentir fundamentalmente roto/a',
+    description: 'Una espiral de vergüenza ocurre cuando un solo evento, como un error, un conflicto o una acción impulsiva, activa una cascada de autoculpa que pasa de "hice algo malo" a "soy malo/a". A diferencia de la culpa, que dice "cometí un error", la vergüenza dice "yo soy el error".',
+    howItWorks: 'La vergüenza suele empezar con un evento real, pero rápidamente se vuelve una historia sobre tu identidad. Tu mente busca evidencia que confirme la peor versión de ti. Cada recuerdo que encuentra agrega combustible. La espiral se profundiza hasta que el evento original queda opacado por el peso del autodesprecio.',
+    commonTriggers: [
+      'Cometer un error en público',
+      'Sobrerreaccionar y darte cuenta',
+      'Que alguien te confronte o critique',
+      'Perder el control de las emociones',
+      'Decir algo hiriente durante un conflicto',
+      'Compararte con otras personas',
+      'Recordar fracasos pasados',
+    ],
+    whatItFeelsLike: [
+      'Querer desaparecer',
+      'Autoodio intenso',
+      'Repetir el evento una y otra vez',
+      'Sentirte fundamentalmente defectuoso/a',
+      'Alejarte de todo el mundo',
+      'Pesadez física o náusea',
+      'Creer que mereces castigo',
+    ],
+    helpfulStrategies: [
+      'Distingue vergüenza de culpa: "hice algo" no es "soy algo"',
+      'Pregunta: "¿Qué le diría a un amigo en esta misma situación?"',
+      'Practica aceptación radical del evento sin aceptar la narrativa de vergüenza',
+      'Acércate a alguien seguro en vez de aislarte',
+      'Escribe lo que pasó realmente y la historia que te estás contando',
+      'Recuerda: todas las personas cometen errores. Los errores no son identidad.',
+    ],
+    reflectionQuestions: [
+      '¿Qué activó tu última espiral de vergüenza? ¿Cuál fue el evento y cuál fue la historia?',
+      '¿Qué creencia central sobre ti activa la vergüenza?',
+      '¿Cómo se vería el autorrespeto en este momento?',
+    ],
+  },
+  'pattern-rumination-loops': {
+    title: 'Bucles de rumiación',
+    subtitle: 'Cuando tu mente no deja de repetir',
+    description: 'La rumiación ocurre cuando tu mente se queda atrapada repitiendo una conversación, evento o preocupación sin parar. Se siente como si intentaras resolver algo, pero en realidad estás reviviendo el dolor. La rumiación intensifica las emociones en vez de resolverlas.',
+    howItWorks: 'Tu cerebro cree que si lo piensas lo suficiente encontrarás una respuesta o te sentirás mejor. Pero rumiar no es resolver problemas: es revivir. Cada repetición reactiva la misma respuesta emocional, mantiene la herida abierta e impide el procesamiento natural.',
+    commonTriggers: [
+      'Conflictos no resueltos',
+      'Situaciones ambiguas, como no saber dónde estás parado/a',
+      'Errores o vergüenzas percibidas',
+      'Esperar una respuesta de alguien',
+      'Estar solo/a tarde en la noche',
+      'Sentirte sin poder para cambiar algo',
+    ],
+    whatItFeelsLike: [
+      'Repetir la misma conversación una y otra vez',
+      'No poder concentrarte en otra cosa',
+      'Sentirte más alterado/a con cada repetición',
+      'Agotamiento sin resolución',
+      'Analizar cada palabra y gesto',
+      'Sentirte atascado/a e incapaz de avanzar',
+    ],
+    helpfulStrategies: [
+      'Pon una "ventana de preocupación": date 10 minutos y luego detente',
+      'Pregunta: "¿Estoy resolviendo o reviviendo?"',
+      'Usa anclaje para volver al momento presente',
+      'Mueve el cuerpo: la actividad física interrumpe los bucles mentales',
+      'Escríbelo una vez y luego cierra el cuaderno',
+      'Practica la habilidad de describir: observa sin juzgar',
+    ],
+    reflectionQuestions: [
+      '¿Qué intenta resolver tu mente ahora?',
+      'Si tuvieras la respuesta, ¿qué cambiaría?',
+      '¿Qué pasaría si soltaras este pensamiento solo por una hora?',
+    ],
+  },
+  'pattern-push-pull': {
+    title: 'Acercar y alejar en relaciones',
+    subtitle: 'Querer cercanía y temerla al mismo tiempo',
+    description: 'El patrón de acercar y alejar ocurre cuando deseas desesperadamente la cercanía, pero te asusta cuando la recibes. Acercas a alguien y luego lo alejas cuando la vulnerabilidad se siente demasiado peligrosa. Esto crea un ciclo de intensidad y retirada que confunde tanto a ti como a la otra persona.',
+    howItWorks: 'Cuando alguien se acerca, tu sistema de apego puede activar miedo a perderte o sentirte absorbido/a. Cuando la persona se distancia, a menudo porque la alejaste, se activa tu sistema de abandono. Oscilas entre "te necesito" y "aléjate", no porque no sepas lo que quieres, sino porque ambos estados se sienten genuinamente amenazantes.',
+    commonTriggers: [
+      'Alguien expresa sentimientos fuertes por ti',
+      'Sentirte demasiado dependiente de alguien',
+      'Cambios percibidos en cómo alguien te trata',
+      'Hitos de intimidad, como compromiso o vivir juntos',
+      'Sentirte expuesto/a después de ser vulnerable',
+      'Miedo a ser "demasiado" para alguien',
+    ],
+    whatItFeelsLike: [
+      'Desear conexión y luego sentirte asfixiado/a',
+      'Idealizar y luego devaluar de pronto a alguien',
+      'Amor intenso seguido de duda intensa',
+      'Culpa después de alejar a alguien',
+      'Pánico después de dejar entrar a alguien',
+      'Sentir que arruinas todas tus relaciones',
+    ],
+    helpfulStrategies: [
+      'Nombra el patrón cuando lo notes: "esto es acercar y alejar"',
+      'Comunica lo que sientes en vez de actuarlo',
+      'Usa habilidades GIVE para permanecer en la relación aunque sea difícil',
+      'Practica quedarte presente con la incomodidad en vez de reaccionar',
+      'Pregunta: "¿Estoy respondiendo a esta persona o a un miedo?"',
+      'Desarrolla una frase de anclaje relacional para momentos detonantes',
+    ],
+    reflectionQuestions: [
+      '¿Cuándo sueles alejar más a las personas?',
+      '¿De qué intentas protegerte?',
+      '¿Cómo se sentiría permanecer cerca incluso cuando da miedo?',
+    ],
+  },
+};
+
+function localizeEmotionalPattern(pattern: EmotionalPattern): EmotionalPattern {
+  const spanish = EMOTIONAL_PATTERN_SPANISH[pattern.id];
+  if (!spanish) {
+    return pattern;
+  }
+
+  const englishArrays = {
+    commonTriggers: pattern.commonTriggers,
+    whatItFeelsLike: pattern.whatItFeelsLike,
+    helpfulStrategies: pattern.helpfulStrategies,
+    reflectionQuestions: pattern.reflectionQuestions,
+  };
+
+  localizedFields(pattern, {
+    title: { en: pattern.title, es: spanish.title },
+    subtitle: { en: pattern.subtitle, es: spanish.subtitle },
+    description: { en: pattern.description, es: spanish.description },
+    howItWorks: { en: pattern.howItWorks, es: spanish.howItWorks },
+  });
+
+  return Object.defineProperties(pattern, {
+    commonTriggers: {
+      enumerable: true,
+      configurable: true,
+      get: () => localizedArrayProxy(englishArrays.commonTriggers, spanish.commonTriggers),
+    },
+    whatItFeelsLike: {
+      enumerable: true,
+      configurable: true,
+      get: () => localizedArrayProxy(englishArrays.whatItFeelsLike, spanish.whatItFeelsLike),
+    },
+    helpfulStrategies: {
+      enumerable: true,
+      configurable: true,
+      get: () => localizedArrayProxy(englishArrays.helpfulStrategies, spanish.helpfulStrategies),
+    },
+    reflectionQuestions: {
+      enumerable: true,
+      configurable: true,
+      get: () => localizedArrayProxy(englishArrays.reflectionQuestions, spanish.reflectionQuestions),
+    },
+  });
+}
+
+export const EMOTIONAL_PATTERNS: EmotionalPattern[] = ENGLISH_EMOTIONAL_PATTERNS.map(localizeEmotionalPattern);

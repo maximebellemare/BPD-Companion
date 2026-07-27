@@ -1,6 +1,7 @@
 import { LessonCategory } from '@/types/learn';
+import { localizedFields } from '@/lib/i18n/staticText';
 
-export const LEARN_CATEGORIES: LessonCategory[] = [
+const ENGLISH_LEARN_CATEGORIES: LessonCategory[] = [
   {
     id: 'understanding-bpd',
     title: 'Understanding BPD',
@@ -74,3 +75,56 @@ export const LEARN_CATEGORIES: LessonCategory[] = [
     lessonCount: 7,
   },
 ];
+
+const LEARN_CATEGORY_SPANISH: Record<string, Pick<LessonCategory, 'title' | 'description'>> = {
+  'understanding-bpd': {
+    title: 'Entender el TLP',
+    description: 'Aprende qué es realmente el TLP, más allá del estigma',
+  },
+  'emotional-regulation': {
+    title: 'Regulación emocional',
+    description: 'Por qué las emociones golpean tan fuerte y cómo atravesar la ola',
+  },
+  relationships: {
+    title: 'Relaciones',
+    description: 'Construir conexión sin perderte a ti mismo/a',
+  },
+  'triggers-abandonment': {
+    title: 'Disparadores y abandono',
+    description: 'Entender el tirón y encontrar seguridad dentro de ti',
+  },
+  'identity-selfworth': {
+    title: 'Identidad y autoestima',
+    description: 'Encontrar suelo firme cuando te sientes sin forma',
+  },
+  communication: {
+    title: 'Habilidades de comunicación',
+    description: 'Expresarte con claridad sin escalar',
+  },
+  'crisis-storms': {
+    title: 'Crisis y tormentas emocionales',
+    description: 'Sobrevivir los peores momentos sin empeorarlos',
+  },
+  'daily-stability': {
+    title: 'Estabilidad diaria y hábitos',
+    description: 'Rutinas pequeñas que construyen una vida más estable',
+  },
+  'therapy-healing': {
+    title: 'Terapia y sanación',
+    description: 'El camino hacia adelante: tratamiento, recuperación y esperanza',
+  },
+};
+
+function localizeLessonCategory(category: LessonCategory): LessonCategory {
+  const spanish = LEARN_CATEGORY_SPANISH[category.id];
+  if (!spanish) {
+    return category;
+  }
+
+  return localizedFields(category, {
+    title: { en: category.title, es: spanish.title },
+    description: { en: category.description, es: spanish.description },
+  }) as LessonCategory;
+}
+
+export const LEARN_CATEGORIES: LessonCategory[] = ENGLISH_LEARN_CATEGORIES.map(localizeLessonCategory);

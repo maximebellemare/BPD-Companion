@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { JournalEntry, MessageDraft } from '@/types';
 import { BreakthroughMoment, BreakthroughType, BreakthroughSummary } from '@/types/breakthrough';
+import { localizedText } from '@/lib/i18n/staticText';
 
 const STORAGE_KEY = 'bpd_breakthroughs';
 
@@ -31,10 +32,19 @@ function detectDistressReductions(entries: JournalEntry[]): BreakthroughMoment[]
         id: generateId(),
         timestamp: curr.timestamp,
         type: 'distress_reduction',
-        title: 'Distress came down',
-        description: `Your distress dropped from ${prev.checkIn.intensityLevel} to ${curr.checkIn.intensityLevel} after using ${copingUsed}.`,
-        supportiveNote: 'You found something that works for you. That takes real awareness.',
-        actionSuggestion: 'Try this tool again next time distress rises',
+        title: localizedText('Distress came down', 'El malestar bajó'),
+        description: localizedText(
+          `Your distress dropped from ${prev.checkIn.intensityLevel} to ${curr.checkIn.intensityLevel} after using ${copingUsed}.`,
+          `Tu malestar bajó de ${prev.checkIn.intensityLevel} a ${curr.checkIn.intensityLevel} después de usar ${copingUsed}.`,
+        ),
+        supportiveNote: localizedText(
+          'You found something that works for you. That takes real awareness.',
+          'Encontraste algo que te ayuda. Eso requiere mucha conciencia.',
+        ),
+        actionSuggestion: localizedText(
+          'Try this tool again next time distress rises',
+          'Prueba esta herramienta otra vez cuando suba el malestar',
+        ),
         sourceData: {
           distressBefore: prev.checkIn.intensityLevel,
           distressAfter: curr.checkIn.intensityLevel,
@@ -58,10 +68,19 @@ function detectPauseBeforeSend(drafts: MessageDraft[]): BreakthroughMoment[] {
         id: generateId(),
         timestamp: draft.timestamp,
         type: 'pause_before_send',
-        title: 'You paused before responding',
-        description: 'You chose to pause and rewrite a message instead of sending impulsively.',
-        supportiveNote: 'Pausing takes courage. It means you value the relationship and yourself.',
-        actionSuggestion: 'Keep building this habit — it gets easier',
+        title: localizedText('You paused before responding', 'Pausaste antes de responder'),
+        description: localizedText(
+          'You chose to pause and rewrite a message instead of sending impulsively.',
+          'Elegiste pausar y reescribir un mensaje en vez de enviarlo desde el impulso.',
+        ),
+        supportiveNote: localizedText(
+          'Pausing takes courage. It means you value the relationship and yourself.',
+          'Pausar requiere valentía. Significa que valoras la relación y también te valoras a ti.',
+        ),
+        actionSuggestion: localizedText(
+          'Keep building this habit — it gets easier',
+          'Sigue fortaleciendo este hábito; con práctica se vuelve más fácil',
+        ),
         actionRoute: '/message-guard',
         saved: false,
         shared: false,
@@ -73,9 +92,15 @@ function detectPauseBeforeSend(drafts: MessageDraft[]): BreakthroughMoment[] {
         id: generateId(),
         timestamp: draft.timestamp,
         type: 'pause_before_send',
-        title: 'You chose not to send',
-        description: 'You wrote a message, rewrote it, and decided not to send. That takes strength.',
-        supportiveNote: 'Sometimes the bravest thing is holding back.',
+        title: localizedText('You chose not to send', 'Elegiste no enviarlo'),
+        description: localizedText(
+          'You wrote a message, rewrote it, and decided not to send. That takes strength.',
+          'Escribiste un mensaje, lo reescribiste y decidiste no enviarlo. Eso requiere fortaleza.',
+        ),
+        supportiveNote: localizedText(
+          'Sometimes the bravest thing is holding back.',
+          'A veces lo más valiente es detenerte.',
+        ),
         saved: false,
         shared: false,
       });
@@ -98,9 +123,15 @@ function detectEmotionalAwareness(entries: JournalEntry[]): BreakthroughMoment[]
         id: generateId(),
         timestamp: Date.now(),
         type: 'emotional_awareness',
-        title: 'Growing emotional vocabulary',
-        description: `You identified ${emotionSet.size} different emotions this week. That's deep self-awareness.`,
-        supportiveNote: 'Naming emotions is the first step to understanding them.',
+        title: localizedText('Growing emotional vocabulary', 'Vocabulario emocional en crecimiento'),
+        description: localizedText(
+          `You identified ${emotionSet.size} different emotions this week. That's deep self-awareness.`,
+          `Identificaste ${emotionSet.size} emociones diferentes esta semana. Eso muestra una conciencia profunda.`,
+        ),
+        supportiveNote: localizedText(
+          'Naming emotions is the first step to understanding them.',
+          'Nombrar las emociones es el primer paso para entenderlas.',
+        ),
         saved: false,
         shared: false,
       });
@@ -114,10 +145,19 @@ function detectEmotionalAwareness(entries: JournalEntry[]): BreakthroughMoment[]
       id: generateId(),
       timestamp: latest.timestamp,
       type: 'journal_reflection',
-      title: 'Meaningful reflection',
-      description: 'You took time to reflect deeply on your experience.',
-      supportiveNote: 'Writing helps process emotions in ways thinking alone cannot.',
-      actionSuggestion: 'Continue journaling — patterns will emerge',
+      title: localizedText('Meaningful reflection', 'Reflexión significativa'),
+      description: localizedText(
+        'You took time to reflect deeply on your experience.',
+        'Te diste tiempo para reflexionar con profundidad sobre tu experiencia.',
+      ),
+      supportiveNote: localizedText(
+        'Writing helps process emotions in ways thinking alone cannot.',
+        'Escribir ayuda a procesar emociones de una forma que pensar solamente no siempre logra.',
+      ),
+      actionSuggestion: localizedText(
+        'Continue journaling — patterns will emerge',
+        'Sigue escribiendo; los patrones empezarán a aparecer',
+      ),
       actionRoute: '/(tabs)/journal',
       saved: false,
       shared: false,
@@ -147,9 +187,15 @@ function detectCopingSuccess(entries: JournalEntry[]): BreakthroughMoment[] {
       id: generateId(),
       timestamp: Date.now(),
       type: 'coping_success',
-      title: `${topTool} is becoming your go-to`,
-      description: `You've used ${topTool} ${count} times. It's becoming part of your regulation toolkit.`,
-      supportiveNote: 'Building reliable coping strategies is real progress.',
+      title: localizedText(`${topTool} is becoming your go-to`, `${topTool} se está volviendo tu recurso principal`),
+      description: localizedText(
+        `You've used ${topTool} ${count} times. It's becoming part of your regulation toolkit.`,
+        `Has usado ${topTool} ${count} veces. Está empezando a formar parte de tu kit de regulación.`,
+      ),
+      supportiveNote: localizedText(
+        'Building reliable coping strategies is real progress.',
+        'Construir estrategias de afrontamiento confiables es un progreso real.',
+      ),
       saved: false,
       shared: false,
     });
@@ -167,9 +213,15 @@ function detectConsistentCheckins(entries: JournalEntry[]): BreakthroughMoment[]
       id: generateId(),
       timestamp: Date.now(),
       type: 'consistent_checkin',
-      title: 'Consistent self-awareness',
-      description: `${recentEntries.length} check-ins this week. You're building a powerful habit.`,
-      supportiveNote: "Showing up for yourself, even when it's hard, is growth.",
+      title: localizedText('Consistent self-awareness', 'Autoconciencia constante'),
+      description: localizedText(
+        `${recentEntries.length} check-ins this week. You're building a powerful habit.`,
+        `${recentEntries.length} registros esta semana. Estás construyendo un hábito poderoso.`,
+      ),
+      supportiveNote: localizedText(
+        "Showing up for yourself, even when it's hard, is growth.",
+        'Estar presente para ti, incluso cuando cuesta, también es crecimiento.',
+      ),
       saved: false,
       shared: false,
     });
@@ -178,9 +230,15 @@ function detectConsistentCheckins(entries: JournalEntry[]): BreakthroughMoment[]
       id: generateId(),
       timestamp: Date.now(),
       type: 'consistent_checkin',
-      title: 'Building momentum',
-      description: `${recentEntries.length} check-ins this week. You're creating a pattern of awareness.`,
-      supportiveNote: 'Every check-in is an act of courage.',
+      title: localizedText('Building momentum', 'Construyendo impulso'),
+      description: localizedText(
+        `${recentEntries.length} check-ins this week. You're creating a pattern of awareness.`,
+        `${recentEntries.length} registros esta semana. Estás creando un patrón de conciencia.`,
+      ),
+      supportiveNote: localizedText(
+        'Every check-in is an act of courage.',
+        'Cada registro es un acto de valentía.',
+      ),
       saved: false,
       shared: false,
     });
@@ -207,12 +265,24 @@ function detectRelationshipRegulation(
       id: generateId(),
       timestamp: latest.timestamp,
       type: 'relationship_regulation',
-      title: 'Navigated relationship stress',
+      title: localizedText('Navigated relationship stress', 'Atravesaste estrés relacional'),
       description: trigger
-        ? `After "${trigger.label}", you managed the situation without escalating.`
-        : 'You managed relationship stress without escalating.',
-      supportiveNote: 'Regulating during relationship stress is one of the hardest things to do.',
-      actionSuggestion: 'Review this in Relationship Copilot',
+        ? localizedText(
+          `After "${trigger.label}", you managed the situation without escalating.`,
+          `Después de "${trigger.label}", manejaste la situación sin escalarla.`,
+        )
+        : localizedText(
+          'You managed relationship stress without escalating.',
+          'Manejaste estrés relacional sin escalarlo.',
+        ),
+      supportiveNote: localizedText(
+        'Regulating during relationship stress is one of the hardest things to do.',
+        'Regularte durante el estrés relacional es una de las cosas más difíciles.',
+      ),
+      actionSuggestion: localizedText(
+        'Review this in Relationship Copilot',
+        'Revisa esto en el copiloto de relaciones',
+      ),
       actionRoute: '/relationship-copilot',
       sourceData: {
         triggerLabel: trigger?.label,
@@ -230,9 +300,15 @@ function detectRelationshipRegulation(
       id: generateId(),
       timestamp: latest.timestamp,
       type: 'relationship_regulation',
-      title: 'Rewrite that helped',
-      description: 'A message you rewrote led to a better outcome.',
-      supportiveNote: 'Choosing your words carefully changes conversations.',
+      title: localizedText('Rewrite that helped', 'Una reescritura que ayudó'),
+      description: localizedText(
+        'A message you rewrote led to a better outcome.',
+        'Un mensaje que reescribiste llevó a un mejor resultado.',
+      ),
+      supportiveNote: localizedText(
+        'Choosing your words carefully changes conversations.',
+        'Elegir tus palabras con cuidado puede cambiar una conversación.',
+      ),
       actionRoute: '/message-guard',
       saved: false,
       shared: false,

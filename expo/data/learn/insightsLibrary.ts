@@ -1,6 +1,7 @@
-import { DailyInsight } from '@/types/dailyInsight';
+import { localizedFields } from '@/lib/i18n/staticText';
+import { DailyInsight, InsightCategory } from '@/types/dailyInsight';
 
-export const DAILY_INSIGHTS_LIBRARY: DailyInsight[] = [
+const ENGLISH_DAILY_INSIGHTS_LIBRARY: DailyInsight[] = [
   {
     id: 'di_001',
     title: 'Why uncertainty feels so intense',
@@ -1102,3 +1103,208 @@ export const DAILY_INSIGHTS_LIBRARY: DailyInsight[] = [
     relatedLessonIds: ['stability-3'],
   },
 ];
+
+type SpanishInsightCopy = {
+  title: string;
+};
+
+const SPANISH_INSIGHT_COPY_BY_ID: Record<string, SpanishInsightCopy> = {
+  di_001: { title: 'Por qué la incertidumbre se siente tan intensa' },
+  di_002: { title: 'La velocidad de las reacciones emocionales' },
+  di_003: { title: 'La vergüenza no es lo mismo que la culpa' },
+  di_004: { title: 'Por qué "solo cálmate" no funciona' },
+  di_005: { title: 'La brecha de interpretación' },
+  di_006: { title: 'La memoria emocional no es neutral' },
+  di_007: { title: 'El ciclo de acercarse y alejarse' },
+  di_008: { title: 'La rumiación se disfraza de solución de problemas' },
+  di_009: { title: 'La validación es una necesidad real' },
+  di_010: { title: 'Por qué el enojo suele esconder dolor' },
+  di_011: { title: 'La intensidad emocional no es lo mismo que la realidad' },
+  di_012: { title: 'La regla de los 10 minutos' },
+  di_013: { title: 'Los patrones de abandono comienzan temprano' },
+  di_014: { title: 'Pensamiento en blanco y negro' },
+  di_015: { title: 'La autocompasión no es autolástima' },
+  di_016: { title: 'Contagio emocional' },
+  di_017: { title: 'La reparación importa más que la ruptura' },
+  di_018: { title: 'La hipervigilancia agota' },
+  di_019: { title: 'La acción opuesta funciona porque las emociones pueden engañar' },
+  di_020: { title: 'Por qué el silencio se siente como abandono' },
+  di_021: { title: 'Los límites no son rechazo' },
+  di_022: { title: 'Las resacas emocionales son reales' },
+  di_023: { title: 'Tu primera reacción no siempre es la más verdadera' },
+  di_024: { title: 'La disociación es una estrategia de supervivencia' },
+  di_025: { title: 'El perfeccionismo evita la vergüenza' },
+  di_026: { title: 'La vulnerabilidad emocional es fortaleza' },
+  di_027: { title: 'Por qué repites conversaciones en tu mente' },
+  di_028: { title: 'La diferencia entre reaccionar y responder' },
+  di_029: { title: 'Catastrofizar y la mente del peor escenario' },
+  di_030: { title: 'Las olas emocionales siempre pasan' },
+  di_031: { title: 'Complacer a todos tiene un costo' },
+  di_032: { title: 'Por qué las mañanas pueden sentirse tan pesadas' },
+  di_033: { title: 'Idealización y devaluación' },
+  di_034: { title: 'Soledad en una habitación llena de gente' },
+  di_035: { title: 'Poner a prueba las relaciones las daña' },
+  di_036: { title: 'La sensibilidad emocional no es un defecto' },
+  di_037: { title: 'La trampa de la urgencia' },
+  di_038: { title: 'Por qué puedes sentir vacío' },
+  di_039: { title: 'Evitar conflictos crea conflictos más grandes' },
+  di_040: { title: 'Los cambios de temperatura calman el sistema nervioso' },
+  di_041: { title: 'Los celos suelen señalar necesidades no atendidas' },
+  di_042: { title: 'La voz crítica interna no es tu voz' },
+  di_043: { title: 'Duelo y relaciones' },
+  di_044: { title: 'Pedir ayuda es una habilidad' },
+  di_045: { title: 'Flashbacks emocionales' },
+  di_046: { title: 'Disculparte de más erosiona la confianza en ti' },
+  di_047: { title: 'Por qué la noche es más difícil' },
+  di_048: { title: 'Las relaciones sanas tienen fricción' },
+  di_049: { title: 'Las emociones como mensajeras' },
+  di_050: { title: 'La confianza se construye en momentos pequeños' },
+  di_051: { title: 'El ciclo vergüenza-rabia' },
+  di_052: { title: 'La atención plena no consiste en dejar la mente en blanco' },
+  di_053: { title: 'La recuperación no es lineal' },
+  di_054: { title: 'Los estilos de apego no son permanentes' },
+  di_055: { title: 'Por qué te sientes responsable de las emociones ajenas' },
+  di_056: { title: 'La desregulación emocional no es drama' },
+  di_057: { title: 'La ventana de tolerancia' },
+  di_058: { title: 'Comparar tu interior con el exterior de otras personas' },
+  di_059: { title: 'Las disculpas sin cambio manipulan' },
+  di_060: { title: 'Respirar cambia la química del cerebro' },
+  di_061: { title: 'El miedo a ser "demasiado"' },
+  di_062: { title: 'La ambivalencia es normal' },
+  di_063: { title: 'El enojo protege el dolor' },
+  di_064: { title: 'La hiperindependencia es una respuesta al trauma' },
+  di_065: { title: 'Por qué las buenas noticias pueden sentirse amenazantes' },
+  di_066: { title: 'El razonamiento emocional convence, pero puede confundir' },
+  di_067: { title: 'Descansar también es productivo' },
+  di_068: { title: 'Por qué una crisis puede sentirse como una revelación' },
+  di_069: { title: 'Miedo a perderte en la relación' },
+  di_070: { title: 'Las estrategias de afrontamiento tienen fecha de vencimiento' },
+  di_071: { title: 'La diferencia entre soledad elegida y aislamiento' },
+  di_072: { title: 'Las necesidades no son negociables' },
+  di_073: { title: 'Por qué te aferras a la certeza' },
+  di_074: { title: 'Existe un enojo saludable' },
+  di_075: { title: 'El cuerpo guarda la experiencia' },
+  di_076: { title: 'Resaca de vulnerabilidad' },
+  di_077: { title: 'Las pequeñas victorias importan más de lo que crees' },
+  di_078: { title: 'La corregulación no es codependencia' },
+  di_079: { title: 'Leer la mente es una distorsión cognitiva' },
+  di_080: { title: 'La consistencia construye seguridad' },
+  di_081: { title: 'No todo requiere una respuesta' },
+  di_082: { title: 'Aceptar no es aprobar' },
+  di_083: { title: 'La invalidación emocional hiere profundamente' },
+  di_084: { title: 'La función del entumecimiento emocional' },
+  di_085: { title: 'Las personas seguras también se sienten inseguras a veces' },
+  di_086: { title: 'La gratitud no cancela el dolor' },
+  di_087: { title: 'La respuesta de congelamiento es real' },
+  di_088: { title: 'Las distorsiones cognitivas no son mentiras intencionales' },
+  di_089: { title: 'Complacer para sobrevivir es una estrategia de protección' },
+  di_090: { title: 'El trabajo emocional es invisible y agotador' },
+  di_091: { title: 'El autosabotaje tiene una lógica' },
+  di_092: { title: 'El duelo no es lineal' },
+  di_093: { title: 'Tu sistema nervioso tiene memoria' },
+  di_094: { title: 'La conexión después del conflicto importa más' },
+  di_095: { title: 'Trabajo emocional en las amistades' },
+  di_096: { title: 'La evitación mantiene la ansiedad' },
+  di_097: { title: 'Puedes tener razón y estar desregulado a la vez' },
+  di_098: { title: 'El movimiento físico cambia los estados emocionales' },
+  di_099: { title: 'Por qué atraes los mismos patrones' },
+  di_100: { title: 'Sanar no significa olvidar' },
+  di_101: { title: 'Sesgo de personalización' },
+  di_102: { title: 'La regulación emocional es una habilidad, no un rasgo' },
+  di_103: { title: 'El poder de nombrar las emociones' },
+  di_104: { title: 'No eres tu peor momento' },
+  di_105: { title: 'Conductas de búsqueda de seguridad' },
+  di_106: { title: 'La terapia no consiste en arreglarte' },
+  di_107: { title: 'El costo hundido de las relaciones tóxicas' },
+  di_108: { title: 'La granularidad emocional mejora la regulación' },
+  di_109: { title: 'La ilusión de control' },
+  di_110: { title: 'La fatiga por compasión es real' },
+};
+
+const SPANISH_CATEGORY_LABELS: Record<InsightCategory, string> = {
+  emotional_escalation: 'la escalada emocional',
+  rejection_sensitivity: 'la sensibilidad al rechazo',
+  abandonment_anxiety: 'el miedo al abandono',
+  shame_cycles: 'los ciclos de vergüenza',
+  rumination: 'la rumiación',
+  interpretation_errors: 'las interpretaciones dolorosas',
+  relationship_conflict: 'los conflictos relacionales',
+  impulsivity: 'los impulsos intensos',
+  emotional_memory_bias: 'la memoria emocional',
+  self_compassion: 'la autocompasión',
+  communication: 'la comunicación',
+  identity: 'la identidad',
+  regulation: 'la regulación',
+  mindfulness: 'la atención plena',
+  boundaries: 'los límites',
+  vulnerability: 'la vulnerabilidad',
+  trust: 'la confianza',
+  grief: 'el duelo',
+  anger: 'el enojo',
+  numbness: 'el entumecimiento emocional',
+};
+
+const SPANISH_TOOL_LABEL_BY_ID: Record<string, string> = {
+  'check-the-facts': 'Comprobar los hechos',
+  stop: 'Habilidad STOP',
+  'shame-recovery': 'Recuperación de la vergüenza',
+  tipp: 'Habilidades TIPP',
+  grounding: 'Ejercicio de conexión a tierra',
+  'wise-mind': 'Mente sabia',
+  'urge-surfing': 'Surfear el impulso',
+  'self-soothe': 'Autoconsuelo',
+  'name-the-emotion': 'Nombrar la emoción',
+  'radical-acceptance': 'Aceptación radical',
+  give: 'Habilidad GIVE',
+  fast: 'Habilidad FAST',
+  observe: 'Observar',
+  'opposite-action': 'Acción opuesta',
+  'mindful-distraction': 'Distracción consciente',
+  'dear-man': 'DEAR MAN para pedir con claridad',
+  please: 'Habilidades PLEASE',
+  'paced-breathing': 'Respiración pautada',
+};
+
+function formatSpanishThemes(tags: InsightCategory[]): string {
+  const labels = tags.map((tag) => SPANISH_CATEGORY_LABELS[tag]).filter(Boolean);
+
+  if (labels.length === 0) {
+    return 'tus patrones emocionales';
+  }
+
+  if (labels.length === 1) {
+    return labels[0];
+  }
+
+  return `${labels.slice(0, -1).join(', ')} y ${labels[labels.length - 1]}`;
+}
+
+function buildSpanishExplanation(insight: DailyInsight, title: string): string {
+  const themes = formatSpanishThemes(insight.relatedPatternTags);
+
+  return `Este insight te ayuda a mirar ${title.toLowerCase()} con más claridad y compasión. Cuando aparecen ${themes}, tu sistema nervioso puede intentar protegerte con respuestas rápidas o dolorosas. Nombrar el patrón te da una pausa para entender lo que ocurre antes de reaccionar.`;
+}
+
+function buildSpanishScenario(insight: DailyInsight): string {
+  const themes = formatSpanishThemes(insight.relatedPatternTags);
+  const toolLabel = SPANISH_TOOL_LABEL_BY_ID[insight.suggestedToolId] ?? insight.suggestedToolLabel;
+
+  return `Puede aparecer en momentos de ${themes}, especialmente cuando una situación cotidiana se siente más intensa de lo esperado. Usa ${toolLabel} como próximo paso para volver al presente, revisar los hechos y elegir una respuesta más cuidada.`;
+}
+
+function localizeDailyInsight(insight: DailyInsight): DailyInsight {
+  const spanish = SPANISH_INSIGHT_COPY_BY_ID[insight.id];
+  const spanishTitle = spanish?.title ?? insight.title;
+
+  return localizedFields(insight, {
+    title: { en: insight.title, es: spanishTitle },
+    explanation: { en: insight.explanation, es: buildSpanishExplanation(insight, spanishTitle) },
+    scenario: { en: insight.scenario, es: buildSpanishScenario(insight) },
+    suggestedToolLabel: {
+      en: insight.suggestedToolLabel,
+      es: SPANISH_TOOL_LABEL_BY_ID[insight.suggestedToolId] ?? insight.suggestedToolLabel,
+    },
+  });
+}
+
+export const DAILY_INSIGHTS_LIBRARY: DailyInsight[] = ENGLISH_DAILY_INSIGHTS_LIBRARY.map(localizeDailyInsight);

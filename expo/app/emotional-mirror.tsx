@@ -36,6 +36,8 @@ import {
   RelationshipMirrorPattern,
   EmotionalMirrorReport,
 } from '@/types/emotionalMirror';
+import { localizedText } from '@/lib/i18n/staticText';
+import { useLanguage } from '@/hooks/useLanguage';
 
 function FadeInView({ delay = 0, children }: { delay?: number; children: React.ReactNode }) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -66,6 +68,7 @@ function FadeInView({ delay = 0, children }: { delay?: number; children: React.R
 }
 
 function LandscapeCard({ report }: { report: EmotionalMirrorReport }) {
+  useLanguage();
   const { landscape } = report;
 
   const trendColor = landscape.distressTrend === 'improving' ? Colors.success
@@ -73,10 +76,10 @@ function LandscapeCard({ report }: { report: EmotionalMirrorReport }) {
     : landscape.distressTrend === 'stable' ? Colors.primary
     : Colors.textMuted;
 
-  const trendLabel = landscape.distressTrend === 'improving' ? 'Easing'
-    : landscape.distressTrend === 'elevated' ? 'Elevated'
-    : landscape.distressTrend === 'stable' ? 'Steady'
-    : 'Building';
+  const trendLabel = landscape.distressTrend === 'improving' ? localizedText('Easing', 'Aliviandose')
+    : landscape.distressTrend === 'elevated' ? localizedText('Elevated', 'Elevado')
+    : landscape.distressTrend === 'stable' ? localizedText('Steady', 'Estable')
+    : localizedText('Building', 'Formandose');
 
   const trendBg = landscape.distressTrend === 'improving' ? Colors.successLight
     : landscape.distressTrend === 'elevated' ? Colors.accentLight
@@ -90,7 +93,7 @@ function LandscapeCard({ report }: { report: EmotionalMirrorReport }) {
           <Activity size={18} color={Colors.primary} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.landscapeTitle}>This Week</Text>
+          <Text style={styles.landscapeTitle}>{localizedText('This Week', 'Esta semana')}</Text>
           <Text style={styles.landscapeSubtitle}>{report.weekLabel}</Text>
         </View>
         <View style={[styles.trendPill, { backgroundColor: trendBg }]}>
@@ -101,14 +104,14 @@ function LandscapeCard({ report }: { report: EmotionalMirrorReport }) {
       <View style={styles.landscapeStats}>
         <View style={styles.landscapeStat}>
           <Text style={styles.landscapeStatValue}>{landscape.totalCheckIns}</Text>
-          <Text style={styles.landscapeStatLabel}>Check-ins</Text>
+          <Text style={styles.landscapeStatLabel}>{localizedText('Check-ins', 'Check-ins')}</Text>
         </View>
         <View style={styles.landscapeStatDivider} />
         <View style={styles.landscapeStat}>
           <Text style={styles.landscapeStatValue}>
             {landscape.averageDistress > 0 ? landscape.averageDistress : '\u2014'}
           </Text>
-          <Text style={styles.landscapeStatLabel}>Avg Distress</Text>
+          <Text style={styles.landscapeStatLabel}>{localizedText('Avg Distress', 'Malestar prom.')}</Text>
         </View>
         <View style={styles.landscapeStatDivider} />
         <View style={styles.landscapeStat}>
@@ -116,7 +119,7 @@ function LandscapeCard({ report }: { report: EmotionalMirrorReport }) {
             {landscape.dominantEmotions[0]?.emoji ?? '\u2014'}
           </Text>
           <Text style={styles.landscapeStatLabel}>
-            {landscape.dominantEmotions[0]?.label ?? 'No data'}
+            {landscape.dominantEmotions[0]?.label ?? localizedText('No data', 'Sin datos')}
           </Text>
         </View>
       </View>
@@ -179,7 +182,7 @@ function InsightRow({ insight }: { insight: EmotionalMirrorInsight }) {
 }
 
 function PatternRow({ pattern }: { pattern: DetectedPattern }) {
-  const confidenceLabel = pattern.confidence >= 0.8 ? 'Strong' : pattern.confidence >= 0.5 ? 'Emerging' : 'Early';
+  const confidenceLabel = pattern.confidence >= 0.8 ? localizedText('Strong', 'Fuerte') : pattern.confidence >= 0.5 ? localizedText('Emerging', 'Emergente') : localizedText('Early', 'Inicial');
   const confidenceColor = pattern.confidence >= 0.8 ? Colors.accent : pattern.confidence >= 0.5 ? Colors.primary : Colors.textMuted;
 
   return (
@@ -227,6 +230,7 @@ function RelationshipRow({ pattern }: { pattern: RelationshipMirrorPattern }) {
 }
 
 function CopingSection({ report }: { report: EmotionalMirrorReport }) {
+  useLanguage();
   const { copingSummary } = report;
   if (copingSummary.toolsUsed.length === 0) return null;
 
@@ -236,18 +240,18 @@ function CopingSection({ report }: { report: EmotionalMirrorReport }) {
         <View style={[styles.sectionIconWrap, { backgroundColor: Colors.successLight }]}>
           <Shield size={16} color={Colors.success} />
         </View>
-        <Text style={styles.sectionTitle}>What Helped</Text>
+        <Text style={styles.sectionTitle}>{localizedText('What Helped', 'Que ayudo')}</Text>
       </View>
       {copingSummary.mostEffective && (
         <View style={styles.mostEffectiveBanner}>
-          <Text style={styles.mostEffectiveLabel}>Most effective tool</Text>
+          <Text style={styles.mostEffectiveLabel}>{localizedText('Most effective tool', 'Herramienta mas efectiva')}</Text>
           <Text style={styles.mostEffectiveName}>{copingSummary.mostEffective}</Text>
         </View>
       )}
       {copingSummary.toolsUsed.slice(0, 4).map((tool) => (
         <View key={tool.name} style={styles.copingRow}>
           <Text style={styles.copingName} numberOfLines={1}>{tool.name}</Text>
-          <Text style={styles.copingMeta}>Used {tool.count}x</Text>
+          <Text style={styles.copingMeta}>{localizedText(`Used ${tool.count}x`, `Usada ${tool.count}x`)}</Text>
           <View style={[
             styles.copingBadge,
             { backgroundColor: tool.avgReduction > 0 ? Colors.successLight : Colors.surface },
@@ -266,6 +270,7 @@ function CopingSection({ report }: { report: EmotionalMirrorReport }) {
 }
 
 function HistorySection({ history, onSelect }: { history: EmotionalMirrorReport[]; onSelect: (report: EmotionalMirrorReport) => void }) {
+  useLanguage();
   if (history.length === 0) return null;
 
   return (
@@ -274,7 +279,7 @@ function HistorySection({ history, onSelect }: { history: EmotionalMirrorReport[
         <View style={[styles.sectionIconWrap, { backgroundColor: Colors.surface }]}>
           <Clock size={16} color={Colors.textSecondary} />
         </View>
-        <Text style={styles.sectionTitle}>Past Reports</Text>
+        <Text style={styles.sectionTitle}>{localizedText('Past Reports', 'Reportes anteriores')}</Text>
       </View>
       {history.slice(0, 4).map((report) => (
         <TouchableOpacity
@@ -286,7 +291,7 @@ function HistorySection({ history, onSelect }: { history: EmotionalMirrorReport[
           <View style={{ flex: 1 }}>
             <Text style={styles.historyWeek}>{report.weekLabel}</Text>
             <Text style={styles.historyMeta}>
-              {report.landscape.totalCheckIns} check-ins \u00B7 Avg {report.landscape.averageDistress}/10
+              {localizedText(`${report.landscape.totalCheckIns} check-ins · Avg ${report.landscape.averageDistress}/10`, `${report.landscape.totalCheckIns} check-ins · Prom. ${report.landscape.averageDistress}/10`)}
             </Text>
           </View>
           <ChevronRight size={16} color={Colors.textMuted} />
@@ -297,23 +302,25 @@ function HistorySection({ history, onSelect }: { history: EmotionalMirrorReport[
 }
 
 function EmptyState({ onCheckIn }: { onCheckIn: () => void }) {
+  useLanguage();
   return (
     <View style={styles.emptyState}>
       <View style={styles.emptyIconWrap}>
         <Eye size={40} color={Colors.primary} />
       </View>
-      <Text style={styles.emptyTitle}>Your mirror is forming</Text>
+      <Text style={styles.emptyTitle}>{localizedText('Your mirror is forming', 'Tu espejo se esta formando')}</Text>
       <Text style={styles.emptySubtitle}>
-        Complete a few check-ins this week and your Emotional Mirror will reflect patterns, triggers, and growth signals back to you.
+        {localizedText('Complete a few check-ins this week and your Emotional Mirror will reflect patterns, triggers, and growth signals back to you.', 'Completa algunos check-ins esta semana y tu Espejo emocional te devolvera patrones, disparadores y senales de crecimiento.')}
       </Text>
       <TouchableOpacity style={styles.emptyButton} onPress={onCheckIn} activeOpacity={0.8}>
-        <Text style={styles.emptyButtonText}>Start a Check-in</Text>
+        <Text style={styles.emptyButtonText}>{localizedText('Start a Check-in', 'Iniciar check-in')}</Text>
       </TouchableOpacity>
     </View>
   );
 }
 
 export default function EmotionalMirrorScreen() {
+  useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { trackEvent } = useAnalytics();
@@ -387,7 +394,7 @@ export default function EmotionalMirrorScreen() {
             <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
               <Eye size={20} color={Colors.primary} />
             </Animated.View>
-            <Text style={styles.headerTitle}>Emotional Mirror</Text>
+            <Text style={styles.headerTitle}>{localizedText('Emotional Mirror', 'Espejo emocional')}</Text>
           </View>
           {hasData && !viewingReport ? (
             <TouchableOpacity
@@ -407,7 +414,7 @@ export default function EmotionalMirrorScreen() {
         {viewingReport && (
           <View style={styles.viewingBanner}>
             <BookOpen size={14} color={Colors.textSecondary} />
-            <Text style={styles.viewingBannerText}>Viewing: {viewingReport.weekLabel}</Text>
+            <Text style={styles.viewingBannerText}>{localizedText('Viewing:', 'Viendo:')} {viewingReport.weekLabel}</Text>
           </View>
         )}
       </View>
@@ -432,7 +439,7 @@ export default function EmotionalMirrorScreen() {
                     <View style={[styles.sectionIconWrap, { backgroundColor: '#FFFFFF' }]}>
                       <Sparkles size={16} color={Colors.accent} />
                     </View>
-                    <Text style={styles.sectionTitle}>Insights</Text>
+                    <Text style={styles.sectionTitle}>{localizedText('Insights', 'Insights')}</Text>
                   </View>
                   {report.insights.map((insight) => (
                     <InsightRow key={insight.id} insight={insight} />
@@ -448,7 +455,7 @@ export default function EmotionalMirrorScreen() {
                     <View style={[styles.sectionIconWrap, { backgroundColor: Colors.primaryLight }]}>
                       <Eye size={16} color={Colors.primary} />
                     </View>
-                    <Text style={styles.sectionTitle}>Patterns Detected</Text>
+                    <Text style={styles.sectionTitle}>{localizedText('Patterns Detected', 'Patrones detectados')}</Text>
                   </View>
                   {report.patterns.map((pattern) => (
                     <PatternRow key={pattern.id} pattern={pattern} />
@@ -464,7 +471,7 @@ export default function EmotionalMirrorScreen() {
                     <View style={[styles.sectionIconWrap, { backgroundColor: '#D9E2EC' }]}>
                       <Users size={16} color="#3B82F6" />
                     </View>
-                    <Text style={styles.sectionTitle}>Relationship Patterns</Text>
+                    <Text style={styles.sectionTitle}>{localizedText('Relationship Patterns', 'Patrones relacionales')}</Text>
                   </View>
                   {report.relationshipPatterns.map((pattern) => (
                     <RelationshipRow key={pattern.id} pattern={pattern} />
@@ -484,7 +491,7 @@ export default function EmotionalMirrorScreen() {
                     <View style={[styles.sectionIconWrap, { backgroundColor: Colors.successLight }]}>
                       <TrendingUp size={16} color={Colors.success} />
                     </View>
-                    <Text style={styles.sectionTitle}>Growth Signals</Text>
+                    <Text style={styles.sectionTitle}>{localizedText('Growth Signals', 'Senales de crecimiento')}</Text>
                   </View>
                   {report.growthSignals.map((signal) => (
                     <GrowthRow key={signal.id} signal={signal} />
@@ -504,7 +511,7 @@ export default function EmotionalMirrorScreen() {
 
             <View style={styles.footer}>
               <Text style={styles.footerText}>
-                Every check-in sharpens this reflection.{'\n'}You are building deep self-understanding.
+                {localizedText('Every check-in sharpens this reflection.\nYou are building deep self-understanding.', 'Cada check-in afina esta reflexion.\nEstas construyendo una comprension profunda de ti.')}
               </Text>
             </View>
 
@@ -514,7 +521,7 @@ export default function EmotionalMirrorScreen() {
               activeOpacity={0.7}
             >
               <Activity size={18} color={Colors.white} />
-              <Text style={styles.deeperButtonText}>Full Emotional Insights</Text>
+              <Text style={styles.deeperButtonText}>{localizedText('Full Emotional Insights', 'Insights emocionales completos')}</Text>
               <ChevronRight size={16} color={Colors.white} style={{ opacity: 0.7 }} />
             </TouchableOpacity>
           </>

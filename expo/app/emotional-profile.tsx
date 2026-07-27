@@ -30,6 +30,8 @@ import Colors from '@/constants/colors';
 import { useApp } from '@/providers/AppProvider';
 import { PremiumInlinePrompt } from '@/components/PremiumGate';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { buildFullEmotionalModelState } from '@/services/emotionalModel/emotionalModelService';
 import {
   EmotionalTriggerProfile,
@@ -140,8 +142,8 @@ function SequenceCard({ sequence, index }: { sequence: EmotionSequence; index: n
       </View>
       <Text style={styles.sequenceNarrative}>{sequence.narrative}</Text>
       <View style={styles.sequenceMeta}>
-        <Text style={styles.sequenceCount}>{sequence.occurrences}× observed</Text>
-        <Text style={styles.sequenceIntensity}>avg {sequence.averageIntensity}/10</Text>
+        <Text style={styles.sequenceCount}>{sequence.occurrences}× {localizedText('observed', 'observado')}</Text>
+        <Text style={styles.sequenceIntensity}>{localizedText('avg', 'prom.')} {sequence.averageIntensity}/10</Text>
       </View>
     </Animated.View>
   );
@@ -167,7 +169,7 @@ function UrgeCard({ urge, index }: { urge: UrgeProfile; index: number }) {
         <Text style={styles.urgeFreq}>{urge.frequency}×</Text>
       </View>
       <View style={styles.urgeManagedRow}>
-        <Text style={styles.urgeManagedLabel}>Managed</Text>
+        <Text style={styles.urgeManagedLabel}>{localizedText('Managed', 'Gestionado')}</Text>
         <View style={styles.urgeManagedTrack}>
           <View
             style={[
@@ -203,14 +205,14 @@ function CopingCard({ coping, index }: { coping: CopingEffectiveness; index: num
       <View style={styles.copingStats}>
         <View style={styles.copingStat}>
           <Text style={styles.copingStatValue}>{coping.timesUsed}</Text>
-          <Text style={styles.copingStatLabel}>used</Text>
+          <Text style={styles.copingStatLabel}>{localizedText('used', 'usado')}</Text>
         </View>
         <View style={styles.copingStatDivider} />
         <View style={styles.copingStat}>
           <Text style={[styles.copingStatValue, coping.helpfulRate >= 50 && { color: PALETTE.coping.accent }]}>
             {coping.helpfulRate}%
           </Text>
-          <Text style={styles.copingStatLabel}>helpful</Text>
+          <Text style={styles.copingStatLabel}>{localizedText('helpful', 'útil')}</Text>
         </View>
       </View>
       <Text style={styles.copingNarrative}>{coping.narrative}</Text>
@@ -247,12 +249,12 @@ function RelationshipCard({ rel, index }: { rel: RelationshipTriggerProfile; ind
       </View>
       <View style={styles.relFlow}>
         <View style={styles.relFlowItem}>
-          <Text style={styles.relFlowLabel}>Response</Text>
+          <Text style={styles.relFlowLabel}>{localizedText('Response', 'Respuesta')}</Text>
           <Text style={styles.relFlowValue}>{rel.emotionalResponse}</Text>
         </View>
         <Text style={styles.relFlowArrow}>→</Text>
         <View style={styles.relFlowItem}>
-          <Text style={styles.relFlowLabel}>Urge</Text>
+          <Text style={styles.relFlowLabel}>{localizedText('Urge', 'Impulso')}</Text>
           <Text style={styles.relFlowValue}>{rel.typicalUrge}</Text>
         </View>
       </View>
@@ -277,25 +279,25 @@ function EscalationCard({ pattern, index }: { pattern: EscalationPattern; index:
     <Animated.View style={[styles.escalationCard, { opacity: fadeAnim }]}>
       <View style={styles.escalationChain}>
         <View style={styles.escalationNode}>
-          <Text style={styles.escalationNodeLabel}>Trigger</Text>
+          <Text style={styles.escalationNodeLabel}>{localizedText('Trigger', 'Disparador')}</Text>
           <Text style={styles.escalationNodeValue}>{pattern.triggerPhase}</Text>
         </View>
         <Text style={styles.escalationArrow}>→</Text>
         <View style={styles.escalationNode}>
-          <Text style={styles.escalationNodeLabel}>Emotion</Text>
+          <Text style={styles.escalationNodeLabel}>{localizedText('Emotion', 'Emoción')}</Text>
           <Text style={styles.escalationNodeValue}>{pattern.emotionalPhase}</Text>
         </View>
         <Text style={styles.escalationArrow}>→</Text>
         <View style={styles.escalationNode}>
-          <Text style={styles.escalationNodeLabel}>Urge</Text>
+          <Text style={styles.escalationNodeLabel}>{localizedText('Urge', 'Impulso')}</Text>
           <Text style={styles.escalationNodeValue}>{pattern.urgePhase}</Text>
         </View>
       </View>
       <Text style={styles.escalationNarrative}>{pattern.narrative}</Text>
       <View style={styles.escalationMeta}>
-        <Text style={styles.escalationMetaText}>{pattern.frequency}× seen</Text>
-        <Text style={styles.escalationMetaText}>Peak: {pattern.averagePeakDistress}/10</Text>
-        <Text style={styles.escalationMetaText}>Interrupted: {pattern.interruptionSuccess}%</Text>
+        <Text style={styles.escalationMetaText}>{pattern.frequency}× {localizedText('seen', 'visto')}</Text>
+        <Text style={styles.escalationMetaText}>{localizedText('Peak:', 'Pico:')} {pattern.averagePeakDistress}/10</Text>
+        <Text style={styles.escalationMetaText}>{localizedText('Interrupted:', 'Interrumpido:')} {pattern.interruptionSuccess}%</Text>
       </View>
     </Animated.View>
   );
@@ -322,6 +324,7 @@ function InsightChip({ insight }: { insight: EmotionalModelInsight }) {
 }
 
 export default function EmotionalProfileScreen() {
+  useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { journalEntries, messageDrafts } = useApp();
@@ -380,12 +383,12 @@ export default function EmotionalProfileScreen() {
   });
 
   const trendLabel = model.overallDistressTrend === 'improving'
-    ? 'Improving'
+    ? localizedText('Improving', 'Mejorando')
     : model.overallDistressTrend === 'worsening'
-      ? 'Needs attention'
+      ? localizedText('Needs attention', 'Necesita atención')
       : model.overallDistressTrend === 'stable'
-        ? 'Stable'
-        : 'Building';
+        ? localizedText('Stable', 'Estable')
+        : localizedText('Building', 'En construcción');
 
   const trendColor = model.overallDistressTrend === 'improving'
     ? PALETTE.coping.accent
@@ -415,29 +418,38 @@ export default function EmotionalProfileScreen() {
           <View style={styles.heroIconWrap}>
             <Brain size={28} color={Colors.white} />
           </View>
-          <Text style={styles.heroTitle}>Emotional Profile</Text>
+          <Text style={styles.heroTitle}>{localizedText('Emotional Profile', 'Perfil emocional')}</Text>
           <Text style={styles.heroSubtitle}>
-            Your personal emotional model, built from your patterns
+            {localizedText(
+              'Your personal emotional model, built from your patterns',
+              'Tu modelo emocional personal, creado a partir de tus patrones',
+            )}
           </Text>
           <PremiumInlinePrompt
             feature="emotional_profile"
-            message="Start membership for deep emotional pattern intelligence and personalized insights."
+            message={localizedText(
+              'Start membership for deep emotional pattern intelligence and personalized insights.',
+              'Inicia tu membresía para acceder a inteligencia profunda de patrones emocionales e insights personalizados.',
+            )}
           />
         </Animated.View>
 
         {!hasData ? (
           <Animated.View style={[styles.emptyState, { opacity: headerFade }]}>
             <Text style={styles.emptyEmoji}>🧠</Text>
-            <Text style={styles.emptyTitle}>Your model is forming</Text>
+            <Text style={styles.emptyTitle}>{localizedText('Your model is forming', 'Tu modelo se está formando')}</Text>
             <Text style={styles.emptyDesc}>
-              As you continue checking in and journaling, your personal emotional model will become more detailed and personalized.
+              {localizedText(
+                'As you continue checking in and journaling, your personal emotional model will become more detailed and personalized.',
+                'A medida que sigas registrándote y escribiendo, tu modelo emocional personal será más detallado y personalizado.',
+              )}
             </Text>
             <TouchableOpacity
               style={styles.emptyAction}
               onPress={() => handleNavigate('/check-in')}
               activeOpacity={0.7}
             >
-              <Text style={styles.emptyActionText}>Start a check-in</Text>
+              <Text style={styles.emptyActionText}>{localizedText('Start a check-in', 'Iniciar registro')}</Text>
               <ChevronRight size={16} color={Colors.primary} />
             </TouchableOpacity>
           </Animated.View>
@@ -450,17 +462,17 @@ export default function EmotionalProfileScreen() {
             <View style={styles.summaryRow}>
               <View style={styles.summaryItem}>
                 <Text style={styles.summaryValue}>{model.dataPointCount}</Text>
-                <Text style={styles.summaryLabel}>Check-ins</Text>
+                <Text style={styles.summaryLabel}>{localizedText('Check-ins', 'Registros')}</Text>
               </View>
               <View style={styles.summaryDivider} />
               <View style={styles.summaryItem}>
                 <Text style={styles.summaryValue}>{model.averageDistress}</Text>
-                <Text style={styles.summaryLabel}>Avg Distress</Text>
+                <Text style={styles.summaryLabel}>{localizedText('Avg Distress', 'Malestar prom.')}</Text>
               </View>
               <View style={styles.summaryDivider} />
               <View style={styles.summaryItem}>
                 <Text style={[styles.summaryValue, { color: trendColor }]}>{trendLabel}</Text>
-                <Text style={styles.summaryLabel}>Trend</Text>
+                <Text style={styles.summaryLabel}>{localizedText('Trend', 'Tendencia')}</Text>
               </View>
             </View>
 
@@ -470,10 +482,10 @@ export default function EmotionalProfileScreen() {
                   <View style={[styles.sectionIcon, { backgroundColor: '#D9E2EC' }]}>
                     <Activity size={18} color="#2E2A72" />
                   </View>
-                  <Text style={styles.sectionTitle}>Key Insights</Text>
+                  <Text style={styles.sectionTitle}>{localizedText('Key Insights', 'Insights clave')}</Text>
                 </View>
                 <Text style={styles.sectionSubtitle}>
-                  What your emotional model has noticed
+                  {localizedText('What your emotional model has noticed', 'Lo que tu modelo emocional ha notado')}
                 </Text>
                 <View style={styles.insightsList}>
                   {insights.slice(0, 6).map(insight => (
@@ -489,10 +501,10 @@ export default function EmotionalProfileScreen() {
                   <View style={[styles.sectionIcon, { backgroundColor: PALETTE.trigger.bg }]}>
                     <Zap size={18} color={PALETTE.trigger.accent} />
                   </View>
-                  <Text style={styles.sectionTitle}>Common Triggers</Text>
+                  <Text style={styles.sectionTitle}>{localizedText('Common Triggers', 'Disparadores comunes')}</Text>
                 </View>
                 <Text style={styles.sectionSubtitle}>
-                  What tends to activate emotional responses
+                  {localizedText('What tends to activate emotional responses', 'Lo que suele activar respuestas emocionales')}
                 </Text>
                 {model.topTriggers.slice(0, 5).map((trigger, i) => (
                   <TriggerCard key={trigger.label} trigger={trigger} index={i} />
@@ -506,10 +518,10 @@ export default function EmotionalProfileScreen() {
                   <View style={[styles.sectionIcon, { backgroundColor: PALETTE.emotion.bg }]}>
                     <GitBranch size={18} color={PALETTE.emotion.accent} />
                   </View>
-                  <Text style={styles.sectionTitle}>Emotional Chains</Text>
+                  <Text style={styles.sectionTitle}>{localizedText('Emotional Chains', 'Cadenas emocionales')}</Text>
                 </View>
                 <Text style={styles.sectionSubtitle}>
-                  How emotions tend to flow from one to another
+                  {localizedText('How emotions tend to flow from one to another', 'Cómo las emociones tienden a pasar de una a otra')}
                 </Text>
                 {model.emotionSequences.slice(0, 4).map((seq, i) => (
                   <SequenceCard key={seq.id} sequence={seq} index={i} />
@@ -523,10 +535,10 @@ export default function EmotionalProfileScreen() {
                   <View style={[styles.sectionIcon, { backgroundColor: PALETTE.urge.bg }]}>
                     <Flame size={18} color={PALETTE.urge.accent} />
                   </View>
-                  <Text style={styles.sectionTitle}>Frequent Urges</Text>
+                  <Text style={styles.sectionTitle}>{localizedText('Frequent Urges', 'Impulsos frecuentes')}</Text>
                 </View>
                 <Text style={styles.sectionSubtitle}>
-                  Urges that show up most and how well they are managed
+                  {localizedText('Urges that show up most and how well they are managed', 'Los impulsos que más aparecen y qué tan bien se gestionan')}
                 </Text>
                 {model.frequentUrges.slice(0, 5).map((urge, i) => (
                   <UrgeCard key={urge.label} urge={urge} index={i} />
@@ -540,10 +552,10 @@ export default function EmotionalProfileScreen() {
                   <View style={[styles.sectionIcon, { backgroundColor: PALETTE.coping.bg }]}>
                     <Leaf size={18} color={PALETTE.coping.accent} />
                   </View>
-                  <Text style={styles.sectionTitle}>Helpful Coping Tools</Text>
+                  <Text style={styles.sectionTitle}>{localizedText('Helpful Coping Tools', 'Herramientas útiles de afrontamiento')}</Text>
                 </View>
                 <Text style={styles.sectionSubtitle}>
-                  Tools that seem to make a difference
+                  {localizedText('Tools that seem to make a difference', 'Herramientas que parecen marcar una diferencia')}
                 </Text>
                 {model.effectiveCoping.slice(0, 4).map((coping, i) => (
                   <CopingCard key={coping.tool} coping={coping} index={i} />
@@ -557,10 +569,10 @@ export default function EmotionalProfileScreen() {
                   <View style={[styles.sectionIcon, { backgroundColor: PALETTE.relationship.bg }]}>
                     <Users size={18} color={PALETTE.relationship.accent} />
                   </View>
-                  <Text style={styles.sectionTitle}>Relationship Triggers</Text>
+                  <Text style={styles.sectionTitle}>{localizedText('Relationship Triggers', 'Disparadores relacionales')}</Text>
                 </View>
                 <Text style={styles.sectionSubtitle}>
-                  How relationship dynamics tend to affect you
+                  {localizedText('How relationship dynamics tend to affect you', 'Cómo las dinámicas relacionales tienden a afectarte')}
                 </Text>
                 {model.relationshipTriggers.slice(0, 4).map((rel, i) => (
                   <RelationshipCard key={rel.label} rel={rel} index={i} />
@@ -574,10 +586,10 @@ export default function EmotionalProfileScreen() {
                   <View style={[styles.sectionIcon, { backgroundColor: PALETTE.escalation.bg }]}>
                     <AlertCircle size={18} color={PALETTE.escalation.accent} />
                   </View>
-                  <Text style={styles.sectionTitle}>Escalation Patterns</Text>
+                  <Text style={styles.sectionTitle}>{localizedText('Escalation Patterns', 'Patrones de escalada')}</Text>
                 </View>
                 <Text style={styles.sectionSubtitle}>
-                  Sequences that tend to build in intensity
+                  {localizedText('Sequences that tend to build in intensity', 'Secuencias que tienden a aumentar en intensidad')}
                 </Text>
                 {model.escalationPatterns.slice(0, 3).map((pattern, i) => (
                   <EscalationCard key={pattern.id} pattern={pattern} index={i} />
@@ -591,7 +603,7 @@ export default function EmotionalProfileScreen() {
                   <View style={[styles.sectionIcon, { backgroundColor: PALETTE.growth.bg }]}>
                     <TrendingUp size={18} color={PALETTE.growth.accent} />
                   </View>
-                  <Text style={styles.sectionTitle}>Growth & Focus</Text>
+                  <Text style={styles.sectionTitle}>{localizedText('Growth & Focus', 'Crecimiento y enfoque')}</Text>
                 </View>
                 {model.growthAreas.map((area, i) => (
                   <View key={`growth_${i}`} style={styles.growthItem}>
@@ -610,7 +622,10 @@ export default function EmotionalProfileScreen() {
 
             <View style={styles.closingSection}>
               <Text style={styles.closingText}>
-                This profile is built from your own check-ins and patterns. It is not a diagnosis — it is a compassionate mirror to help you and the AI Companion understand your emotional world better.
+                {localizedText(
+                  'This profile is built from your own check-ins and patterns. It is not a diagnosis — it is a compassionate mirror to help you and the AI Companion understand your emotional world better.',
+                  'Este perfil se construye con tus propios registros y patrones. No es un diagnóstico; es un espejo compasivo para ayudarte a ti y al Companion de IA a entender mejor tu mundo emocional.',
+                )}
               </Text>
             </View>
 
@@ -620,8 +635,8 @@ export default function EmotionalProfileScreen() {
                 onPress={() => handleNavigate('/reflection-mirror')}
                 activeOpacity={0.7}
               >
-                <Text style={styles.actionLabel}>Reflection Mirror</Text>
-                <Text style={styles.actionDesc}>Compassionate reflections</Text>
+                <Text style={styles.actionLabel}>{localizedText('Reflection Mirror', 'Espejo de reflexión')}</Text>
+                <Text style={styles.actionDesc}>{localizedText('Compassionate reflections', 'Reflexiones compasivas')}</Text>
                 <ChevronRight size={16} color={Colors.textMuted} />
               </TouchableOpacity>
               <TouchableOpacity
@@ -629,8 +644,8 @@ export default function EmotionalProfileScreen() {
                 onPress={() => handleNavigate('/insights')}
                 activeOpacity={0.7}
               >
-                <Text style={styles.actionLabel}>Your Insights</Text>
-                <Text style={styles.actionDesc}>Detailed analytics</Text>
+                <Text style={styles.actionLabel}>{localizedText('Your Insights', 'Tus insights')}</Text>
+                <Text style={styles.actionDesc}>{localizedText('Detailed analytics', 'Análisis detallado')}</Text>
                 <ChevronRight size={16} color={Colors.textMuted} />
               </TouchableOpacity>
               <TouchableOpacity
@@ -638,8 +653,8 @@ export default function EmotionalProfileScreen() {
                 onPress={() => handleNavigate('/emotional-loops')}
                 activeOpacity={0.7}
               >
-                <Text style={styles.actionLabel}>Emotional Loops</Text>
-                <Text style={styles.actionDesc}>Recurring patterns</Text>
+                <Text style={styles.actionLabel}>{localizedText('Emotional Loops', 'Bucles emocionales')}</Text>
+                <Text style={styles.actionDesc}>{localizedText('Recurring patterns', 'Patrones recurrentes')}</Text>
                 <ChevronRight size={16} color={Colors.textMuted} />
               </TouchableOpacity>
             </View>

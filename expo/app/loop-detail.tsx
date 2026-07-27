@@ -35,6 +35,8 @@ import { useLoopInterruptPlans } from '@/hooks/useLoopInterruptPlans';
 import { mapLoopDetail } from '@/services/patterns/loopMappingService';
 import { generateDefaultPlan } from '@/services/patterns/loopInterruptService';
 import { LoopNodeType, LoopPhase } from '@/types/emotionalLoop';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 const NODE_COLORS: Record<LoopNodeType, { bg: string; text: string; border: string; accent: string }> = {
   trigger: { bg: '#FFFFFF', text: '#3B82F6', border: '#D9E2EC', accent: '#3B82F6' },
@@ -64,6 +66,7 @@ export default function LoopDetailScreen() {
   const { loopId } = useLocalSearchParams<{ loopId: string }>();
   const report = useEmotionalLoops();
   const { plans, savePlan } = useLoopInterruptPlans();
+  useLanguage();
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -124,15 +127,20 @@ export default function LoopDetailScreen() {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Loop Detail</Text>
+          <Text style={styles.headerTitle}>{localizedText('Loop Detail', 'Detalle del bucle')}</Text>
           <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
             <X size={22} color={Colors.textSecondary} />
           </TouchableOpacity>
         </View>
         <View style={styles.emptyState}>
-          <Text style={styles.emptyText}>This loop could not be found. It may have changed as new data was added.</Text>
+          <Text style={styles.emptyText}>
+            {localizedText(
+              'This loop could not be found. It may have changed as new data was added.',
+              'No pudimos encontrar este bucle. Puede haber cambiado al agregarse nuevos datos.',
+            )}
+          </Text>
           <TouchableOpacity style={styles.backButton} onPress={handleClose}>
-            <Text style={styles.backButtonText}>Go back</Text>
+            <Text style={styles.backButtonText}>{localizedText('Go back', 'Volver')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -155,7 +163,7 @@ export default function LoopDetailScreen() {
           <View style={styles.headerIconWrap}>
             <CircleDot size={18} color={Colors.accent} />
           </View>
-          <Text style={styles.headerTitle}>Loop Detail</Text>
+          <Text style={styles.headerTitle}>{localizedText('Loop Detail', 'Detalle del bucle')}</Text>
         </View>
         <TouchableOpacity
           onPress={handleClose}
@@ -193,13 +201,13 @@ export default function LoopDetailScreen() {
               {detail.isRelationshipRelated && (
                 <View style={[styles.metaChip, { backgroundColor: '#FFFFFF' }]}>
                   <Heart size={10} color="#3B82F6" />
-                  <Text style={[styles.metaLabel, { color: '#3B82F6' }]}>Relationship</Text>
+                  <Text style={[styles.metaLabel, { color: '#3B82F6' }]}>{localizedText('Relationship', 'Relación')}</Text>
                 </View>
               )}
             </View>
           </View>
 
-          <Text style={styles.sectionTitle}>How this loop unfolds</Text>
+          <Text style={styles.sectionTitle}>{localizedText('How this loop unfolds', 'Cómo se desarrolla este bucle')}</Text>
 
           <View style={styles.phasesContainer}>
             {phases.map((p, idx) => {
@@ -244,7 +252,7 @@ export default function LoopDetailScreen() {
 
           {detail.interruptOptions.length > 0 && (
             <>
-              <Text style={styles.sectionTitle}>Where to interrupt</Text>
+              <Text style={styles.sectionTitle}>{localizedText('Where to interrupt', 'Dónde interrumpirlo')}</Text>
               {detail.interruptOptions.slice(0, 4).map(point => (
                 <View key={point.id} style={styles.interruptCard}>
                   <Text style={styles.interruptNarrative}>{point.narrative}</Text>
@@ -284,8 +292,8 @@ export default function LoopDetailScreen() {
                   <Shield size={20} color={Colors.white} />
                 </View>
                 <View style={styles.planButtonText}>
-                  <Text style={styles.planButtonTitle}>View Your Interrupt Plan</Text>
-                  <Text style={styles.planButtonDesc}>You have a plan saved for this loop</Text>
+                  <Text style={styles.planButtonTitle}>{localizedText('View Your Interrupt Plan', 'Ver tu plan de interrupción')}</Text>
+                  <Text style={styles.planButtonDesc}>{localizedText('You have a plan saved for this loop', 'Tienes un plan guardado para este bucle')}</Text>
                 </View>
                 <ChevronRight size={16} color={Colors.white} style={{ opacity: 0.7 }} />
               </TouchableOpacity>
@@ -300,8 +308,8 @@ export default function LoopDetailScreen() {
                   <Shield size={20} color={Colors.primary} />
                 </View>
                 <View style={styles.createPlanText}>
-                  <Text style={styles.createPlanTitle}>Create an Interrupt Plan</Text>
-                  <Text style={styles.createPlanDesc}>Save personalized steps to interrupt this loop</Text>
+                  <Text style={styles.createPlanTitle}>{localizedText('Create an Interrupt Plan', 'Crear un plan de interrupción')}</Text>
+                  <Text style={styles.createPlanDesc}>{localizedText('Save personalized steps to interrupt this loop', 'Guarda pasos personalizados para interrumpir este bucle')}</Text>
                 </View>
                 <ChevronRight size={16} color={Colors.primary} />
               </TouchableOpacity>

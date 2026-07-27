@@ -12,6 +12,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Check, Sparkles } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { SUPPORT_TOPICS } from '@/constants/community';
 import { useSupportPreferences, useRecommendedCircles } from '@/hooks/useSupportCircles';
 import { useSupportCircles } from '@/hooks/useCommunityFeed';
@@ -19,6 +21,7 @@ import { SupportTopic } from '@/types/community';
 
 export default function SupportPreferencesScreen() {
   const router = useRouter();
+  useLanguage();
   const { preferences, savePreferences, isSaving } = useSupportPreferences();
   const { recommended } = useRecommendedCircles();
   const { joinCircle } = useSupportCircles();
@@ -62,7 +65,7 @@ export default function SupportPreferencesScreen() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} testID="back-btn">
             <ArrowLeft size={20} color={Colors.text} />
           </TouchableOpacity>
-          <Text style={styles.navTitle}>Support Preferences</Text>
+          <Text style={styles.navTitle}>{localizedText('Support Preferences', 'Preferencias de apoyo')}</Text>
           <View style={{ width: 36 }} />
         </View>
       </SafeAreaView>
@@ -75,9 +78,12 @@ export default function SupportPreferencesScreen() {
         <Animated.View style={{ opacity: fadeAnim }}>
           <View style={styles.introCard}>
             <Text style={styles.introEmoji}>🎯</Text>
-            <Text style={styles.introTitle}>What matters to you?</Text>
+            <Text style={styles.introTitle}>{localizedText('What matters to you?', '¿Qué es importante para ti?')}</Text>
             <Text style={styles.introText}>
-              Select topics you'd like support with. We'll match you with circles and peers who share similar goals.
+              {localizedText(
+                "Select topics you'd like support with. We'll match you with circles and peers who share similar goals.",
+                'Elige los temas en los que quieres apoyo. Te recomendaremos círculos y personas con metas parecidas.',
+              )}
             </Text>
           </View>
 
@@ -115,7 +121,7 @@ export default function SupportPreferencesScreen() {
             <View style={styles.recommendedSection}>
               <View style={styles.sectionHeader}>
                 <Sparkles size={16} color={Colors.brandAmber} />
-                <Text style={styles.sectionTitle}>Recommended for you</Text>
+                <Text style={styles.sectionTitle}>{localizedText('Recommended for you', 'Recomendado para ti')}</Text>
               </View>
               {recommended.map((circle) => (
                 <View key={circle.id} style={[styles.recommendedCircle, { borderColor: circle.color + '30' }]}>
@@ -123,7 +129,9 @@ export default function SupportPreferencesScreen() {
                     <Text style={styles.recommendedEmoji}>{circle.emoji}</Text>
                     <View style={styles.recommendedInfo}>
                       <Text style={styles.recommendedName}>{circle.name}</Text>
-                      <Text style={styles.recommendedMembers}>{circle.memberCount} members</Text>
+                      <Text style={styles.recommendedMembers}>
+                        {localizedText(`${circle.memberCount} members`, `${circle.memberCount} miembros`)}
+                      </Text>
                     </View>
                   </View>
                   {!circle.isJoined ? (
@@ -131,11 +139,13 @@ export default function SupportPreferencesScreen() {
                       style={[styles.joinSmallBtn, { backgroundColor: circle.color }]}
                       onPress={() => handleJoinCircle(circle.id)}
                     >
-                      <Text style={styles.joinSmallBtnText}>Join</Text>
+                      <Text style={styles.joinSmallBtnText}>{localizedText('Join', 'Unirme')}</Text>
                     </TouchableOpacity>
                   ) : (
                     <View style={[styles.joinedSmallBadge, { backgroundColor: circle.color + '15' }]}>
-                      <Text style={[styles.joinedSmallText, { color: circle.color }]}>Joined</Text>
+                      <Text style={[styles.joinedSmallText, { color: circle.color }]}>
+                        {localizedText('Joined', 'Ya estás dentro')}
+                      </Text>
                     </View>
                   )}
                 </View>
@@ -156,7 +166,9 @@ export default function SupportPreferencesScreen() {
             testID="save-preferences-btn"
           >
             <Text style={styles.saveBtnText}>
-              {isSaving ? 'Saving...' : `Save preferences (${selectedTopics.length})`}
+              {isSaving
+                ? localizedText('Saving...', 'Guardando...')
+                : localizedText(`Save preferences (${selectedTopics.length})`, `Guardar preferencias (${selectedTopics.length})`)}
             </Text>
           </TouchableOpacity>
         </SafeAreaView>

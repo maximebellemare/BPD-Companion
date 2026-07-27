@@ -21,6 +21,8 @@ import { useAnalytics } from '@/providers/AnalyticsProvider';
 import { GUIDED_REFLECTION_FLOWS } from '@/data/guidedReflectionFlows';
 import { JOURNAL_EMOTIONS } from '@/types/journalEntry';
 import { Emotion } from '@/types';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 export default function JournalGuidedScreen() {
   const router = useRouter();
@@ -28,6 +30,7 @@ export default function JournalGuidedScreen() {
   const params = useLocalSearchParams<{ flowId?: string }>();
   const { addEntry, analyzeEntry, isAnalyzing } = useJournal();
   const { trackEvent } = useAnalytics();
+  useLanguage();
 
   const flow = GUIDED_REFLECTION_FLOWS.find(f => f.id === params.flowId);
   const steps = flow?.steps ?? [];
@@ -140,7 +143,10 @@ export default function JournalGuidedScreen() {
       setIsSaved(true);
     } catch (err) {
       console.error('[JournalGuided] Save failed:', err);
-      Alert.alert('Error', 'Could not save. Please try again.');
+      Alert.alert(
+        localizedText('Error', 'Error'),
+        localizedText('Could not save. Please try again.', 'No se pudo guardar. Inténtalo de nuevo.'),
+      );
     } finally {
       setIsSaving(false);
     }
@@ -150,9 +156,9 @@ export default function JournalGuidedScreen() {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>Flow not found</Text>
+          <Text style={styles.emptyText}>{localizedText('Flow not found', 'No se encontró esta guía')}</Text>
           <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.backLink}>Go back</Text>
+            <Text style={styles.backLink}>{localizedText('Go back', 'Volver')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -166,20 +172,23 @@ export default function JournalGuidedScreen() {
           <View style={styles.savedIcon}>
             <Check size={32} color={Colors.brandTeal} />
           </View>
-          <Text style={styles.savedTitle}>Reflection complete</Text>
+          <Text style={styles.savedTitle}>{localizedText('Reflection complete', 'Reflexión completa')}</Text>
           <Text style={styles.savedSubtitle}>
-            You walked through this with honesty. That takes courage.
+            {localizedText(
+              'You walked through this with honesty. That takes courage.',
+              'Recorriste esto con honestidad. Eso requiere valentía.',
+            )}
           </Text>
 
           {isAnalyzing && (
             <View style={styles.analyzingRow}>
               <Loader size={16} color={Colors.brandTeal} />
-              <Text style={styles.analyzingText}>Generating insight...</Text>
+              <Text style={styles.analyzingText}>{localizedText('Generating insight...', 'Generando insight...')}</Text>
             </View>
           )}
 
           <TouchableOpacity style={styles.doneBtn} onPress={() => router.back()}>
-            <Text style={styles.doneBtnText}>Done</Text>
+            <Text style={styles.doneBtnText}>{localizedText('Done', 'Listo')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -234,15 +243,15 @@ export default function JournalGuidedScreen() {
                   autoFocus
                 />
                 {currentStep.optional && (
-                  <Text style={styles.optionalLabel}>This step is optional</Text>
+                  <Text style={styles.optionalLabel}>{localizedText('This step is optional', 'Este paso es opcional')}</Text>
                 )}
               </View>
             )}
 
             {isEmotionStep && (
               <View style={styles.stepContainer}>
-                <Text style={styles.stepPrompt}>How are you feeling right now?</Text>
-                <Text style={styles.stepSubprompt}>Select all that apply</Text>
+                <Text style={styles.stepPrompt}>{localizedText('How are you feeling right now?', '¿Cómo te sientes ahora mismo?')}</Text>
+                <Text style={styles.stepSubprompt}>{localizedText('Select all that apply', 'Selecciona todo lo que corresponda')}</Text>
                 <View style={styles.emotionGrid}>
                   {JOURNAL_EMOTIONS.map(emotion => {
                     const selected = selectedEmotions.some(e => e.id === emotion.id);
@@ -265,7 +274,7 @@ export default function JournalGuidedScreen() {
 
             {isDistressStep && (
               <View style={styles.stepContainer}>
-                <Text style={styles.stepPrompt}>How intense is your distress right now?</Text>
+                <Text style={styles.stepPrompt}>{localizedText('How intense is your distress right now?', '¿Qué tan intenso se siente tu malestar ahora mismo?')}</Text>
                 <View style={styles.distressContainer}>
                   {Array.from({ length: 10 }, (_, i) => i + 1).map(level => (
                     <TouchableOpacity
@@ -306,7 +315,7 @@ export default function JournalGuidedScreen() {
             disabled={stepIndex === 0}
           >
             <ChevronLeft size={20} color={stepIndex === 0 ? Colors.textMuted : Colors.text} />
-            <Text style={[styles.navBtnText, stepIndex === 0 && styles.navBtnTextDisabled]}>Back</Text>
+            <Text style={[styles.navBtnText, stepIndex === 0 && styles.navBtnTextDisabled]}>{localizedText('Back', 'Atrás')}</Text>
           </TouchableOpacity>
 
           {isDistressStep ? (
@@ -316,12 +325,18 @@ export default function JournalGuidedScreen() {
               disabled={isSaving}
             >
               <Sparkles size={18} color={Colors.white} />
-              <Text style={styles.saveBtnText}>{isSaving ? 'Saving...' : 'Save & Analyze'}</Text>
+              <Text style={styles.saveBtnText}>
+                {isSaving
+                  ? localizedText('Saving...', 'Guardando...')
+                  : localizedText('Save & Analyze', 'Guardar y analizar')}
+              </Text>
             </TouchableOpacity>
           ) : (
             <TouchableOpacity style={styles.nextBtn} onPress={goNext}>
               <Text style={styles.nextBtnText}>
-                {currentStep?.optional && !responses[currentStep.id]?.trim() ? 'Skip' : 'Next'}
+                {currentStep?.optional && !responses[currentStep.id]?.trim()
+                  ? localizedText('Skip', 'Omitir')
+                  : localizedText('Next', 'Siguiente')}
               </Text>
               <ChevronRight size={20} color={Colors.white} />
             </TouchableOpacity>

@@ -23,6 +23,8 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { useJournal } from '@/providers/JournalProvider';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
 import {
@@ -34,11 +36,23 @@ import {
 import { Emotion, Trigger } from '@/types';
 import { TRIGGERS } from '@/constants/data';
 
-const DISTRESS_LABELS = ['Calm', '', '', 'Mild', '', '', 'Moderate', '', '', 'Intense'];
+const DISTRESS_LABELS = [
+  localizedText('Calm', 'Calma'),
+  '',
+  '',
+  localizedText('Mild', 'Leve'),
+  '',
+  '',
+  localizedText('Moderate', 'Moderada'),
+  '',
+  '',
+  localizedText('Intense', 'Intensa'),
+];
 
 export default function JournalWriteScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  useLanguage();
   const params = useLocalSearchParams<{ format?: string }>();
   const { addEntry, analyzeEntry, isAnalyzing } = useJournal();
   const { trackEvent } = useAnalytics();
@@ -88,7 +102,10 @@ export default function JournalWriteScreen() {
 
   const handleSave = useCallback(async () => {
     if (!content.trim()) {
-      Alert.alert('Empty entry', 'Write something before saving.');
+      Alert.alert(
+        localizedText('Empty entry', 'Entrada vacía'),
+        localizedText('Write something before saving.', 'Escribe algo antes de guardar.'),
+      );
       return;
     }
 
@@ -122,7 +139,10 @@ export default function JournalWriteScreen() {
       }
     } catch (err) {
       console.error('[JournalWrite] Save failed:', err);
-      Alert.alert('Error', 'Could not save entry. Please try again.');
+      Alert.alert(
+        localizedText('Error', 'Error'),
+        localizedText('Could not save entry. Please try again.', 'No se pudo guardar la entrada. Inténtalo de nuevo.'),
+      );
     } finally {
       setIsSaving(false);
     }
@@ -131,11 +151,11 @@ export default function JournalWriteScreen() {
   const handleClose = useCallback(() => {
     if (content.trim() && !savedEntry) {
       Alert.alert(
-        'Discard entry?',
-        'Your writing will not be saved.',
+        localizedText('Discard entry?', '¿Descartar entrada?'),
+        localizedText('Your writing will not be saved.', 'Lo que escribiste no se guardará.'),
         [
-          { text: 'Keep writing', style: 'cancel' },
-          { text: 'Discard', style: 'destructive', onPress: () => router.back() },
+          { text: localizedText('Keep writing', 'Seguir escribiendo'), style: 'cancel' },
+          { text: localizedText('Discard', 'Descartar'), style: 'destructive', onPress: () => router.back() },
         ]
       );
     } else {
@@ -150,15 +170,18 @@ export default function JournalWriteScreen() {
           <View style={styles.savedIconCircle}>
             <Bookmark size={32} color={Colors.brandTeal} />
           </View>
-          <Text style={styles.savedTitle}>Entry saved</Text>
+          <Text style={styles.savedTitle}>{localizedText('Entry saved', 'Entrada guardada')}</Text>
           <Text style={styles.savedSubtitle}>
-            Taking the time to write about how you feel is a powerful act of self-awareness.
+            {localizedText(
+              'Taking the time to write about how you feel is a powerful act of self-awareness.',
+              'Tomarte el tiempo para escribir sobre cómo te sientes es un acto poderoso de autoconciencia.',
+            )}
           </Text>
 
           {isAnalyzing && (
             <View style={styles.analyzingCard}>
               <Loader size={18} color={Colors.brandTeal} />
-              <Text style={styles.analyzingText}>Generating insight...</Text>
+              <Text style={styles.analyzingText}>{localizedText('Generating insight...', 'Generando insight...')}</Text>
             </View>
           )}
 
@@ -166,7 +189,7 @@ export default function JournalWriteScreen() {
             <View style={styles.insightCard}>
               <View style={styles.insightHeader}>
                 <Sparkles size={16} color={Colors.brandLilac} />
-                <Text style={styles.insightLabel}>AI Insight</Text>
+                <Text style={styles.insightLabel}>{localizedText('AI Insight', 'Insight de IA')}</Text>
               </View>
               <Text style={styles.insightText}>{savedEntry.aiInsight.summary}</Text>
               {savedEntry.aiInsight.copingSuggestion && (
@@ -179,7 +202,7 @@ export default function JournalWriteScreen() {
             style={styles.doneBtn}
             onPress={() => router.back()}
           >
-            <Text style={styles.doneBtnText}>Done</Text>
+            <Text style={styles.doneBtnText}>{localizedText('Done', 'Listo')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -207,7 +230,7 @@ export default function JournalWriteScreen() {
               disabled={!content.trim() || isSaving}
             >
               <Text style={[styles.saveBtnText, (!content.trim() || isSaving) && styles.saveBtnTextDisabled]}>
-                {isSaving ? 'Saving...' : 'Save'}
+                {isSaving ? localizedText('Saving...', 'Guardando...') : localizedText('Save', 'Guardar')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -221,7 +244,7 @@ export default function JournalWriteScreen() {
               style={styles.titleInput}
               value={title}
               onChangeText={setTitle}
-              placeholder="Title (optional)"
+              placeholder={localizedText('Title (optional)', 'Título (opcional)')}
               placeholderTextColor={Colors.textMuted}
               maxLength={100}
             />
@@ -351,7 +374,7 @@ export default function JournalWriteScreen() {
                 style={styles.notesInput}
                 value={notes}
                 onChangeText={setNotes}
-                placeholder="Anything else you want to note..."
+                placeholder={localizedText('Anything else you want to note...', 'Cualquier otra cosa que quieras anotar...')}
                 placeholderTextColor={Colors.textMuted}
                 multiline
                 textAlignVertical="top"

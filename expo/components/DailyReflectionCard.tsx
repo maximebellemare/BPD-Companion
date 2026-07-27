@@ -9,6 +9,8 @@ import {
 import { Sun, Flame, ChevronRight, TrendingUp } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { DailyRitualEntry, RitualStreak, WeeklyReflectionSummary } from '@/types/ritual';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 interface DailyReflectionCardProps {
   todayEntry: DailyRitualEntry | undefined;
@@ -23,6 +25,7 @@ export default function DailyReflectionCard({
   weeklySummary,
   onPress,
 }: DailyReflectionCardProps) {
+  useLanguage();
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -62,12 +65,15 @@ export default function DailyReflectionCard({
           </View>
           <View style={styles.titleWrap}>
             <Text style={styles.title}>
-              {hasCheckedIn ? 'Daily Reflection' : 'How are you feeling today?'}
+              {hasCheckedIn ? localizedText('Daily Reflection', 'Reflexión diaria') : localizedText('How are you feeling today?', '¿Cómo te sientes hoy?')}
             </Text>
             <Text style={styles.subtitle}>
               {hasCheckedIn
-                ? `You're feeling ${todayEntry.mood.label.toLowerCase()} today`
-                : 'Take a moment to check in with yourself'}
+                ? localizedText(
+                  `You're feeling ${todayEntry.mood.label.toLowerCase()} today`,
+                  `Hoy te sientes ${todayEntry.mood.label.toLowerCase()}`,
+                )
+                : localizedText('Take a moment to check in with yourself', 'Tómate un momento para conectar contigo')}
             </Text>
           </View>
           <ChevronRight size={16} color={Colors.textMuted} />
@@ -98,25 +104,25 @@ export default function DailyReflectionCard({
           {streak.currentStreak > 0 && (
             <View style={styles.streakBadge}>
               <Flame size={14} color="#3B82F6" />
-              <Text style={styles.streakText}>{streak.currentStreak} day streak</Text>
+              <Text style={styles.streakText}>{streak.currentStreak} {localizedText('day streak', 'días de racha')}</Text>
             </View>
           )}
           {weeklySummary.totalDays > 0 && (
             <View style={styles.weekBadge}>
               <TrendingUp size={12} color={Colors.primary} />
               <Text style={styles.weekText}>
-                Week avg: {weeklySummary.averageMood}
+                {localizedText('Week avg:', 'Prom. semana:')} {weeklySummary.averageMood}
               </Text>
             </View>
           )}
           {!hasCheckedIn && streak.currentStreak === 0 && weeklySummary.totalDays === 0 && (
-            <Text style={styles.startText}>Start your daily ritual</Text>
+            <Text style={styles.startText}>{localizedText('Start your daily ritual', 'Inicia tu ritual diario')}</Text>
           )}
         </View>
 
         {weeklySummary.totalDays > 0 && weeklySummary.averageStress > 0 && (
           <View style={styles.stressRow}>
-            <Text style={styles.stressLabel}>Avg stress this week</Text>
+            <Text style={styles.stressLabel}>{localizedText('Avg stress this week', 'Estrés prom. esta semana')}</Text>
             <View style={styles.stressBarBg}>
               <View
                 style={[

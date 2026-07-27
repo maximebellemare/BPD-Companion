@@ -40,6 +40,8 @@ import {
   SIMULATION_OUTCOME_OPTIONS,
   SimulationOutcomeResult,
 } from '@/types/messageSimulation';
+import { localizedText } from '@/lib/i18n/staticText';
+import { useLanguage } from '@/hooks/useLanguage';
 
 const TIER_COLORS: Record<RiskTier, string> = {
   low: Colors.success,
@@ -47,20 +49,23 @@ const TIER_COLORS: Record<RiskTier, string> = {
   high: Colors.danger,
 };
 
-const TIER_LABELS: Record<string, Record<RiskTier, string>> = {
-  regretRisk: { low: 'Low regret', moderate: 'Some regret', high: 'High regret' },
-  dignityProtection: { low: 'Low dignity', moderate: 'Some dignity', high: 'High dignity' },
-  escalationRisk: { low: 'Low escalation', moderate: 'May escalate', high: 'Likely escalation' },
-  selfRespect: { low: 'Low self-respect', moderate: 'Moderate', high: 'Self-respecting' },
-  clarityLevel: { low: 'Low clarity', moderate: 'Some clarity', high: 'High clarity' },
-};
+function getTierLabel(dimension: string, tier: RiskTier): string {
+  const labels: Record<string, Record<RiskTier, string>> = {
+    regretRisk: { low: localizedText('Low regret', 'Bajo arrepentimiento'), moderate: localizedText('Some regret', 'Algo de arrepentimiento'), high: localizedText('High regret', 'Alto arrepentimiento') },
+    dignityProtection: { low: localizedText('Low dignity', 'Baja dignidad'), moderate: localizedText('Some dignity', 'Algo de dignidad'), high: localizedText('High dignity', 'Alta dignidad') },
+    escalationRisk: { low: localizedText('Low escalation', 'Baja escalada'), moderate: localizedText('May escalate', 'Puede escalar'), high: localizedText('Likely escalation', 'Escalada probable') },
+    selfRespect: { low: localizedText('Low self-respect', 'Bajo autorrespeto'), moderate: localizedText('Moderate', 'Moderado'), high: localizedText('Self-respecting', 'Respeta tu dignidad') },
+    clarityLevel: { low: localizedText('Low clarity', 'Baja claridad'), moderate: localizedText('Some clarity', 'Algo de claridad'), high: localizedText('High clarity', 'Alta claridad') },
+  };
+  return labels[dimension]?.[tier] ?? tier;
+}
 
 function ImpactPill({ dimension, tier }: { dimension: string; tier: RiskTier }) {
   const isInverted = dimension === 'dignityProtection' || dimension === 'selfRespect' || dimension === 'clarityLevel';
   const color = isInverted
     ? (tier === 'high' ? Colors.success : tier === 'low' ? Colors.danger : Colors.accent)
     : TIER_COLORS[tier];
-  const label = TIER_LABELS[dimension]?.[tier] ?? `${tier}`;
+  const label = getTierLabel(dimension, tier);
 
   return (
     <View style={[styles.impactPill, { backgroundColor: color + '12' }]}>
@@ -97,29 +102,30 @@ function DoNotSendActions({
   onGround: () => void;
   onSecureRewrite: () => void;
 }) {
+  useLanguage();
   return (
     <View style={styles.dnsActionsContainer}>
-      <Text style={styles.dnsActionsTitle}>What you can do instead</Text>
+      <Text style={styles.dnsActionsTitle}>{localizedText('What you can do instead', 'Que puedes hacer en su lugar')}</Text>
       <View style={styles.dnsActionsGrid}>
         <TouchableOpacity style={styles.dnsActionBtn} onPress={onSaveDraft} activeOpacity={0.7}>
           <Archive size={16} color={Colors.brandLilac} />
-          <Text style={styles.dnsActionLabel}>Save draft</Text>
+          <Text style={styles.dnsActionLabel}>{localizedText('Save draft', 'Guardar borrador')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.dnsActionBtn} onPress={onPause} activeOpacity={0.7}>
           <Pause size={16} color={Colors.accent} />
-          <Text style={styles.dnsActionLabel}>Pause 10 min</Text>
+          <Text style={styles.dnsActionLabel}>{localizedText('Pause 10 min', 'Pausar 10 min')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.dnsActionBtn} onPress={onSecureRewrite} activeOpacity={0.7}>
           <Leaf size={16} color={Colors.brandSage} />
-          <Text style={styles.dnsActionLabel}>Secure rewrite</Text>
+          <Text style={styles.dnsActionLabel}>{localizedText('Secure rewrite', 'Reescritura segura')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.dnsActionBtn} onPress={onJournal} activeOpacity={0.7}>
           <BookOpen size={16} color={Colors.brandMist} />
-          <Text style={styles.dnsActionLabel}>Journal first</Text>
+          <Text style={styles.dnsActionLabel}>{localizedText('Journal first', 'Diario primero')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.dnsActionBtn} onPress={onGround} activeOpacity={0.7}>
           <Shield size={16} color={Colors.brandTeal} />
-          <Text style={styles.dnsActionLabel}>Ground yourself</Text>
+          <Text style={styles.dnsActionLabel}>{localizedText('Ground yourself', 'Anclarte')}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -133,10 +139,11 @@ function OutcomeTracker({
   onSelectOutcome: (outcome: SimulationOutcomeResult) => void;
   selectedOutcome: SimulationOutcomeResult | null;
 }) {
+  useLanguage();
   return (
     <View style={styles.outcomeSection}>
-      <Text style={styles.outcomeSectionTitle}>How did it go?</Text>
-      <Text style={styles.outcomeSectionHint}>Your feedback helps improve future recommendations.</Text>
+      <Text style={styles.outcomeSectionTitle}>{localizedText('How did it go?', '¿Como salio?')}</Text>
+      <Text style={styles.outcomeSectionHint}>{localizedText('Your feedback helps improve future recommendations.', 'Tu respuesta ayuda a mejorar futuras recomendaciones.')}</Text>
       <View style={styles.outcomeGrid}>
         {SIMULATION_OUTCOME_OPTIONS.map((opt) => {
           const isSelected = selectedOutcome === opt.value;
@@ -166,6 +173,7 @@ function OutcomeTracker({
 }
 
 export default function MessageSimulationScreen() {
+  useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{
@@ -328,10 +336,10 @@ export default function MessageSimulationScreen() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
             <ArrowLeft size={20} color={Colors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Response Paths</Text>
+          <Text style={styles.headerTitle}>{localizedText('Response Paths', 'Caminos de respuesta')}</Text>
         </View>
         <View style={styles.emptyState}>
-          <Text style={styles.emptyText}>No message to analyze.</Text>
+          <Text style={styles.emptyText}>{localizedText('No message to analyze.', 'No hay mensaje para analizar.')}</Text>
         </View>
       </View>
     );
@@ -354,8 +362,8 @@ export default function MessageSimulationScreen() {
           <ArrowLeft size={20} color={Colors.text} />
         </TouchableOpacity>
         <View style={styles.headerTextWrap}>
-          <Text style={styles.headerTitle}>Response Paths</Text>
-          <Text style={styles.headerSub}>Compare approaches before you decide</Text>
+          <Text style={styles.headerTitle}>{localizedText('Response Paths', 'Caminos de respuesta')}</Text>
+          <Text style={styles.headerSub}>{localizedText('Compare approaches before you decide', 'Compara enfoques antes de decidir')}</Text>
         </View>
       </View>
 
@@ -372,7 +380,7 @@ export default function MessageSimulationScreen() {
               </View>
               <View style={styles.recBannerTextWrap}>
                 <Text style={styles.recBannerTitle}>
-                  Best option: {recommendedPath.label}
+                  {localizedText('Best option:', 'Mejor opcion:')} {recommendedPath.label}
                 </Text>
               </View>
             </View>
@@ -412,7 +420,7 @@ export default function MessageSimulationScreen() {
                       {path.isRecommended && (
                         <View style={styles.recommendedBadge}>
                           <Star size={10} color={Colors.success} />
-                          <Text style={styles.recommendedText}>Best option</Text>
+                          <Text style={styles.recommendedText}>{localizedText('Best option', 'Mejor opcion')}</Text>
                         </View>
                       )}
                     </View>
@@ -437,7 +445,7 @@ export default function MessageSimulationScreen() {
                   <View style={styles.pathExpanded}>
                     {!isDoNotSend && (
                       <View style={styles.pathMessageCard}>
-                        <Text style={styles.pathMessageLabel}>Example message</Text>
+                        <Text style={styles.pathMessageLabel}>{localizedText('Example message', 'Mensaje de ejemplo')}</Text>
                         <Text style={styles.pathMessageText}>{path.exampleMessage}</Text>
                         <TouchableOpacity
                           style={styles.pathCopyBtn}
@@ -457,13 +465,13 @@ export default function MessageSimulationScreen() {
                     )}
 
                     <View style={styles.effectSection}>
-                      <EffectRow emoji="💭" label="Effect on you" text={path.selfEffect} />
-                      <EffectRow emoji="⏱️" label="Short-term" text={path.shortTermEffect} />
-                      <EffectRow emoji="🤝" label="Relationship" text={path.relationshipEffect} />
+                      <EffectRow emoji="💭" label={localizedText('Effect on you', 'Efecto en ti')} text={path.selfEffect} />
+                      <EffectRow emoji="⏱️" label={localizedText('Short-term', 'Corto plazo')} text={path.shortTermEffect} />
+                      <EffectRow emoji="🤝" label={localizedText('Relationship', 'Relacion')} text={path.relationshipEffect} />
                     </View>
 
                     <View style={styles.fullImpactSection}>
-                      <Text style={styles.fullImpactTitle}>Impact breakdown</Text>
+                      <Text style={styles.fullImpactTitle}>{localizedText('Impact breakdown', 'Desglose del impacto')}</Text>
                       <View style={styles.fullImpactGrid}>
                         <ImpactPill dimension="regretRisk" tier={path.impact.regretRisk} />
                         <ImpactPill dimension="dignityProtection" tier={path.impact.dignityProtection} />
@@ -508,7 +516,7 @@ export default function MessageSimulationScreen() {
         })}
 
         <View style={styles.originalSection}>
-          <Text style={styles.originalLabel}>Your original draft</Text>
+          <Text style={styles.originalLabel}>{localizedText('Your original draft', 'Tu borrador original')}</Text>
           <Text style={styles.originalText}>{context.draft}</Text>
         </View>
 
@@ -523,7 +531,7 @@ export default function MessageSimulationScreen() {
           <View style={styles.outcomeSavedCard}>
             <Check size={16} color={Colors.success} />
             <Text style={styles.outcomeSavedText}>
-              Feedback saved. This helps improve future recommendations.
+              {localizedText('Feedback saved. This helps improve future recommendations.', 'Respuesta guardada. Esto ayuda a mejorar futuras recomendaciones.')}
             </Text>
           </View>
         )}

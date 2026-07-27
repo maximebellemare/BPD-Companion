@@ -49,10 +49,13 @@ import { scoreSecureRewrite, scoreOriginalDraft } from '@/services/messages/secu
 import { saveSecureSession } from '@/services/messages/secureRewriteOutcomeService';
 import { saveToDraftVault } from '@/services/messages/messageOutcomeService';
 import { trackSecureRewrite } from '@/services/analytics/analyticsService';
+import { localizedText } from '@/lib/i18n/staticText';
+import { useLanguage } from '@/hooks/useLanguage';
 
 type ViewMode = 'rewrites' | 'comparison' | 'teaching' | 'outcome';
 
 export default function SecureRewriteScreen() {
+  useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{
@@ -254,7 +257,7 @@ export default function SecureRewriteScreen() {
             <View style={styles.whySecureSection}>
               <View style={styles.whySecureHeader}>
                 <Shield size={12} color={Colors.brandSage} />
-                <Text style={styles.whySecureTitle}>Why this is secure</Text>
+                <Text style={styles.whySecureTitle}>{localizedText('Why this is secure', 'Por que esto es seguro')}</Text>
               </View>
               <Text style={styles.whySecureText}>{rewrite.whySecure}</Text>
             </View>
@@ -296,15 +299,15 @@ export default function SecureRewriteScreen() {
     <View style={styles.comparisonContainer}>
       <View style={styles.sectionHeaderRow}>
         <GitCompare size={16} color={Colors.primary} />
-        <Text style={styles.sectionHeaderTitle}>Before & After</Text>
+        <Text style={styles.sectionHeaderTitle}>{localizedText('Before & After', 'Antes y después')}</Text>
       </View>
 
       <View style={styles.comparisonDraftCard}>
-        <Text style={styles.comparisonDraftLabel}>Your original</Text>
+        <Text style={styles.comparisonDraftLabel}>{localizedText('Your original', 'Tu original')}</Text>
         <Text style={styles.comparisonDraftText}>{input.originalDraft}</Text>
         <View style={styles.comparisonScorePill}>
           <Text style={[styles.comparisonScoreText, { color: originalScore.overall <= 4 ? Colors.danger : Colors.accent }]}>
-            Quality: {originalScore.overall}/10
+            {localizedText('Quality', 'Calidad')}: {originalScore.overall}/10
           </Text>
         </View>
       </View>
@@ -326,7 +329,7 @@ export default function SecureRewriteScreen() {
         </View>
       )}
 
-      <Text style={styles.improvementsTitle}>What improved</Text>
+      <Text style={styles.improvementsTitle}>{localizedText('What improved', 'Que mejoro')}</Text>
       {comparison.map((point, i) => (
         <View key={i} style={styles.improvementRow}>
           <Text style={styles.improvementEmoji}>{point.emoji}</Text>
@@ -356,7 +359,7 @@ export default function SecureRewriteScreen() {
     <View style={styles.teachingContainer}>
       <View style={styles.sectionHeaderRow}>
         <Lightbulb size={16} color={Colors.accent} />
-        <Text style={styles.sectionHeaderTitle}>Why this matters</Text>
+        <Text style={styles.sectionHeaderTitle}>{localizedText('Why this matters', 'Por que importa')}</Text>
       </View>
       <Text style={styles.teachingIntro}>
         Understanding why certain language patterns work helps you build secure communication habits over time.
@@ -388,12 +391,12 @@ export default function SecureRewriteScreen() {
             onPress={() => router.back()}
             activeOpacity={0.8}
           >
-            <Text style={styles.outcomeDoneBtnText}>Done</Text>
+            <Text style={styles.outcomeDoneBtnText}>{localizedText('Done', 'Listo')}</Text>
           </TouchableOpacity>
         </View>
       ) : (
         <>
-          <Text style={styles.outcomeTitle}>What happened?</Text>
+          <Text style={styles.outcomeTitle}>{localizedText('What happened?', '¿Que paso?')}</Text>
           <Text style={styles.outcomeHint}>This helps improve future suggestions.</Text>
           <View style={styles.outcomeGrid}>
             {SECURE_OUTCOME_OPTIONS.map((opt) => (
@@ -515,7 +518,7 @@ export default function SecureRewriteScreen() {
                     activeOpacity={0.7}
                   >
                     <Archive size={13} color={Colors.textSecondary} />
-                    <Text style={styles.utilityBtnText}>Save to vault</Text>
+                    <Text style={styles.utilityBtnText}>{localizedText('Save to vault', 'Guardar en borradores')}</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity

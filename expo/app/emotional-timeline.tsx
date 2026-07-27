@@ -35,21 +35,23 @@ import {
   buildEpisodeReplayState,
 } from '@/services/timeline/emotionalEpisodeService';
 import { EmotionalEpisode, EpisodeNode, EpisodeNodeType } from '@/types/emotionalEpisode';
+import { localizedText } from '@/lib/i18n/staticText';
+import { useLanguage } from '@/hooks/useLanguage';
 
 const NODE_TYPE_CONFIG: Record<EpisodeNodeType, { icon: React.ElementType; label: string; bg: string; color: string }> = {
-  trigger: { icon: Zap, label: 'Trigger', bg: '#FFFFFF', color: '#3B82F6' },
-  emotion: { icon: Heart, label: 'Emotion', bg: '#FFFFFF', color: '#3B82F6' },
-  urge: { icon: AlertTriangle, label: 'Urge', bg: '#FFFFFF', color: '#3B82F6' },
-  behavior: { icon: MessageSquare, label: 'Action', bg: '#D9E2EC', color: '#67E8F9' },
-  coping: { icon: Shield, label: 'Coping', bg: '#FFFFFF', color: '#14B8A6' },
-  outcome: { icon: Activity, label: 'Outcome', bg: '#D9E2EC', color: '#14B8A6' },
+  trigger: { icon: Zap, get label() { return localizedText('Trigger', 'Disparador'); }, bg: '#FFFFFF', color: '#3B82F6' },
+  emotion: { icon: Heart, get label() { return localizedText('Emotion', 'Emocion'); }, bg: '#FFFFFF', color: '#3B82F6' },
+  urge: { icon: AlertTriangle, get label() { return localizedText('Urge', 'Impulso'); }, bg: '#FFFFFF', color: '#3B82F6' },
+  behavior: { icon: MessageSquare, get label() { return localizedText('Action', 'Accion'); }, bg: '#D9E2EC', color: '#67E8F9' },
+  coping: { icon: Shield, get label() { return localizedText('Coping', 'Afrontamiento'); }, bg: '#FFFFFF', color: '#14B8A6' },
+  outcome: { icon: Activity, get label() { return localizedText('Outcome', 'Resultado'); }, bg: '#D9E2EC', color: '#14B8A6' },
 };
 
 const OUTCOME_CONFIG = {
-  managed: { label: 'Managed', color: '#14B8A6', bg: '#FFFFFF', icon: TrendingDown },
-  escalated: { label: 'Escalated', color: '#3B82F6', bg: '#FFFFFF', icon: TrendingUp },
-  deescalated: { label: 'De-escalated', color: '#14B8A6', bg: '#D9E2EC', icon: TrendingDown },
-  neutral: { label: 'Neutral', color: '#2E2A72', bg: '#FFFFFF', icon: Minus },
+  managed: { get label() { return localizedText('Managed', 'Regulado'); }, color: '#14B8A6', bg: '#FFFFFF', icon: TrendingDown },
+  escalated: { get label() { return localizedText('Escalated', 'Escalo'); }, color: '#3B82F6', bg: '#FFFFFF', icon: TrendingUp },
+  deescalated: { get label() { return localizedText('De-escalated', 'Bajo'); }, color: '#14B8A6', bg: '#D9E2EC', icon: TrendingDown },
+  neutral: { get label() { return localizedText('Neutral', 'Neutral'); }, color: '#2E2A72', bg: '#FFFFFF', icon: Minus },
 };
 
 function formatDate(ts: number): string {
@@ -219,23 +221,23 @@ const EpisodeCard = React.memo(function EpisodeCard({
       <View style={styles.episodeMetaRow}>
         <View style={styles.episodeMetaItem}>
           <Zap size={12} color="#3B82F6" />
-          <Text style={styles.episodeMetaText}>{episode.triggers.length} trigger{episode.triggers.length !== 1 ? 's' : ''}</Text>
+          <Text style={styles.episodeMetaText}>{localizedText(`${episode.triggers.length} trigger${episode.triggers.length !== 1 ? 's' : ''}`, `${episode.triggers.length} disparador${episode.triggers.length !== 1 ? 'es' : ''}`)}</Text>
         </View>
         <View style={[styles.episodeIntensityPill, { backgroundColor: intensityColor + '18' }]}>
           <Text style={[styles.episodeIntensityText, { color: intensityColor }]}>
-            Peak {episode.peakIntensity}/10
+            {localizedText('Peak', 'Pico')} {episode.peakIntensity}/10
           </Text>
         </View>
         {episode.isRelationshipRelated && (
           <View style={styles.relationshipBadge}>
             <Heart size={10} color="#67E8F9" />
-            <Text style={styles.relationshipBadgeText}>Relationship</Text>
+            <Text style={styles.relationshipBadgeText}>{localizedText('Relationship', 'Relacion')}</Text>
           </View>
         )}
       </View>
 
       <View style={styles.episodeTapHint}>
-        <Text style={styles.episodeTapHintText}>Tap to replay</Text>
+        <Text style={styles.episodeTapHintText}>{localizedText('Tap to replay', 'Toca para repetir')}</Text>
         <ChevronRight size={14} color={Colors.textMuted} />
       </View>
     </TouchableOpacity>
@@ -279,7 +281,7 @@ function EpisodeDetail({
           activeOpacity={0.7}
         >
           <ChevronLeft size={20} color={Colors.primary} />
-          <Text style={styles.backText}>Episodes</Text>
+          <Text style={styles.backText}>{localizedText('Episodes', 'Episodios')}</Text>
         </TouchableOpacity>
 
         <View style={styles.detailHeaderInfo}>
@@ -302,7 +304,7 @@ function EpisodeDetail({
           {episode.isRelationshipRelated && (
             <View style={styles.relationshipBadge}>
               <Heart size={10} color="#67E8F9" />
-              <Text style={styles.relationshipBadgeText}>Relationship</Text>
+              <Text style={styles.relationshipBadgeText}>{localizedText('Relationship', 'Relacion')}</Text>
             </View>
           )}
         </View>
@@ -311,26 +313,26 @@ function EpisodeDetail({
       <View style={styles.detailSummaryRow}>
         <View style={styles.detailSummaryItem}>
           <Text style={styles.detailSummaryValue}>{episode.peakIntensity}</Text>
-          <Text style={styles.detailSummaryLabel}>Peak</Text>
+          <Text style={styles.detailSummaryLabel}>{localizedText('Peak', 'Pico')}</Text>
         </View>
         <View style={styles.detailSummaryDivider} />
         <View style={styles.detailSummaryItem}>
           <Text style={styles.detailSummaryValue}>{episode.nodes.length}</Text>
-          <Text style={styles.detailSummaryLabel}>Steps</Text>
+          <Text style={styles.detailSummaryLabel}>{localizedText('Steps', 'Pasos')}</Text>
         </View>
         <View style={styles.detailSummaryDivider} />
         <View style={styles.detailSummaryItem}>
           <Text style={styles.detailSummaryValue}>{episode.emotions.length}</Text>
-          <Text style={styles.detailSummaryLabel}>Emotions</Text>
+          <Text style={styles.detailSummaryLabel}>{localizedText('Emotions', 'Emociones')}</Text>
         </View>
         <View style={styles.detailSummaryDivider} />
         <View style={styles.detailSummaryItem}>
           <Text style={styles.detailSummaryValue}>{episode.copingUsed.length}</Text>
-          <Text style={styles.detailSummaryLabel}>Coping</Text>
+          <Text style={styles.detailSummaryLabel}>{localizedText('Coping', 'Afrontamiento')}</Text>
         </View>
       </View>
 
-      <Text style={styles.sectionTitle}>Episode Timeline</Text>
+      <Text style={styles.sectionTitle}>{localizedText('Episode Timeline', 'Linea de tiempo del episodio')}</Text>
 
       {episode.nodes.map((node, idx) => (
         <TimelineNode
@@ -346,7 +348,7 @@ function EpisodeDetail({
           <View style={styles.reflectionIconWrap}>
             <Lightbulb size={18} color="#67E8F9" />
           </View>
-          <Text style={styles.reflectionTitle}>What may have happened</Text>
+          <Text style={styles.reflectionTitle}>{localizedText('What may have happened', 'Que puede haber pasado')}</Text>
         </View>
         <Text style={styles.reflectionText}>{episode.reflection}</Text>
       </Animated.View>
@@ -356,14 +358,14 @@ function EpisodeDetail({
           <View style={[styles.reflectionIconWrap, { backgroundColor: '#D9E2EC' }]}>
             <RotateCcw size={16} color="#14B8A6" />
           </View>
-          <Text style={styles.reflectionTitle}>Where to interrupt next time</Text>
+          <Text style={styles.reflectionTitle}>{localizedText('Where to interrupt next time', 'Donde interrumpir la proxima vez')}</Text>
         </View>
         <Text style={styles.interruptText}>{episode.interruptSuggestion}</Text>
       </Animated.View>
 
       {episode.emotions.length > 0 && (
         <View style={styles.chipSection}>
-          <Text style={styles.chipSectionTitle}>Emotions</Text>
+          <Text style={styles.chipSectionTitle}>{localizedText('Emotions', 'Emociones')}</Text>
           <View style={styles.chipRow}>
             {episode.emotions.map(e => (
               <View key={e} style={styles.emotionChip}>
@@ -376,7 +378,7 @@ function EpisodeDetail({
 
       {episode.triggers.length > 0 && (
         <View style={styles.chipSection}>
-          <Text style={styles.chipSectionTitle}>Triggers</Text>
+          <Text style={styles.chipSectionTitle}>{localizedText('Triggers', 'Disparadores')}</Text>
           <View style={styles.chipRow}>
             {episode.triggers.map(t => (
               <View key={t} style={styles.triggerChip}>
@@ -405,6 +407,7 @@ function EpisodeDetail({
 }
 
 export default function EmotionalTimelineReplayScreen() {
+  useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { journalEntries, messageDrafts } = useApp();
@@ -506,9 +509,9 @@ export default function EmotionalTimelineReplayScreen() {
             {replayState.episodes.length === 0 ? (
               <View style={styles.emptyState}>
                 <Activity size={48} color={Colors.border} />
-                <Text style={styles.emptyTitle}>No episodes yet</Text>
+                <Text style={styles.emptyTitle}>{localizedText('No episodes yet', 'Aun no hay episodios')}</Text>
                 <Text style={styles.emptyDesc}>
-                  As you use check-ins and journaling, emotional episodes will appear here for you to review.
+                  {localizedText('As you use check-ins and journaling, emotional episodes will appear here for you to review.', 'A medida que uses check-ins y diario, los episodios emocionales apareceran aqui para que los revises.')}
                 </Text>
               </View>
             ) : (

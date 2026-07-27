@@ -22,6 +22,8 @@ import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
 import { EarlyWarningSuggestion, DetectedPattern, WarningLevel } from '@/types/prediction';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 interface Props {
   warningLevel: WarningLevel;
@@ -50,6 +52,7 @@ export default React.memo(function EarlyWarningBanner({
   patterns,
   suggestions,
 }: Props) {
+  useLanguage();
   const router = useRouter();
   const slideAnim = useRef(new Animated.Value(-20)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -123,7 +126,7 @@ export default React.memo(function EarlyWarningBanner({
             </View>
             <View style={styles.bannerTextWrap}>
               <Text style={[styles.bannerTitle, { color: colors.accent }]}>
-                Gentle Heads Up
+                {localizedText('Gentle Heads Up', 'Aviso amable')}
               </Text>
               <Text style={styles.bannerMessage} numberOfLines={2}>
                 {message}
@@ -163,12 +166,12 @@ export default React.memo(function EarlyWarningBanner({
             <View style={[styles.modalIconCircle, { backgroundColor: colors.accent + '12' }]}>
               <ShieldCheck size={32} color={colors.accent} />
             </View>
-            <Text style={styles.modalTitle}>Emotional Check-In</Text>
+            <Text style={styles.modalTitle}>{localizedText('Emotional Check-In', 'Registro emocional')}</Text>
             <Text style={styles.modalMessage}>{message}</Text>
 
             {patterns.length > 0 && (
               <View style={styles.patternsSection}>
-                <Text style={styles.sectionTitle}>What we noticed</Text>
+                <Text style={styles.sectionTitle}>{localizedText('What we noticed', 'Lo que notamos')}</Text>
                 {patterns.map(pattern => (
                   <View key={pattern.id} style={styles.patternCard}>
                     <View style={[styles.patternDot, { backgroundColor: colors.accent }]} />
@@ -183,7 +186,7 @@ export default React.memo(function EarlyWarningBanner({
 
             {suggestions.length > 0 && (
               <View style={styles.suggestionsSection}>
-                <Text style={styles.sectionTitle}>Things that might help</Text>
+                <Text style={styles.sectionTitle}>{localizedText('Things that might help', 'Cosas que podrían ayudar')}</Text>
                 {suggestions.map(suggestion => {
                   const IconComponent = ICON_MAP[suggestion.icon] ?? Wind;
                   return (
@@ -210,7 +213,10 @@ export default React.memo(function EarlyWarningBanner({
             <View style={styles.reassurance}>
               <AlertTriangle size={14} color={Colors.textMuted} />
               <Text style={styles.reassuranceText}>
-                This is based on your recent patterns. It's never a diagnosis — just a gentle nudge to take care of yourself.
+                {localizedText(
+                  "This is based on your recent patterns. It's never a diagnosis — just a gentle nudge to take care of yourself.",
+                  'Esto se basa en tus patrones recientes. Nunca es un diagnóstico; solo un recordatorio amable para cuidarte.',
+                )}
               </Text>
             </View>
           </View>

@@ -11,6 +11,8 @@ import { useRouter } from 'expo-router';
 import { Sparkles, ChevronRight } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 interface ReflectionMirrorCardProps {
   hasEnoughData: boolean;
@@ -23,6 +25,7 @@ export default function ReflectionMirrorCard({
   topTheme,
   growthCount,
 }: ReflectionMirrorCardProps) {
+  useLanguage();
   const router = useRouter();
   const shimmer = useRef(new Animated.Value(0)).current;
 
@@ -50,11 +53,20 @@ export default function ReflectionMirrorCard({
   });
 
   const subtitle = hasEnoughData && topTheme
-    ? `${topTheme} has been a recurring theme`
-    : 'See compassionate reflections about your patterns';
+    ? localizedText(
+      `${topTheme} has been a recurring theme`,
+      `${topTheme} ha sido un tema recurrente`,
+    )
+    : localizedText(
+      'See compassionate reflections about your patterns',
+      'Mira reflexiones compasivas sobre tus patrones',
+    );
 
   const detail = hasEnoughData && growthCount > 0
-    ? `${growthCount} growth signal${growthCount !== 1 ? 's' : ''} detected`
+    ? localizedText(
+      `${growthCount} growth signal${growthCount !== 1 ? 's' : ''} detected`,
+      `${growthCount} señal${growthCount !== 1 ? 'es' : ''} de crecimiento detectada${growthCount !== 1 ? 's' : ''}`,
+    )
     : null;
 
   return (
@@ -70,7 +82,7 @@ export default function ReflectionMirrorCard({
           <Sparkles size={20} color="#14B8A6" />
         </View>
         <View style={styles.textWrap}>
-          <Text style={styles.title}>Reflection Mirror</Text>
+          <Text style={styles.title}>{localizedText('Reflection Mirror', 'Espejo de reflexión')}</Text>
           <Text style={styles.subtitle} numberOfLines={2}>{subtitle}</Text>
           {detail && <Text style={styles.detail}>{detail}</Text>}
         </View>

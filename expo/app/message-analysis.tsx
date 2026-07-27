@@ -25,18 +25,20 @@ import {
   MessageDesiredOutcome,
   MessageHealthScore,
 } from '@/types/messageHealth';
+import { localizedText } from '@/lib/i18n/staticText';
+import { useLanguage } from '@/hooks/useLanguage';
 
 const DIMENSION_META: Record<keyof MessageHealthScore, { label: string; emoji: string; inverted?: boolean }> = {
-  urgency: { label: 'Urgency', emoji: '⚡' },
-  blame: { label: 'Blame', emoji: '👆' },
-  reassuranceSeeking: { label: 'Reassurance-seeking', emoji: '🤲' },
-  overexplaining: { label: 'Over-explaining', emoji: '📝' },
-  hostility: { label: 'Hostility', emoji: '🔥' },
-  clarity: { label: 'Clarity', emoji: '🎯', inverted: true },
-  emotionalFlooding: { label: 'Emotional flooding', emoji: '🌊' },
-  boundaryStrength: { label: 'Boundary strength', emoji: '🛡️', inverted: true },
-  selfRespect: { label: 'Self-respect', emoji: '👑', inverted: true },
-  escalationRisk: { label: 'Escalation risk', emoji: '📈' },
+  urgency: { get label() { return localizedText('Urgency', 'Urgencia'); }, emoji: '⚡' },
+  blame: { get label() { return localizedText('Blame', 'Culpa'); }, emoji: '👆' },
+  reassuranceSeeking: { get label() { return localizedText('Reassurance-seeking', 'Buscar tranquilidad'); }, emoji: '🤲' },
+  overexplaining: { get label() { return localizedText('Over-explaining', 'Sobreexplicar'); }, emoji: '📝' },
+  hostility: { get label() { return localizedText('Hostility', 'Hostilidad'); }, emoji: '🔥' },
+  clarity: { get label() { return localizedText('Clarity', 'Claridad'); }, emoji: '🎯', inverted: true },
+  emotionalFlooding: { get label() { return localizedText('Emotional flooding', 'Inundacion emocional'); }, emoji: '🌊' },
+  boundaryStrength: { get label() { return localizedText('Boundary strength', 'Fuerza del limite'); }, emoji: '🛡️', inverted: true },
+  selfRespect: { get label() { return localizedText('Self-respect', 'Autorrespeto'); }, emoji: '👑', inverted: true },
+  escalationRisk: { get label() { return localizedText('Escalation risk', 'Riesgo de escalada'); }, emoji: '📈' },
 };
 
 function ScoreBar({ value, inverted }: { value: number; inverted?: boolean }) {
@@ -52,6 +54,7 @@ function ScoreBar({ value, inverted }: { value: number; inverted?: boolean }) {
 }
 
 export default function MessageAnalysisScreen() {
+  useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{
@@ -117,10 +120,10 @@ export default function MessageAnalysisScreen() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
             <ArrowLeft size={20} color={Colors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Message Health</Text>
+          <Text style={styles.headerTitle}>{localizedText('Message Health', 'Salud del mensaje')}</Text>
         </View>
         <View style={styles.emptyState}>
-          <Text style={styles.emptyText}>No message to analyze.</Text>
+          <Text style={styles.emptyText}>{localizedText('No message to analyze.', 'No hay mensaje para analizar.')}</Text>
         </View>
       </View>
     );
@@ -146,7 +149,7 @@ export default function MessageAnalysisScreen() {
         >
           <ArrowLeft size={20} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Message Health Score</Text>
+        <Text style={styles.headerTitle}>{localizedText('Message Health Score', 'Puntaje de salud del mensaje')}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -247,7 +250,7 @@ export default function MessageAnalysisScreen() {
         </View>
 
         <View style={styles.draftCard}>
-          <Text style={styles.draftLabel}>Your message</Text>
+          <Text style={styles.draftLabel}>{localizedText('Your message', 'Tu mensaje')}</Text>
           <Text style={styles.draftText}>{context.draft}</Text>
         </View>
 
@@ -273,7 +276,7 @@ export default function MessageAnalysisScreen() {
           ) : null}
           {context.urge ? (
             <View style={styles.contextRow}>
-              <Text style={styles.contextRowLabel}>Urge</Text>
+              <Text style={styles.contextRowLabel}>{localizedText('Urge', 'Impulso')}</Text>
               <Text style={styles.contextRowValue}>{context.urge.replace(/_/g, ' ')}</Text>
             </View>
           ) : null}

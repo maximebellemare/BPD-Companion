@@ -11,6 +11,8 @@ import { TrendingUp, TrendingDown, Minus, Activity, Zap, Heart } from 'lucide-re
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { EmotionalTrend, WarningLevel } from '@/types/prediction';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 interface Props {
   trend: EmotionalTrend;
@@ -19,10 +21,10 @@ interface Props {
 }
 
 const TREND_CONFIG = {
-  rising: { label: 'Rising', color: '#3B82F6', Icon: TrendingUp },
-  falling: { label: 'Falling', color: '#14B8A6', Icon: TrendingDown },
-  stable: { label: 'Stable', color: Colors.primary, Icon: Minus },
-  unknown: { label: 'Not enough data', color: Colors.textMuted, Icon: Activity },
+  rising: { get label() { return localizedText('Rising', 'Subiendo'); }, color: '#3B82F6', Icon: TrendingUp },
+  falling: { get label() { return localizedText('Falling', 'Bajando'); }, color: '#14B8A6', Icon: TrendingDown },
+  stable: { get label() { return localizedText('Stable', 'Estable'); }, color: Colors.primary, Icon: Minus },
+  unknown: { get label() { return localizedText('Not enough data', 'Aún faltan datos'); }, color: Colors.textMuted, Icon: Activity },
 } as const;
 
 const WARNING_ACCENT: Record<WarningLevel, string> = {
@@ -33,6 +35,7 @@ const WARNING_ACCENT: Record<WarningLevel, string> = {
 };
 
 export default React.memo(function EmotionalTrendsCard({ trend, warningLevel, onPress }: Props) {
+  useLanguage();
   const pulseAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -92,7 +95,7 @@ export default React.memo(function EmotionalTrendsCard({ trend, warningLevel, on
         <View style={styles.headerRow}>
           <View style={styles.titleRow}>
             <Activity size={16} color={accentColor} />
-            <Text style={styles.title}>Emotional Trends</Text>
+            <Text style={styles.title}>{localizedText('Emotional Trends', 'Tendencias emocionales')}</Text>
           </View>
           {warningLevel !== 'none' && (
             <Animated.View
@@ -109,7 +112,7 @@ export default React.memo(function EmotionalTrendsCard({ trend, warningLevel, on
             <View style={[styles.metricIconWrap, { backgroundColor: trendConfig.color + '18' }]}>
               <TrendIcon size={16} color={trendConfig.color} />
             </View>
-            <Text style={styles.metricLabel}>Distress</Text>
+            <Text style={styles.metricLabel}>{localizedText('Distress', 'Malestar')}</Text>
             <Text style={[styles.metricValue, { color: trendConfig.color }]}>
               {trendConfig.label}
             </Text>
@@ -121,7 +124,7 @@ export default React.memo(function EmotionalTrendsCard({ trend, warningLevel, on
             <View style={[styles.metricIconWrap, { backgroundColor: Colors.accent + '18' }]}>
               <Zap size={16} color={Colors.accent} />
             </View>
-            <Text style={styles.metricLabel}>Top Trigger</Text>
+            <Text style={styles.metricLabel}>{localizedText('Top Trigger', 'Disparador')}</Text>
             <Text style={styles.metricValue} numberOfLines={1}>
               {trend.topTriggerThisWeek ?? '—'}
             </Text>
@@ -133,7 +136,7 @@ export default React.memo(function EmotionalTrendsCard({ trend, warningLevel, on
             <View style={[styles.metricIconWrap, { backgroundColor: '#3B82F6' + '18' }]}>
               <Heart size={16} color="#3B82F6" />
             </View>
-            <Text style={styles.metricLabel}>Top Emotion</Text>
+            <Text style={styles.metricLabel}>{localizedText('Top Emotion', 'Emoción')}</Text>
             <Text style={styles.metricValue} numberOfLines={1}>
               {trend.topEmotionThisWeek ?? '—'}
             </Text>
@@ -154,7 +157,10 @@ export default React.memo(function EmotionalTrendsCard({ trend, warningLevel, on
               />
             </View>
             <Text style={styles.footerText}>
-              Avg distress: {trend.averageDistressThisWeek}/10 · {trend.checkInsThisWeek} check-in{trend.checkInsThisWeek !== 1 ? 's' : ''} this week
+              {localizedText('Avg distress:', 'Malestar prom.:')} {trend.averageDistressThisWeek}/10 · {trend.checkInsThisWeek} {localizedText(
+                `check-in${trend.checkInsThisWeek !== 1 ? 's' : ''} this week`,
+                `registro${trend.checkInsThisWeek !== 1 ? 's' : ''} esta semana`,
+              )}
             </Text>
           </View>
         )}

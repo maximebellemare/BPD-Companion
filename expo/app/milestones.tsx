@@ -29,6 +29,8 @@ import Colors from '@/constants/colors';
 import { useRewards } from '@/providers/RewardsProvider';
 import { MilestoneDefinition, MilestoneLevel, MILESTONE_DEFINITIONS } from '@/types/reward';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 const ICON_MAP: Record<string, React.ComponentType<{ size: number; color: string }>> = {
   Heart,
@@ -44,9 +46,9 @@ const ICON_MAP: Record<string, React.ComponentType<{ size: number; color: string
 };
 
 const LEVEL_META: Record<MilestoneLevel, { label: string; color: string; bg: string; border: string }> = {
-  bronze: { label: 'Beginning', color: '#3B82F6', bg: '#FFFFFF', border: '#D9E2EC' },
-  silver: { label: 'Growing', color: '#2E2A72', bg: '#FFFFFF', border: '#D9E2EC' },
-  gold: { label: 'Strong', color: '#3B82F6', bg: '#FFFFFF', border: '#D9E2EC' },
+  bronze: { get label() { return localizedText('Beginning', 'Comenzando'); }, color: '#3B82F6', bg: '#FFFFFF', border: '#D9E2EC' },
+  silver: { get label() { return localizedText('Growing', 'Creciendo'); }, color: '#2E2A72', bg: '#FFFFFF', border: '#D9E2EC' },
+  gold: { get label() { return localizedText('Strong', 'Fuerte'); }, color: '#3B82F6', bg: '#FFFFFF', border: '#D9E2EC' },
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -66,6 +68,7 @@ export default function MilestonesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { trackEvent } = useAnalytics();
+  useLanguage();
   const {
     unlockedMilestones,
     nextMilestones,
@@ -234,12 +237,12 @@ export default function MilestonesScreen() {
           <View style={styles.summaryRow}>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryValue}>{metrics.checkInDays}</Text>
-              <Text style={styles.summaryLabel}>Check-in{'\n'}days</Text>
+              <Text style={styles.summaryLabel}>{localizedText('Check-in', 'Check-in')}{'\n'}{localizedText('days', 'días')}</Text>
             </View>
             <View style={styles.summaryDivider} />
             <View style={styles.summaryItem}>
               <Text style={styles.summaryValue}>{metrics.journalDays}</Text>
-              <Text style={styles.summaryLabel}>Journal{'\n'}days</Text>
+              <Text style={styles.summaryLabel}>{localizedText('Journal', 'Diario')}{'\n'}{localizedText('days', 'días')}</Text>
             </View>
             <View style={styles.summaryDivider} />
             <View style={styles.summaryItem}>

@@ -33,6 +33,8 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { localizedText } from '@/lib/i18n/staticText';
+import { useLanguage } from '@/hooks/useLanguage';
 import { useAppointments } from '@/providers/AppointmentProvider';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
 import {
@@ -53,6 +55,7 @@ export default function AppointmentDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
+  useLanguage();
   const { trackEvent } = useAnalytics();
   const appointmentContext = useAppointments();
   const getAppointmentById = appointmentContext?.getAppointmentById ?? (() => null);
@@ -120,12 +123,15 @@ export default function AppointmentDetailScreen() {
   const handleDelete = useCallback(() => {
     if (!appointment) return;
     Alert.alert(
-      'Delete Appointment',
-      `Remove "${appointment.providerName}" appointment?`,
+      localizedText('Delete Appointment', 'Eliminar cita'),
+      localizedText(
+        `Remove "${appointment.providerName}" appointment?`,
+        `¿Eliminar la cita con "${appointment.providerName}"?`,
+      ),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: localizedText('Cancel', 'Cancelar'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: localizedText('Delete', 'Eliminar'),
           style: 'destructive',
           onPress: async () => {
             if (Platform.OS !== 'web') {
@@ -156,7 +162,10 @@ export default function AppointmentDetailScreen() {
     };
     await savePreSessionNotes(appointment.id, notes);
     trackEvent('pre_session_note_saved', { appointment_type: appointment.appointmentType });
-    Alert.alert('Saved', 'Your pre-session notes have been saved.');
+    Alert.alert(
+      localizedText('Saved', 'Guardado'),
+      localizedText('Your pre-session notes have been saved.', 'Tus notas previas a la sesión se guardaron.'),
+    );
   }, [appointment, preNotes, savePreSessionNotes, trackEvent]);
 
   const handleSavePostSession = useCallback(async () => {
@@ -179,7 +188,13 @@ export default function AppointmentDetailScreen() {
     await savePostSessionNotes(appointment.id, notes);
     trackEvent('post_session_note_saved', { appointment_type: appointment.appointmentType });
     trackEvent('appointment_completed', { appointment_type: appointment.appointmentType });
-    Alert.alert('Saved', 'Session notes saved and appointment marked complete.');
+    Alert.alert(
+      localizedText('Saved', 'Guardado'),
+      localizedText(
+        'Session notes saved and appointment marked complete.',
+        'Tus notas de la sesión se guardaron y la cita quedó marcada como completada.',
+      ),
+    );
   }, [appointment, postNotes, savePostSessionNotes, trackEvent]);
 
   const handleMarkComplete = useCallback(async () => {
@@ -191,8 +206,11 @@ export default function AppointmentDetailScreen() {
     trackEvent('appointment_completed', { appointment_type: appointment.appointmentType });
     setActiveTab('post_session');
     Alert.alert(
-      'Appointment completed',
-      'Take a minute to save what stood out while it is still fresh.',
+      localizedText('Appointment completed', 'Cita completada'),
+      localizedText(
+        'Take a minute to save what stood out while it is still fresh.',
+        'Tómate un minuto para guardar lo que destacó mientras todavía está fresco.',
+      ),
     );
   }, [appointment, markCompleted, trackEvent]);
 
@@ -209,9 +227,9 @@ export default function AppointmentDetailScreen() {
           </TouchableOpacity>
         </View>
         <View style={styles.emptyState}>
-          <Text style={styles.emptyTitle}>Appointment Not Found</Text>
+          <Text style={styles.emptyTitle}>{localizedText('Appointment Not Found', 'No se encontró la cita')}</Text>
           <TouchableOpacity style={styles.emptyAction} onPress={handleClose}>
-            <Text style={styles.emptyActionText}>Go Back</Text>
+            <Text style={styles.emptyActionText}>{localizedText('Go Back', 'Volver')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -278,7 +296,7 @@ export default function AppointmentDetailScreen() {
                 {appointment.completed && (
                   <View style={styles.completedBadge}>
                     <CheckCircle2 size={14} color={Colors.success} />
-                    <Text style={styles.completedBadgeText}>Completed</Text>
+                    <Text style={styles.completedBadgeText}>{localizedText('Completed', 'Completada')}</Text>
                   </View>
                 )}
               </View>
@@ -288,7 +306,7 @@ export default function AppointmentDetailScreen() {
               <View style={styles.topicsCard}>
                 <View style={styles.topicsHeader}>
                   <FileText size={16} color={Colors.primaryDark} />
-                  <Text style={styles.topicsTitle}>Topics to Discuss</Text>
+                  <Text style={styles.topicsTitle}>{localizedText('Topics to Discuss', 'Temas para conversar')}</Text>
                 </View>
                 {appointment.topicsToDiscuss.map((topic, i) => (
                   <View key={i} style={styles.topicItem}>
@@ -301,7 +319,7 @@ export default function AppointmentDetailScreen() {
 
             {appointment.notes ? (
               <View style={styles.notesCard}>
-                <Text style={styles.notesLabel}>Notes</Text>
+                <Text style={styles.notesLabel}>{localizedText('Notes', 'Notas')}</Text>
                 <Text style={styles.notesText}>{appointment.notes}</Text>
               </View>
             ) : null}
@@ -311,20 +329,20 @@ export default function AppointmentDetailScreen() {
                 style={[styles.tab, activeTab === 'overview' && styles.tabActive]}
                 onPress={() => setActiveTab('overview')}
               >
-                <Text style={[styles.tabText, activeTab === 'overview' && styles.tabTextActive]}>Overview</Text>
+                <Text style={[styles.tabText, activeTab === 'overview' && styles.tabTextActive]}>{localizedText('Overview', 'Resumen')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.tab, activeTab === 'pre_session' && styles.tabActive]}
                 onPress={() => setActiveTab('pre_session')}
               >
-                <Text style={[styles.tabText, activeTab === 'pre_session' && styles.tabTextActive]}>Pre-Session</Text>
+                <Text style={[styles.tabText, activeTab === 'pre_session' && styles.tabTextActive]}>{localizedText('Pre-Session', 'Antes')}</Text>
                 {appointment.preSessionNotes && <View style={styles.tabDot} />}
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.tab, activeTab === 'post_session' && styles.tabActive]}
                 onPress={() => setActiveTab('post_session')}
               >
-                <Text style={[styles.tabText, activeTab === 'post_session' && styles.tabTextActive]}>Post-Session</Text>
+                <Text style={[styles.tabText, activeTab === 'post_session' && styles.tabTextActive]}>{localizedText('Post-Session', 'Después')}</Text>
                 {appointment.postSessionNotes && <View style={styles.tabDot} />}
               </TouchableOpacity>
             </View>
@@ -334,7 +352,7 @@ export default function AppointmentDetailScreen() {
                 {!appointment.completed && isPast && (
                   <TouchableOpacity style={styles.completeBtn} onPress={handleMarkComplete} activeOpacity={0.7}>
                     <CheckCircle2 size={18} color={Colors.white} />
-                    <Text style={styles.completeBtnText}>Mark as Completed</Text>
+                    <Text style={styles.completeBtnText}>{localizedText('Mark as Completed', 'Marcar como completada')}</Text>
                   </TouchableOpacity>
                 )}
 
@@ -347,8 +365,10 @@ export default function AppointmentDetailScreen() {
                     <TrendingUp size={16} color={Colors.primary} />
                   </View>
                   <View style={styles.linkContent}>
-                    <Text style={styles.linkTitle}>Therapy Report</Text>
-                    <Text style={styles.linkDesc}>View your emotional summary for this period</Text>
+                    <Text style={styles.linkTitle}>{localizedText('Therapy Report', 'Informe terapéutico')}</Text>
+                    <Text style={styles.linkDesc}>
+                      {localizedText('View your emotional summary for this period', 'Ve tu resumen emocional de este período')}
+                    </Text>
                   </View>
                   <ChevronRight size={16} color={Colors.textMuted} />
                 </TouchableOpacity>
@@ -362,8 +382,8 @@ export default function AppointmentDetailScreen() {
                     <BookOpen size={16} color="#3B82F6" />
                   </View>
                   <View style={styles.linkContent}>
-                    <Text style={styles.linkTitle}>Weekly Reflection</Text>
-                    <Text style={styles.linkDesc}>Review your weekly narrative</Text>
+                    <Text style={styles.linkTitle}>{localizedText('Weekly Reflection', 'Reflexión semanal')}</Text>
+                    <Text style={styles.linkDesc}>{localizedText('Review your weekly narrative', 'Revisa tu narrativa semanal')}</Text>
                   </View>
                   <ChevronRight size={16} color={Colors.textMuted} />
                 </TouchableOpacity>
@@ -373,7 +393,10 @@ export default function AppointmentDetailScreen() {
             {activeTab === 'pre_session' && (
               <View style={styles.sessionSection}>
                 <Text style={styles.sessionIntro}>
-                  Prepare for your session. These notes can help you make the most of your time.
+                  {localizedText(
+                    'Prepare for your session. These notes can help you make the most of your time.',
+                    'Prepárate para tu sesión. Estas notas pueden ayudarte a aprovechar mejor tu tiempo.',
+                  )}
                 </Text>
 
                 {PRE_SESSION_PROMPTS.map(prompt => (
@@ -405,7 +428,9 @@ export default function AppointmentDetailScreen() {
                   activeOpacity={0.7}
                 >
                   <Text style={styles.saveSessionBtnText}>
-                    {isSavingPreSession ? 'Saving…' : 'Save Pre-Session Notes'}
+                    {isSavingPreSession
+                      ? localizedText('Saving…', 'Guardando…')
+                      : localizedText('Save Pre-Session Notes', 'Guardar notas previas')}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -414,19 +439,25 @@ export default function AppointmentDetailScreen() {
             {activeTab === 'post_session' && (
               <View style={styles.sessionSection}>
                 <Text style={styles.sessionIntro}>
-                  Save the pieces you may want to remember later. Companion can use these notes gently when they are relevant.
+                  {localizedText(
+                    'Save the pieces you may want to remember later. Companion can use these notes gently when they are relevant.',
+                    'Guarda las partes que quizá quieras recordar después. Companion puede usar estas notas con cuidado cuando sean relevantes.',
+                  )}
                 </Text>
 
                 <View style={styles.promptGroup}>
                   <View style={styles.promptHeader}>
                     <Lightbulb size={14} color={Colors.accent} />
-                    <Text style={styles.promptLabel}>What stood out?</Text>
+                    <Text style={styles.promptLabel}>{localizedText('What stood out?', '¿Qué destacó?')}</Text>
                   </View>
                   <TextInput
                     style={[styles.promptInput, postNotes.whatStoodOut.length > 0 && styles.promptInputFilled]}
                     value={postNotes.whatStoodOut}
                     onChangeText={(text) => setPostNotes(prev => ({ ...prev, whatStoodOut: text }))}
-                    placeholder="A moment, phrase, idea, or feeling you do not want to lose..."
+                    placeholder={localizedText(
+                      'A moment, phrase, idea, or feeling you do not want to lose...',
+                      'Un momento, frase, idea o sentimiento que no quieres perder...',
+                    )}
                     placeholderTextColor={Colors.textMuted}
                     multiline
                     textAlignVertical="top"
@@ -436,13 +467,16 @@ export default function AppointmentDetailScreen() {
                 <View style={styles.promptGroup}>
                   <View style={styles.promptHeader}>
                     <BookOpen size={14} color="#3B82F6" />
-                    <Text style={styles.promptLabel}>What do you want to remember?</Text>
+                    <Text style={styles.promptLabel}>{localizedText('What do you want to remember?', '¿Qué quieres recordar?')}</Text>
                   </View>
                   <TextInput
                     style={[styles.promptInput, postNotes.remember.length > 0 && styles.promptInputFilled]}
                     value={postNotes.remember}
                     onChangeText={(text) => setPostNotes(prev => ({ ...prev, remember: text }))}
-                    placeholder="Something your provider suggested, something you realized, or a reminder for yourself..."
+                    placeholder={localizedText(
+                      'Something your provider suggested, something you realized, or a reminder for yourself...',
+                      'Algo que tu profesional sugirió, algo que notaste o un recordatorio para ti...',
+                    )}
                     placeholderTextColor={Colors.textMuted}
                     multiline
                     textAlignVertical="top"
@@ -452,13 +486,16 @@ export default function AppointmentDetailScreen() {
                 <View style={styles.promptGroup}>
                   <View style={styles.promptHeader}>
                     <TrendingUp size={14} color={Colors.success} />
-                    <Text style={styles.promptLabel}>Any action items?</Text>
+                    <Text style={styles.promptLabel}>{localizedText('Any action items?', '¿Algún paso a seguir?')}</Text>
                   </View>
                   <TextInput
                     style={[styles.promptInput, postNotes.actionItems.length > 0 && styles.promptInputFilled]}
                     value={postNotes.actionItems}
                     onChangeText={(text) => setPostNotes(prev => ({ ...prev, actionItems: text }))}
-                    placeholder="Practice a skill, track something, bring up a topic, book a follow-up..."
+                    placeholder={localizedText(
+                      'Practice a skill, track something, bring up a topic, book a follow-up...',
+                      'Practicar una habilidad, registrar algo, mencionar un tema, agendar seguimiento...',
+                    )}
                     placeholderTextColor={Colors.textMuted}
                     multiline
                     textAlignVertical="top"
@@ -468,13 +505,16 @@ export default function AppointmentDetailScreen() {
                 <View style={styles.promptGroup}>
                   <View style={styles.promptHeader}>
                     <MessageCircle size={14} color={Colors.primary} />
-                    <Text style={styles.promptLabel}>Any follow-up questions?</Text>
+                    <Text style={styles.promptLabel}>{localizedText('Any follow-up questions?', '¿Alguna pregunta de seguimiento?')}</Text>
                   </View>
                   <TextInput
                     style={[styles.promptInput, postNotes.followUpQuestions.length > 0 && styles.promptInputFilled]}
                     value={postNotes.followUpQuestions}
                     onChangeText={(text) => setPostNotes(prev => ({ ...prev, followUpQuestions: text }))}
-                    placeholder="Questions to ask next time, or things you want to understand better..."
+                    placeholder={localizedText(
+                      'Questions to ask next time, or things you want to understand better...',
+                      'Preguntas para la próxima vez o cosas que quieres entender mejor...',
+                    )}
                     placeholderTextColor={Colors.textMuted}
                     multiline
                     textAlignVertical="top"
@@ -484,13 +524,13 @@ export default function AppointmentDetailScreen() {
                 <View style={styles.promptGroup}>
                   <View style={styles.promptHeader}>
                     <FileText size={14} color={Colors.textSecondary} />
-                    <Text style={styles.promptLabel}>Other notes</Text>
+                    <Text style={styles.promptLabel}>{localizedText('Other notes', 'Otras notas')}</Text>
                   </View>
                   <TextInput
                     style={[styles.promptInput, postNotes.mainTakeaways.length > 0 && styles.promptInputFilled]}
                     value={postNotes.mainTakeaways}
                     onChangeText={(text) => setPostNotes(prev => ({ ...prev, mainTakeaways: text }))}
-                    placeholder="Anything else you want to keep..."
+                    placeholder={localizedText('Anything else you want to keep...', 'Cualquier otra cosa que quieras conservar...')}
                     placeholderTextColor={Colors.textMuted}
                     multiline
                     textAlignVertical="top"
@@ -500,13 +540,16 @@ export default function AppointmentDetailScreen() {
                 <View style={styles.promptGroup}>
                   <View style={styles.promptHeader}>
                     <Pill size={14} color="#3B82F6" />
-                    <Text style={styles.promptLabel}>Medication or care notes</Text>
+                    <Text style={styles.promptLabel}>{localizedText('Medication or care notes', 'Notas sobre medicamentos o cuidado')}</Text>
                   </View>
                   <TextInput
                     style={[styles.promptInput, postNotes.medicationChanges.length > 0 && styles.promptInputFilled]}
                     value={postNotes.medicationChanges}
                     onChangeText={(text) => setPostNotes(prev => ({ ...prev, medicationChanges: text }))}
-                    placeholder="Medication changes, side effects to monitor, or provider instructions..."
+                    placeholder={localizedText(
+                      'Medication changes, side effects to monitor, or provider instructions...',
+                      'Cambios de medicamento, efectos secundarios a observar o indicaciones del profesional...',
+                    )}
                     placeholderTextColor={Colors.textMuted}
                     multiline
                     textAlignVertical="top"
@@ -520,7 +563,9 @@ export default function AppointmentDetailScreen() {
                   activeOpacity={0.7}
                 >
                   <Text style={styles.saveSessionBtnText}>
-                    {isSavingPostSession ? 'Saving…' : 'Save & Complete Session'}
+                    {isSavingPostSession
+                      ? localizedText('Saving…', 'Guardando…')
+                      : localizedText('Save & Complete Session', 'Guardar y completar sesión')}
                   </Text>
                 </TouchableOpacity>
               </View>

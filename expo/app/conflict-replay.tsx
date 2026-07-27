@@ -38,6 +38,8 @@ import {
   ConflictTimelineStep,
   CONFLICT_OUTCOME_META,
 } from '@/types/conflictReplay';
+import { localizedText } from '@/lib/i18n/staticText';
+import { useLanguage } from '@/hooks/useLanguage';
 
 const STEP_COLORS: Record<string, string> = {
   trigger: '#3B82F6',
@@ -196,7 +198,7 @@ function EventCard({
             <View style={styles.aiInsightBox}>
               <View style={styles.aiInsightHeader}>
                 <Sparkles size={14} color={Colors.primary} />
-                <Text style={styles.aiInsightTitle}>AI Insight</Text>
+                <Text style={styles.aiInsightTitle}>{localizedText('AI Insight', 'Insight de IA')}</Text>
               </View>
               <Text style={styles.aiInsightText}>{event.aiInsight}</Text>
             </View>
@@ -206,7 +208,7 @@ function EventCard({
             <View style={styles.suggestionsBox}>
               <View style={styles.suggestionsHeader}>
                 <Lightbulb size={14} color={Colors.accent} />
-                <Text style={styles.suggestionsTitle}>What might help next time</Text>
+                <Text style={styles.suggestionsTitle}>{localizedText('What might help next time', 'Que podria ayudar la proxima vez')}</Text>
               </View>
               {event.learningSuggestions.map((suggestion, idx) => (
                 <View key={idx} style={styles.suggestionRow}>
@@ -302,6 +304,7 @@ function QuickActionButton({
 }
 
 export default function ConflictReplayScreen() {
+  useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const analytics = useAnalytics();
@@ -356,31 +359,30 @@ export default function ConflictReplayScreen() {
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary} />
-          <Text style={styles.loadingText}>Loading your history...</Text>
+          <Text style={styles.loadingText}>{localizedText('Loading your history...', 'Cargando tu historial...')}</Text>
         </View>
       ) : !hasEvents ? (
         <View style={styles.emptyContainer}>
           <View style={styles.emptyIconCircle}>
             <RotateCcw size={36} color={Colors.primary} />
           </View>
-          <Text style={styles.emptyTitle}>No conflict events yet</Text>
+          <Text style={styles.emptyTitle}>{localizedText('No conflict events yet', 'Aun no hay eventos de conflicto')}</Text>
           <Text style={styles.emptyDescription}>
-            As you use check-ins, message rewrites, and Relationship Copilot, your emotional
-            conflict moments will appear here as a timeline you can learn from.
+            {localizedText('As you use check-ins, message rewrites, and Relationship Copilot, your emotional conflict moments will appear here as a timeline you can learn from.', 'A medida que uses check-ins, reescrituras de mensajes y Copiloto relacional, tus momentos de conflicto emocional apareceran aqui como una linea de tiempo para aprender.')}
           </Text>
           <View style={styles.emptyActions}>
             <QuickActionButton
-              label="Check in"
+              label={localizedText('Check in', 'Hacer check-in')}
               icon={<BookOpen size={18} color={Colors.primary} />}
               onPress={() => navigateTo('/check-in')}
             />
             <QuickActionButton
-              label="Copilot"
+              label={localizedText('Copilot', 'Copiloto')}
               icon={<Compass size={18} color={Colors.primary} />}
               onPress={() => navigateTo('/relationship-copilot')}
             />
             <QuickActionButton
-              label="Messages"
+              label={localizedText('Messages', 'Mensajes')}
               icon={<MessageSquare size={18} color={Colors.primary} />}
               onPress={() => navigateTo('/(tabs)/messages')}
             />
@@ -404,7 +406,7 @@ export default function ConflictReplayScreen() {
               >
                 <View style={styles.sectionHeaderLeft}>
                   <Sparkles size={16} color={Colors.primary} />
-                  <Text style={styles.sectionTitle}>Pattern Insights</Text>
+                  <Text style={styles.sectionTitle}>{localizedText('Pattern Insights', 'Insights de patrones')}</Text>
                 </View>
                 {showInsights ? (
                   <ChevronUp size={18} color={Colors.textMuted} />

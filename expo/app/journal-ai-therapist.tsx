@@ -16,6 +16,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { X, Send, Sparkles, Bookmark, ChevronDown } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedArray, localizedText } from '@/lib/i18n/staticText';
 import { useJournal } from '@/providers/JournalProvider';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
 import {
@@ -56,7 +58,7 @@ function MessageBubble({ message }: { message: AIJournalMessage }) {
       {!isUser && (
         <View style={styles.aiLabel}>
           <Sparkles size={12} color={Colors.brandLilac} />
-          <Text style={styles.aiLabelText}>Journal Guide</Text>
+          <Text style={styles.aiLabelText}>{localizedText('Journal Guide', 'Guía de diario')}</Text>
         </View>
       )}
       <Text style={[styles.messageText, isUser && styles.userMessageText]}>
@@ -69,6 +71,7 @@ function MessageBubble({ message }: { message: AIJournalMessage }) {
 export default function JournalAITherapistScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  useLanguage();
   const params = useLocalSearchParams<{ mode?: string }>();
   const { smartEntries, addEntry } = useJournal();
   const { trackEvent } = useAnalytics();
@@ -81,6 +84,13 @@ export default function JournalAITherapistScreen() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showChips, setShowChips] = useState<boolean>(true);
   const [sessionSaved, setSessionSaved] = useState<boolean>(false);
+  const suggestionChips = localizedArray(SUGGESTION_CHIPS, [
+    '¿Qué pasó exactamente?',
+    '¿Podría estar interpretando esto de otra manera?',
+    'Ayúdame a calmarme',
+    '¿Qué patrón ves?',
+    'Ayúdame a responder bien',
+  ]);
 
   const scrollRef = useRef<ScrollView>(null);
 
@@ -147,7 +157,10 @@ export default function JournalAITherapistScreen() {
       const fallbackMsg: AIJournalMessage = {
         id: `msg_${Date.now()}_f`,
         role: 'assistant',
-        content: 'I want to understand what you\'re going through. Could you share a bit more about what happened?',
+        content: localizedText(
+          'I want to understand what you\'re going through. Could you share a bit more about what happened?',
+          'Quiero entender lo que estás viviendo. ¿Podrías contarme un poco más sobre lo que pasó?',
+        ),
         timestamp: Date.now(),
       };
       setMessages(prev => [...prev, fallbackMsg]);
@@ -166,12 +179,12 @@ export default function JournalAITherapistScreen() {
     if (content.trim()) {
       addEntry({
         format: 'free_writing',
-        title: `${config.label} — AI Session`,
+        title: localizedText(`${config.label} — AI Session`, `${config.label} — sesión con IA`),
         content,
         emotions: [],
         triggers: [],
         distressLevel: 5,
-        notes: 'Generated from AI Therapist journaling session',
+        notes: localizedText('Generated from AI Therapist journaling session', 'Generado desde una sesión de diario con IA'),
       });
     }
 
@@ -196,12 +209,15 @@ export default function JournalAITherapistScreen() {
           <View style={styles.savedIconCircle}>
             <Bookmark size={32} color={Colors.brandLilac} />
           </View>
-          <Text style={styles.savedTitle}>Session saved</Text>
+          <Text style={styles.savedTitle}>{localizedText('Session saved', 'Sesión guardada')}</Text>
           <Text style={styles.savedSubtitle}>
-            Your reflections have been saved to your journal. The insights from this conversation are part of your emotional story.
+            {localizedText(
+              'Your reflections have been saved to your journal. The insights from this conversation are part of your emotional story.',
+              'Tus reflexiones se guardaron en tu diario. Los insights de esta conversación forman parte de tu historia emocional.',
+            )}
           </Text>
           <TouchableOpacity style={styles.doneBtn} onPress={() => router.back()}>
-            <Text style={styles.doneBtnText}>Done</Text>
+            <Text style={styles.doneBtnText}>{localizedText('Done', 'Listo')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -254,7 +270,7 @@ export default function JournalAITherapistScreen() {
           {isLoading && (
             <View style={styles.loadingRow}>
               <ActivityIndicator size="small" color={Colors.brandLilac} />
-              <Text style={styles.loadingText}>Reflecting...</Text>
+              <Text style={styles.loadingText}>{localizedText('Reflecting...', 'Reflexionando...')}</Text>
             </View>
           )}
 
@@ -262,7 +278,7 @@ export default function JournalAITherapistScreen() {
             <View style={styles.chipsContainer}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <View style={styles.chipRow}>
-                  {SUGGESTION_CHIPS.map(chip => (
+                  {suggestionChips.map(chip => (
                     <TouchableOpacity
                       key={chip}
                       style={styles.chip}
@@ -284,7 +300,7 @@ export default function JournalAITherapistScreen() {
               onPress={handleSaveSession}
             >
               <Bookmark size={14} color={Colors.brandLilac} />
-              <Text style={styles.saveSessionText}>Save session</Text>
+              <Text style={styles.saveSessionText}>{localizedText('Save session', 'Guardar sesión')}</Text>
               <ChevronDown size={14} color={Colors.brandLilac} style={{ transform: [{ rotate: '-90deg' }] }} />
             </TouchableOpacity>
           )}
@@ -293,7 +309,7 @@ export default function JournalAITherapistScreen() {
               style={styles.textInput}
               value={input}
               onChangeText={setInput}
-              placeholder="Write what's on your mind..."
+              placeholder={localizedText("Write what's on your mind...", 'Escribe lo que tienes en mente...')}
               placeholderTextColor={Colors.textMuted}
               multiline
               maxLength={2000}

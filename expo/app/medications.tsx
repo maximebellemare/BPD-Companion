@@ -17,8 +17,11 @@ import { useMedications } from '@/providers/MedicationProvider';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
 import { formatMedicationSchedule, formatTime, getCategoryColor, Medication, MedicationTime } from '@/types/medication';
 import { useAppTheme } from '@/providers/ThemeProvider';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 export default function MedicationsScreen() {
+  useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
@@ -96,7 +99,7 @@ export default function MedicationsScreen() {
         >
           <X size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Medications</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>{localizedText('Medications', 'Medicamentos')}</Text>
         <TouchableOpacity
           style={[styles.addButton, { backgroundColor: colors.primary }]}
           onPress={() => router.push('/medication-add')}
@@ -115,19 +118,19 @@ export default function MedicationsScreen() {
             <View style={styles.summaryRow}>
               <View style={styles.summaryItem}>
                 <Text style={styles.summaryValue}>{takenToday}</Text>
-                <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>Taken today</Text>
+                <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>{localizedText('Taken today', 'Tomados hoy')}</Text>
               </View>
               <View style={styles.summaryDivider} />
               <View style={styles.summaryItem}>
                 <Text style={styles.summaryValue}>{activeMedications.length}</Text>
-                <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>Active</Text>
+                <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>{localizedText('Active', 'Activos')}</Text>
               </View>
               <View style={styles.summaryDivider} />
               <View style={styles.summaryItem}>
                 <Text style={[styles.summaryValue, { color: overallAdherence >= 70 ? Colors.success : Colors.accent }]}>
                   {overallAdherence}%
                 </Text>
-                <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>7-day rate</Text>
+                <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>{localizedText('7-day rate', 'Tasa 7 días')}</Text>
               </View>
             </View>
           </View>
@@ -135,7 +138,7 @@ export default function MedicationsScreen() {
 
         {dueMedications.length > 0 && (
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Due Now</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{localizedText('Due Now', 'Para tomar ahora')}</Text>
             {dueMedications.map((item, idx) => (
               <View key={`due-${item.medication.id}-${idx}`} style={[styles.dueCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
                 <View style={[styles.dueDot, { backgroundColor: getCategoryColor(item.medication.category) }]} />
@@ -148,7 +151,7 @@ export default function MedicationsScreen() {
                 {item.logged ? (
                   <View style={styles.loggedBadge}>
                     <CheckCircle size={16} color={Colors.success} />
-                    <Text style={styles.loggedText}>Done</Text>
+                    <Text style={styles.loggedText}>{localizedText('Done', 'Listo')}</Text>
                   </View>
                 ) : (
                   <View style={styles.dueActions}>
@@ -180,7 +183,7 @@ export default function MedicationsScreen() {
 
         {activeMedications.length > 0 && (
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Active Medications</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{localizedText('Active Medications', 'Medicamentos activos')}</Text>
             {activeMedications.map(med => (
               <MedicationRow
                 key={med.id}
@@ -194,7 +197,7 @@ export default function MedicationsScreen() {
 
         {inactiveMedications.length > 0 && (
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Inactive</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{localizedText('Inactive', 'Inactivos')}</Text>
             {inactiveMedications.map(med => (
               <MedicationRow
                 key={med.id}
@@ -212,16 +215,19 @@ export default function MedicationsScreen() {
               <View style={[styles.emptyIconWrap, { backgroundColor: colors.primaryLight }]}>
               <Pill size={40} color={colors.primary} />
             </View>
-            <Text style={[styles.emptyTitle, { color: colors.text }]}>No medications yet</Text>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>{localizedText('No medications yet', 'Aún no hay medicamentos')}</Text>
             <Text style={[styles.emptyDesc, { color: colors.textSecondary }]}>
-              Add your medications to track adherence, side effects, and how they affect your mood.
+              {localizedText(
+                'Add your medications to track adherence, side effects, and how they affect your mood.',
+                'Agrega tus medicamentos para registrar adherencia, efectos secundarios y cómo afectan tu ánimo.',
+              )}
             </Text>
             <TouchableOpacity
               style={[styles.emptyButton, { backgroundColor: colors.primary }]}
               onPress={() => router.push('/medication-add')}
             >
               <Plus size={18} color={Colors.white} />
-              <Text style={styles.emptyButtonText}>Add Medication</Text>
+              <Text style={styles.emptyButtonText}>{localizedText('Add Medication', 'Agregar medicamento')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -237,8 +243,8 @@ export default function MedicationsScreen() {
                 <Calendar size={20} color={Colors.white} />
               </View>
               <View>
-                <Text style={styles.historyBannerTitle}>View Full History</Text>
-                <Text style={styles.historyBannerDesc}>See adherence log and mood trends</Text>
+                <Text style={styles.historyBannerTitle}>{localizedText('View Full History', 'Ver historial completo')}</Text>
+                <Text style={styles.historyBannerDesc}>{localizedText('See adherence log and mood trends', 'Ve el registro de adherencia y tendencias de ánimo')}</Text>
               </View>
             </View>
             <ChevronRight size={18} color={Colors.white} style={{ opacity: 0.7 }} />
@@ -249,12 +255,13 @@ export default function MedicationsScreen() {
   );
 }
 
-const MedicationRow = React.memo(({ medication, onPress, inactive, colors }: {
+const MedicationRow = React.memo(function MedicationRow({ medication, onPress, inactive, colors }: {
   medication: Medication;
   onPress: () => void;
   inactive?: boolean;
   colors: ReturnType<typeof useAppTheme>['colors'];
-}) => {
+}) {
+  useLanguage();
   const scheduleLabel = formatMedicationSchedule(medication);
 
   return (

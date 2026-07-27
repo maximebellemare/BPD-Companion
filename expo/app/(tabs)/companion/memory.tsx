@@ -32,6 +32,8 @@ import { useUserMemory } from '@/hooks/useUserMemory';
 import { generateMemoryInsights } from '@/services/memory/emotionalMemoryService';
 import { MemoryInsight, PatternItem } from '@/types/memory';
 import { UserMemory, MemoryNarrative } from '@/types/userMemory';
+import { localizedText } from '@/lib/i18n/staticText';
+import { useLanguage } from '@/hooks/useLanguage';
 
 const CATEGORY_CONFIG: Record<string, { color: string; bg: string; icon: string }> = {
   trigger: { color: '#3B82F6', bg: '#FFFFFF', icon: '⚡' },
@@ -445,6 +447,7 @@ const pbStyles = StyleSheet.create({
 });
 
 export default function MemoryScreen() {
+  useLanguage();
   const { memoryProfile } = useAICompanion();
   const { summary, rebuildMemories } = useUserMemory();
 
@@ -531,7 +534,7 @@ export default function MemoryScreen() {
           <View style={styles.heroIconWrap}>
             <Brain size={26} color={Colors.primary} />
           </View>
-          <Text style={styles.heroTitle}>Your Emotional Memory</Text>
+          <Text style={styles.heroTitle}>{localizedText('Your Emotional Memory', 'Tu memoria emocional')}</Text>
           <Text style={styles.heroSubtitle}>
             What your companion has learned about you over time.
           </Text>
@@ -575,7 +578,7 @@ export default function MemoryScreen() {
                   <View style={[styles.sectionIcon, { backgroundColor: Colors.primaryLight }]}>
                     <Compass size={16} color={Colors.primary} />
                   </View>
-                  <Text style={styles.sectionTitle}>What I Know About You</Text>
+                  <Text style={styles.sectionTitle}>{localizedText('What I Know About You', 'Lo que se de ti')}</Text>
                 </View>
                 {summary.narratives.slice(0, 5).map((narrative, i) => (
                   <MemoizedNarrativeCard key={narrative.id} narrative={narrative} index={i} />
@@ -589,7 +592,7 @@ export default function MemoryScreen() {
                   <View style={[styles.sectionIcon, { backgroundColor: '#FFFFFF' }]}>
                     <Zap size={16} color="#3B82F6" />
                   </View>
-                  <Text style={styles.sectionTitle}>Known Triggers</Text>
+                  <Text style={styles.sectionTitle}>{localizedText('Known Triggers', 'Disparadores conocidos')}</Text>
                 </View>
                 {summary.topTriggers.slice(0, 5).map((memory, i) => (
                   <MemoizedMemoryItem key={memory.id} memory={memory} index={i} />
@@ -617,7 +620,7 @@ export default function MemoryScreen() {
                   <View style={[styles.sectionIcon, { backgroundColor: '#FFFFFF' }]}>
                     <Shield size={16} color={Colors.success} />
                   </View>
-                  <Text style={styles.sectionTitle}>What Helps</Text>
+                  <Text style={styles.sectionTitle}>{localizedText('What Helps', 'Que ayuda')}</Text>
                 </View>
                 {summary.helpfulTools.slice(0, 5).map((memory, i) => (
                   <MemoizedMemoryItem key={memory.id} memory={memory} index={i} />
@@ -631,7 +634,7 @@ export default function MemoryScreen() {
                   <View style={[styles.sectionIcon, { backgroundColor: '#D9E2EC' }]}>
                     <Users size={16} color={Colors.accent} />
                   </View>
-                  <Text style={styles.sectionTitle}>Relationship Patterns</Text>
+                  <Text style={styles.sectionTitle}>{localizedText('Relationship Patterns', 'Patrones relacionales')}</Text>
                 </View>
                 {summary.relationshipPatterns.slice(0, 4).map((memory, i) => (
                   <MemoizedMemoryItem key={memory.id} memory={memory} index={i} />
@@ -645,7 +648,7 @@ export default function MemoryScreen() {
                   <View style={[styles.sectionIcon, { backgroundColor: Colors.successLight }]}>
                     <Leaf size={16} color={Colors.success} />
                   </View>
-                  <Text style={styles.sectionTitle}>Growth Signals</Text>
+                  <Text style={styles.sectionTitle}>{localizedText('Growth Signals', 'Senales de crecimiento')}</Text>
                 </View>
                 {summary.growthSignals.map((memory, i) => (
                   <MemoizedMemoryItem key={memory.id} memory={memory} index={i} />
@@ -659,7 +662,7 @@ export default function MemoryScreen() {
                   <View style={[styles.sectionIcon, { backgroundColor: '#FFFFFF' }]}>
                     <Zap size={16} color="#3B82F6" />
                   </View>
-                  <Text style={styles.sectionTitle}>Trigger Frequency</Text>
+                  <Text style={styles.sectionTitle}>{localizedText('Trigger Frequency', 'Frecuencia de disparadores')}</Text>
                 </View>
                 {memoryProfile.topTriggers.slice(0, 5).map((item, i) => (
                   <MemoizedPatternBar
@@ -714,7 +717,7 @@ export default function MemoryScreen() {
 
             {memoryInsights.length > 0 && (
               <View style={styles.section} testID="memory-insights-list">
-                <Text style={styles.insightsSectionTitle}>Personalized Insights</Text>
+                <Text style={styles.insightsSectionTitle}>{localizedText('Personalized Insights', 'Insights personalizados')}</Text>
                 <Text style={styles.insightsSectionDesc}>
                   Patterns your companion uses to support you
                 </Text>

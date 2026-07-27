@@ -12,12 +12,15 @@ import { BookOpen, ChevronRight, Shield, Zap } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import type { PlaybookReport } from '@/types/playbook';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 interface PlaybookCardProps {
   playbook: PlaybookReport;
 }
 
 export default React.memo(function PlaybookCard({ playbook }: PlaybookCardProps) {
+  useLanguage();
   const router = useRouter();
   const shimmer = useRef(new Animated.Value(0)).current;
 
@@ -67,11 +70,14 @@ export default React.memo(function PlaybookCard({ playbook }: PlaybookCardProps)
           <BookOpen size={18} color="#67E8F9" />
         </Animated.View>
         <View style={styles.headerText}>
-          <Text style={styles.title}>My Emotional Playbook</Text>
+          <Text style={styles.title}>{localizedText('My Emotional Playbook', 'Mi guía emocional')}</Text>
           <Text style={styles.subtitle}>
             {strategyCount > 0
-              ? `${strategyCount} strateg${strategyCount === 1 ? 'y' : 'ies'} personalized for you`
-              : 'Building your personal coping guide'}
+              ? localizedText(
+                `${strategyCount} strateg${strategyCount === 1 ? 'y' : 'ies'} personalized for you`,
+                `${strategyCount} estrategia${strategyCount === 1 ? '' : 's'} personalizada${strategyCount === 1 ? '' : 's'} para ti`,
+              )
+              : localizedText('Building your personal coping guide', 'Construyendo tu guía personal de afrontamiento')}
           </Text>
         </View>
         <ChevronRight size={16} color={Colors.textMuted} />
@@ -83,7 +89,7 @@ export default React.memo(function PlaybookCard({ playbook }: PlaybookCardProps)
             <Shield size={14} color={Colors.primary} />
           </View>
           <View style={styles.topStrategyContent}>
-            <Text style={styles.topStrategyLabel}>Top strategy</Text>
+            <Text style={styles.topStrategyLabel}>{localizedText('Top strategy', 'Estrategia principal')}</Text>
             <Text style={styles.topStrategyName} numberOfLines={1}>{topTool.title}</Text>
           </View>
           {topTool.avgDistressReduction > 0 && (
@@ -97,7 +103,10 @@ export default React.memo(function PlaybookCard({ playbook }: PlaybookCardProps)
 
       {!playbook.hasEnoughData && (
         <Text style={styles.encouragement}>
-          A few more check-ins will reveal what works best for you.
+          {localizedText(
+            'A few more check-ins will reveal what works best for you.',
+            'Unos registros más mostrarán qué te funciona mejor.',
+          )}
         </Text>
       )}
     </TouchableOpacity>

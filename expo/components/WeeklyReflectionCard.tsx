@@ -4,6 +4,8 @@ import { useRouter } from 'expo-router';
 import { BookOpen, ChevronRight, Calendar } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 interface WeeklyReflectionCardProps {
   weekLabel: string;
@@ -18,6 +20,7 @@ function WeeklyReflectionCardComponent({
   openingNarrative,
   improvementCount,
 }: WeeklyReflectionCardProps) {
+  useLanguage();
   const router = useRouter();
   const shimmerAnim = useRef(new Animated.Value(0)).current;
 
@@ -56,7 +59,10 @@ function WeeklyReflectionCardComponent({
     ? openingNarrative.length > 100
       ? openingNarrative.slice(0, 100) + '...'
       : openingNarrative
-    : 'Check in a few more times to unlock your weekly reflection.';
+    : localizedText(
+      'Check in a few more times to unlock your weekly reflection.',
+      'Haz algunos registros más para desbloquear tu reflexión semanal.',
+    );
 
   return (
     <TouchableOpacity
@@ -83,13 +89,16 @@ function WeeklyReflectionCardComponent({
         <ChevronRight size={16} color={Colors.textMuted} />
       </View>
 
-      <Text style={styles.title}>Weekly Reflection</Text>
+      <Text style={styles.title}>{localizedText('Weekly Reflection', 'Reflexión semanal')}</Text>
       <Text style={styles.preview}>{previewText}</Text>
 
       {hasEnoughData && improvementCount > 0 && (
         <View style={styles.growthBadge}>
           <Text style={styles.growthBadgeText}>
-            {improvementCount} growth signal{improvementCount !== 1 ? 's' : ''} detected
+            {improvementCount} {localizedText(
+              `growth signal${improvementCount !== 1 ? 's' : ''} detected`,
+              `señal${improvementCount !== 1 ? 'es' : ''} de crecimiento detectada${improvementCount !== 1 ? 's' : ''}`,
+            )}
           </Text>
         </View>
       )}

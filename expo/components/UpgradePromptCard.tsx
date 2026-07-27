@@ -5,10 +5,13 @@ import { Crown, ArrowRight } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useSubscription } from '@/providers/SubscriptionProvider';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 export default function UpgradePromptCard() {
   const router = useRouter();
   const { isPremium } = useSubscription();
+  useLanguage();
   const glowAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -49,8 +52,8 @@ export default function UpgradePromptCard() {
             <Crown size={20} color="#67E8F9" />
           </View>
           <View style={styles.textWrap}>
-            <Text style={styles.title}>Membership access</Text>
-            <Text style={styles.subtitle}>Start your 3-day free trial</Text>
+            <Text style={styles.title}>{localizedText('Membership access', 'Acceso de membresía')}</Text>
+            <Text style={styles.subtitle}>{localizedText('Start your 3-day free trial', 'Inicia tu prueba gratis de 3 días')}</Text>
           </View>
         </View>
         <View style={styles.arrowWrap}>

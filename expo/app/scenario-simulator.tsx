@@ -33,6 +33,8 @@ import {
   Award,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import Colors from '@/constants/colors';
 import { useScenarioSimulator } from '@/hooks/useScenarioSimulator';
 import {
@@ -50,9 +52,9 @@ const RISK_COLORS = {
 } as const;
 
 const RISK_LABELS = {
-  low: 'Low risk',
-  medium: 'Medium risk',
-  high: 'High risk',
+  get low() { return localizedText('Low risk', 'Riesgo bajo'); },
+  get medium() { return localizedText('Medium risk', 'Riesgo medio'); },
+  get high() { return localizedText('High risk', 'Riesgo alto'); },
 } as const;
 
 function FadeInView({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
@@ -98,6 +100,7 @@ function StyleIcon({ style, size = 18, color }: { style: ResponseStyle; size?: n
 export default function ScenarioSimulatorScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  useLanguage();
   const scrollRef = useRef<ScrollView>(null);
 
   const {
@@ -199,18 +202,21 @@ export default function ScenarioSimulatorScreen() {
               <MessageSquare size={22} color={Colors.primary} />
             </View>
           </View>
-          <Text style={styles.introTitle}>What happened?</Text>
+          <Text style={styles.introTitle}>{localizedText('What happened?', '¿Qué pasó?')}</Text>
           <Text style={styles.introSubtitle}>
-            Describe a difficult conversation or message. We'll simulate different ways to respond.
+            {localizedText(
+              "Describe a difficult conversation or message. We'll simulate different ways to respond.",
+              'Describe una conversación o mensaje difícil. Simularemos distintas formas de responder.',
+            )}
           </Text>
         </View>
       </FadeInView>
 
       <FadeInView delay={100}>
-        <Text style={styles.fieldLabel}>Message you received</Text>
+        <Text style={styles.fieldLabel}>{localizedText('Message you received', 'Mensaje que recibiste')}</Text>
         <TextInput
           style={styles.textInput}
-          placeholder="Paste or type the message..."
+          placeholder={localizedText('Paste or type the message...', 'Pega o escribe el mensaje...')}
           placeholderTextColor={Colors.textMuted}
           value={input.messageReceived}
           onChangeText={t => updateInput('messageReceived', t)}
@@ -221,10 +227,10 @@ export default function ScenarioSimulatorScreen() {
       </FadeInView>
 
       <FadeInView delay={200}>
-        <Text style={styles.fieldLabel}>What's the situation?</Text>
+        <Text style={styles.fieldLabel}>{localizedText("What's the situation?", '¿Cuál es la situación?')}</Text>
         <TextInput
           style={[styles.textInput, { minHeight: 70 }]}
-          placeholder="E.g., partner hasn't responded in hours..."
+          placeholder={localizedText("E.g., partner hasn't responded in hours...", 'p. ej., mi pareja no responde hace horas...')}
           placeholderTextColor={Colors.textMuted}
           value={input.situationDescription}
           onChangeText={t => updateInput('situationDescription', t)}
@@ -235,7 +241,7 @@ export default function ScenarioSimulatorScreen() {
       </FadeInView>
 
       <FadeInView delay={300}>
-        <Text style={styles.fieldLabel}>Context</Text>
+        <Text style={styles.fieldLabel}>{localizedText('Context', 'Contexto')}</Text>
         <View style={styles.contextGrid}>
           {SCENARIO_CONTEXTS.map(ctx => (
             <TouchableOpacity
@@ -270,7 +276,7 @@ export default function ScenarioSimulatorScreen() {
           testID="run-simulation-btn"
         >
           <Play size={18} color={Colors.white} />
-          <Text style={styles.primaryBtnText}>Simulate Responses</Text>
+          <Text style={styles.primaryBtnText}>{localizedText('Simulate Responses', 'Simular respuestas')}</Text>
         </TouchableOpacity>
       </FadeInView>
     </View>
@@ -306,7 +312,7 @@ export default function ScenarioSimulatorScreen() {
 
           <View style={[styles.simResponseBox, { borderLeftColor: sim.color }]}>
             <Text style={styles.simResponseText}>
-              "{sim.responseText}"
+              &quot;{sim.responseText}&quot;
             </Text>
           </View>
 
@@ -314,13 +320,13 @@ export default function ScenarioSimulatorScreen() {
             <View style={styles.simImpactSection}>
               <View style={styles.impactRow}>
                 <Heart size={14} color={Colors.accent} />
-                <Text style={styles.impactLabel}>Emotional impact</Text>
+                <Text style={styles.impactLabel}>{localizedText('Emotional impact', 'Impacto emocional')}</Text>
               </View>
               <Text style={styles.impactText}>{sim.emotionalImpact}</Text>
 
               <View style={[styles.impactRow, { marginTop: 12 }]}>
                 <Target size={14} color={Colors.primary} />
-                <Text style={styles.impactLabel}>Relationship impact</Text>
+                <Text style={styles.impactLabel}>{localizedText('Relationship impact', 'Impacto relacional')}</Text>
               </View>
               <Text style={styles.impactText}>{sim.relationshipImpact}</Text>
 
@@ -331,7 +337,7 @@ export default function ScenarioSimulatorScreen() {
                   activeOpacity={0.7}
                 >
                   <Edit3 size={15} color={Colors.white} />
-                  <Text style={styles.refineBtnText}>Refine This Response</Text>
+                  <Text style={styles.refineBtnText}>{localizedText('Refine This Response', 'Refinar esta respuesta')}</Text>
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity
@@ -340,7 +346,7 @@ export default function ScenarioSimulatorScreen() {
                   activeOpacity={0.7}
                 >
                   <Leaf size={15} color={Colors.primary} />
-                  <Text style={styles.trySecureBtnText}>Try the secure version instead</Text>
+                  <Text style={styles.trySecureBtnText}>{localizedText('Try the secure version instead', 'Probar la versión segura')}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -354,9 +360,12 @@ export default function ScenarioSimulatorScreen() {
     <View style={styles.stepContainer}>
       <FadeInView>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Response Styles</Text>
+          <Text style={styles.sectionTitle}>{localizedText('Response Styles', 'Estilos de respuesta')}</Text>
           <Text style={styles.sectionSubtitle}>
-            Tap a card to see how each response might land
+            {localizedText(
+              'Tap a card to see how each response might land',
+              'Toca una tarjeta para ver cómo podría sentirse cada respuesta',
+            )}
           </Text>
         </View>
       </FadeInView>
@@ -370,7 +379,7 @@ export default function ScenarioSimulatorScreen() {
           activeOpacity={0.8}
         >
           <Shield size={18} color={Colors.white} />
-          <Text style={styles.primaryBtnText}>Build a Secure Response</Text>
+          <Text style={styles.primaryBtnText}>{localizedText('Build a Secure Response', 'Crear una respuesta segura')}</Text>
         </TouchableOpacity>
       </FadeInView>
     </View>
@@ -380,15 +389,18 @@ export default function ScenarioSimulatorScreen() {
     <View style={styles.stepContainer}>
       <FadeInView>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Refine Your Response</Text>
+          <Text style={styles.sectionTitle}>{localizedText('Refine Your Response', 'Refina tu respuesta')}</Text>
           <Text style={styles.sectionSubtitle}>
-            Use tools to shape a calmer, clearer message
+            {localizedText(
+              'Use tools to shape a calmer, clearer message',
+              'Usa herramientas para crear un mensaje más calmado y claro',
+            )}
           </Text>
         </View>
       </FadeInView>
 
       <FadeInView delay={100}>
-        <Text style={styles.fieldLabel}>Refinement Tools</Text>
+        <Text style={styles.fieldLabel}>{localizedText('Refinement Tools', 'Herramientas de refinamiento')}</Text>
         <View style={styles.refineToolsGrid}>
           {refineTools.map(tool => (
             <TouchableOpacity
@@ -423,7 +435,7 @@ export default function ScenarioSimulatorScreen() {
       </FadeInView>
 
       <FadeInView delay={200}>
-        <Text style={styles.fieldLabel}>Your Response</Text>
+        <Text style={styles.fieldLabel}>{localizedText('Your Response', 'Tu respuesta')}</Text>
         <TextInput
           style={[styles.textInput, styles.refineInput]}
           value={refinedResponse}
@@ -442,7 +454,7 @@ export default function ScenarioSimulatorScreen() {
           testID="start-practice-btn"
         >
           <Play size={18} color={Colors.white} />
-          <Text style={styles.primaryBtnText}>Practice Mode</Text>
+          <Text style={styles.primaryBtnText}>{localizedText('Practice Mode', 'Modo práctica')}</Text>
         </TouchableOpacity>
       </FadeInView>
     </View>
@@ -457,9 +469,12 @@ export default function ScenarioSimulatorScreen() {
               <Target size={22} color={Colors.primary} />
             </View>
           </View>
-          <Text style={styles.introTitle}>Practice Mode</Text>
+          <Text style={styles.introTitle}>{localizedText('Practice Mode', 'Modo práctica')}</Text>
           <Text style={styles.introSubtitle}>
-            Write your own response to this scenario. Get feedback on how it might land.
+            {localizedText(
+              'Write your own response to this scenario. Get feedback on how it might land.',
+              'Escribe tu propia respuesta a este escenario. Recibe retroalimentación sobre cómo podría sentirse.',
+            )}
           </Text>
         </View>
       </FadeInView>
@@ -467,24 +482,24 @@ export default function ScenarioSimulatorScreen() {
       {input.messageReceived.trim() ? (
         <FadeInView delay={100}>
           <View style={styles.scenarioReminder}>
-            <Text style={styles.scenarioReminderLabel}>The message:</Text>
-            <Text style={styles.scenarioReminderText}>"{input.messageReceived}"</Text>
+            <Text style={styles.scenarioReminderLabel}>{localizedText('The message:', 'El mensaje:')}</Text>
+            <Text style={styles.scenarioReminderText}>&quot;{input.messageReceived}&quot;</Text>
           </View>
         </FadeInView>
       ) : input.situationDescription.trim() ? (
         <FadeInView delay={100}>
           <View style={styles.scenarioReminder}>
-            <Text style={styles.scenarioReminderLabel}>The situation:</Text>
+            <Text style={styles.scenarioReminderLabel}>{localizedText('The situation:', 'La situación:')}</Text>
             <Text style={styles.scenarioReminderText}>{input.situationDescription}</Text>
           </View>
         </FadeInView>
       ) : null}
 
       <FadeInView delay={200}>
-        <Text style={styles.fieldLabel}>Your response</Text>
+        <Text style={styles.fieldLabel}>{localizedText('Your response', 'Tu respuesta')}</Text>
         <TextInput
           style={[styles.textInput, styles.practiceInput]}
-          placeholder="Type how you'd respond..."
+          placeholder={localizedText("Type how you'd respond...", 'Escribe cómo responderías...')}
           placeholderTextColor={Colors.textMuted}
           value={practiceText}
           onChangeText={setPracticeText}
@@ -502,7 +517,7 @@ export default function ScenarioSimulatorScreen() {
           activeOpacity={0.8}
         >
           <Sparkles size={18} color={Colors.white} />
-          <Text style={styles.primaryBtnText}>Get Feedback</Text>
+          <Text style={styles.primaryBtnText}>{localizedText('Get Feedback', 'Recibir retroalimentación')}</Text>
         </TouchableOpacity>
       </FadeInView>
 
@@ -511,7 +526,7 @@ export default function ScenarioSimulatorScreen() {
           <View style={styles.feedbackCard}>
             <View style={styles.feedbackHeader}>
               <Sparkles size={16} color={Colors.primary} />
-              <Text style={styles.feedbackHeaderText}>Feedback</Text>
+              <Text style={styles.feedbackHeaderText}>{localizedText('Feedback', 'Retroalimentación')}</Text>
             </View>
             <Text style={styles.feedbackText}>{currentFeedback.feedback}</Text>
             <View style={styles.feedbackTipBox}>
@@ -534,7 +549,7 @@ export default function ScenarioSimulatorScreen() {
               activeOpacity={0.7}
             >
               <RotateCcw size={16} color={Colors.primary} />
-              <Text style={styles.secondaryBtnText}>Try Again</Text>
+              <Text style={styles.secondaryBtnText}>{localizedText('Try Again', 'Intentar de nuevo')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.primaryBtnSmall}
@@ -542,7 +557,7 @@ export default function ScenarioSimulatorScreen() {
               activeOpacity={0.8}
             >
               <Award size={16} color={Colors.white} />
-              <Text style={styles.primaryBtnSmallText}>Complete</Text>
+              <Text style={styles.primaryBtnSmallText}>{localizedText('Complete', 'Completar')}</Text>
             </TouchableOpacity>
           </View>
         </FadeInView>
@@ -557,10 +572,12 @@ export default function ScenarioSimulatorScreen() {
           <View style={styles.completeIconBg}>
             <Award size={32} color={Colors.primary} />
           </View>
-          <Text style={styles.completeTitle}>Great Practice</Text>
+          <Text style={styles.completeTitle}>{localizedText('Great Practice', 'Gran práctica')}</Text>
           <Text style={styles.completeSubtitle}>
-            You explored different response styles and practiced a calmer approach.
-            This kind of rehearsal builds emotional muscle memory.
+            {localizedText(
+              'You explored different response styles and practiced a calmer approach. This kind of rehearsal builds emotional muscle memory.',
+              'Exploraste distintos estilos de respuesta y practicaste un enfoque más calmado. Este tipo de ensayo fortalece la memoria emocional.',
+            )}
           </Text>
         </View>
       </FadeInView>
@@ -568,22 +585,22 @@ export default function ScenarioSimulatorScreen() {
       {refinedResponse ? (
         <FadeInView delay={150}>
           <View style={styles.finalResponseCard}>
-            <Text style={styles.finalResponseLabel}>Your refined response</Text>
-            <Text style={styles.finalResponseText}>"{refinedResponse}"</Text>
+            <Text style={styles.finalResponseLabel}>{localizedText('Your refined response', 'Tu respuesta refinada')}</Text>
+            <Text style={styles.finalResponseText}>&quot;{refinedResponse}&quot;</Text>
           </View>
         </FadeInView>
       ) : null}
 
       <FadeInView delay={300}>
         <View style={styles.suggestionsCard}>
-          <Text style={styles.suggestionsTitle}>What to try next</Text>
+          <Text style={styles.suggestionsTitle}>{localizedText('What to try next', 'Qué probar ahora')}</Text>
           <TouchableOpacity
             style={styles.suggestionRow}
             onPress={() => router.push('/relationship-copilot')}
             activeOpacity={0.7}
           >
             <Heart size={16} color={Colors.primary} />
-            <Text style={styles.suggestionText}>Relationship Copilot session</Text>
+            <Text style={styles.suggestionText}>{localizedText('Relationship Copilot session', 'Sesión de Copiloto relacional')}</Text>
             <ChevronRight size={16} color={Colors.textMuted} />
           </TouchableOpacity>
           <TouchableOpacity
@@ -592,7 +609,7 @@ export default function ScenarioSimulatorScreen() {
             activeOpacity={0.7}
           >
             <Shield size={16} color={Colors.primary} />
-            <Text style={styles.suggestionText}>Message Guard for real messages</Text>
+            <Text style={styles.suggestionText}>{localizedText('Message Guard for real messages', 'Protección de mensajes para mensajes reales')}</Text>
             <ChevronRight size={16} color={Colors.textMuted} />
           </TouchableOpacity>
         </View>
@@ -605,25 +622,25 @@ export default function ScenarioSimulatorScreen() {
           activeOpacity={0.8}
         >
           <RefreshCw size={18} color={Colors.white} />
-          <Text style={styles.primaryBtnText}>New Scenario</Text>
+          <Text style={styles.primaryBtnText}>{localizedText('New Scenario', 'Nuevo escenario')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.closeBtn}
           onPress={() => router.back()}
           activeOpacity={0.7}
         >
-          <Text style={styles.closeBtnText}>Close</Text>
+          <Text style={styles.closeBtnText}>{localizedText('Close', 'Cerrar')}</Text>
         </TouchableOpacity>
       </FadeInView>
     </View>
   );
 
   const stepTitles: Record<string, string> = {
-    input: 'Scenario Simulator',
-    simulations: 'Response Styles',
-    refine: 'Secure Response',
-    practice: 'Practice Mode',
-    complete: 'Session Complete',
+    input: localizedText('Scenario Simulator', 'Simulador de escenarios'),
+    simulations: localizedText('Response Styles', 'Estilos de respuesta'),
+    refine: localizedText('Secure Response', 'Respuesta segura'),
+    practice: localizedText('Practice Mode', 'Modo práctica'),
+    complete: localizedText('Session Complete', 'Sesión completa'),
   };
 
   return (
@@ -642,7 +659,7 @@ export default function ScenarioSimulatorScreen() {
         >
           <ArrowLeft size={22} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{stepTitles[step] ?? 'Simulator'}</Text>
+        <Text style={styles.headerTitle}>{stepTitles[step] ?? localizedText('Simulator', 'Simulador')}</Text>
         <View style={styles.headerSpacer} />
       </Animated.View>
 

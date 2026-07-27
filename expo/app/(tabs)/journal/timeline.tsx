@@ -24,70 +24,83 @@ import {
   X,
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { useTimeline } from '@/hooks/useTimeline';
 import { TimelineEvent, TimelineMarker } from '@/types/timeline';
 
 const MARKER_CONFIG: Record<
   TimelineMarker,
-  { color: string; bg: string; label: string; icon: React.ElementType }
+  { color: string; bg: string; labelEn: string; labelEs: string; icon: React.ElementType }
 > = {
   high_distress: {
     color: Colors.danger,
     bg: Colors.dangerLight,
-    label: 'High Distress',
+    labelEn: 'High Distress',
+    labelEs: 'Malestar alto',
     icon: Flame,
   },
   coping_success: {
     color: Colors.success,
     bg: Colors.successLight,
-    label: 'Coping Success',
+    labelEn: 'Coping Success',
+    labelEs: 'Afrontamiento exitoso',
     icon: CheckCircle,
   },
   relationship_conflict: {
     color: '#3B82F6',
     bg: '#FFFFFF',
-    label: 'Conflict',
+    labelEn: 'Conflict',
+    labelEs: 'Conflicto',
     icon: Users,
   },
   low_distress: {
     color: Colors.primary,
     bg: Colors.primaryLight,
-    label: 'Calm',
+    labelEn: 'Calm',
+    labelEs: 'Calma',
     icon: Heart,
   },
   none: {
     color: Colors.textMuted,
     bg: Colors.surface,
-    label: '',
+    labelEn: '',
+    labelEs: '',
     icon: Clock,
   },
 };
 
 const DATE_RANGES = [
-  { key: 'week' as const, label: '7 days' },
-  { key: 'month' as const, label: '30 days' },
-  { key: 'all' as const, label: 'All time' },
+  { key: 'week' as const, labelEn: '7 days', labelEs: '7 días' },
+  { key: 'month' as const, labelEn: '30 days', labelEs: '30 días' },
+  { key: 'all' as const, labelEn: 'All time', labelEs: 'Todo el tiempo' },
 ];
 
-function formatEventDate(ts: number): string {
+function getMarkerLabel(marker: TimelineMarker): string {
+  const config = MARKER_CONFIG[marker];
+  return localizedText(config.labelEn, config.labelEs);
+}
+
+function formatEventDate(ts: number, language: string): string {
   const d = new Date(ts);
-  return d.toLocaleDateString('en-US', {
+  return d.toLocaleDateString(language === 'es' ? 'es' : 'en-US', {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
   });
 }
 
-function formatEventTime(ts: number): string {
-  return new Date(ts).toLocaleTimeString('en-US', {
+function formatEventTime(ts: number, language: string): string {
+  return new Date(ts).toLocaleTimeString(language === 'es' ? 'es' : 'en-US', {
     hour: 'numeric',
     minute: '2-digit',
-    hour12: true,
+    hour12: language !== 'es',
   });
 }
 
 function groupEventsByDate(
-  events: TimelineEvent[]
+  events: TimelineEvent[],
+  language: string,
 ): { date: string; timestamp: number; events: TimelineEvent[] }[] {
   const groups: Record<string, TimelineEvent[]> = {};
   events.forEach((event) => {
@@ -97,7 +110,7 @@ function groupEventsByDate(
   });
   return Object.entries(groups)
     .map(([_dateKey, evts]) => ({
-      date: formatEventDate(evts[0].timestamp),
+      date: formatEventDate(evts[0].timestamp, language),
       timestamp: evts[0].timestamp,
       events: evts,
     }))
@@ -111,6 +124,7 @@ const TimelineEventCard = React.memo(function TimelineEventCard({
   event: TimelineEvent;
   isLast: boolean;
 }) {
+  const { language } = useLanguage();
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -150,11 +164,11 @@ const TimelineEventCard = React.memo(function TimelineEventCard({
             ) : event.type === 'journal' ? (
               <Clock size={14} color={Colors.textSecondary} />
             ) : null}
-            <Text style={styles.eventTime}>{formatEventTime(event.timestamp)}</Text>
+            <Text style={styles.eventTime}>{formatEventTime(event.timestamp, language)}</Text>
             {event.marker !== 'none' && (
               <View style={[styles.markerBadge, { backgroundColor: marker.bg }]}>
                 <Text style={[styles.markerBadgeText, { color: marker.color }]}>
-                  {marker.label}
+                  {getMarkerLabel(event.marker)}
                 </Text>
               </View>
             )}
@@ -228,32 +242,33 @@ function StatsBar({
     conflictCount: number;
   };
 }) {
+  useLanguage();
   return (
     <View style={styles.statsRow}>
       <View style={styles.statItem}>
         <Text style={styles.statValue}>{stats.totalEvents}</Text>
-        <Text style={styles.statLabel}>Events</Text>
+        <Text style={styles.statLabel}>{localizedText('Events', 'Eventos')}</Text>
       </View>
       <View style={[styles.statDivider]} />
       <View style={styles.statItem}>
         <Text style={[styles.statValue, { color: Colors.danger }]}>
           {stats.highDistressCount}
         </Text>
-        <Text style={styles.statLabel}>High Distress</Text>
+        <Text style={styles.statLabel}>{localizedText('High Distress', 'Malestar alto')}</Text>
       </View>
       <View style={[styles.statDivider]} />
       <View style={styles.statItem}>
         <Text style={[styles.statValue, { color: Colors.success }]}>
           {stats.copingSuccessCount}
         </Text>
-        <Text style={styles.statLabel}>Coped Well</Text>
+        <Text style={styles.statLabel}>{localizedText('Coped Well', 'Afronté bien')}</Text>
       </View>
       <View style={[styles.statDivider]} />
       <View style={styles.statItem}>
         <Text style={[styles.statValue, { color: '#3B82F6' }]}>
           {stats.conflictCount}
         </Text>
-        <Text style={styles.statLabel}>Conflicts</Text>
+        <Text style={styles.statLabel}>{localizedText('Conflicts', 'Conflictos')}</Text>
       </View>
     </View>
   );
@@ -261,6 +276,7 @@ function StatsBar({
 
 export default function TimelineScreen() {
   const insets = useSafeAreaInsets();
+  const { language } = useLanguage();
   const {
     events,
     stats,
@@ -272,7 +288,7 @@ export default function TimelineScreen() {
   } = useTimeline();
   const [filterModalVisible, setFilterModalVisible] = useState<boolean>(false);
 
-  const groupedEvents = useMemo(() => groupEventsByDate(events), [events]);
+  const groupedEvents = useMemo(() => groupEventsByDate(events, language), [events, language]);
 
   const hasActiveFilters =
     filters.emotionType !== null ||
@@ -306,7 +322,7 @@ export default function TimelineScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Emotional Timeline',
+          title: localizedText('Emotional Timeline', 'Línea emocional'),
           headerStyle: { backgroundColor: Colors.background },
           headerTitleStyle: {
             color: Colors.text,
@@ -345,7 +361,7 @@ export default function TimelineScreen() {
                     filters.dateRange === range.key && styles.filterChipTextActive,
                   ]}
                 >
-                  {range.label}
+                  {localizedText(range.labelEn, range.labelEs)}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -368,14 +384,14 @@ export default function TimelineScreen() {
                   hasActiveFilters && styles.filterChipTextActive,
                 ]}
               >
-                Filters
+                {localizedText('Filters', 'Filtros')}
               </Text>
             </TouchableOpacity>
 
             {hasActiveFilters && (
               <TouchableOpacity style={styles.clearBtn} onPress={resetFilters}>
                 <X size={14} color={Colors.danger} />
-                <Text style={styles.clearBtnText}>Clear</Text>
+                <Text style={styles.clearBtnText}>{localizedText('Clear', 'Limpiar')}</Text>
               </TouchableOpacity>
             )}
           </ScrollView>
@@ -383,7 +399,7 @@ export default function TimelineScreen() {
 
         {filters.emotionType && (
           <View style={styles.activeFilterRow}>
-            <Text style={styles.activeFilterLabel}>Emotion:</Text>
+            <Text style={styles.activeFilterLabel}>{localizedText('Emotion:', 'Emoción:')}</Text>
             <View style={styles.activeFilterValue}>
               <Text style={styles.activeFilterValueText}>{filters.emotionType}</Text>
               <TouchableOpacity onPress={() => updateFilter('emotionType', null)}>
@@ -395,7 +411,7 @@ export default function TimelineScreen() {
 
         {filters.triggerType && (
           <View style={styles.activeFilterRow}>
-            <Text style={styles.activeFilterLabel}>Trigger:</Text>
+            <Text style={styles.activeFilterLabel}>{localizedText('Trigger:', 'Detonante:')}</Text>
             <View style={styles.activeFilterValue}>
               <Text style={styles.activeFilterValueText}>{filters.triggerType}</Text>
               <TouchableOpacity onPress={() => updateFilter('triggerType', null)}>
@@ -408,11 +424,11 @@ export default function TimelineScreen() {
         {events.length === 0 ? (
           <View style={styles.emptyState}>
             <Clock size={48} color={Colors.border} />
-            <Text style={styles.emptyTitle}>No events found</Text>
+            <Text style={styles.emptyTitle}>{localizedText('No events found', 'No se encontraron eventos')}</Text>
             <Text style={styles.emptyDesc}>
               {hasActiveFilters
-                ? 'Try adjusting your filters to see more events.'
-                : 'Your emotional timeline will build as you use the app.'}
+                ? localizedText('Try adjusting your filters to see more events.', 'Ajusta tus filtros para ver más eventos.')
+                : localizedText('Your emotional timeline will build as you use the app.', 'Tu línea emocional se irá formando mientras usas la app.')}
             </Text>
           </View>
         ) : (
@@ -447,9 +463,9 @@ export default function TimelineScreen() {
         >
           <Pressable style={styles.modalContent} onPress={() => {}}>
             <View style={styles.modalHandle} />
-            <Text style={styles.modalTitle}>Filter Timeline</Text>
+            <Text style={styles.modalTitle}>{localizedText('Filter Timeline', 'Filtrar línea')}</Text>
 
-            <Text style={styles.modalSectionTitle}>Event Markers</Text>
+            <Text style={styles.modalSectionTitle}>{localizedText('Event Markers', 'Marcadores de eventos')}</Text>
             <View style={styles.modalChipRow}>
               {(
                 [
@@ -474,7 +490,7 @@ export default function TimelineScreen() {
                     <Text
                       style={[styles.modalChipText, { color: cfg.color }]}
                     >
-                      {cfg.label}
+                      {getMarkerLabel(m)}
                     </Text>
                   </TouchableOpacity>
                 );
@@ -483,7 +499,7 @@ export default function TimelineScreen() {
 
             {uniqueEmotions.length > 0 && (
               <>
-                <Text style={styles.modalSectionTitle}>Emotions</Text>
+                <Text style={styles.modalSectionTitle}>{localizedText('Emotions', 'Emociones')}</Text>
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
@@ -514,7 +530,7 @@ export default function TimelineScreen() {
 
             {uniqueTriggerCategories.length > 0 && (
               <>
-                <Text style={styles.modalSectionTitle}>Trigger Types</Text>
+                <Text style={styles.modalSectionTitle}>{localizedText('Trigger Types', 'Tipos de detonantes')}</Text>
                 <View style={styles.modalChipRow}>
                   {uniqueTriggerCategories.map((tc) => (
                     <TouchableOpacity
@@ -543,7 +559,7 @@ export default function TimelineScreen() {
               style={styles.modalDoneBtn}
               onPress={() => setFilterModalVisible(false)}
             >
-              <Text style={styles.modalDoneBtnText}>Done</Text>
+              <Text style={styles.modalDoneBtnText}>{localizedText('Done', 'Listo')}</Text>
             </TouchableOpacity>
           </Pressable>
         </Pressable>

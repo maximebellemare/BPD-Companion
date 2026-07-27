@@ -13,20 +13,43 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronLeft, ChevronRight, Sparkles, Check } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedField, localizedText } from '@/lib/i18n/staticText';
 import { matchTools } from '@/services/tools/toolMatcherService';
 import { ToolMatchResult } from '@/types/tools';
 
-const EMOTION_OPTIONS = [
-  'Anxious', 'Angry', 'Sad', 'Empty', 'Ashamed', 'Lonely',
-  'Rejected', 'Abandoned', 'Jealous', 'Numb', 'Overwhelmed',
-  'Calm', 'Something else',
+type MatcherOption = { value: string; label: string };
+
+const EMOTION_OPTIONS: MatcherOption[] = [
+  localizedField({ value: 'Anxious', label: 'Anxious' }, 'label', 'Anxious', 'Ansiedad'),
+  localizedField({ value: 'Angry', label: 'Angry' }, 'label', 'Angry', 'Enojo'),
+  localizedField({ value: 'Sad', label: 'Sad' }, 'label', 'Sad', 'Tristeza'),
+  localizedField({ value: 'Empty', label: 'Empty' }, 'label', 'Empty', 'Vacío'),
+  localizedField({ value: 'Ashamed', label: 'Ashamed' }, 'label', 'Ashamed', 'Vergüenza'),
+  localizedField({ value: 'Lonely', label: 'Lonely' }, 'label', 'Lonely', 'Soledad'),
+  localizedField({ value: 'Rejected', label: 'Rejected' }, 'label', 'Rejected', 'Rechazo'),
+  localizedField({ value: 'Abandoned', label: 'Abandoned' }, 'label', 'Abandoned', 'Abandono'),
+  localizedField({ value: 'Jealous', label: 'Jealous' }, 'label', 'Jealous', 'Celos'),
+  localizedField({ value: 'Numb', label: 'Numb' }, 'label', 'Numb', 'Entumecimiento'),
+  localizedField({ value: 'Overwhelmed', label: 'Overwhelmed' }, 'label', 'Overwhelmed', 'Abrumamiento'),
+  localizedField({ value: 'Calm', label: 'Calm' }, 'label', 'Calm', 'Calma'),
+  localizedField({ value: 'Something else', label: 'Something else' }, 'label', 'Something else', 'Algo más'),
 ];
 
-const URGE_OPTIONS = [
-  'Text again', 'Call repeatedly', 'Argue', 'Withdraw',
-  'Apologize too much', 'Check social media', 'Ask for reassurance',
-  'Spend money', 'Drink/use substances', 'End the relationship',
-  'Say something hurtful', 'I don’t know', 'Something else',
+const URGE_OPTIONS: MatcherOption[] = [
+  localizedField({ value: 'Text again', label: 'Text again' }, 'label', 'Text again', 'Escribir otra vez'),
+  localizedField({ value: 'Call repeatedly', label: 'Call repeatedly' }, 'label', 'Call repeatedly', 'Llamar repetidamente'),
+  localizedField({ value: 'Argue', label: 'Argue' }, 'label', 'Argue', 'Discutir'),
+  localizedField({ value: 'Withdraw', label: 'Withdraw' }, 'label', 'Withdraw', 'Alejarme'),
+  localizedField({ value: 'Apologize too much', label: 'Apologize too much' }, 'label', 'Apologize too much', 'Pedir perdón demasiado'),
+  localizedField({ value: 'Check social media', label: 'Check social media' }, 'label', 'Check social media', 'Revisar redes sociales'),
+  localizedField({ value: 'Ask for reassurance', label: 'Ask for reassurance' }, 'label', 'Ask for reassurance', 'Pedir seguridad'),
+  localizedField({ value: 'Spend money', label: 'Spend money' }, 'label', 'Spend money', 'Gastar dinero'),
+  localizedField({ value: 'Drink/use substances', label: 'Drink/use substances' }, 'label', 'Drink/use substances', 'Beber/usar sustancias'),
+  localizedField({ value: 'End the relationship', label: 'End the relationship' }, 'label', 'End the relationship', 'Terminar la relación'),
+  localizedField({ value: 'Say something hurtful', label: 'Say something hurtful' }, 'label', 'Say something hurtful', 'Decir algo hiriente'),
+  localizedField({ value: 'I don’t know', label: 'I don’t know' }, 'label', 'I don’t know', 'No sé'),
+  localizedField({ value: 'Something else', label: 'Something else' }, 'label', 'Something else', 'Algo más'),
 ];
 
 type MatcherStep = 'emotions' | 'urges' | 'distress' | 'context' | 'results';
@@ -34,6 +57,7 @@ type MatcherStep = 'emotions' | 'urges' | 'distress' | 'context' | 'results';
 export default function ToolMatcherScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  useLanguage();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const stepAnim = useRef(new Animated.Value(0)).current;
 
@@ -116,19 +140,19 @@ export default function ToolMatcherScreen() {
       case 'emotions':
         return (
           <Animated.View style={{ opacity: stepAnim, transform: [{ translateY: stepAnim.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }] }}>
-            <Text style={styles.stepTitle}>What are you feeling?</Text>
-            <Text style={styles.stepDesc}>Select all that apply</Text>
+            <Text style={styles.stepTitle}>{localizedText('What are you feeling?', '¿Qué estás sintiendo?')}</Text>
+            <Text style={styles.stepDesc}>{localizedText('Select all that apply', 'Selecciona todo lo que aplique')}</Text>
             <View style={styles.chipGrid}>
               {EMOTION_OPTIONS.map(emotion => {
-                const selected = selectedEmotions.includes(emotion);
+                const selected = selectedEmotions.includes(emotion.value);
                 return (
                   <TouchableOpacity
-                    key={emotion}
+                    key={emotion.value}
                     style={[styles.chip, selected && styles.chipSelected]}
-                    onPress={() => toggleEmotion(emotion)}
+                    onPress={() => toggleEmotion(emotion.value)}
                     activeOpacity={0.7}
                   >
-                    <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{emotion}</Text>
+                    <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{emotion.label}</Text>
                     {selected && <Check size={14} color={Colors.white} />}
                   </TouchableOpacity>
                 );
@@ -137,7 +161,7 @@ export default function ToolMatcherScreen() {
             {selectedEmotions.includes('Something else') && (
               <TextInput
                 style={styles.customInput}
-                placeholder="Write what you feel"
+                placeholder={localizedText('Write what you feel', 'Escribe lo que sientes')}
                 placeholderTextColor={Colors.textMuted}
                 value={customEmotion}
                 onChangeText={setCustomEmotion}
@@ -149,19 +173,19 @@ export default function ToolMatcherScreen() {
       case 'urges':
         return (
           <Animated.View style={{ opacity: stepAnim, transform: [{ translateY: stepAnim.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }] }}>
-            <Text style={styles.stepTitle}>Any strong urges?</Text>
-            <Text style={styles.stepDesc}>Optional — select if relevant</Text>
+            <Text style={styles.stepTitle}>{localizedText('Any strong urges?', '¿Algún impulso fuerte?')}</Text>
+            <Text style={styles.stepDesc}>{localizedText('Optional — select if relevant', 'Opcional: selecciona si aplica')}</Text>
             <View style={styles.chipGrid}>
               {URGE_OPTIONS.map(urge => {
-                const selected = selectedUrges.includes(urge);
+                const selected = selectedUrges.includes(urge.value);
                 return (
                   <TouchableOpacity
-                    key={urge}
+                    key={urge.value}
                     style={[styles.chip, selected && styles.chipSelected]}
-                    onPress={() => toggleUrge(urge)}
+                    onPress={() => toggleUrge(urge.value)}
                     activeOpacity={0.7}
                   >
-                    <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{urge}</Text>
+                    <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{urge.label}</Text>
                     {selected && <Check size={14} color={Colors.white} />}
                   </TouchableOpacity>
                 );
@@ -170,7 +194,7 @@ export default function ToolMatcherScreen() {
             {selectedUrges.includes('Something else') && (
               <TextInput
                 style={styles.customInput}
-                placeholder="Write the urge"
+                placeholder={localizedText('Write the urge', 'Escribe el impulso')}
                 placeholderTextColor={Colors.textMuted}
                 value={customUrge}
                 onChangeText={setCustomUrge}
@@ -182,8 +206,8 @@ export default function ToolMatcherScreen() {
       case 'distress':
         return (
           <Animated.View style={{ opacity: stepAnim, transform: [{ translateY: stepAnim.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }] }}>
-            <Text style={styles.stepTitle}>How intense is it?</Text>
-            <Text style={styles.stepDesc}>Rate your distress level</Text>
+            <Text style={styles.stepTitle}>{localizedText('How intense is it?', '¿Qué tan intenso se siente?')}</Text>
+            <Text style={styles.stepDesc}>{localizedText('Rate your distress level', 'Califica tu nivel de angustia')}</Text>
             <View style={styles.distressContainer}>
               <View style={styles.distressRow}>
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(level => (
@@ -209,9 +233,9 @@ export default function ToolMatcherScreen() {
                 ))}
               </View>
               <View style={styles.distressLabels}>
-                <Text style={styles.distressLabel}>Low</Text>
-                <Text style={styles.distressLabel}>Moderate</Text>
-                <Text style={styles.distressLabel}>Intense</Text>
+                <Text style={styles.distressLabel}>{localizedText('Low', 'Bajo')}</Text>
+                <Text style={styles.distressLabel}>{localizedText('Moderate', 'Moderado')}</Text>
+                <Text style={styles.distressLabel}>{localizedText('Intense', 'Intenso')}</Text>
               </View>
             </View>
           </Animated.View>
@@ -220,8 +244,8 @@ export default function ToolMatcherScreen() {
       case 'context':
         return (
           <Animated.View style={{ opacity: stepAnim, transform: [{ translateY: stepAnim.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }] }}>
-            <Text style={styles.stepTitle}>Is this relationship-related?</Text>
-            <Text style={styles.stepDesc}>This helps us recommend the right tools</Text>
+            <Text style={styles.stepTitle}>{localizedText('Is this relationship-related?', '¿Esto está relacionado con una relación?')}</Text>
+            <Text style={styles.stepDesc}>{localizedText('This helps us recommend the right tools', 'Esto nos ayuda a recomendar las herramientas adecuadas')}</Text>
             <View style={styles.contextOptions}>
               <TouchableOpacity
                 style={[styles.contextBtn, relationshipContext && styles.contextBtnActive]}
@@ -229,7 +253,7 @@ export default function ToolMatcherScreen() {
                 activeOpacity={0.7}
               >
                 <Text style={[styles.contextBtnText, relationshipContext && styles.contextBtnTextActive]}>
-                  Yes, this involves someone
+                  {localizedText('Yes, this involves someone', 'Sí, involucra a alguien')}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -238,7 +262,7 @@ export default function ToolMatcherScreen() {
                 activeOpacity={0.7}
               >
                 <Text style={[styles.contextBtnText, !relationshipContext && styles.contextBtnTextActive]}>
-                  No, it's more internal
+                  {localizedText("No, it's more internal", 'No, es más interno')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -252,8 +276,10 @@ export default function ToolMatcherScreen() {
               <View style={styles.resultsIconWrap}>
                 <Sparkles size={24} color={Colors.brandNavy} />
               </View>
-              <Text style={styles.resultsTitle}>Recommended for you</Text>
-              <Text style={styles.resultsDesc}>Based on what you shared, these tools may help most right now</Text>
+              <Text style={styles.resultsTitle}>{localizedText('Recommended for you', 'Recomendado para ti')}</Text>
+              <Text style={styles.resultsDesc}>
+                {localizedText('Based on what you shared, these tools may help most right now', 'Según lo que compartiste, estas herramientas podrían ayudar más ahora mismo')}
+              </Text>
             </View>
             <View style={styles.resultsList}>
               {results.map((result, index) => (
@@ -272,7 +298,7 @@ export default function ToolMatcherScreen() {
                     <Text style={styles.resultReason}>{result.reason}</Text>
                     <View style={styles.resultMeta}>
                       <View style={styles.confidenceBadge}>
-                        <Text style={styles.confidenceText}>{result.confidence}% match</Text>
+                        <Text style={styles.confidenceText}>{localizedText(`${result.confidence}% match`, `${result.confidence}% coincidencia`)}</Text>
                       </View>
                       <Text style={styles.resultType}>{result.toolType}</Text>
                     </View>
@@ -295,7 +321,7 @@ export default function ToolMatcherScreen() {
               }}
               activeOpacity={0.7}
             >
-              <Text style={styles.retryBtnText}>Try different answers</Text>
+              <Text style={styles.retryBtnText}>{localizedText('Try different answers', 'Probar otras respuestas')}</Text>
             </TouchableOpacity>
           </Animated.View>
         );
@@ -318,7 +344,7 @@ export default function ToolMatcherScreen() {
           >
             <ChevronLeft size={24} color={Colors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Find the Right Tool</Text>
+          <Text style={styles.headerTitle}>{localizedText('Find the Right Tool', 'Encontrar la herramienta adecuada')}</Text>
           {step !== 'results' && (
             <Text style={styles.stepIndicator}>
               {['emotions', 'urges', 'distress', 'context'].indexOf(step) + 1}/4
@@ -350,12 +376,12 @@ export default function ToolMatcherScreen() {
               testID="matcher-next-btn"
             >
               <Text style={styles.nextBtnText}>
-                {step === 'context' ? 'Find Tools' : 'Continue'}
+                {step === 'context' ? localizedText('Find Tools', 'Encontrar herramientas') : localizedText('Continue', 'Continuar')}
               </Text>
             </TouchableOpacity>
             {step === 'urges' && (
               <TouchableOpacity onPress={handleNext} style={styles.skipBtn}>
-                <Text style={styles.skipBtnText}>Skip this step</Text>
+                <Text style={styles.skipBtnText}>{localizedText('Skip this step', 'Saltar este paso')}</Text>
               </TouchableOpacity>
             )}
           </View>

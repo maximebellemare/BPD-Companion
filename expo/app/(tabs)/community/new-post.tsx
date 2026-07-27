@@ -31,8 +31,11 @@ import { PostCategory, SituationTag, SupportRequestType } from '@/types/communit
 import { checkContentSafety, getPostSuggestions } from '@/services/community/communitySafetyService';
 import { getDistressLabel, trackEmotionalContextEvent } from '@/services/community/communityEmotionalContextService';
 import { CommunityProfile, loadCommunityProfile } from '@/services/community/communityProfileService';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 export default function NewPostScreen() {
+  useLanguage();
   const router = useRouter();
   const { createPost, isCreating } = useCreatePost();
   const [communityProfile, setCommunityProfile] = useState<CommunityProfile | null>(null);
@@ -132,33 +135,33 @@ export default function NewPostScreen() {
       router.back();
     } catch (error) {
       console.error('[NewPost] Failed to create post:', error);
-      Alert.alert('Could not share post', error instanceof Error ? error.message : 'Please try again in a moment.');
+      Alert.alert(localizedText('Could not share post', 'No se pudo compartir la publicación'), error instanceof Error ? error.message : localizedText('Please try again in a moment.', 'Intenta de nuevo en un momento.'));
     }
   }, [category, title, body, isAnonymous, hasContentWarning, contentWarningText, situationTag, selectedEmotions, supportType, createPost, router, primaryEmotion, distressLevel, supportRequestType, hasEmotionalContext]);
 
   const handleSubmit = useCallback(async () => {
     if (!title.trim()) {
-      Alert.alert('Add a title', 'Give your post a short title so people know what you need.');
+      Alert.alert(localizedText('Add a title', 'Agrega un título'), localizedText('Give your post a short title so people know what you need.', 'Dale a tu publicación un título breve para que las personas sepan qué necesitas.'));
       return;
     }
     if (!body.trim()) {
-      Alert.alert('Write your post', 'Share a little about what is going on before posting.');
+      Alert.alert(localizedText('Write your post', 'Escribe tu publicación'), localizedText('Share a little about what is going on before posting.', 'Comparte un poco de lo que está pasando antes de publicar.'));
       return;
     }
     if (!category) {
-      Alert.alert('Choose a category', 'Pick the category that best fits your post.');
+      Alert.alert(localizedText('Choose a category', 'Elige una categoría'), localizedText('Pick the category that best fits your post.', 'Elige la categoría que mejor se ajuste a tu publicación.'));
       return;
     }
 
     const safety = checkContentSafety(body);
     if (!safety.isSafe) {
       Alert.alert(
-        'A gentle reminder',
-        safety.suggestion ?? 'Please review your message before posting.',
+        localizedText('A gentle reminder', 'Un recordatorio amable'),
+        safety.suggestion ?? localizedText('Please review your message before posting.', 'Revisa tu mensaje antes de publicar.'),
         [
-          { text: 'Edit post', style: 'cancel' },
+          { text: localizedText('Edit post', 'Editar publicación'), style: 'cancel' },
           {
-            text: 'Post anyway',
+            text: localizedText('Post anyway', 'Publicar de todos modos'),
             onPress: async () => {
               await doSubmit();
             },
@@ -178,7 +181,7 @@ export default function NewPostScreen() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} testID="back-btn">
             <ArrowLeft size={20} color={Colors.text} />
           </TouchableOpacity>
-          <Text style={styles.navTitle}>New Post</Text>
+          <Text style={styles.navTitle}>{localizedText('New Post', 'Nueva publicación')}</Text>
           <TouchableOpacity
             style={[styles.submitBtn, canSubmit && styles.submitBtnActive]}
             onPress={handleSubmit}
@@ -188,7 +191,7 @@ export default function NewPostScreen() {
             {isCreating ? (
               <ActivityIndicator size="small" color={Colors.white} />
             ) : (
-              <Text style={[styles.submitText, canSubmit && styles.submitTextActive]}>Share</Text>
+              <Text style={[styles.submitText, canSubmit && styles.submitTextActive]}>{localizedText('Share', 'Compartir')}</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -204,7 +207,7 @@ export default function NewPostScreen() {
           <View style={styles.safeNotice}>
             <Shield size={14} color={Colors.primary} />
             <Text style={styles.safeNoticeText}>
-              This is a safe space. Share what feels right for you.
+              {localizedText('This is a safe space. Share what feels right for you.', 'Este es un espacio seguro. Comparte lo que se sienta bien para ti.')}
             </Text>
           </View>
 
@@ -217,8 +220,8 @@ export default function NewPostScreen() {
             >
               <Sparkles size={17} color={Colors.primary} />
               <View style={styles.profilePromptText}>
-                <Text style={styles.profilePromptTitle}>Optional community profile</Text>
-                <Text style={styles.profilePromptBody}>Add a username when you want. You can still post now.</Text>
+                <Text style={styles.profilePromptTitle}>{localizedText('Optional community profile', 'Perfil comunitario opcional')}</Text>
+                <Text style={styles.profilePromptBody}>{localizedText('Add a username when you want. You can still post now.', 'Agrega un nombre de usuario cuando quieras. Igual puedes publicar ahora.')}</Text>
               </View>
             </TouchableOpacity>
           )}
@@ -234,7 +237,7 @@ export default function NewPostScreen() {
             >
               {isAnonymous ? <EyeOff size={16} color={Colors.primary} /> : <Eye size={16} color={Colors.textMuted} />}
               <Text style={[styles.toggleText, isAnonymous && styles.toggleTextActive]}>
-                {isAnonymous ? 'Posting anonymously' : 'Posting as you'}
+                {isAnonymous ? localizedText('Posting anonymously', 'Publicando anónimamente') : localizedText('Posting as you', 'Publicando como tú')}
               </Text>
             </TouchableOpacity>
 
@@ -254,7 +257,7 @@ export default function NewPostScreen() {
           {hasContentWarning && (
             <TextInput
               style={styles.cwInput}
-              placeholder="What should readers be aware of?"
+              placeholder={localizedText('What should readers be aware of?', '¿Qué deberían saber quienes lean?')}
               placeholderTextColor={Colors.textMuted}
               value={contentWarningText}
               onChangeText={setContentWarningText}
@@ -263,7 +266,7 @@ export default function NewPostScreen() {
             />
           )}
 
-          <Text style={styles.sectionLabel}>What's the situation?</Text>
+          <Text style={styles.sectionLabel}>{localizedText("What's the situation?", '¿Cuál es la situación?')}</Text>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -288,7 +291,7 @@ export default function NewPostScreen() {
             })}
           </ScrollView>
 
-          <Text style={styles.sectionLabel}>What kind of support would help?</Text>
+          <Text style={styles.sectionLabel}>{localizedText('What kind of support would help?', '¿Qué tipo de apoyo ayudaría?')}</Text>
           <View style={styles.supportGrid}>
             {SUPPORT_TYPES.map((st) => {
               const isSelected = supportType === st.id;
@@ -308,7 +311,7 @@ export default function NewPostScreen() {
             })}
           </View>
 
-          <Text style={styles.sectionLabel}>Category</Text>
+          <Text style={styles.sectionLabel}>{localizedText('Category', 'Categoría')}</Text>
           <View style={styles.categoriesGrid}>
             {CATEGORIES.map((cat) => {
               const isSelected = category === cat.id;
@@ -339,10 +342,10 @@ export default function NewPostScreen() {
             })}
           </View>
 
-          <Text style={styles.sectionLabel}>Title</Text>
+          <Text style={styles.sectionLabel}>{localizedText('Title', 'Título')}</Text>
           <TextInput
             style={styles.titleInput}
-            placeholder="Give your post a title..."
+            placeholder={localizedText('Give your post a title...', 'Dale un título a tu publicación...')}
             placeholderTextColor={Colors.textMuted}
             value={title}
             onChangeText={setTitle}
@@ -351,10 +354,10 @@ export default function NewPostScreen() {
           />
           <Text style={styles.charCount}>{title.length}/150</Text>
 
-          <Text style={styles.sectionLabel}>Your thoughts</Text>
+          <Text style={styles.sectionLabel}>{localizedText('Your thoughts', 'Tus pensamientos')}</Text>
           <TextInput
             style={styles.bodyInput}
-            placeholder="Share what's on your mind. This community understands."
+            placeholder={localizedText("Share what's on your mind. This community understands.", 'Comparte lo que tienes en mente. Esta comunidad entiende.')}
             placeholderTextColor={Colors.textMuted}
             value={body}
             onChangeText={handleBodyChange}
@@ -379,7 +382,7 @@ export default function NewPostScreen() {
             <View style={styles.suggestionsCard}>
               <View style={styles.suggestionsHeader}>
                 <Sparkles size={14} color={Colors.brandLilac} />
-                <Text style={styles.suggestionsTitle}>Suggestions</Text>
+                <Text style={styles.suggestionsTitle}>{localizedText('Suggestions', 'Sugerencias')}</Text>
               </View>
               {suggestions.map((s, idx) => (
                 <Text key={idx} style={styles.suggestionText}>• {s.message}</Text>
@@ -392,7 +395,7 @@ export default function NewPostScreen() {
             onPress={() => setShowEmotions(!showEmotions)}
           >
             <Text style={styles.emotionToggleText}>
-              {showEmotions ? 'Hide emotions' : `Add emotions${selectedEmotions.length > 0 ? ` (${selectedEmotions.length})` : ''}`}
+              {showEmotions ? localizedText('Hide emotions', 'Ocultar emociones') : localizedText(`Add emotions${selectedEmotions.length > 0 ? ` (${selectedEmotions.length})` : ''}`, `Agregar emociones${selectedEmotions.length > 0 ? ` (${selectedEmotions.length})` : ''}`)}
             </Text>
           </TouchableOpacity>
 
@@ -426,9 +429,9 @@ export default function NewPostScreen() {
               <Text style={styles.emotionalContextToggleEmoji}>🫧</Text>
               <View>
                 <Text style={styles.emotionalContextToggleTitle}>
-                  {showEmotionalContext ? 'Hide emotional context' : 'Add emotional context'}
+                  {showEmotionalContext ? localizedText('Hide emotional context', 'Ocultar contexto emocional') : localizedText('Add emotional context', 'Agregar contexto emocional')}
                 </Text>
-                <Text style={styles.emotionalContextToggleDesc}>Optional — helps others respond supportively</Text>
+                <Text style={styles.emotionalContextToggleDesc}>{localizedText('Optional — helps others respond supportively', 'Opcional: ayuda a que otras personas respondan con apoyo')}</Text>
               </View>
             </View>
             {hasEmotionalContext && !showEmotionalContext && (
@@ -440,7 +443,7 @@ export default function NewPostScreen() {
 
           {showEmotionalContext && (
             <View style={styles.emotionalContextSection}>
-              <Text style={styles.contextSectionLabel}>How are you feeling right now?</Text>
+              <Text style={styles.contextSectionLabel}>{localizedText('How are you feeling right now?', '¿Cómo te sientes ahora mismo?')}</Text>
               <View style={styles.primaryEmotionGrid}>
                 {PRIMARY_EMOTIONS.map((emotion) => {
                   const isSelected = primaryEmotion === emotion.id;
@@ -462,7 +465,7 @@ export default function NewPostScreen() {
                 })}
               </View>
 
-              <Text style={styles.contextSectionLabel}>Distress level</Text>
+              <Text style={styles.contextSectionLabel}>{localizedText('Distress level', 'Nivel de malestar')}</Text>
               <View style={styles.distressRow}>
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((level) => {
                   const isSelected = distressLevel === level;
@@ -493,7 +496,7 @@ export default function NewPostScreen() {
                 </Text>
               )}
 
-              <Text style={styles.contextSectionLabel}>What kind of response would help?</Text>
+              <Text style={styles.contextSectionLabel}>{localizedText('What kind of response would help?', '¿Qué tipo de respuesta ayudaría?')}</Text>
               <View style={styles.supportRequestGrid}>
                 {SUPPORT_REQUEST_TYPES.map((type) => {
                   const isSelected = supportRequestType === type.id;

@@ -14,6 +14,8 @@ import Colors from '@/constants/colors';
 import { PremiumFeature } from '@/types/subscription';
 import { useEntitlements } from '@/hooks/useEntitlements';
 import { getUpgradeReason } from '@/services/subscription/entitlementService';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 interface PremiumGateProps {
   feature: PremiumFeature;
@@ -42,6 +44,7 @@ export default function PremiumGate({ feature, children, fallback, showInline = 
 
 function InlineUpgradePrompt({ feature }: { feature: PremiumFeature }) {
   const router = useRouter();
+  useLanguage();
   const reason = getUpgradeReason(feature);
 
   const handlePress = useCallback(() => {
@@ -71,6 +74,7 @@ function InlineUpgradePrompt({ feature }: { feature: PremiumFeature }) {
 
 function FullUpgradePrompt({ feature }: { feature: PremiumFeature }) {
   const router = useRouter();
+  useLanguage();
   const reason = getUpgradeReason(feature);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
@@ -108,7 +112,7 @@ function FullUpgradePrompt({ feature }: { feature: PremiumFeature }) {
       <View style={styles.fullIconWrap}>
         <Crown size={28} color="#67E8F9" />
       </View>
-      <Text style={styles.fullTitle}>Membership required</Text>
+      <Text style={styles.fullTitle}>{localizedText('Membership required', 'Membresía requerida')}</Text>
       <Text style={styles.fullDescription}>{reason}</Text>
       <TouchableOpacity
         style={styles.fullButton}
@@ -117,9 +121,9 @@ function FullUpgradePrompt({ feature }: { feature: PremiumFeature }) {
         testID={`premium-gate-full-${feature}`}
       >
         <Crown size={16} color={Colors.white} />
-        <Text style={styles.fullButtonText}>Start membership</Text>
+        <Text style={styles.fullButtonText}>{localizedText('Start membership', 'Iniciar membresía')}</Text>
       </TouchableOpacity>
-      <Text style={styles.fullFooter}>3-day free trial available</Text>
+      <Text style={styles.fullFooter}>{localizedText('3-day free trial available', 'Prueba gratis de 3 días disponible')}</Text>
     </Animated.View>
   );
 }
@@ -127,6 +131,7 @@ function FullUpgradePrompt({ feature }: { feature: PremiumFeature }) {
 export function PremiumInlinePrompt({ feature, message }: { feature: PremiumFeature; message?: string }) {
   const router = useRouter();
   const { canAccess } = useEntitlements();
+  useLanguage();
   const reason = message ?? getUpgradeReason(feature);
 
   const handlePress = useCallback(() => {
@@ -157,10 +162,11 @@ export function PremiumInlinePrompt({ feature, message }: { feature: PremiumFeat
 }
 
 export function PremiumBadge() {
+  useLanguage();
   return (
     <View style={styles.badge} testID="premium-badge">
       <Crown size={10} color="#67E8F9" />
-      <Text style={styles.badgeText}>MEMBER</Text>
+      <Text style={styles.badgeText}>{localizedText('MEMBER', 'MIEMBRO')}</Text>
     </View>
   );
 }
@@ -168,6 +174,7 @@ export function PremiumBadge() {
 export function PremiumLockOverlay({ feature, children }: { feature: PremiumFeature; children: React.ReactNode }) {
   const router = useRouter();
   const { canAccess } = useEntitlements();
+  useLanguage();
 
   const handlePress = useCallback(() => {
     if (Platform.OS !== 'web') {
@@ -191,7 +198,7 @@ export function PremiumLockOverlay({ feature, children }: { feature: PremiumFeat
       <View style={styles.lockOverlay}>
         <View style={styles.lockOverlayBadge}>
           <Lock size={12} color={Colors.white} />
-          <Text style={styles.lockOverlayText}>Membership</Text>
+          <Text style={styles.lockOverlayText}>{localizedText('Membership', 'Membresía')}</Text>
         </View>
       </View>
     </TouchableOpacity>

@@ -12,12 +12,15 @@ import { Fingerprint, Compass, BookOpen, Anchor, Shield, ChevronRight } from 'lu
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useIdentityValues, useAnchorStatements } from '@/hooks/useIdentity';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 interface Props {
   pinnedAnchor?: string | null;
 }
 
 const IdentityBuilderCard = React.memo(function IdentityBuilderCard({ pinnedAnchor }: Props) {
+  useLanguage();
   const router = useRouter();
   const { selectedValues } = useIdentityValues();
   const { pinnedAnchors } = useAnchorStatements();
@@ -63,8 +66,8 @@ const IdentityBuilderCard = React.memo(function IdentityBuilderCard({ pinnedAnch
           <Fingerprint size={18} color="#14B8A6" />
         </View>
         <View style={styles.headerText}>
-          <Text style={styles.title}>Identity & Self-Trust</Text>
-          <Text style={styles.subtitle}>Build a more stable sense of self</Text>
+          <Text style={styles.title}>{localizedText('Identity & Self-Trust', 'Identidad y autoconfianza')}</Text>
+          <Text style={styles.subtitle}>{localizedText('Build a more stable sense of self', 'Construye un sentido de identidad más estable')}</Text>
         </View>
       </View>
 
@@ -103,7 +106,7 @@ const IdentityBuilderCard = React.memo(function IdentityBuilderCard({ pinnedAnch
           <View style={[styles.linkIcon, { backgroundColor: '#FFFFFF' }]}>
             <Compass size={16} color="#14B8A6" />
           </View>
-          <Text style={styles.linkLabel}>Values</Text>
+          <Text style={styles.linkLabel}>{localizedText('Values', 'Valores')}</Text>
           <ChevronRight size={14} color={Colors.textMuted} />
         </TouchableOpacity>
 
@@ -116,7 +119,7 @@ const IdentityBuilderCard = React.memo(function IdentityBuilderCard({ pinnedAnch
           <View style={[styles.linkIcon, { backgroundColor: '#FFFFFF' }]}>
             <Shield size={16} color="#3B82F6" />
           </View>
-          <Text style={styles.linkLabel}>Self-Trust</Text>
+          <Text style={styles.linkLabel}>{localizedText('Self-Trust', 'Autoconfianza')}</Text>
           <ChevronRight size={14} color={Colors.textMuted} />
         </TouchableOpacity>
 
@@ -129,7 +132,7 @@ const IdentityBuilderCard = React.memo(function IdentityBuilderCard({ pinnedAnch
           <View style={[styles.linkIcon, { backgroundColor: '#FFFFFF' }]}>
             <BookOpen size={16} color="#3B82F6" />
           </View>
-          <Text style={styles.linkLabel}>Journal</Text>
+          <Text style={styles.linkLabel}>{localizedText('Journal', 'Diario')}</Text>
           <ChevronRight size={14} color={Colors.textMuted} />
         </TouchableOpacity>
 
@@ -142,7 +145,7 @@ const IdentityBuilderCard = React.memo(function IdentityBuilderCard({ pinnedAnch
           <View style={[styles.linkIcon, { backgroundColor: '#FFFFFF' }]}>
             <Anchor size={16} color="#67E8F9" />
           </View>
-          <Text style={styles.linkLabel}>Anchors</Text>
+          <Text style={styles.linkLabel}>{localizedText('Anchors', 'Anclas')}</Text>
           <ChevronRight size={14} color={Colors.textMuted} />
         </TouchableOpacity>
       </View>
@@ -158,8 +161,8 @@ const IdentityBuilderCard = React.memo(function IdentityBuilderCard({ pinnedAnch
             <Fingerprint size={18} color={Colors.white} />
           </View>
           <View>
-            <Text style={styles.conflictBtnTitle}>Conflict Self-Alignment</Text>
-            <Text style={styles.conflictBtnDesc}>Pause. Align with your values. Respond.</Text>
+            <Text style={styles.conflictBtnTitle}>{localizedText('Conflict Self-Alignment', 'Alineación personal en conflictos')}</Text>
+            <Text style={styles.conflictBtnDesc}>{localizedText('Pause. Align with your values. Respond.', 'Pausa. Alinéate con tus valores. Responde.')}</Text>
           </View>
         </View>
         <ChevronRight size={16} color="rgba(255,255,255,0.7)" />

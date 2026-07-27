@@ -40,6 +40,8 @@ import {
   RelationshipInsight,
   RelationshipSuggestion,
 } from '@/types/relationships';
+import { localizedText } from '@/lib/i18n/staticText';
+import { useLanguage } from '@/hooks/useLanguage';
 
 const SEVERITY_COLORS = {
   info: Colors.primary,
@@ -48,10 +50,10 @@ const SEVERITY_COLORS = {
 } as const;
 
 const TREND_CONFIG = {
-  rising: { label: 'Rising', icon: TrendingUp, color: '#3B82F6' },
-  stable: { label: 'Stable', icon: Minus, color: Colors.primary },
-  falling: { label: 'Improving', icon: TrendingDown, color: Colors.success },
-  insufficient_data: { label: 'Not enough data', icon: AlertCircle, color: Colors.textMuted },
+  rising: { get label() { return localizedText('Rising', 'Subiendo'); }, icon: TrendingUp, color: '#3B82F6' },
+  stable: { get label() { return localizedText('Stable', 'Estable'); }, icon: Minus, color: Colors.primary },
+  falling: { get label() { return localizedText('Improving', 'Mejorando'); }, icon: TrendingDown, color: Colors.success },
+  insufficient_data: { get label() { return localizedText('Not enough data', 'Datos insuficientes'); }, icon: AlertCircle, color: Colors.textMuted },
 } as const;
 
 function AnimatedSection({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
@@ -84,6 +86,7 @@ function AnimatedSection({ children, delay = 0 }: { children: React.ReactNode; d
 }
 
 function RelationshipCard({ pattern, index }: { pattern: RelationshipPattern; index: number }) {
+  useLanguage();
   const relOption = RELATIONSHIP_OPTIONS.find((r: { value: string; label: string; emoji: string }) => r.value === pattern.relationship);
   const topEmotion = pattern.emotionalTriggers[0];
   const topIntent = pattern.commonIntents[0];
@@ -99,9 +102,9 @@ function RelationshipCard({ pattern, index }: { pattern: RelationshipPattern; in
           <View style={styles.relCardIdentity}>
             <Text style={styles.relCardEmoji}>{relOption?.emoji ?? '👤'}</Text>
             <View>
-              <Text style={styles.relCardName}>{relOption?.label ?? 'Unknown'}</Text>
+              <Text style={styles.relCardName}>{relOption?.label ?? localizedText('Unknown', 'Desconocido')}</Text>
               <Text style={styles.relCardCount}>
-                {pattern.totalInteractions} message{pattern.totalInteractions !== 1 ? 's' : ''} analyzed
+                {localizedText(`${pattern.totalInteractions} message${pattern.totalInteractions !== 1 ? 's' : ''} analyzed`, `${pattern.totalInteractions} mensaje${pattern.totalInteractions !== 1 ? 's' : ''} analizado${pattern.totalInteractions !== 1 ? 's' : ''}`)}
               </Text>
             </View>
           </View>
@@ -126,7 +129,7 @@ function RelationshipCard({ pattern, index }: { pattern: RelationshipPattern; in
             <View style={styles.relStatItem}>
               <Text style={styles.relStatEmoji}>{emotionOption.emoji}</Text>
               <View style={styles.relStatContent}>
-                <Text style={styles.relStatLabel}>Top emotion</Text>
+                <Text style={styles.relStatLabel}>{localizedText('Top emotion', 'Emocion principal')}</Text>
                 <Text style={styles.relStatValue}>{emotionOption.label}</Text>
                 <View style={styles.relStatBar}>
                   <View style={[styles.relStatBarFill, { width: `${topEmotion.percentage}%`, backgroundColor: Colors.accent }]} />
@@ -140,7 +143,7 @@ function RelationshipCard({ pattern, index }: { pattern: RelationshipPattern; in
             <View style={styles.relStatItem}>
               <Text style={styles.relStatEmoji}>{intentOption.emoji}</Text>
               <View style={styles.relStatContent}>
-                <Text style={styles.relStatLabel}>Common intent</Text>
+                <Text style={styles.relStatLabel}>{localizedText('Common intent', 'Intencion comun')}</Text>
                 <Text style={styles.relStatValue}>{intentOption.label}</Text>
                 <View style={styles.relStatBar}>
                   <View style={[styles.relStatBarFill, { width: `${topIntent.percentage}%`, backgroundColor: Colors.primary }]} />
@@ -154,7 +157,7 @@ function RelationshipCard({ pattern, index }: { pattern: RelationshipPattern; in
             <View style={styles.relStatItem}>
               <Text style={styles.relStatEmoji}>{styleMeta.emoji}</Text>
               <View style={styles.relStatContent}>
-                <Text style={styles.relStatLabel}>Preferred style</Text>
+                <Text style={styles.relStatLabel}>{localizedText('Preferred style', 'Estilo preferido')}</Text>
                 <Text style={styles.relStatValue}>{styleMeta.label}</Text>
                 <View style={styles.relStatBar}>
                   <View style={[styles.relStatBarFill, { width: `${topStyle.percentage}%`, backgroundColor: styleMeta.color }]} />
@@ -258,6 +261,7 @@ function TriggerChip({ label, emoji, percentage }: { label: string; emoji: strin
 }
 
 export default function RelationshipInsightsScreen() {
+  useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { trackEvent } = useAnalytics();
@@ -359,8 +363,8 @@ export default function RelationshipInsightsScreen() {
           <ArrowLeft size={20} color={Colors.text} />
         </TouchableOpacity>
         <View style={styles.headerTextWrap}>
-          <Text style={styles.headerTitle}>Relationship Patterns</Text>
-          <Text style={styles.headerSubtitle}>Understanding how you connect</Text>
+          <Text style={styles.headerTitle}>{localizedText('Relationship Patterns', 'Patrones relacionales')}</Text>
+          <Text style={styles.headerSubtitle}>{localizedText('Understanding how you connect', 'Comprender como conectas')}</Text>
         </View>
       </Animated.View>
 
@@ -373,9 +377,9 @@ export default function RelationshipInsightsScreen() {
             <View style={styles.emptyIconWrap}>
               <Heart size={40} color={Colors.primary} />
             </View>
-            <Text style={styles.emptyTitle}>No patterns yet</Text>
+            <Text style={styles.emptyTitle}>{localizedText('No patterns yet', 'Aun no hay patrones')}</Text>
             <Text style={styles.emptyDesc}>
-              Use the Message Tool to rewrite messages and track outcomes. Over time, you'll see patterns in how you communicate in different relationships.
+              {localizedText("Use the Message Tool to rewrite messages and track outcomes. Over time, you'll see patterns in how you communicate in different relationships.", 'Usa la herramienta de mensajes para reescribir mensajes y registrar resultados. Con el tiempo veras patrones sobre como te comunicas en distintas relaciones.')}
             </Text>
             <TouchableOpacity
               style={styles.emptyButton}
@@ -383,7 +387,7 @@ export default function RelationshipInsightsScreen() {
               activeOpacity={0.8}
             >
               <MessageSquare size={16} color={Colors.white} />
-              <Text style={styles.emptyButtonText}>Go to Messages</Text>
+              <Text style={styles.emptyButtonText}>{localizedText('Go to Messages', 'Ir a Mensajes')}</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -395,21 +399,21 @@ export default function RelationshipInsightsScreen() {
                     <Users size={18} color={Colors.primary} />
                   </View>
                   <Text style={styles.overviewValue}>{patterns.length}</Text>
-                  <Text style={styles.overviewLabel}>Relationships</Text>
+                  <Text style={styles.overviewLabel}>{localizedText('Relationships', 'Relaciones')}</Text>
                 </View>
                 <View style={styles.overviewCard}>
                   <View style={[styles.overviewIconWrap, { backgroundColor: Colors.accentLight }]}>
                     <MessageSquare size={18} color={Colors.accent} />
                   </View>
                   <Text style={styles.overviewValue}>{totalMessagesAnalyzed}</Text>
-                  <Text style={styles.overviewLabel}>Messages</Text>
+                  <Text style={styles.overviewLabel}>{localizedText('Messages', 'Mensajes')}</Text>
                 </View>
                 <View style={styles.overviewCard}>
                   <View style={[styles.overviewIconWrap, { backgroundColor: trendConfig.color + '18' }]}>
                     <TrendIcon size={18} color={trendConfig.color} />
                   </View>
                   <Text style={[styles.overviewValue, { color: trendConfig.color }]}>{trendConfig.label}</Text>
-                  <Text style={styles.overviewLabel}>Conflict trend</Text>
+                  <Text style={styles.overviewLabel}>{localizedText('Conflict trend', 'Tendencia de conflicto')}</Text>
                 </View>
               </View>
             </AnimatedSection>
@@ -419,22 +423,22 @@ export default function RelationshipInsightsScreen() {
                 <View style={styles.highlightCard}>
                   <View style={styles.highlightHeader}>
                     <Lightbulb size={16} color={Colors.accent} />
-                    <Text style={styles.highlightLabel}>Key finding</Text>
+                    <Text style={styles.highlightLabel}>{localizedText('Key finding', 'Hallazgo clave')}</Text>
                   </View>
                   <Text style={styles.highlightText}>
-                    Your most emotionally activating relationship appears to be with your{' '}
+                    {localizedText('Your most emotionally activating relationship appears to be with your', 'Tu relacion mas activadora emocionalmente parece ser con tu')}{' '}
                     <Text style={styles.highlightBold}>
-                      {RELATIONSHIP_OPTIONS.find((r: { value: string; label: string; emoji: string }) => r.value === topTriggerRelationship)?.label?.toLowerCase() ?? 'connection'}
+                      {RELATIONSHIP_OPTIONS.find((r: { value: string; label: string; emoji: string }) => r.value === topTriggerRelationship)?.label?.toLowerCase() ?? localizedText('connection', 'conexion')}
                     </Text>
                     {mostCommonEmotion && (
                       <>
-                        , where you seem to most often feel{' '}
+                        {localizedText(', where you seem to most often feel', ', donde parece que con mas frecuencia sientes')}{' '}
                         <Text style={styles.highlightBold}>
                           {EMOTIONAL_STATE_OPTIONS.find((e: { value: string; label: string; emoji: string }) => e.value === mostCommonEmotion)?.label?.toLowerCase() ?? ''}
                         </Text>
                       </>
                     )}
-                    . This awareness is powerful.
+                    {localizedText('. This awareness is powerful.', '. Esta conciencia es poderosa.')}
                   </Text>
                 </View>
               </AnimatedSection>
@@ -448,8 +452,8 @@ export default function RelationshipInsightsScreen() {
                       <Zap size={16} color="#3B82F6" />
                     </View>
                     <View>
-                      <Text style={styles.sectionTitle}>Relationship Triggers</Text>
-                      <Text style={styles.sectionSubtitleInline}>What seems to activate you most</Text>
+                      <Text style={styles.sectionTitle}>{localizedText('Relationship Triggers', 'Disparadores relacionales')}</Text>
+                      <Text style={styles.sectionSubtitleInline}>{localizedText('What seems to activate you most', 'Lo que parece activarte mas')}</Text>
                     </View>
                   </View>
                   {triggerInsights.map((insight, i) => (
@@ -467,8 +471,8 @@ export default function RelationshipInsightsScreen() {
                       <Activity size={16} color="#3B82F6" />
                     </View>
                     <View>
-                      <Text style={styles.sectionTitle}>Emotional Reactions</Text>
-                      <Text style={styles.sectionSubtitleInline}>Emotions that appear most in your messages</Text>
+                      <Text style={styles.sectionTitle}>{localizedText('Emotional Reactions', 'Reacciones emocionales')}</Text>
+                      <Text style={styles.sectionSubtitleInline}>{localizedText('Emotions that appear most in your messages', 'Emociones que mas aparecen en tus mensajes')}</Text>
                     </View>
                   </View>
                   <View style={styles.emotionGrid}>
@@ -503,8 +507,8 @@ export default function RelationshipInsightsScreen() {
                       <MessageSquare size={16} color="#3B82F6" />
                     </View>
                     <View>
-                      <Text style={styles.sectionTitle}>Communication Patterns</Text>
-                      <Text style={styles.sectionSubtitleInline}>How you tend to approach conversations</Text>
+                      <Text style={styles.sectionTitle}>{localizedText('Communication Patterns', 'Patrones de comunicacion')}</Text>
+                      <Text style={styles.sectionSubtitleInline}>{localizedText('How you tend to approach conversations', 'Como tiendes a abordar conversaciones')}</Text>
                     </View>
                   </View>
                   <View style={styles.emotionGrid}>
@@ -526,9 +530,9 @@ export default function RelationshipInsightsScreen() {
                         <Pause size={16} color={Colors.primary} />
                       </View>
                       <View style={styles.pauseCardContent}>
-                        <Text style={styles.pauseCardTitle}>Pause usage</Text>
+                        <Text style={styles.pauseCardTitle}>{localizedText('Pause usage', 'Uso de pausa')}</Text>
                         <Text style={styles.pauseCardDesc}>
-                          You chose to pause or not send {pauseCount} time{pauseCount !== 1 ? 's' : ''}. That takes real self-awareness.
+                          {localizedText(`You chose to pause or not send ${pauseCount} time${pauseCount !== 1 ? 's' : ''}. That takes real self-awareness.`, `Elegiste pausar o no enviar ${pauseCount} vez${pauseCount !== 1 ? 'ces' : ''}. Eso requiere mucha conciencia.`)}
                         </Text>
                       </View>
                     </View>
@@ -552,8 +556,8 @@ export default function RelationshipInsightsScreen() {
                       <Heart size={16} color={Colors.primary} />
                     </View>
                     <View>
-                      <Text style={styles.sectionTitle}>By Relationship</Text>
-                      <Text style={styles.sectionSubtitleInline}>Patterns within each connection</Text>
+                      <Text style={styles.sectionTitle}>{localizedText('By Relationship', 'Por relacion')}</Text>
+                      <Text style={styles.sectionSubtitleInline}>{localizedText('Patterns within each connection', 'Patrones dentro de cada conexion')}</Text>
                     </View>
                   </View>
                   {patterns.map((pattern, i) => (
@@ -571,8 +575,8 @@ export default function RelationshipInsightsScreen() {
                       <Shield size={16} color={Colors.success} />
                     </View>
                     <View>
-                      <Text style={styles.sectionTitle}>Suggestions</Text>
-                      <Text style={styles.sectionSubtitleInline}>Gentle ideas based on your patterns</Text>
+                      <Text style={styles.sectionTitle}>{localizedText('Suggestions', 'Sugerencias')}</Text>
+                      <Text style={styles.sectionSubtitleInline}>{localizedText('Gentle ideas based on your patterns', 'Ideas suaves basadas en tus patrones')}</Text>
                     </View>
                   </View>
                   {suggestions.map((suggestion, i) => (
@@ -590,7 +594,7 @@ export default function RelationshipInsightsScreen() {
             <AnimatedSection delay={700}>
               <View style={styles.footerNote}>
                 <Text style={styles.footerNoteText}>
-                  These patterns are generated from your local data and are never shared. They're here to help you grow, not to judge you.
+                  {localizedText("These patterns are generated from your local data and are never shared. They're here to help you grow, not to judge you.", 'Estos patrones se generan desde tus datos locales y nunca se comparten. Estan aqui para ayudarte a crecer, no para juzgarte.')}
                 </Text>
               </View>
             </AnimatedSection>

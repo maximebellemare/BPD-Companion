@@ -35,13 +35,15 @@ import {
   EmotionPattern,
   CopingEffectiveness,
 } from '@/services/patterns/patternEngine';
+import { localizedText } from '@/lib/i18n/staticText';
+import { useLanguage } from '@/hooks/useLanguage';
 
 type TimePeriod = 7 | 14 | 30;
 
 const PERIOD_OPTIONS: { label: string; value: TimePeriod }[] = [
-  { label: '7 days', value: 7 },
-  { label: '14 days', value: 14 },
-  { label: '30 days', value: 30 },
+  { get label() { return localizedText('7 days', '7 dias'); }, value: 7 },
+  { get label() { return localizedText('14 days', '14 dias'); }, value: 14 },
+  { get label() { return localizedText('30 days', '30 dias'); }, value: 30 },
 ];
 
 const ICON_MAP: Record<string, React.ComponentType<{ size: number; color: string }>> = {
@@ -125,7 +127,7 @@ function OverviewCard({ narrative, avgDistress, totalEntries, trend }: {
   const trendLabel = trend === 'improving' ? 'Improving'
     : trend === 'worsening' ? 'Elevated'
     : trend === 'stable' ? 'Stable'
-    : 'Building data';
+    : localizedText('Building data', 'Construyendo datos');
 
   return (
     <Animated.View style={[styles.overviewCard, { opacity: fadeAnim }]}>
@@ -133,18 +135,18 @@ function OverviewCard({ narrative, avgDistress, totalEntries, trend }: {
         <View style={styles.overviewIconWrap}>
           <Activity size={18} color={Colors.primary} />
         </View>
-        <Text style={styles.overviewTitle}>Overview</Text>
+        <Text style={styles.overviewTitle}>{localizedText('Overview', 'Resumen')}</Text>
       </View>
       <Text style={styles.overviewNarrative}>{narrative}</Text>
       <View style={styles.overviewStats}>
         <View style={styles.overviewStat}>
           <Text style={styles.overviewStatValue}>{totalEntries}</Text>
-          <Text style={styles.overviewStatLabel}>Check-ins</Text>
+          <Text style={styles.overviewStatLabel}>{localizedText('Check-ins', 'Check-ins')}</Text>
         </View>
         <View style={styles.overviewStatDivider} />
         <View style={styles.overviewStat}>
           <Text style={styles.overviewStatValue}>{avgDistress || '—'}</Text>
-          <Text style={styles.overviewStatLabel}>Avg Distress</Text>
+          <Text style={styles.overviewStatLabel}>{localizedText('Avg Distress', 'Malestar prom.')}</Text>
         </View>
         <View style={styles.overviewStatDivider} />
         <View style={styles.overviewStat}>
@@ -337,6 +339,7 @@ function SectionCard({
 }
 
 export default function EmotionalInsightsScreen() {
+  useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [period, setPeriod] = useState<TimePeriod>(30);
@@ -383,7 +386,7 @@ export default function EmotionalInsightsScreen() {
         >
           <ArrowLeft size={22} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Emotional Insights</Text>
+        <Text style={styles.headerTitle}>{localizedText('Emotional Insights', 'Insights emocionales')}</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -418,16 +421,16 @@ export default function EmotionalInsightsScreen() {
             <View style={styles.emptyIconWrap}>
               <BarChart3 size={40} color={Colors.primary} />
             </View>
-            <Text style={styles.emptyTitle}>Your patterns are forming</Text>
+            <Text style={styles.emptyTitle}>{localizedText('Your patterns are forming', 'Tus patrones se estan formando')}</Text>
             <Text style={styles.emptySubtitle}>
-              Complete a few more check-ins and your emotional patterns will start becoming visible. Each one adds depth to your self-understanding.
+              {localizedText('Complete a few more check-ins and your emotional patterns will start becoming visible. Each one adds depth to your self-understanding.', 'Completa algunos check-ins mas y tus patrones emocionales empezaran a volverse visibles. Cada uno profundiza tu autocomprension.')}
             </Text>
             <TouchableOpacity
               style={styles.emptyButton}
               onPress={() => router.push('/check-in')}
               activeOpacity={0.8}
             >
-              <Text style={styles.emptyButtonText}>Start a Check-in</Text>
+              <Text style={styles.emptyButtonText}>{localizedText('Start a Check-in', 'Iniciar check-in')}</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -596,7 +599,7 @@ export default function EmotionalInsightsScreen() {
                   onPress={() => router.push('/relationship-insights')}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.deeperLinkText}>Deeper Relationship Insights</Text>
+                  <Text style={styles.deeperLinkText}>{localizedText('Deeper Relationship Insights', 'Insights relacionales mas profundos')}</Text>
                   <ChevronRight size={14} color={Colors.primary} />
                 </TouchableOpacity>
               </SectionCard>
@@ -604,7 +607,7 @@ export default function EmotionalInsightsScreen() {
 
             {analysis.growthSignals.length > 0 && (
               <SectionCard
-                title="Growth Signals"
+                title={localizedText('Growth Signals', 'Senales de crecimiento')}
                 icon={<TrendingUp size={16} color={Colors.success} />}
                 iconColor={Colors.success}
                 iconBg={Colors.successLight}
@@ -624,7 +627,7 @@ export default function EmotionalInsightsScreen() {
                       <View style={styles.growthContent}>
                         <View style={[styles.growthTypeBadge, { backgroundColor: typeBg }]}>
                           <Text style={[styles.growthTypeText, { color: typeColor }]}>
-                            {signal.type === 'positive' ? 'Progress' : signal.type === 'emerging' ? 'Emerging' : 'Awareness'}
+                            {signal.type === 'positive' ? localizedText('Progress', 'Progreso') : signal.type === 'emerging' ? localizedText('Emerging', 'Emergente') : localizedText('Awareness', 'Conciencia')}
                           </Text>
                         </View>
                         <Text style={styles.growthNarrative}>{signal.narrative}</Text>
@@ -637,7 +640,7 @@ export default function EmotionalInsightsScreen() {
 
             <View style={styles.footer}>
               <Text style={styles.footerText}>
-                Every check-in deepens this picture.{'\n'}You're building real self-understanding.
+                {localizedText("Every check-in deepens this picture.\nYou're building real self-understanding.", 'Cada check-in profundiza esta imagen.\nEstas construyendo una autocomprension real.')}
               </Text>
             </View>
 
@@ -647,7 +650,7 @@ export default function EmotionalInsightsScreen() {
               activeOpacity={0.7}
             >
               <BarChart3 size={18} color={Colors.white} />
-              <Text style={styles.fullInsightsText}>View Full Insights</Text>
+              <Text style={styles.fullInsightsText}>{localizedText('View Full Insights', 'Ver insights completos')}</Text>
               <ChevronRight size={16} color={Colors.white} style={{ opacity: 0.7 }} />
             </TouchableOpacity>
           </>

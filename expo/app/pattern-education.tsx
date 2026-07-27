@@ -31,6 +31,8 @@ import Colors from '@/constants/colors';
 import { getPatternById } from '@/services/learn/learningPathService';
 import { getLessonById } from '@/services/learn/learnService';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
+import { localizedText } from '@/lib/i18n/staticText';
+import { useLanguage } from '@/hooks/useLanguage';
 
 const PATTERN_ICONS: Record<string, React.ComponentType<{ size: number; color: string }>> = {
   'shield-alert': ShieldAlert,
@@ -41,6 +43,7 @@ const PATTERN_ICONS: Record<string, React.ComponentType<{ size: number; color: s
 };
 
 export default function PatternEducationScreen() {
+  useLanguage();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -83,12 +86,12 @@ export default function PatternEducationScreen() {
           <TouchableOpacity onPress={handleClose} style={styles.backButton}>
             <ArrowLeft size={22} color={Colors.text} />
           </TouchableOpacity>
-          <Text style={styles.topBarTitle}>Pattern</Text>
+          <Text style={styles.topBarTitle}>{localizedText('Pattern', 'Patron')}</Text>
           <View style={styles.topBarSpacer} />
         </View>
         <View style={styles.emptyState}>
           <BookOpen size={40} color={Colors.textMuted} />
-          <Text style={styles.emptyTitle}>Pattern not found</Text>
+          <Text style={styles.emptyTitle}>{localizedText('Pattern not found', 'Patron no encontrado')}</Text>
         </View>
       </View>
     );
@@ -102,7 +105,7 @@ export default function PatternEducationScreen() {
         <TouchableOpacity onPress={handleClose} style={styles.backButton} testID="pattern-back">
           <ArrowLeft size={22} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.topBarTitle} numberOfLines={1}>Emotional Pattern</Text>
+        <Text style={styles.topBarTitle} numberOfLines={1}>{localizedText('Emotional Pattern', 'Patron emocional')}</Text>
         <View style={styles.topBarSpacer} />
       </View>
 
@@ -120,14 +123,14 @@ export default function PatternEducationScreen() {
 
         <Animated.View style={{ opacity: fadeAnim }}>
           <View style={styles.sectionCard}>
-            <Text style={styles.sectionHeading}>What It Is</Text>
+            <Text style={styles.sectionHeading}>{localizedText('What It Is', 'Que es')}</Text>
             <Text style={styles.sectionBody}>{pattern.description}</Text>
           </View>
 
           <View style={[styles.insightCard, { borderLeftColor: pattern.color }]}>
             <View style={styles.insightHeader}>
               <Lightbulb size={16} color={pattern.color} />
-              <Text style={[styles.insightLabel, { color: pattern.color }]}>How It Works</Text>
+              <Text style={[styles.insightLabel, { color: pattern.color }]}>{localizedText('How It Works', 'Como funciona')}</Text>
             </View>
             <Text style={styles.insightBody}>{pattern.howItWorks}</Text>
           </View>
@@ -135,7 +138,7 @@ export default function PatternEducationScreen() {
           <View style={styles.sectionCard}>
             <View style={styles.listHeader}>
               <AlertTriangle size={16} color={Colors.accent} />
-              <Text style={styles.listTitle}>Common Triggers</Text>
+              <Text style={styles.listTitle}>{localizedText('Common Triggers', 'Disparadores comunes')}</Text>
             </View>
             {pattern.commonTriggers.map((trigger, i) => (
               <View key={i} style={styles.listItem}>
@@ -148,7 +151,7 @@ export default function PatternEducationScreen() {
           <View style={styles.sectionCard}>
             <View style={styles.listHeader}>
               <Heart size={16} color={Colors.danger} />
-              <Text style={styles.listTitle}>What It Feels Like</Text>
+              <Text style={styles.listTitle}>{localizedText('What It Feels Like', 'Como se siente')}</Text>
             </View>
             {pattern.whatItFeelsLike.map((feeling, i) => (
               <View key={i} style={styles.listItem}>
@@ -183,7 +186,7 @@ export default function PatternEducationScreen() {
 
           {pattern.relatedLessonIds.length > 0 && (
             <View style={styles.relatedSection}>
-              <Text style={styles.relatedTitle}>Related Lessons</Text>
+              <Text style={styles.relatedTitle}>{localizedText('Related Lessons', 'Lecciones relacionadas')}</Text>
               {pattern.relatedLessonIds.slice(0, 3).map(lessonId => {
                 const lesson = getLessonById(lessonId);
                 if (!lesson) return null;
@@ -214,8 +217,8 @@ export default function PatternEducationScreen() {
             >
               <Wrench size={20} color={Colors.primary} />
               <View style={styles.toolsButtonContent}>
-                <Text style={styles.toolsButtonTitle}>Practice These Skills Now</Text>
-                <Text style={styles.toolsButtonDesc}>Open the Tools tab</Text>
+                <Text style={styles.toolsButtonTitle}>{localizedText('Practice These Skills Now', 'Practicar estas habilidades ahora')}</Text>
+                <Text style={styles.toolsButtonDesc}>{localizedText('Open the Tools tab', 'Abrir la pestana Herramientas')}</Text>
               </View>
               <ArrowRight size={18} color={Colors.primary} />
             </TouchableOpacity>

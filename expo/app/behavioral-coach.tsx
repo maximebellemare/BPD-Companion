@@ -43,6 +43,8 @@ import {
   RelationshipCoachMoment,
   RegulationTip,
 } from '@/types/behavioralCoach';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 const SECTION_COLORS = {
   pattern: { bg: '#FFFFFF', border: '#D9E2EC', accent: '#3B82F6' },
@@ -133,13 +135,13 @@ function CopingSuggestionCard({ suggestion, index }: { suggestion: CopingSuggest
         <Heart size={14} color={SECTION_COLORS.coping.accent} />
         <Text style={[styles.insightPattern, { color: SECTION_COLORS.coping.accent }]}>{suggestion.tool}</Text>
         <View style={[styles.effectBadge, { backgroundColor: SECTION_COLORS.coping.accent + '20' }]}>
-          <Text style={[styles.effectText, { color: SECTION_COLORS.coping.accent }]}>{suggestion.effectiveness}% effective</Text>
+          <Text style={[styles.effectText, { color: SECTION_COLORS.coping.accent }]}>{suggestion.effectiveness}% {localizedText('effective', 'efectiva')}</Text>
         </View>
       </View>
       <Text style={styles.insightObservation}>{suggestion.situation}</Text>
       <Text style={styles.insightCoaching}>{suggestion.why}</Text>
       {suggestion.alternativeTool && (
-        <Text style={styles.insightMeta}>Alternative: {suggestion.alternativeTool}</Text>
+        <Text style={styles.insightMeta}>{localizedText('Alternative:', 'Alternativa:')} {suggestion.alternativeTool}</Text>
       )}
     </Animated.View>
   );
@@ -164,7 +166,7 @@ function GrowthCard({ growth, index }: { growth: GrowthRecognition; index: numbe
         <Text style={[styles.insightPattern, { color: SECTION_COLORS.growth.accent }]}>{growth.area}</Text>
         <View style={[styles.directionBadge, { backgroundColor: SECTION_COLORS.growth.accent + '20' }]}>
           <Text style={[styles.directionText, { color: SECTION_COLORS.growth.accent }]}>
-            {growth.direction === 'improving' ? 'Improving' : 'Maintained'}
+            {growth.direction === 'improving' ? localizedText('Improving', 'Mejorando') : localizedText('Maintained', 'Mantenido')}
           </Text>
         </View>
       </View>
@@ -218,7 +220,9 @@ function RegulationTipCard({ tip, index }: { tip: RegulationTip; index: number }
     <Animated.View style={[styles.insightCard, { opacity: fadeAnim, backgroundColor: SECTION_COLORS.regulation.bg, borderColor: SECTION_COLORS.regulation.border }]}>
       <View style={styles.insightHeader}>
         <Zap size={14} color={SECTION_COLORS.regulation.accent} />
-        <Text style={[styles.insightPattern, { color: SECTION_COLORS.regulation.accent }]}>When "{tip.trigger}" activates</Text>
+        <Text style={[styles.insightPattern, { color: SECTION_COLORS.regulation.accent }]}>
+          {localizedText(`When "${tip.trigger}" activates`, `Cuando "${tip.trigger}" se activa`)}
+        </Text>
         <View style={[styles.distressBadge, {
           backgroundColor: tip.distressRange === 'high' ? '#3B82F620' : '#67E8F920',
         }]}>
@@ -227,9 +231,9 @@ function RegulationTipCard({ tip, index }: { tip: RegulationTip; index: number }
           }]}>{tip.distressRange}</Text>
         </View>
       </View>
-      <Text style={styles.insightObservation}>Pattern: {tip.currentPattern}</Text>
+      <Text style={styles.insightObservation}>{localizedText('Pattern:', 'Patrón:')} {tip.currentPattern}</Text>
       <Text style={styles.insightCoaching}>{tip.suggestedShift}</Text>
-      <Text style={styles.insightMeta}>Suggested tool: {tip.tool}</Text>
+      <Text style={styles.insightMeta}>{localizedText('Suggested tool:', 'Herramienta sugerida:')} {tip.tool}</Text>
     </Animated.View>
   );
 }
@@ -269,11 +273,14 @@ function EmptyState() {
       <View style={styles.emptyIconWrap}>
         <Brain size={36} color={Colors.textMuted} />
       </View>
-      <Text style={styles.emptyTitle}>Your coaching profile is building</Text>
+      <Text style={styles.emptyTitle}>{localizedText('Your coaching profile is building', 'Tu perfil de acompañamiento se está formando')}</Text>
       <Text style={styles.emptyBody}>
-        As you check in, journal, and use the app, the AI Behavioral Coach will learn your patterns and offer personalized insights.
+        {localizedText(
+          'As you check in, journal, and use the app, the AI Behavioral Coach will learn your patterns and offer personalized insights.',
+          'A medida que hagas check-ins, escribas en tu diario y uses la app, el coach conductual con IA aprenderá tus patrones y ofrecerá insights personalizados.',
+        )}
       </Text>
-      <Text style={styles.emptyHint}>Keep checking in — every entry helps build a clearer picture.</Text>
+      <Text style={styles.emptyHint}>{localizedText('Keep checking in — every entry helps build a clearer picture.', 'Sigue haciendo check-ins: cada entrada ayuda a construir una imagen más clara.')}</Text>
     </View>
   );
 }
@@ -282,6 +289,7 @@ export default function BehavioralCoachScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { journalEntries, messageDrafts } = useApp();
+  useLanguage();
   const headerAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -328,7 +336,7 @@ export default function BehavioralCoachScreen() {
           <View style={styles.headerIconRow}>
             <Brain size={20} color={Colors.primary} />
           </View>
-          <Text style={styles.headerTitle}>AI Behavioral Coach</Text>
+          <Text style={styles.headerTitle}>{localizedText('AI Behavioral Coach', 'Coach conductual con IA')}</Text>
           {profile.weeklyTheme ? (
             <Text style={styles.headerTheme}>{profile.weeklyTheme}</Text>
           ) : null}
@@ -349,7 +357,7 @@ export default function BehavioralCoachScreen() {
               <View style={styles.summaryCard}>
                 <View style={styles.summaryHeader}>
                   <Compass size={16} color={Colors.primary} />
-                  <Text style={styles.summaryLabel}>Today's Focus</Text>
+                  <Text style={styles.summaryLabel}>{localizedText("Today's Focus", 'Enfoque de hoy')}</Text>
                 </View>
                 <Text style={styles.summaryText}>{profile.dailySummary}</Text>
               </View>
@@ -358,7 +366,7 @@ export default function BehavioralCoachScreen() {
             {topMoments.length > 0 && (
               <View style={styles.section}>
                 <SectionHeader
-                  title="Active Coaching Moments"
+                  title={localizedText('Active Coaching Moments', 'Momentos activos de acompañamiento')}
                   icon={<Sparkles size={16} color={Colors.accent} />}
                   color={Colors.accent}
                 />
@@ -371,7 +379,7 @@ export default function BehavioralCoachScreen() {
             {profile.topPatternInsights.length > 0 && (
               <View style={styles.section}>
                 <SectionHeader
-                  title="Pattern Insights"
+                  title={localizedText('Pattern Insights', 'Insights de patrones')}
                   icon={<Activity size={16} color={SECTION_COLORS.pattern.accent} />}
                   color={SECTION_COLORS.pattern.accent}
                 />

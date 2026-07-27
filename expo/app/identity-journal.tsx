@@ -15,6 +15,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { X, Send, Heart, BookOpen, Trash2, ChevronDown, ChevronUp } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { useIdentityJournal } from '@/hooks/useIdentity';
 import { IDENTITY_JOURNAL_PROMPTS } from '@/services/identity/valuesService';
 import type { IdentityJournalPrompt } from '@/types/identity';
@@ -32,6 +34,7 @@ const JOURNAL_TAGS = ['identity', 'values', 'boundaries', 'calm', 'growth', 'con
 export default function IdentityJournalScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  useLanguage();
   const { entries, save, isSaving, remove, toggleFavorite } = useIdentityJournal();
   const [activePrompt, setActivePrompt] = useState<IdentityJournalPrompt | null>(null);
   const [journalText, setJournalText] = useState('');
@@ -93,7 +96,7 @@ export default function IdentityJournalScreen() {
             <X size={22} color={Colors.text} />
           </TouchableOpacity>
           <View style={styles.headerCenter}>
-            <Text style={styles.headerTitle}>Identity Journal</Text>
+            <Text style={styles.headerTitle}>{localizedText('Identity Journal', 'Diario de identidad')}</Text>
           </View>
           <View style={styles.closeBtn} />
         </View>
@@ -111,7 +114,7 @@ export default function IdentityJournalScreen() {
             style={styles.journalInput}
             value={journalText}
             onChangeText={setJournalText}
-            placeholder="Let your thoughts flow..."
+            placeholder={localizedText('Let your thoughts flow...', 'Deja que tus pensamientos fluyan...')}
             placeholderTextColor={Colors.textMuted}
             multiline
             textAlignVertical="top"
@@ -142,7 +145,7 @@ export default function IdentityJournalScreen() {
             testID="save-journal"
           >
             <Send size={18} color={Colors.white} />
-            <Text style={styles.saveBtnText}>Save Entry</Text>
+            <Text style={styles.saveBtnText}>{localizedText('Save Entry', 'Guardar entrada')}</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -160,7 +163,7 @@ export default function IdentityJournalScreen() {
           <X size={22} color={Colors.text} />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>Identity Journal</Text>
+          <Text style={styles.headerTitle}>{localizedText('Identity Journal', 'Diario de identidad')}</Text>
           <Text style={styles.headerSubtitle}>Reflect on who you are</Text>
         </View>
         <View style={styles.closeBtn} />

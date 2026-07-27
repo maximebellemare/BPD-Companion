@@ -11,6 +11,8 @@ import { HeartHandshake, ChevronRight, Shield } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 interface Props {
   shouldShow: boolean;
@@ -25,6 +27,7 @@ export default React.memo(function RelationshipCopilotCard({
   recentDraftCount,
   lastSessionLabel,
 }: Props) {
+  useLanguage();
   const router = useRouter();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(12)).current;
@@ -58,10 +61,16 @@ export default React.memo(function RelationshipCopilotCard({
   if (!shouldShow) return null;
 
   const contextLine = relationshipTriggerCount > 0
-    ? `${relationshipTriggerCount} relationship trigger${relationshipTriggerCount !== 1 ? 's' : ''} this week`
+    ? localizedText(
+      `${relationshipTriggerCount} relationship trigger${relationshipTriggerCount !== 1 ? 's' : ''} this week`,
+      `${relationshipTriggerCount} disparador${relationshipTriggerCount !== 1 ? 'es' : ''} relacional${relationshipTriggerCount !== 1 ? 'es' : ''} esta semana`,
+    )
     : recentDraftCount >= 2
-      ? `${recentDraftCount} messages drafted recently`
-      : 'Get support for a relationship moment';
+      ? localizedText(
+        `${recentDraftCount} messages drafted recently`,
+        `${recentDraftCount} mensajes redactados recientemente`,
+      )
+      : localizedText('Get support for a relationship moment', 'Recibe apoyo para un momento relacional');
 
   return (
     <Animated.View
@@ -85,7 +94,7 @@ export default React.memo(function RelationshipCopilotCard({
           </View>
           <View style={styles.textContent}>
             <View style={styles.titleRow}>
-              <Text style={styles.title}>Relationship Copilot</Text>
+              <Text style={styles.title}>{localizedText('Relationship Copilot', 'Copiloto relacional')}</Text>
               <View style={styles.premiumBadge}>
                 <Shield size={9} color={Colors.white} />
                 <Text style={styles.premiumText}>MEMBER</Text>
@@ -93,8 +102,8 @@ export default React.memo(function RelationshipCopilotCard({
             </View>
             <Text style={styles.subtitle} numberOfLines={2}>
               {lastSessionLabel
-                ? 'Continue getting support for relationship triggers'
-                : 'Slow down before reacting to a relationship moment'}
+                ? localizedText('Continue getting support for relationship triggers', 'Sigue recibiendo apoyo con disparadores relacionales')
+                : localizedText('Slow down before reacting to a relationship moment', 'Baja la velocidad antes de reaccionar en un momento relacional')}
             </Text>
           </View>
           <ChevronRight size={16} color="#3B82F6" style={{ opacity: 0.6 }} />

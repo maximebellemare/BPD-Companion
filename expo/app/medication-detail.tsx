@@ -17,8 +17,10 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { localizedText } from '@/lib/i18n/staticText';
 import { useMedications } from '@/providers/MedicationProvider';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
+import { useLanguage } from '@/hooks/useLanguage';
 import {
   formatTime,
   formatMedicationSchedule,
@@ -33,6 +35,7 @@ import {
 export default function MedicationDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  useLanguage();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { trackEvent } = useAnalytics();
   const medicationContext = useMedications();
@@ -118,12 +121,15 @@ export default function MedicationDetailScreen() {
   const handleDelete = useCallback(() => {
     if (!id) return;
     Alert.alert(
-      'Remove medication?',
-      'This will also remove all logs for this medication. This cannot be undone.',
+      localizedText('Remove medication?', '¿Eliminar medicamento?'),
+      localizedText(
+        'This will also remove all logs for this medication. This cannot be undone.',
+        'Esto también eliminará todos los registros de este medicamento. No se puede deshacer.',
+      ),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: localizedText('Cancel', 'Cancelar'), style: 'cancel' },
         {
-          text: 'Remove',
+          text: localizedText('Remove', 'Eliminar'),
           style: 'destructive',
           onPress: async () => {
             await deleteMedication(id);
@@ -141,11 +147,11 @@ export default function MedicationDetailScreen() {
           <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
             <X size={24} color={Colors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Medication</Text>
+          <Text style={styles.headerTitle}>{localizedText('Medication', 'Medicamento')}</Text>
           <View style={{ width: 40 }} />
         </View>
         <View style={styles.emptyState}>
-          <Text style={styles.emptyText}>Medication not found</Text>
+          <Text style={styles.emptyText}>{localizedText('Medication not found', 'No se encontró el medicamento')}</Text>
         </View>
       </View>
     );
@@ -182,11 +188,11 @@ export default function MedicationDetailScreen() {
             </View>
             {!medication.active && (
               <View style={styles.inactiveBadge}>
-                <Text style={styles.inactiveBadgeText}>Inactive</Text>
+                <Text style={styles.inactiveBadgeText}>{localizedText('Inactive', 'Inactivo')}</Text>
               </View>
             )}
           </View>
-          <Text style={styles.heroDosage}>{medication.dosage || 'No dosage set'}</Text>
+          <Text style={styles.heroDosage}>{medication.dosage || localizedText('No dosage set', 'Sin dosis configurada')}</Text>
           {medication.purpose ? (
             <Text style={styles.heroPurpose}>{medication.purpose}</Text>
           ) : null}
@@ -201,24 +207,24 @@ export default function MedicationDetailScreen() {
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{adherence7}%</Text>
-            <Text style={styles.statLabel}>7-day</Text>
+            <Text style={styles.statLabel}>{localizedText('7-day', '7 días')}</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{adherence30}%</Text>
-            <Text style={styles.statLabel}>30-day</Text>
+            <Text style={styles.statLabel}>{localizedText('30-day', '30 días')}</Text>
           </View>
           <View style={styles.statCard}>
             <View style={styles.statRow}>
               <Flame size={14} color={Colors.accent} />
               <Text style={styles.statValue}>{streak}</Text>
             </View>
-            <Text style={styles.statLabel}>Streak</Text>
+            <Text style={styles.statLabel}>{localizedText('Streak', 'Racha')}</Text>
           </View>
         </View>
 
         {medication.active && medication.schedule !== 'as_needed' && isScheduledToday && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Quick Log</Text>
+            <Text style={styles.sectionTitle}>{localizedText('Quick Log', 'Registro rápido')}</Text>
             {medicationTimes.map((time, idx) => (
               <View key={idx} style={styles.quickLogRow}>
                 <Text style={styles.quickLogTime}>{time.label} · {formatTime(time.hour, time.minute)}</Text>
@@ -229,7 +235,7 @@ export default function MedicationDetailScreen() {
                     disabled={isLogging}
                   >
                     <CheckCircle size={16} color={Colors.white} />
-                    <Text style={styles.quickLogBtnText}>Taken</Text>
+                    <Text style={styles.quickLogBtnText}>{localizedText('Taken', 'Tomado')}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.quickLogMissed}
@@ -251,7 +257,9 @@ export default function MedicationDetailScreen() {
               onPress={() => setShowLogForm(!showLogForm)}
             >
               <Text style={styles.detailedLogToggleText}>
-                {showLogForm ? 'Hide detailed log' : 'Log with details (mood, side effects)'}
+                {showLogForm
+                  ? localizedText('Hide detailed log', 'Ocultar registro detallado')
+                  : localizedText('Log with details (mood, side effects)', 'Registrar con detalles (ánimo, efectos secundarios)')}
               </Text>
               <ChevronRight
                 size={16}
@@ -262,7 +270,7 @@ export default function MedicationDetailScreen() {
 
             {showLogForm && (
               <View style={styles.detailedLogForm}>
-                <Text style={styles.formLabel}>How do you feel after taking it?</Text>
+                <Text style={styles.formLabel}>{localizedText('How do you feel after taking it?', '¿Cómo te sientes después de tomarlo?')}</Text>
                 <View style={styles.moodRow}>
                   {MOOD_AFTER_OPTIONS.map(opt => (
                     <TouchableOpacity
@@ -278,12 +286,12 @@ export default function MedicationDetailScreen() {
                   ))}
                 </View>
 
-                <Text style={styles.formLabel}>Did it seem to help today?</Text>
+                <Text style={styles.formLabel}>{localizedText('Did it seem to help today?', '¿Sentiste que ayudó hoy?')}</Text>
                 <View style={styles.helpRow}>
                   {[
-                    { value: true, label: 'Yes' },
-                    { value: false, label: 'Not really' },
-                    { value: null, label: 'Not sure' },
+                    { value: true, label: localizedText('Yes', 'Sí') },
+                    { value: false, label: localizedText('Not really', 'No mucho') },
+                    { value: null, label: localizedText('Not sure', 'No sé') },
                   ].map(opt => (
                     <TouchableOpacity
                       key={String(opt.value)}
@@ -297,22 +305,22 @@ export default function MedicationDetailScreen() {
                   ))}
                 </View>
 
-                <Text style={styles.formLabel}>Side effects (optional)</Text>
+                <Text style={styles.formLabel}>{localizedText('Side effects (optional)', 'Efectos secundarios (opcional)')}</Text>
                 <TextInput
                   style={styles.formInput}
                   value={logSideEffects}
                   onChangeText={setLogSideEffects}
-                  placeholder="Any side effects today..."
+                  placeholder={localizedText('Any side effects today...', 'Cualquier efecto secundario de hoy...')}
                   placeholderTextColor={Colors.textMuted}
                   multiline
                 />
 
-                <Text style={styles.formLabel}>Notes (optional)</Text>
+                <Text style={styles.formLabel}>{localizedText('Notes (optional)', 'Notas (opcional)')}</Text>
                 <TextInput
                   style={styles.formInput}
                   value={logNotes}
                   onChangeText={setLogNotes}
-                  placeholder="How you're feeling..."
+                  placeholder={localizedText("How you're feeling...", 'Cómo te estás sintiendo...')}
                   placeholderTextColor={Colors.textMuted}
                   multiline
                 />
@@ -323,7 +331,7 @@ export default function MedicationDetailScreen() {
                   disabled={isLogging}
                 >
                   <CheckCircle size={18} color={Colors.white} />
-                  <Text style={styles.formSubmitText}>Log Medication</Text>
+                  <Text style={styles.formSubmitText}>{localizedText('Log Medication', 'Registrar medicamento')}</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -333,9 +341,9 @@ export default function MedicationDetailScreen() {
         {recentLogs.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Recent Logs</Text>
+              <Text style={styles.sectionTitle}>{localizedText('Recent Logs', 'Registros recientes')}</Text>
               <TouchableOpacity onPress={() => router.push(`/medication-history?id=${medication.id}` as any)}>
-                <Text style={styles.seeAllText}>See all</Text>
+                <Text style={styles.seeAllText}>{localizedText('See all', 'Ver todo')}</Text>
               </TouchableOpacity>
             </View>
             {recentLogs.map(log => {
@@ -350,10 +358,14 @@ export default function MedicationDetailScreen() {
                       {date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} · {date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
                     </Text>
                     <Text style={[styles.logStatus, { color: statusColor }]}>
-                      {log.status === 'taken' ? 'Taken' : log.status === 'missed' ? 'Missed' : 'Skipped'}
+                      {log.status === 'taken'
+                        ? localizedText('Taken', 'Tomado')
+                        : log.status === 'missed'
+                          ? localizedText('Missed', 'No tomado')
+                          : localizedText('Skipped', 'Omitido')}
                       {moodOpt ? ` · ${moodOpt.emoji} ${moodOpt.label}` : ''}
                     </Text>
-                    {log.sideEffects ? <Text style={styles.logNote}>SE: {log.sideEffects}</Text> : null}
+                    {log.sideEffects ? <Text style={styles.logNote}>{localizedText('SE:', 'ES:')} {log.sideEffects}</Text> : null}
                     {log.notes ? <Text style={styles.logNote}>{log.notes}</Text> : null}
                   </View>
                 </View>
@@ -364,14 +376,14 @@ export default function MedicationDetailScreen() {
 
         {medication.sideEffectNotes ? (
           <View style={styles.noteCard}>
-            <Text style={styles.noteTitle}>Side Effects to Watch</Text>
+            <Text style={styles.noteTitle}>{localizedText('Side Effects to Watch', 'Efectos secundarios a observar')}</Text>
             <Text style={styles.noteText}>{medication.sideEffectNotes}</Text>
           </View>
         ) : null}
 
         {medication.generalNotes ? (
           <View style={styles.noteCard}>
-            <Text style={styles.noteTitle}>Notes</Text>
+            <Text style={styles.noteTitle}>{localizedText('Notes', 'Notas')}</Text>
             <Text style={styles.noteText}>{medication.generalNotes}</Text>
           </View>
         ) : null}
@@ -384,13 +396,15 @@ export default function MedicationDetailScreen() {
               <ToggleLeft size={20} color={Colors.textMuted} />
             )}
             <Text style={styles.actionText}>
-              {medication.active ? 'Mark as inactive' : 'Mark as active'}
+              {medication.active ? localizedText('Mark as inactive', 'Marcar como inactivo') : localizedText('Mark as active', 'Marcar como activo')}
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.actionRow} onPress={handleDelete}>
             <Trash2 size={20} color={Colors.danger} />
-            <Text style={[styles.actionText, { color: Colors.danger }]}>Remove medication</Text>
+            <Text style={[styles.actionText, { color: Colors.danger }]}>
+              {localizedText('Remove medication', 'Eliminar medicamento')}
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

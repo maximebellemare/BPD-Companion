@@ -40,27 +40,29 @@ import {
   AppointmentLocation,
   APPOINTMENT_TYPE_COLORS,
 } from '@/types/appointment';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedField, localizedText } from '@/lib/i18n/staticText';
 
 const APPOINTMENT_TYPES: { value: AppointmentType; label: string; icon: any }[] = [
-  { value: 'therapist', label: 'Therapy', icon: User },
-  { value: 'psychiatrist', label: 'Psychiatrist', icon: Stethoscope },
-  { value: 'doctor', label: 'Doctor', icon: HeartPulse },
-  { value: 'group', label: 'Group', icon: Users },
-  { value: 'other', label: 'Other', icon: MoreHorizontal },
+  localizedField({ value: 'therapist', label: 'Therapy', icon: User }, 'label', 'Therapy', 'Terapia'),
+  localizedField({ value: 'psychiatrist', label: 'Psychiatrist', icon: Stethoscope }, 'label', 'Psychiatrist', 'Psiquiatría'),
+  localizedField({ value: 'doctor', label: 'Doctor', icon: HeartPulse }, 'label', 'Doctor', 'Médico/a'),
+  localizedField({ value: 'group', label: 'Group', icon: Users }, 'label', 'Group', 'Grupo'),
+  localizedField({ value: 'other', label: 'Other', icon: MoreHorizontal }, 'label', 'Other', 'Otro'),
 ];
 
 const LOCATION_TYPES: { value: AppointmentLocation; label: string; icon: any }[] = [
-  { value: 'in_person', label: 'In Person', icon: MapPin },
-  { value: 'telehealth', label: 'Telehealth', icon: Video },
-  { value: 'phone', label: 'Phone', icon: Phone },
+  localizedField({ value: 'in_person', label: 'In Person', icon: MapPin }, 'label', 'In Person', 'Presencial'),
+  localizedField({ value: 'telehealth', label: 'Telehealth', icon: Video }, 'label', 'Telehealth', 'Teleconsulta'),
+  localizedField({ value: 'phone', label: 'Phone', icon: Phone }, 'label', 'Phone', 'Teléfono'),
 ];
 
 const REMINDER_OPTIONS = [
-  { value: 15, label: '15 min before' },
-  { value: 30, label: '30 min before' },
-  { value: 60, label: '1 hour before' },
-  { value: 120, label: '2 hours before' },
-  { value: 1440, label: '1 day before' },
+  localizedField({ value: 15, label: '15 min before' }, 'label', '15 min before', '15 min antes'),
+  localizedField({ value: 30, label: '30 min before' }, 'label', '30 min before', '30 min antes'),
+  localizedField({ value: 60, label: '1 hour before' }, 'label', '1 hour before', '1 hora antes'),
+  localizedField({ value: 120, label: '2 hours before' }, 'label', '2 hours before', '2 horas antes'),
+  localizedField({ value: 1440, label: '1 day before' }, 'label', '1 day before', '1 día antes'),
 ];
 
 const TIME_PRESETS = ['8:00 AM', '9:00 AM', '10:00 AM', '12:00 PM', '2:30 PM', '5:00 PM', '7:00 PM'];
@@ -99,13 +101,14 @@ function parseAppointmentInputTime(value: string): { hours: number; minutes: num
 }
 
 export default function AppointmentAddScreen() {
+  useLanguage();
   const router = useRouter();
   const params = useLocalSearchParams<{ editId?: string }>();
   const insets = useSafeAreaInsets();
   const { trackEvent } = useAnalytics();
   const appointmentContext = useAppointments();
   const addAppointment = appointmentContext?.addAppointment ?? (async () => {
-    throw new Error('Appointment tracking is still loading. Please try again.');
+    throw new Error(localizedText('Appointment tracking is still loading. Please try again.', 'El registro de citas todavía se está cargando. Intenta de nuevo.'));
   });
   const updateAppointment = appointmentContext?.updateAppointment ?? (async () => null);
   const getAppointmentById = appointmentContext?.getAppointmentById ?? (() => null);
@@ -191,14 +194,14 @@ export default function AppointmentAddScreen() {
 
   const handleSave = useCallback(async () => {
     if (!providerName.trim()) {
-      Alert.alert('Missing info', 'Please enter a provider name.');
+      Alert.alert(localizedText('Missing info', 'Falta información'), localizedText('Please enter a provider name.', 'Ingresa el nombre de la persona o lugar.'));
       return;
     }
 
     const dateTime = appointmentDate.getTime();
 
     if (isNaN(dateTime)) {
-      Alert.alert('Invalid date', 'Please choose a valid date and time.');
+      Alert.alert(localizedText('Invalid date', 'Fecha inválida'), localizedText('Please choose a valid date and time.', 'Elige una fecha y hora válidas.'));
       return;
     }
 
@@ -239,7 +242,7 @@ export default function AppointmentAddScreen() {
       router.back();
     } catch (error) {
       console.log('[AppointmentAdd] Error saving:', error);
-      Alert.alert('Error', 'Could not save appointment. Please try again.');
+      Alert.alert(localizedText('Error', 'Error'), localizedText('Could not save appointment. Please try again.', 'No se pudo guardar la cita. Intenta de nuevo.'));
     }
   }, [
     providerName, appointmentType, appointmentDate, duration,
@@ -256,14 +259,14 @@ export default function AppointmentAddScreen() {
         <TouchableOpacity onPress={handleClose} style={styles.closeBtn}>
           <X size={22} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.topTitle}>{isEditing ? 'Edit Appointment' : 'New Appointment'}</Text>
+        <Text style={styles.topTitle}>{isEditing ? localizedText('Edit Appointment', 'Editar cita') : localizedText('New Appointment', 'Nueva cita')}</Text>
         <TouchableOpacity
           onPress={handleSave}
           style={[styles.saveBtn, isAdding && styles.saveBtnDisabled]}
           disabled={isAdding}
         >
           <Check size={18} color={Colors.white} />
-          <Text style={styles.saveBtnText}>{isAdding ? 'Saving…' : 'Save'}</Text>
+          <Text style={styles.saveBtnText}>{isAdding ? localizedText('Saving…', 'Guardando…') : localizedText('Save', 'Guardar')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -279,19 +282,19 @@ export default function AppointmentAddScreen() {
         >
           <Animated.View style={{ opacity: fadeAnim }}>
             <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Appointment Title</Text>
+            <Text style={styles.fieldLabel}>{localizedText('Appointment Title', 'Título de la cita')}</Text>
             <TextInput
                 style={styles.textInput}
                 value={providerName}
                 onChangeText={setProviderName}
-                placeholder="Therapy with Dr. Smith, Psychiatry follow-up..."
+                placeholder={localizedText('Therapy with Dr. Smith, Psychiatry follow-up...', 'Terapia, seguimiento de psiquiatría...')}
                 placeholderTextColor={Colors.textMuted}
                 testID="provider-name-input"
               />
             </View>
 
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>Appointment Type</Text>
+              <Text style={styles.fieldLabel}>{localizedText('Appointment Type', 'Tipo de cita')}</Text>
               <View style={styles.typeGrid}>
                 {APPOINTMENT_TYPES.map(({ value, label, icon: Icon }) => (
                   <TouchableOpacity
@@ -319,7 +322,7 @@ export default function AppointmentAddScreen() {
             </View>
 
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>Date</Text>
+              <Text style={styles.fieldLabel}>{localizedText('Date', 'Fecha')}</Text>
               <TouchableOpacity
                 style={styles.pickerRow}
                 onPress={() => {
@@ -329,14 +332,14 @@ export default function AppointmentAddScreen() {
                 activeOpacity={0.75}
                 testID="appointment-date-picker-button"
                 accessibilityRole="button"
-                accessibilityLabel={`Choose appointment date, currently ${formatAppointmentInputDate(appointmentDate)}`}
+                accessibilityLabel={localizedText(`Choose appointment date, currently ${formatAppointmentInputDate(appointmentDate)}`, `Elegir fecha de la cita, actualmente ${formatAppointmentInputDate(appointmentDate)}`)}
               >
                 <View style={styles.pickerIcon}>
                   <Calendar size={18} color={Colors.primary} />
                 </View>
                 <View style={styles.pickerTextBlock}>
                   <Text style={styles.pickerValue}>{formatAppointmentInputDate(appointmentDate)}</Text>
-                  <Text style={styles.pickerHint}>Tap to choose from calendar</Text>
+                  <Text style={styles.pickerHint}>{localizedText('Tap to choose from calendar', 'Toca para elegir en el calendario')}</Text>
                 </View>
               </TouchableOpacity>
               {showDatePicker && (
@@ -357,7 +360,7 @@ export default function AppointmentAddScreen() {
             </View>
 
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>Time</Text>
+              <Text style={styles.fieldLabel}>{localizedText('Time', 'Hora')}</Text>
               <TouchableOpacity
                 style={styles.pickerRow}
                 onPress={() => {
@@ -367,14 +370,14 @@ export default function AppointmentAddScreen() {
                 activeOpacity={0.75}
                 testID="appointment-time-picker-button"
                 accessibilityRole="button"
-                accessibilityLabel={`Choose appointment time, currently ${formatAppointmentInputTime(appointmentDate)}`}
+                accessibilityLabel={localizedText(`Choose appointment time, currently ${formatAppointmentInputTime(appointmentDate)}`, `Elegir hora de la cita, actualmente ${formatAppointmentInputTime(appointmentDate)}`)}
               >
                 <View style={styles.pickerIcon}>
                   <Clock size={18} color={Colors.primary} />
                 </View>
                 <View style={styles.pickerTextBlock}>
                   <Text style={styles.pickerValue}>{formatAppointmentInputTime(appointmentDate)}</Text>
-                  <Text style={styles.pickerHint}>Tap to choose time</Text>
+                  <Text style={styles.pickerHint}>{localizedText('Tap to choose time', 'Toca para elegir la hora')}</Text>
                 </View>
               </TouchableOpacity>
               {showTimePicker && (
@@ -411,7 +414,7 @@ export default function AppointmentAddScreen() {
             </View>
 
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>Duration (minutes)</Text>
+              <Text style={styles.fieldLabel}>{localizedText('Duration (minutes)', 'Duración (minutos)')}</Text>
               <View style={styles.durationRow}>
                 {[30, 45, 50, 60, 90].map(d => (
                   <TouchableOpacity
@@ -429,7 +432,7 @@ export default function AppointmentAddScreen() {
             </View>
 
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>Location</Text>
+              <Text style={styles.fieldLabel}>{localizedText('Location', 'Ubicación')}</Text>
               <View style={styles.locationRow}>
                 {LOCATION_TYPES.map(({ value, label, icon: Icon }) => (
                   <TouchableOpacity
@@ -449,13 +452,17 @@ export default function AppointmentAddScreen() {
                 style={[styles.textInput, { marginTop: 10 }]}
                 value={locationDetail}
                 onChangeText={setLocationDetail}
-                placeholder={locationType === 'telehealth' ? 'Meeting link or platform' : locationType === 'phone' ? 'Phone number' : 'Address or office name'}
+                placeholder={locationType === 'telehealth'
+                  ? localizedText('Meeting link or platform', 'Enlace o plataforma')
+                  : locationType === 'phone'
+                    ? localizedText('Phone number', 'Número de teléfono')
+                    : localizedText('Address or office name', 'Dirección o nombre del consultorio')}
                 placeholderTextColor={Colors.textMuted}
               />
             </View>
 
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>Reminder</Text>
+              <Text style={styles.fieldLabel}>{localizedText('Reminder', 'Recordatorio')}</Text>
               <TouchableOpacity
                 style={styles.reminderToggle}
                 onPress={() => setReminderEnabled(!reminderEnabled)}
@@ -463,7 +470,7 @@ export default function AppointmentAddScreen() {
               >
                 <Bell size={16} color={reminderEnabled ? Colors.primary : Colors.textMuted} />
                 <Text style={[styles.reminderToggleText, reminderEnabled && { color: Colors.text }]}>
-                  {reminderEnabled ? 'Reminder enabled' : 'No reminder'}
+                  {reminderEnabled ? localizedText('Reminder enabled', 'Recordatorio activado') : localizedText('No reminder', 'Sin recordatorio')}
                 </Text>
                 <View style={[styles.toggle, reminderEnabled && styles.toggleActive]}>
                   <View style={[styles.toggleThumb, reminderEnabled && styles.toggleThumbActive]} />
@@ -488,7 +495,7 @@ export default function AppointmentAddScreen() {
             </View>
 
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>Topics to Discuss</Text>
+              <Text style={styles.fieldLabel}>{localizedText('Topics to Discuss', 'Temas para hablar')}</Text>
               {topics.map((topic, idx) => (
                 <View key={idx} style={styles.topicRow}>
                   <Text style={styles.topicText}>{topic}</Text>
@@ -502,7 +509,7 @@ export default function AppointmentAddScreen() {
                   style={[styles.textInput, { flex: 1, marginBottom: 0 }]}
                   value={newTopic}
                   onChangeText={setNewTopic}
-                  placeholder="Add a topic…"
+                  placeholder={localizedText('Add a topic…', 'Agregar un tema…')}
                   placeholderTextColor={Colors.textMuted}
                   onSubmitEditing={handleAddTopic}
                   returnKeyType="done"
@@ -518,12 +525,12 @@ export default function AppointmentAddScreen() {
             </View>
 
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>Notes</Text>
+              <Text style={styles.fieldLabel}>{localizedText('Notes', 'Notas')}</Text>
               <TextInput
                 style={[styles.textInput, styles.textArea]}
                 value={notes}
                 onChangeText={setNotes}
-                placeholder="Any additional notes…"
+                placeholder={localizedText('Any additional notes…', 'Notas adicionales…')}
                 placeholderTextColor={Colors.textMuted}
                 multiline
                 numberOfLines={3}

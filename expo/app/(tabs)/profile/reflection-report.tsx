@@ -33,11 +33,13 @@ import {
   SuggestedFocusArea,
   CopingStrategyInsight,
 } from '@/types/therapySummary';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 const PERIOD_OPTIONS = [
-  { label: '7 days', days: 7 },
-  { label: '14 days', days: 14 },
-  { label: '30 days', days: 30 },
+  { get label() { return localizedText('7 days', '7 días'); }, days: 7 },
+  { get label() { return localizedText('14 days', '14 días'); }, days: 14 },
+  { get label() { return localizedText('30 days', '30 días'); }, days: 30 },
 ];
 
 function EmotionalPatternCard({ pattern }: { pattern: EmotionalPatternInsight }) {
@@ -148,6 +150,7 @@ function CopingCard({ strategy }: { strategy: CopingStrategyInsight }) {
 
 export default function ReflectionReportScreen() {
   const router = useRouter();
+  useLanguage();
   const { journalEntries, messageDrafts } = useApp();
   const [selectedPeriod, setSelectedPeriod] = useState<number>(14);
 
@@ -197,7 +200,7 @@ export default function ReflectionReportScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: 'Reflection Report',
+          title: localizedText('Reflection Report', 'Informe de reflexión'),
           headerStyle: { backgroundColor: Colors.background },
           headerTintColor: Colors.text,
           headerShadowVisible: false,
@@ -215,7 +218,7 @@ export default function ReflectionReportScreen() {
                 <FileText size={22} color={Colors.white} />
               </View>
             </View>
-            <Text style={styles.headerTitle}>Your Reflection</Text>
+            <Text style={styles.headerTitle}>{localizedText('Your Reflection', 'Tu reflexión')}</Text>
             <View style={styles.headerMeta}>
               <Clock size={13} color={Colors.textMuted} />
               <Text style={styles.headerDate}>{formattedDate}</Text>
@@ -248,7 +251,7 @@ export default function ReflectionReportScreen() {
           <View style={styles.narrativeCard}>
             <View style={styles.narrativeIconRow}>
               <Sparkles size={16} color={Colors.primary} />
-              <Text style={styles.narrativeLabel}>Summary</Text>
+              <Text style={styles.narrativeLabel}>{localizedText('Summary', 'Resumen')}</Text>
             </View>
             <Text style={styles.narrativeText}>{report.overallNarrative}</Text>
           </View>
@@ -256,7 +259,10 @@ export default function ReflectionReportScreen() {
           {!report.hasEnoughData && (
             <View style={styles.emptyBanner}>
               <Text style={styles.emptyBannerText}>
-                Keep checking in — your reports will become more personalized with more data.
+                {localizedText(
+                  'Keep checking in — your reports will become more personalized with more data.',
+                  'Sigue haciendo check-ins: tus informes serán más personalizados con más datos.',
+                )}
               </Text>
             </View>
           )}
@@ -265,7 +271,7 @@ export default function ReflectionReportScreen() {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Heart size={16} color={Colors.primary} />
-                <Text style={styles.sectionTitle}>Emotional Patterns</Text>
+                <Text style={styles.sectionTitle}>{localizedText('Emotional Patterns', 'Patrones emocionales')}</Text>
               </View>
               {report.emotionalPatterns.map((pattern) => (
                 <EmotionalPatternCard key={pattern.id} pattern={pattern} />
@@ -277,7 +283,7 @@ export default function ReflectionReportScreen() {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Heart size={16} color="#3B82F6" />
-                <Text style={styles.sectionTitle}>Relationship Patterns</Text>
+                <Text style={styles.sectionTitle}>{localizedText('Relationship Patterns', 'Patrones relacionales')}</Text>
               </View>
               {report.relationshipPatterns.map((insight) => (
                 <RelationshipInsightCard key={insight.id} insight={insight} />

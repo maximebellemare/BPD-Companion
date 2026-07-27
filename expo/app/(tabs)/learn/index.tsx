@@ -45,6 +45,8 @@ import BrandLogo from '@/components/branding/BrandLogo';
 import DailyInsightCard from '@/components/DailyInsightCard';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import {
   getCategories,
   getLearnState,
@@ -96,6 +98,7 @@ type ActiveTab = 'explore' | 'paths' | 'bookmarks';
 export default function LearnScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  useLanguage();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const { recommendations, contextMessage, trackArticleOpened } = useLearningRecommendations();
   const { trackEvent } = useAnalytics();
@@ -400,7 +403,7 @@ export default function LearnScreen() {
           <Search size={18} color={Colors.textMuted} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search lessons, topics..."
+            placeholder={localizedText('Search lessons, topics...', 'Buscar lecciones, temas...')}
             placeholderTextColor={Colors.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -429,8 +432,8 @@ export default function LearnScreen() {
           ) : (
             <View style={styles.emptyState}>
               <Search size={40} color={Colors.textMuted} />
-              <Text style={styles.emptyTitle}>No results found</Text>
-              <Text style={styles.emptyDesc}>Try a different search term</Text>
+              <Text style={styles.emptyTitle}>{localizedText('No results found', 'No se encontraron resultados')}</Text>
+              <Text style={styles.emptyDesc}>{localizedText('Try a different search term', 'Prueba con otra busqueda')}</Text>
             </View>
           )}
         </ScrollView>
@@ -456,7 +459,7 @@ export default function LearnScreen() {
               onPress={() => setActiveTab('bookmarks')}
             >
               <Bookmark size={16} color={activeTab === 'bookmarks' ? Colors.brandTeal : Colors.textMuted} />
-              <Text style={[styles.tabText, activeTab === 'bookmarks' && styles.tabTextActive]}>Saved</Text>
+              <Text style={[styles.tabText, activeTab === 'bookmarks' && styles.tabTextActive]}>{localizedText('Saved', 'Guardado')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -482,7 +485,7 @@ export default function LearnScreen() {
                         onPress={() => handlePathPress(weeklyInsight.suggestedPathId!)}
                         activeOpacity={0.7}
                       >
-                        <Text style={styles.weeklyInsightActionText}>Start suggested path</Text>
+                        <Text style={styles.weeklyInsightActionText}>{localizedText('Start suggested path', 'Iniciar ruta sugerida')}</Text>
                         <ArrowRight size={14} color={Colors.brandTeal} />
                       </TouchableOpacity>
                     )}
@@ -532,7 +535,7 @@ export default function LearnScreen() {
                 <View style={styles.section}>
                   <View style={styles.sectionHeader}>
                     <Brain size={16} color={Colors.brandLilac} />
-                    <Text style={styles.sectionTitle}>Understand Your Patterns</Text>
+                    <Text style={styles.sectionTitle}>{localizedText('Understand Your Patterns', 'Comprende tus patrones')}</Text>
                   </View>
                   <Text style={styles.sectionSubtitle}>Learn why your mind and body react the way they do</Text>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalScroll}>
@@ -553,7 +556,7 @@ export default function LearnScreen() {
                       onPress={() => setActiveTab('paths')}
                       activeOpacity={0.7}
                     >
-                      <Text style={styles.viewAllText}>View all scenarios</Text>
+                      <Text style={styles.viewAllText}>{localizedText('View all scenarios', 'Ver todos los escenarios')}</Text>
                       <ArrowRight size={14} color={Colors.brandTeal} />
                     </TouchableOpacity>
                   )}
@@ -611,7 +614,7 @@ export default function LearnScreen() {
                               <Text style={styles.coachCardTime}>{mod.estimatedDuration} min</Text>
                               {isCompleted && (
                                 <View style={styles.coachCompletedBadge}>
-                                  <Text style={styles.coachCompletedText}>Done</Text>
+                                  <Text style={styles.coachCompletedText}>{localizedText('Done', 'Listo')}</Text>
                                 </View>
                               )}
                             </View>
@@ -623,7 +626,7 @@ export default function LearnScreen() {
                   {(coachProgress?.completedModuleIds.length ?? 0) > 0 && (
                     <TouchableOpacity style={styles.viewProgressButton} onPress={handleViewProgress}>
                       <Target size={14} color={Colors.primary} />
-                      <Text style={styles.viewProgressText}>View Learning Progress</Text>
+                      <Text style={styles.viewProgressText}>{localizedText('View Learning Progress', 'Ver progreso de aprendizaje')}</Text>
                       <ArrowRight size={14} color={Colors.primary} />
                     </TouchableOpacity>
                   )}
@@ -675,7 +678,7 @@ export default function LearnScreen() {
                 <View style={styles.section}>
                   <View style={styles.sectionHeader}>
                     <Brain size={16} color={Colors.brandLilac} />
-                    <Text style={styles.sectionTitle}>Emotional Patterns</Text>
+                    <Text style={styles.sectionTitle}>{localizedText('Emotional Patterns', 'Patrones emocionales')}</Text>
                   </View>
                   {patterns.map(pattern => (
                     <TouchableOpacity
@@ -714,7 +717,7 @@ export default function LearnScreen() {
                 ) : (
                   <View style={styles.emptyState}>
                     <Bookmark size={40} color={Colors.textMuted} />
-                    <Text style={styles.emptyTitle}>No saved lessons yet</Text>
+                    <Text style={styles.emptyTitle}>{localizedText('No saved lessons yet', 'Aun no hay lecciones guardadas')}</Text>
                     <Text style={styles.emptyDesc}>Bookmark lessons to find them here</Text>
                   </View>
                 )}

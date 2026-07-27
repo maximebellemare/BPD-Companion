@@ -13,6 +13,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Brain, Check, ChevronRight, Eye, Sparkles, Target, Trophy, X } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { useAppTheme } from '@/providers/ThemeProvider';
 import { trackEvent } from '@/services/analytics/analyticsService';
 import {
@@ -37,6 +39,7 @@ function accuracyLabel(progress: SpotDistortionProgress | null): string {
 }
 
 export default function SpotTheDistortionScreen() {
+  useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
@@ -269,7 +272,7 @@ export default function SpotTheDistortionScreen() {
               activeOpacity={0.86}
               testID="spot-distortion-next"
             >
-              <Text style={styles.submitText}>Next example</Text>
+              <Text style={styles.submitText}>{localizedText('Next example', 'Siguiente ejemplo')}</Text>
               <ChevronRight size={18} color={Colors.white} />
             </TouchableOpacity>
           </View>

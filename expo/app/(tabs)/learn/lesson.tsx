@@ -31,6 +31,8 @@ import {
   toggleBookmark,
 } from '@/services/learn/learnService';
 import { LearnState, LessonSection } from '@/types/learn';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedArray, localizedText } from '@/lib/i18n/staticText';
 
 const SECTION_ICONS: Record<string, React.ComponentType<{ size: number; color: string }>> = {
   callout: Lightbulb,
@@ -87,8 +89,57 @@ const REFLECTION_PROMPTS: Record<string, string[]> = {
 };
 
 function getReflectionPrompt(categoryId: string): string {
-  const prompts = REFLECTION_PROMPTS[categoryId] ?? REFLECTION_PROMPTS['understanding-bpd'] ?? [];
-  if (prompts.length === 0) return 'What stood out to you in this lesson?';
+  const promptMap: Record<string, string[]> = {
+    'understanding-bpd': localizedArray(REFLECTION_PROMPTS['understanding-bpd'] ?? [], [
+      '¿Algo de esta lección se siente familiar en tu propia experiencia?',
+      '¿Qué parte resonó más contigo?',
+      '¿Cómo cambia esto la forma en que te ves?',
+    ]),
+    'emotional-regulation': localizedArray(REFLECTION_PROMPTS['emotional-regulation'] ?? [], [
+      '¿Puedes pensar en un momento reciente en que esta habilidad habría ayudado?',
+      '¿Qué cosa pequeña podrías probar hoy de esta lección?',
+      '¿Cómo sueles responder cuando las emociones se sienten abrumadoras?',
+    ]),
+    relationships: localizedArray(REFLECTION_PROMPTS.relationships ?? [], [
+      '¿Este patrón aparece en alguna de tus relaciones actuales?',
+      '¿Qué cambiaría si probaras una cosa de esta lección?',
+      '¿Cómo te sientes después de leer esto? ¿Algo se está moviendo?',
+    ]),
+    'triggers-abandonment': localizedArray(REFLECTION_PROMPTS['triggers-abandonment'] ?? [], [
+      '¿Puedes identificar un desencadenante reciente conectado con lo que leíste?',
+      '¿Cómo se sentiría responder de otra manera la próxima vez?',
+      '¿Hay una herida antigua que esta lección te ayuda a entender?',
+    ]),
+    'identity-selfworth': localizedArray(REFLECTION_PROMPTS['identity-selfworth'] ?? [], [
+      '¿Qué cosa sabes que es verdad sobre ti ahora mismo?',
+      '¿Cómo te hablas cuando algo sale mal?',
+      '¿Cómo se vería la autocompasión para ti hoy?',
+    ]),
+    communication: localizedArray(REFLECTION_PROMPTS.communication ?? [], [
+      'Piensa en una conversación reciente que se sintió difícil. ¿Qué podrías probar distinto?',
+      '¿Qué necesidad te cuesta expresar?',
+      '¿Cómo se siente imaginar comunicarte con más apertura?',
+    ]),
+    'crisis-storms': localizedArray(REFLECTION_PROMPTS['crisis-storms'] ?? [], [
+      '¿Qué te ha ayudado a atravesar momentos difíciles antes?',
+      '¿Qué cosa segura podrías buscar durante la próxima tormenta?',
+      '¿Cómo se siente saber que toda tormenta eventualmente pasa?',
+    ]),
+    'daily-stability': localizedArray(REFLECTION_PROMPTS['daily-stability'] ?? [], [
+      '¿Qué rutina pequeña ya te ayuda a sentir arraigo?',
+      '¿Cómo se vería un día un poco más estable para ti?',
+      '¿Cómo se siente tu cuerpo cuando tus necesidades básicas están cubiertas?',
+    ]),
+    'therapy-healing': localizedArray(REFLECTION_PROMPTS['therapy-healing'] ?? [], [
+      '¿Qué significa la recuperación para ti personalmente?',
+      '¿Qué señal de progreso puedes ver en ti?',
+      '¿Cómo se siente saber que sanar es posible?',
+    ]),
+  };
+  const prompts = promptMap[categoryId] ?? promptMap['understanding-bpd'] ?? [];
+  if (prompts.length === 0) {
+    return localizedText('What stood out to you in this lesson?', '¿Qué te llamó la atención de esta lección?');
+  }
   return prompts[Math.floor(Math.random() * prompts.length)] ?? prompts[0];
 }
 
@@ -103,6 +154,7 @@ export default function LessonScreen() {
   const router = useRouter();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [learnState, setLearnState] = useState<LearnState | null>(null);
+  useLanguage();
 
   const lesson = getLessonById(id ?? '');
   const category = lesson ? getCategoryById(lesson.categoryId) : undefined;
@@ -154,10 +206,10 @@ export default function LessonScreen() {
   if (!lesson) {
     return (
       <View style={styles.container}>
-        <Stack.Screen options={{ title: 'Lesson' }} />
+        <Stack.Screen options={{ title: localizedText('Lesson', 'Lección') }} />
         <View style={styles.emptyState}>
           <BookOpen size={40} color={Colors.textMuted} />
-          <Text style={styles.emptyTitle}>Lesson not found</Text>
+          <Text style={styles.emptyTitle}>{localizedText('Lesson not found', 'Lección no encontrada')}</Text>
         </View>
       </View>
     );
@@ -194,7 +246,11 @@ export default function LessonScreen() {
         <View style={styles.specialHeader}>
           <IconComp size={18} color={colors.icon} />
           <Text style={[styles.specialLabel, { color: colors.icon }]}>
-            {section.type === 'callout' ? 'Key Insight' : section.type === 'takeaway' ? 'Takeaway' : 'Try This'}
+            {section.type === 'callout'
+              ? localizedText('Key Insight', 'Insight clave')
+              : section.type === 'takeaway'
+                ? localizedText('Takeaway', 'Idea clave')
+                : localizedText('Try This', 'Prueba esto')}
           </Text>
         </View>
         <Text style={styles.specialHeading}>{section.title}</Text>
@@ -243,12 +299,12 @@ export default function LessonScreen() {
           <View style={styles.metaRow}>
             <View style={styles.metaItem}>
               <BookOpen size={14} color={Colors.textMuted} />
-              <Text style={styles.metaText}>{lesson.readingTime} min read</Text>
+              <Text style={styles.metaText}>{lesson.readingTime} {localizedText('min read', 'min de lectura')}</Text>
             </View>
             {isCompleted && (
               <View style={styles.completedIndicator}>
                 <CheckCircle size={14} color={Colors.success} />
-                <Text style={styles.completedText}>Completed</Text>
+                <Text style={styles.completedText}>{localizedText('Completed', 'Completada')}</Text>
               </View>
             )}
           </View>
@@ -264,7 +320,7 @@ export default function LessonScreen() {
           <View style={styles.reflectionCard}>
             <View style={styles.reflectionIconRow}>
               <MessageSquareHeart size={20} color={Colors.accent} />
-              <Text style={styles.reflectionLabel}>Reflect</Text>
+              <Text style={styles.reflectionLabel}>{localizedText('Reflect', 'Reflexiona')}</Text>
             </View>
             <Text style={styles.reflectionPrompt}>
               {getReflectionPrompt(lesson.categoryId)}
@@ -274,7 +330,7 @@ export default function LessonScreen() {
 
         {(lesson.relatedToolIds.length > 0 || lesson.relatedExerciseIds.length > 0) && (
           <View style={styles.relatedSection}>
-            <Text style={styles.relatedTitle}>Related Tools</Text>
+            <Text style={styles.relatedTitle}>{localizedText('Related Tools', 'Herramientas relacionadas')}</Text>
             <TouchableOpacity
               style={styles.relatedCard}
               onPress={handleToolPress}
@@ -282,8 +338,8 @@ export default function LessonScreen() {
             >
               <Wrench size={20} color={Colors.primary} />
               <View style={styles.relatedCardContent}>
-                <Text style={styles.relatedCardTitle}>Open Coping Tools</Text>
-                <Text style={styles.relatedCardDesc}>Practice what you've learned</Text>
+                <Text style={styles.relatedCardTitle}>{localizedText('Open Coping Tools', 'Abrir herramientas de afrontamiento')}</Text>
+                <Text style={styles.relatedCardDesc}>{localizedText("Practice what you've learned", 'Practica lo que aprendiste')}</Text>
               </View>
               <ArrowRight size={18} color={Colors.primary} />
             </TouchableOpacity>
@@ -299,7 +355,7 @@ export default function LessonScreen() {
               testID="complete-lesson-button"
             >
               <CheckCircle size={20} color={Colors.white} />
-              <Text style={styles.completeButtonText}>Mark as Completed</Text>
+              <Text style={styles.completeButtonText}>{localizedText('Mark as Completed', 'Marcar como completada')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -308,9 +364,9 @@ export default function LessonScreen() {
           <View style={styles.completedSection}>
             <View style={styles.completedCard}>
               <CheckCircle size={28} color={Colors.success} />
-              <Text style={styles.completedCardTitle}>Lesson complete</Text>
+              <Text style={styles.completedCardTitle}>{localizedText('Lesson complete', 'Lección completa')}</Text>
               <Text style={styles.completedCardDesc}>
-                You've read this lesson. Come back anytime.
+                {localizedText("You've read this lesson. Come back anytime.", 'Ya leíste esta lección. Puedes volver cuando quieras.')}
               </Text>
             </View>
           </View>

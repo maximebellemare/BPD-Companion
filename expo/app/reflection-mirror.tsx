@@ -25,6 +25,8 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useApp } from '@/providers/AppProvider';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { generateReflectionMirror } from '@/services/reflection/reflectionMirrorService';
 import { ReflectionTheme, RelationshipPattern, CopingInsight, GrowthSignal } from '@/types/reflectionMirror';
 
@@ -70,7 +72,7 @@ function EmotionalThemeCard({ theme, index }: { theme: ReflectionTheme; index: n
           <View style={styles.themeMeta}>
             <TrendIcon trend={theme.trend} />
             <Text style={styles.themeFreq}>
-              {theme.frequency}× recently
+              {theme.frequency}× {localizedText('recently', 'recientemente')}
             </Text>
           </View>
         </View>
@@ -96,14 +98,14 @@ function RelationshipPatternCard({ pattern, index }: { pattern: RelationshipPatt
     <Animated.View style={[styles.relationshipCard, { opacity: fadeAnim }]}>
       <View style={styles.patternChain}>
         <View style={styles.patternNode}>
-          <Text style={styles.patternNodeLabel}>Trigger</Text>
+          <Text style={styles.patternNodeLabel}>{localizedText('Trigger', 'Disparador')}</Text>
           <Text style={styles.patternNodeValue}>{pattern.trigger}</Text>
         </View>
         <View style={styles.patternArrow}>
           <Text style={styles.patternArrowText}>→</Text>
         </View>
         <View style={styles.patternNode}>
-          <Text style={styles.patternNodeLabel}>Response</Text>
+          <Text style={styles.patternNodeLabel}>{localizedText('Response', 'Respuesta')}</Text>
           <Text style={styles.patternNodeValue}>{pattern.emotionalResponse}</Text>
         </View>
       </View>
@@ -130,7 +132,7 @@ function CopingInsightCard({ insight, index }: { insight: CopingInsight; index: 
         <Text style={styles.copingEmoji}>{insight.emoji}</Text>
         <View style={styles.copingInfo}>
           <Text style={styles.copingTool}>{insight.tool}</Text>
-          <Text style={styles.copingCount}>{insight.timesUsed}× used</Text>
+          <Text style={styles.copingCount}>{insight.timesUsed}× {localizedText('used', 'usado')}</Text>
         </View>
       </View>
       <Text style={styles.copingNote}>{insight.helpfulnessNote}</Text>
@@ -162,6 +164,7 @@ function GrowthSignalCard({ signal, index }: { signal: GrowthSignal; index: numb
 }
 
 export default function ReflectionMirrorScreen() {
+  useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { journalEntries, messageDrafts } = useApp();
@@ -238,25 +241,31 @@ export default function ReflectionMirrorScreen() {
           <View style={styles.heroIconWrap}>
             <Sparkles size={28} color={Colors.white} />
           </View>
-          <Text style={styles.heroTitle}>Reflection Mirror</Text>
+          <Text style={styles.heroTitle}>{localizedText('Reflection Mirror', 'Espejo de reflexión')}</Text>
           <Text style={styles.heroSubtitle}>
-            A compassionate look at your emotional patterns
+            {localizedText(
+              'A compassionate look at your emotional patterns',
+              'Una mirada compasiva a tus patrones emocionales',
+            )}
           </Text>
         </Animated.View>
 
         {!mirror.hasEnoughData ? (
           <Animated.View style={[styles.emptyState, { opacity: headerFade }]}>
             <Text style={styles.emptyEmoji}>🪞</Text>
-            <Text style={styles.emptyTitle}>Your mirror is forming</Text>
+            <Text style={styles.emptyTitle}>{localizedText('Your mirror is forming', 'Tu espejo se está formando')}</Text>
             <Text style={styles.emptyDesc}>
-              As you continue checking in and journaling, your reflection mirror will reveal meaningful patterns about your emotional world.
+              {localizedText(
+                'As you continue checking in and journaling, your reflection mirror will reveal meaningful patterns about your emotional world.',
+                'A medida que sigas registrándote y escribiendo, tu espejo de reflexión revelará patrones significativos sobre tu mundo emocional.',
+              )}
             </Text>
             <TouchableOpacity
               style={styles.emptyAction}
               onPress={() => handleNavigate('/check-in')}
               activeOpacity={0.7}
             >
-              <Text style={styles.emptyActionText}>Start a check-in</Text>
+              <Text style={styles.emptyActionText}>{localizedText('Start a check-in', 'Iniciar registro')}</Text>
               <ChevronRight size={16} color={Colors.primary} />
             </TouchableOpacity>
           </Animated.View>
@@ -272,10 +281,10 @@ export default function ReflectionMirrorScreen() {
                   <View style={[styles.sectionIcon, { backgroundColor: SECTION_COLORS.themes }]}>
                     <Heart size={18} color={SECTION_COLORS.themesAccent} />
                   </View>
-                  <Text style={styles.sectionTitle}>Recent Emotional Themes</Text>
+                  <Text style={styles.sectionTitle}>{localizedText('Recent Emotional Themes', 'Temas emocionales recientes')}</Text>
                 </View>
                 <Text style={styles.sectionSubtitle}>
-                  Emotions that have been most present lately
+                  {localizedText('Emotions that have been most present lately', 'Emociones que han estado más presentes últimamente')}
                 </Text>
                 {mirror.emotionalThemes.map((theme, i) => (
                   <EmotionalThemeCard key={theme.id} theme={theme} index={i} />
@@ -289,10 +298,10 @@ export default function ReflectionMirrorScreen() {
                   <View style={[styles.sectionIcon, { backgroundColor: SECTION_COLORS.relationship }]}>
                     <Users size={18} color={SECTION_COLORS.relationshipAccent} />
                   </View>
-                  <Text style={styles.sectionTitle}>Relationship Patterns</Text>
+                  <Text style={styles.sectionTitle}>{localizedText('Relationship Patterns', 'Patrones relacionales')}</Text>
                 </View>
                 <Text style={styles.sectionSubtitle}>
-                  How relationship triggers tend to affect you
+                  {localizedText('How relationship triggers tend to affect you', 'Cómo los disparadores relacionales tienden a afectarte')}
                 </Text>
                 {mirror.relationshipPatterns.map((pattern, i) => (
                   <RelationshipPatternCard key={pattern.id} pattern={pattern} index={i} />
@@ -306,10 +315,10 @@ export default function ReflectionMirrorScreen() {
                   <View style={[styles.sectionIcon, { backgroundColor: SECTION_COLORS.coping }]}>
                     <Leaf size={18} color={SECTION_COLORS.copingAccent} />
                   </View>
-                  <Text style={styles.sectionTitle}>What Helped</Text>
+                  <Text style={styles.sectionTitle}>{localizedText('What Helped', 'Lo que ayudó')}</Text>
                 </View>
                 <Text style={styles.sectionSubtitle}>
-                  Coping strategies that seem to make a difference
+                  {localizedText('Coping strategies that seem to make a difference', 'Estrategias de afrontamiento que parecen marcar una diferencia')}
                 </Text>
                 {mirror.copingInsights.map((insight, i) => (
                   <CopingInsightCard key={insight.id} insight={insight} index={i} />
@@ -323,10 +332,10 @@ export default function ReflectionMirrorScreen() {
                   <View style={[styles.sectionIcon, { backgroundColor: SECTION_COLORS.growth }]}>
                     <Sparkles size={18} color={SECTION_COLORS.growthAccent} />
                   </View>
-                  <Text style={styles.sectionTitle}>Growth Signals</Text>
+                  <Text style={styles.sectionTitle}>{localizedText('Growth Signals', 'Señales de crecimiento')}</Text>
                 </View>
                 <Text style={styles.sectionSubtitle}>
-                  Signs that something meaningful is shifting
+                  {localizedText('Signs that something meaningful is shifting', 'Señales de que algo significativo está cambiando')}
                 </Text>
                 {mirror.growthSignals.map((signal, i) => (
                   <GrowthSignalCard key={signal.id} signal={signal} index={i} />
@@ -336,7 +345,10 @@ export default function ReflectionMirrorScreen() {
 
             <View style={styles.closingSection}>
               <Text style={styles.closingText}>
-                These reflections are not diagnoses — they are gentle observations drawn from your own words and check-ins. Use them as a mirror, not a measure.
+                {localizedText(
+                  'These reflections are not diagnoses — they are gentle observations drawn from your own words and check-ins. Use them as a mirror, not a measure.',
+                  'Estas reflexiones no son diagnósticos; son observaciones amables basadas en tus propias palabras y registros. Úsalas como espejo, no como medida.',
+                )}
               </Text>
             </View>
 
@@ -346,8 +358,8 @@ export default function ReflectionMirrorScreen() {
                 onPress={() => handleNavigate('/weekly-reflection')}
                 activeOpacity={0.7}
               >
-                <Text style={styles.actionLabel}>Weekly Reflection</Text>
-                <Text style={styles.actionDesc}>See your full weekly summary</Text>
+                <Text style={styles.actionLabel}>{localizedText('Weekly Reflection', 'Reflexión semanal')}</Text>
+                <Text style={styles.actionDesc}>{localizedText('See your full weekly summary', 'Ver tu resumen semanal completo')}</Text>
                 <ChevronRight size={16} color={Colors.textMuted} />
               </TouchableOpacity>
               <TouchableOpacity
@@ -355,8 +367,8 @@ export default function ReflectionMirrorScreen() {
                 onPress={() => handleNavigate('/insights')}
                 activeOpacity={0.7}
               >
-                <Text style={styles.actionLabel}>Your Insights</Text>
-                <Text style={styles.actionDesc}>Deeper emotional analytics</Text>
+                <Text style={styles.actionLabel}>{localizedText('Your Insights', 'Tus insights')}</Text>
+                <Text style={styles.actionDesc}>{localizedText('Deeper emotional analytics', 'Análisis emocional más profundo')}</Text>
                 <ChevronRight size={16} color={Colors.textMuted} />
               </TouchableOpacity>
               <TouchableOpacity
@@ -364,8 +376,8 @@ export default function ReflectionMirrorScreen() {
                 onPress={() => handleNavigate('/therapy-report')}
                 activeOpacity={0.7}
               >
-                <Text style={styles.actionLabel}>Therapist Report</Text>
-                <Text style={styles.actionDesc}>Share patterns with your therapist</Text>
+                <Text style={styles.actionLabel}>{localizedText('Therapist Report', 'Informe para terapia')}</Text>
+                <Text style={styles.actionDesc}>{localizedText('Share patterns with your therapist', 'Comparte patrones con tu terapeuta')}</Text>
                 <ChevronRight size={16} color={Colors.textMuted} />
               </TouchableOpacity>
             </View>

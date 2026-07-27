@@ -30,6 +30,8 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { useMessageGuard } from '@/hooks/useMessageGuard';
 import {
   TONE_META,
@@ -61,7 +63,7 @@ function UrgencyMeter({ level }: { level: number }) {
   return (
     <View style={urgencyStyles.container}>
       <View style={urgencyStyles.labelRow}>
-        <Text style={urgencyStyles.label}>Urgency level</Text>
+        <Text style={urgencyStyles.label}>{localizedText('Urgency level', 'Nivel de urgencia')}</Text>
         <Text style={[urgencyStyles.value, { color }]}>{level}/10</Text>
       </View>
       <View style={urgencyStyles.track}>
@@ -151,13 +153,13 @@ function StyleCard({
         {isDetected && (
           <View style={[cardStyles.badge, { backgroundColor: card.color + '20' }]}>
             <AlertTriangle size={10} color={card.color} />
-            <Text style={[cardStyles.badgeText, { color: card.color }]}>Your current tone</Text>
+            <Text style={[cardStyles.badgeText, { color: card.color }]}>{localizedText('Your current tone', 'Tu tono actual')}</Text>
           </View>
         )}
         {card.isRecommended && !isDetected && (
           <View style={[cardStyles.badge, { backgroundColor: Colors.successLight }]}>
             <Sparkles size={10} color={Colors.success} />
-            <Text style={[cardStyles.badgeText, { color: Colors.success }]}>Recommended</Text>
+            <Text style={[cardStyles.badgeText, { color: Colors.success }]}>{localizedText('Recommended', 'Recomendado')}</Text>
           </View>
         )}
 
@@ -188,13 +190,13 @@ function StyleCard({
           <View style={cardStyles.impactSection}>
             <View style={cardStyles.impactRow}>
               <Heart size={12} color={Colors.accent} />
-              <Text style={cardStyles.impactLabel}>Emotional impact</Text>
+              <Text style={cardStyles.impactLabel}>{localizedText('Emotional impact', 'Impacto emocional')}</Text>
             </View>
             <Text style={cardStyles.impactText}>{card.emotionalImpact}</Text>
 
             <View style={[cardStyles.impactRow, { marginTop: 12 }]}>
               <Zap size={12} color={Colors.primary} />
-              <Text style={cardStyles.impactLabel}>Relationship impact</Text>
+              <Text style={cardStyles.impactLabel}>{localizedText('Relationship impact', 'Impacto en la relación')}</Text>
             </View>
             <Text style={cardStyles.impactText}>{card.relationshipImpact}</Text>
 
@@ -208,7 +210,7 @@ function StyleCard({
                 activeOpacity={0.8}
               >
                 <Feather size={16} color={Colors.white} />
-                <Text style={cardStyles.selectButtonText}>Refine this version</Text>
+                <Text style={cardStyles.selectButtonText}>{localizedText('Refine this version', 'Refinar esta versión')}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -330,6 +332,7 @@ const cardStyles = StyleSheet.create({
 export default function MessageGuardScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  useLanguage();
   const {
     messageText,
     setMessageText,
@@ -390,16 +393,19 @@ export default function MessageGuardScreen() {
         <View style={styles.heroIconContainer}>
           <Shield size={28} color={Colors.primary} />
         </View>
-        <Text style={styles.heroTitle}>Before You Send</Text>
+        <Text style={styles.heroTitle}>{localizedText('Before You Send', 'Antes de enviar')}</Text>
         <Text style={styles.heroSubtitle}>
-          Paste or write the message you're considering. Let's explore how it might land.
+          {localizedText(
+            "Paste or write the message you're considering. Let's explore how it might land.",
+            'Pega o escribe el mensaje que estás pensando enviar. Veamos cómo podría recibirse.',
+          )}
         </Text>
       </View>
 
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.messageInput}
-          placeholder="Write or paste your message here..."
+          placeholder={localizedText('Write or paste your message here...', 'Escribe o pega tu mensaje aquí...')}
           placeholderTextColor={Colors.textMuted}
           multiline
           value={messageText}
@@ -408,7 +414,9 @@ export default function MessageGuardScreen() {
           testID="guard-message-input"
         />
         {messageText.trim().length > 0 && (
-          <Text style={styles.charCount}>{messageText.length} characters</Text>
+          <Text style={styles.charCount}>
+            {localizedText(`${messageText.length} characters`, `${messageText.length} caracteres`)}
+          </Text>
         )}
       </View>
 
@@ -423,17 +431,20 @@ export default function MessageGuardScreen() {
           testID="analyze-btn"
         >
           <Eye size={18} color={Colors.white} />
-          <Text style={styles.analyzeButtonText}>Analyze this message</Text>
+          <Text style={styles.analyzeButtonText}>{localizedText('Analyze this message', 'Analizar este mensaje')}</Text>
         </TouchableOpacity>
       )}
 
       <View style={styles.infoCard}>
         <View style={styles.infoIconRow}>
           <Shield size={14} color={Colors.primary} />
-          <Text style={styles.infoTitle}>How this works</Text>
+          <Text style={styles.infoTitle}>{localizedText('How this works', 'Cómo funciona')}</Text>
         </View>
         <Text style={styles.infoText}>
-          We'll look at the emotional tone, show you how it might sound in different styles, and help you craft something that protects both connection and self-respect.
+          {localizedText(
+            "We'll look at the emotional tone, show you how it might sound in different styles, and help you craft something that protects both connection and self-respect.",
+            'Miraremos el tono emocional, cómo podría sonar en distintos estilos y cómo crear algo que cuide la conexión y tu autorrespeto.',
+          )}
         </Text>
       </View>
     </>
@@ -448,13 +459,13 @@ export default function MessageGuardScreen() {
         <View style={[styles.analysisHero, { backgroundColor: detectedMeta.color + '10' }]}>
           <Text style={styles.analysisEmoji}>{detectedMeta.emoji}</Text>
           <Text style={[styles.analysisTitle, { color: detectedMeta.color }]}>
-            {detectedMeta.label} tone detected
+            {localizedText(`${detectedMeta.label} tone detected`, `Tono ${detectedMeta.label.toLowerCase()} detectado`)}
           </Text>
           <Text style={styles.analysisDesc}>{detectedMeta.description}</Text>
         </View>
 
         <View style={styles.originalPreview}>
-          <Text style={styles.originalLabel}>Your message</Text>
+          <Text style={styles.originalLabel}>{localizedText('Your message', 'Tu mensaje')}</Text>
           <Text style={styles.originalText} numberOfLines={3}>{messageText}</Text>
         </View>
 
@@ -462,7 +473,7 @@ export default function MessageGuardScreen() {
 
         {toneAnalysis.signals.length > 0 && (
           <View style={styles.signalsSection}>
-            <Text style={styles.signalsSectionTitle}>Emotional signals detected</Text>
+            <Text style={styles.signalsSectionTitle}>{localizedText('Emotional signals detected', 'Señales emocionales detectadas')}</Text>
             <View style={styles.signalsRow}>
               {toneAnalysis.signals.map(signal => {
                 const meta = EMOTIONAL_SIGNAL_META[signal];
@@ -480,7 +491,10 @@ export default function MessageGuardScreen() {
         {toneAnalysis.urgencyLevel >= 5 && (
           <View style={styles.gentleWarning}>
             <Text style={styles.gentleWarningText}>
-              It seems like urgency may be high right now. Seeing different styles can help you choose how you want to show up.
+              {localizedText(
+                'It seems like urgency may be high right now. Seeing different styles can help you choose how you want to show up.',
+                'Parece que la urgencia puede estar alta ahora mismo. Ver distintos estilos puede ayudarte a elegir cómo quieres presentarte.',
+              )}
             </Text>
           </View>
         )}
@@ -495,7 +509,7 @@ export default function MessageGuardScreen() {
           testID="see-styles-btn"
         >
           <MessageSquare size={18} color={Colors.white} />
-          <Text style={styles.primaryButtonText}>See response styles</Text>
+          <Text style={styles.primaryButtonText}>{localizedText('See response styles', 'Ver estilos de respuesta')}</Text>
         </TouchableOpacity>
       </>
     );
@@ -507,9 +521,12 @@ export default function MessageGuardScreen() {
     return (
       <>
         <View style={styles.stylesIntro}>
-          <Text style={styles.stylesIntroTitle}>How this message could sound</Text>
+          <Text style={styles.stylesIntroTitle}>{localizedText('How this message could sound', 'Cómo podría sonar este mensaje')}</Text>
           <Text style={styles.stylesIntroSub}>
-            Each style shows a different way the same feelings could come across. Tap to explore.
+            {localizedText(
+              'Each style shows a different way the same feelings could come across. Tap to explore.',
+              'Cada estilo muestra una forma distinta en que esos mismos sentimientos podrían percibirse. Toca para explorar.',
+            )}
           </Text>
         </View>
 
@@ -525,9 +542,9 @@ export default function MessageGuardScreen() {
         ))}
 
         <View style={styles.delaySection}>
-          <Text style={styles.delaySectionTitle}>Or simply pause</Text>
+          <Text style={styles.delaySectionTitle}>{localizedText('Or simply pause', 'O simplemente pausa')}</Text>
           <Text style={styles.delaySectionSub}>
-            Sometimes the most powerful thing is waiting.
+            {localizedText('Sometimes the most powerful thing is waiting.', 'A veces lo más poderoso es esperar.')}
           </Text>
           <View style={styles.delayRow}>
             {DELAY_OPTIONS.map(opt => (
@@ -558,7 +575,7 @@ export default function MessageGuardScreen() {
         >
           <Save size={14} color={Colors.textSecondary} />
           <Text style={styles.saveDraftText}>
-            {draftSaved ? 'Draft saved' : 'Save as draft'}
+            {draftSaved ? localizedText('Draft saved', 'Borrador guardado') : localizedText('Save as draft', 'Guardar como borrador')}
           </Text>
           {draftSaved && <Check size={14} color={Colors.success} />}
         </TouchableOpacity>
@@ -573,18 +590,18 @@ export default function MessageGuardScreen() {
       <>
         <View style={styles.refineHero}>
           <Text style={styles.refineHeroEmoji}>🌿</Text>
-          <Text style={styles.refineHeroTitle}>Build your secure version</Text>
+          <Text style={styles.refineHeroTitle}>{localizedText('Build your secure version', 'Construye tu versión segura')}</Text>
           <Text style={styles.refineHeroSub}>
-            Adjust what matters most to you right now.
+            {localizedText('Adjust what matters most to you right now.', 'Ajusta lo que más importa para ti ahora mismo.')}
           </Text>
         </View>
 
         <View style={styles.toggleSection}>
           {([
-            { key: 'reduceUrgency' as const, label: 'Reduce urgency', desc: 'Soften time pressure' },
-            { key: 'removeBlame' as const, label: 'Remove blame', desc: 'Replace accusatory language' },
-            { key: 'addEmotionalClarity' as const, label: 'Add emotional clarity', desc: 'Name what you feel' },
-            { key: 'addBoundaries' as const, label: 'Add boundaries', desc: 'Protect your peace' },
+            { key: 'reduceUrgency' as const, label: localizedText('Reduce urgency', 'Reducir urgencia'), desc: localizedText('Soften time pressure', 'Suavizar la presión de tiempo') },
+            { key: 'removeBlame' as const, label: localizedText('Remove blame', 'Quitar culpa'), desc: localizedText('Replace accusatory language', 'Reemplazar lenguaje acusatorio') },
+            { key: 'addEmotionalClarity' as const, label: localizedText('Add emotional clarity', 'Agregar claridad emocional'), desc: localizedText('Name what you feel', 'Nombrar lo que sientes') },
+            { key: 'addBoundaries' as const, label: localizedText('Add boundaries', 'Agregar límites'), desc: localizedText('Protect your peace', 'Proteger tu paz') },
           ]).map(opt => (
             <TouchableOpacity
               key={opt.key}
@@ -618,14 +635,14 @@ export default function MessageGuardScreen() {
         </View>
 
         <View style={styles.rewritePreviewSection}>
-          <Text style={styles.rewritePreviewLabel}>Your refined message</Text>
+          <Text style={styles.rewritePreviewLabel}>{localizedText('Your refined message', 'Tu mensaje refinado')}</Text>
           <View style={styles.rewritePreviewCard}>
             <Text style={styles.rewritePreviewText}>{secureRewrite}</Text>
           </View>
         </View>
 
         <View style={styles.originalCompare}>
-          <Text style={styles.originalCompareLabel}>Original</Text>
+          <Text style={styles.originalCompareLabel}>{localizedText('Original', 'Original')}</Text>
           <Text style={styles.originalCompareText} numberOfLines={2}>{messageText}</Text>
         </View>
 
@@ -640,7 +657,7 @@ export default function MessageGuardScreen() {
           >
             <Save size={18} color={Colors.white} />
             <Text style={styles.primaryButtonText}>
-              {draftSaved ? 'Saved' : 'Save this version'}
+              {draftSaved ? localizedText('Saved', 'Guardado') : localizedText('Save this version', 'Guardar esta versión')}
             </Text>
             {draftSaved && <Check size={16} color={Colors.white} />}
           </TouchableOpacity>
@@ -656,7 +673,7 @@ export default function MessageGuardScreen() {
                 }}
                 activeOpacity={0.7}
               >
-                <Text style={styles.delayChipSmallLabel}>Wait {opt.label}</Text>
+                <Text style={styles.delayChipSmallLabel}>{localizedText(`Wait ${opt.label}`, `Esperar ${opt.label}`)}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -669,7 +686,7 @@ export default function MessageGuardScreen() {
           testID="guard-simulator-link"
         >
           <Sparkles size={15} color={Colors.primary} />
-          <Text style={styles.simulatorLinkText}>Practice different responses</Text>
+          <Text style={styles.simulatorLinkText}>{localizedText('Practice different responses', 'Practicar respuestas distintas')}</Text>
           <ChevronRight size={14} color={Colors.textMuted} />
         </TouchableOpacity>
       </>
@@ -727,13 +744,13 @@ export default function MessageGuardScreen() {
                     },
                   ]}
                 >
-                  Breathe...
+                  {localizedText('Breathe...', 'Respira...')}
                 </Animated.Text>
               </>
             ) : (
               <>
                 <Text style={styles.pauseCompleteEmoji}>🌿</Text>
-                <Text style={styles.pauseCompleteText}>Pause complete</Text>
+                <Text style={styles.pauseCompleteText}>{localizedText('Pause complete', 'Pausa completada')}</Text>
               </>
             )}
           </View>
@@ -741,8 +758,11 @@ export default function MessageGuardScreen() {
 
         <Text style={styles.pauseMessage}>
           {isDelaying
-            ? "This pause is a gift to your future self.\nLet the urgency pass through you."
-            : "You chose to wait. That takes real strength."
+            ? localizedText(
+              "This pause is a gift to your future self.\nLet the urgency pass through you.",
+              'Esta pausa es un regalo para tu yo del futuro.\nDeja que la urgencia pase a través de ti.',
+            )
+            : localizedText('You chose to wait. That takes real strength.', 'Elegiste esperar. Eso requiere mucha fuerza.')
           }
         </Text>
 
@@ -755,7 +775,7 @@ export default function MessageGuardScreen() {
             }}
             activeOpacity={0.7}
           >
-            <Text style={styles.secondaryButtonText}>I'm ready now</Text>
+            <Text style={styles.secondaryButtonText}>{localizedText("I'm ready now", 'Ya estoy lista/o')}</Text>
           </TouchableOpacity>
         ) : (
           <View style={styles.pauseCompleteActions}>
@@ -769,7 +789,7 @@ export default function MessageGuardScreen() {
             >
               <Save size={18} color={Colors.white} />
               <Text style={styles.primaryButtonText}>
-                {draftSaved ? 'Draft saved' : 'Save draft for later'}
+                {draftSaved ? localizedText('Draft saved', 'Borrador guardado') : localizedText('Save draft for later', 'Guardar borrador para después')}
               </Text>
               {draftSaved && <Check size={16} color={Colors.white} />}
             </TouchableOpacity>
@@ -783,7 +803,7 @@ export default function MessageGuardScreen() {
               activeOpacity={0.7}
             >
               <RotateCcw size={14} color={Colors.textSecondary} />
-              <Text style={styles.secondaryButtonText}>Start over</Text>
+              <Text style={styles.secondaryButtonText}>{localizedText('Start over', 'Empezar de nuevo')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -792,11 +812,23 @@ export default function MessageGuardScreen() {
   };
 
   const stepTitles: Record<string, { title: string; subtitle: string }> = {
-    input: { title: 'Message Guard', subtitle: 'See how your message may land before sending' },
-    analysis: { title: 'Tone Analysis', subtitle: "Here's what we noticed" },
-    styles: { title: 'Response Styles', subtitle: 'Same feelings, different delivery' },
-    refine: { title: 'Secure Builder', subtitle: 'Craft your grounded response' },
-    pause: { title: 'Pausing', subtitle: '' },
+    input: {
+      title: localizedText('Message Guard', 'Protector de mensajes'),
+      subtitle: localizedText('See how your message may land before sending', 'Ve cómo podría recibirse tu mensaje antes de enviarlo'),
+    },
+    analysis: {
+      title: localizedText('Tone Analysis', 'Análisis de tono'),
+      subtitle: localizedText("Here's what we noticed", 'Esto es lo que notamos'),
+    },
+    styles: {
+      title: localizedText('Response Styles', 'Estilos de respuesta'),
+      subtitle: localizedText('Same feelings, different delivery', 'Los mismos sentimientos, otra forma de expresarlos'),
+    },
+    refine: {
+      title: localizedText('Secure Builder', 'Constructor seguro'),
+      subtitle: localizedText('Craft your grounded response', 'Crea tu respuesta más centrada'),
+    },
+    pause: { title: localizedText('Pausing', 'Pausa'), subtitle: '' },
   };
 
   const currentStepMeta = stepTitles[step] ?? stepTitles.input;

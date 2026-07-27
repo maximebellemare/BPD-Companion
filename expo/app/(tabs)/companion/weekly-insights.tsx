@@ -23,6 +23,8 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useAICompanion } from '@/providers/AICompanionProvider';
 import { WeeklyCompanionInsight } from '@/types/companionMemory';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 function InsightSection({
   title,
@@ -91,7 +93,7 @@ function WeeklyCard({ insight, index, onDiscuss }: { insight: WeeklyCompanionIns
 
   const weekDate = new Date(insight.weekStart);
   const weekEndDate = new Date(insight.weekEnd);
-  const formatDate = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const formatDate = (d: Date) => d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
   const dateRange = `${formatDate(weekDate)} — ${formatDate(weekEndDate)}`;
   const isLatest = index === 0;
 
@@ -104,7 +106,7 @@ function WeeklyCard({ insight, index, onDiscuss }: { insight: WeeklyCompanionIns
         </View>
         {isLatest && (
           <View style={styles.currentBadge}>
-            <Text style={styles.currentBadgeText}>Current</Text>
+            <Text style={styles.currentBadgeText}>{localizedText('Current', 'Actual')}</Text>
           </View>
         )}
       </View>
@@ -112,7 +114,7 @@ function WeeklyCard({ insight, index, onDiscuss }: { insight: WeeklyCompanionIns
       <Text style={styles.weekCardSummary}>{insight.summary}</Text>
 
       <InsightSection
-        title="Emotional Patterns"
+        title={localizedText('Emotional Patterns', 'Patrones emocionales')}
         icon={<Heart size={14} color="#3B82F6" />}
         iconBg="#FFFFFF"
         items={insight.emotionalPatterns}
@@ -121,7 +123,7 @@ function WeeklyCard({ insight, index, onDiscuss }: { insight: WeeklyCompanionIns
       />
 
       <InsightSection
-        title="Relationship Patterns"
+        title={localizedText('Relationship Patterns', 'Patrones relacionales')}
         icon={<Users size={14} color={Colors.accent} />}
         iconBg={Colors.accentLight}
         items={insight.relationshipPatterns}
@@ -130,7 +132,7 @@ function WeeklyCard({ insight, index, onDiscuss }: { insight: WeeklyCompanionIns
       />
 
       <InsightSection
-        title="What Helped"
+        title={localizedText('What Helped', 'Lo que ayudó')}
         icon={<Shield size={14} color={Colors.primary} />}
         iconBg={Colors.primaryLight}
         items={insight.helpfulStrategies}
@@ -139,7 +141,7 @@ function WeeklyCard({ insight, index, onDiscuss }: { insight: WeeklyCompanionIns
       />
 
       <InsightSection
-        title="Growth Signals"
+        title={localizedText('Growth Signals', 'Señales de crecimiento')}
         icon={<TrendingUp size={14} color={Colors.success} />}
         iconBg={Colors.successLight}
         items={insight.growthSignals}
@@ -155,7 +157,7 @@ function WeeklyCard({ insight, index, onDiscuss }: { insight: WeeklyCompanionIns
           testID="discuss-weekly-btn"
         >
           <MessageCircle size={15} color={Colors.primary} />
-          <Text style={styles.discussButtonText}>Discuss with Companion</Text>
+          <Text style={styles.discussButtonText}>{localizedText('Discuss with Companion', 'Hablarlo con Companion')}</Text>
           <ChevronRight size={14} color={Colors.primary} />
         </TouchableOpacity>
       )}
@@ -169,6 +171,7 @@ export default function WeeklyInsightsScreen() {
     weeklyInsights,
     startNewConversation,
   } = useAICompanion();
+  useLanguage();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -189,14 +192,17 @@ export default function WeeklyInsightsScreen() {
       pathname: '/companion/chat',
       params: {
         conversationId: id,
-        initialMessage: 'I want to talk about my weekly emotional patterns and what you have noticed.',
+        initialMessage: localizedText(
+          'I want to talk about my weekly emotional patterns and what you have noticed.',
+          'Quiero hablar sobre mis patrones emocionales de la semana y lo que has notado.',
+        ),
       },
     } as never);
   }, [startNewConversation, router]);
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: 'Weekly Insights' }} />
+      <Stack.Screen options={{ title: localizedText('Weekly Insights', 'Insights semanales') }} />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -206,9 +212,12 @@ export default function WeeklyInsightsScreen() {
           <View style={styles.headerIconWrap}>
             <Sparkles size={20} color="#3B82F6" />
           </View>
-          <Text style={styles.headerTitle}>Your Companion Insights</Text>
+          <Text style={styles.headerTitle}>{localizedText('Your Companion Insights', 'Tus insights de Companion')}</Text>
           <Text style={styles.headerSubtitle}>
-            A personal look at your emotional patterns, what helped, and where you are growing.
+            {localizedText(
+              'A personal look at your emotional patterns, what helped, and where you are growing.',
+              'Una mirada personal a tus patrones emocionales, lo que ayudó y dónde estás creciendo.',
+            )}
           </Text>
         </Animated.View>
 
@@ -217,9 +226,12 @@ export default function WeeklyInsightsScreen() {
             <View style={styles.emptyIcon}>
               <Calendar size={36} color={Colors.textMuted} />
             </View>
-            <Text style={styles.emptyTitle}>No weekly insights yet</Text>
+            <Text style={styles.emptyTitle}>{localizedText('No weekly insights yet', 'Aún no hay insights semanales')}</Text>
             <Text style={styles.emptySubtitle}>
-              As you use the Companion, check in, and journal, your weekly insights will appear here. Keep showing up for yourself.
+              {localizedText(
+                'As you use the Companion, check in, and journal, your weekly insights will appear here. Keep showing up for yourself.',
+                'A medida que uses Companion, hagas check-ins y escribas en tu diario, tus insights semanales aparecerán aquí. Sigue presentándote para ti.',
+              )}
             </Text>
           </Animated.View>
         ) : (

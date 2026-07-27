@@ -20,10 +20,13 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { useChallenges, useChallengeProgress } from '@/hooks/useSupportCircles';
 import { CommunityChallenge, ChallengeProgress } from '@/types/community';
 
 function ChallengeProgressBar({ completed, total, color }: { completed: number; total: number; color: string }) {
+  useLanguage();
   const progress = total > 0 ? completed / total : 0;
   const widthAnim = useRef(new Animated.Value(0)).current;
 
@@ -41,12 +44,15 @@ function ChallengeProgressBar({ completed, total, color }: { completed: number; 
       <View style={styles.progressBarBg}>
         <Animated.View style={[styles.progressBarFill, { width: animatedWidth, backgroundColor: color }]} />
       </View>
-      <Text style={styles.progressBarText}>{completed}/{total} days</Text>
+      <Text style={styles.progressBarText}>
+        {completed}/{total} {localizedText('days', 'días')}
+      </Text>
     </View>
   );
 }
 
 function ParticipantRow({ participants, color }: { participants: ChallengeProgress[]; color: string }) {
+  useLanguage();
   const sorted = useMemo(
     () => [...participants].sort((a, b) => b.completedDays - a.completedDays),
     [participants]
@@ -56,7 +62,7 @@ function ParticipantRow({ participants, color }: { participants: ChallengeProgre
 
   return (
     <View style={styles.participantSection}>
-      <Text style={styles.participantTitle}>Participants</Text>
+      <Text style={styles.participantTitle}>{localizedText('Participants', 'Participantes')}</Text>
       {sorted.map((p) => (
         <View key={p.userId} style={styles.participantRow}>
           <View style={styles.participantInfo}>
@@ -69,7 +75,12 @@ function ParticipantRow({ participants, color }: { participants: ChallengeProgre
               <Text style={[styles.participantName, p.isCurrentUser && styles.participantNameCurrent]}>
                 {p.displayName}
               </Text>
-              <Text style={styles.participantDays}>{p.completedDays} of {p.totalDays} days</Text>
+              <Text style={styles.participantDays}>
+                {localizedText(
+                  `${p.completedDays} of ${p.totalDays} days`,
+                  `${p.completedDays} de ${p.totalDays} días`,
+                )}
+              </Text>
             </View>
           </View>
           <ChallengeProgressBar completed={p.completedDays} total={p.totalDays} color={color} />
@@ -94,6 +105,7 @@ const ChallengeCard = React.memo(function ChallengeCard({
   isJoining: boolean;
   isCheckingIn: boolean;
 }) {
+  useLanguage();
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const { progress } = useChallengeProgress(challenge.id);
 
@@ -135,7 +147,9 @@ const ChallengeCard = React.memo(function ChallengeCard({
             <Text style={styles.challengeTitle}>{challenge.title}</Text>
             <View style={styles.challengeMetaRow}>
               <Calendar size={12} color={Colors.textMuted} />
-              <Text style={styles.challengeMetaText}>{challenge.durationDays} days</Text>
+              <Text style={styles.challengeMetaText}>
+                {challenge.durationDays} {localizedText('days', 'días')}
+              </Text>
               <View style={styles.metaDot} />
               <Users size={12} color={Colors.textMuted} />
               <Text style={styles.challengeMetaText}>{challenge.participantCount}</Text>
@@ -149,7 +163,9 @@ const ChallengeCard = React.memo(function ChallengeCard({
           <View style={styles.myProgressSection}>
             <View style={styles.myProgressHeader}>
               <Flame size={14} color={challenge.color} />
-              <Text style={[styles.myProgressLabel, { color: challenge.color }]}>Your progress</Text>
+              <Text style={[styles.myProgressLabel, { color: challenge.color }]}>
+                {localizedText('Your progress', 'Tu progreso')}
+              </Text>
             </View>
             <ChallengeProgressBar
               completed={userProgress.completedDays}
@@ -161,7 +177,7 @@ const ChallengeCard = React.memo(function ChallengeCard({
 
         {challenge.isJoined && (
           <View style={styles.dailyPromptCard}>
-            <Text style={styles.dailyPromptLabel}>Daily prompt</Text>
+            <Text style={styles.dailyPromptLabel}>{localizedText('Daily prompt', 'Pregunta diaria')}</Text>
             <Text style={styles.dailyPromptText}>{challenge.dailyPrompt}</Text>
           </View>
         )}
@@ -183,14 +199,14 @@ const ChallengeCard = React.memo(function ChallengeCard({
               ) : (
                 <>
                   <Users size={16} color={Colors.white} />
-                  <Text style={styles.challengeBtnText}>Join challenge</Text>
+                  <Text style={styles.challengeBtnText}>{localizedText('Join challenge', 'Unirme al reto')}</Text>
                 </>
               )}
             </TouchableOpacity>
           ) : isCompleted ? (
             <View style={[styles.challengeBtn, styles.completedBtn]}>
               <Trophy size={16} color={Colors.success} />
-              <Text style={styles.completedBtnText}>Completed!</Text>
+              <Text style={styles.completedBtnText}>{localizedText('Completed!', 'Completado')}</Text>
             </View>
           ) : (
             <View style={styles.joinedActions}>
@@ -210,7 +226,7 @@ const ChallengeCard = React.memo(function ChallengeCard({
                   <>
                     <Check size={16} color={Colors.white} />
                     <Text style={styles.checkInBtnText}>
-                      {canCheckIn ? 'Check in today' : 'Checked in'}
+                      {canCheckIn ? localizedText('Check in today', 'Registrar hoy') : localizedText('Checked in', 'Registrado')}
                     </Text>
                   </>
                 )}
@@ -225,6 +241,7 @@ const ChallengeCard = React.memo(function ChallengeCard({
 
 export default function ChallengesScreen() {
   const router = useRouter();
+  useLanguage();
   const {
     challenges,
     isLoading,
@@ -271,7 +288,7 @@ export default function ChallengesScreen() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} testID="back-btn">
             <ArrowLeft size={20} color={Colors.text} />
           </TouchableOpacity>
-          <Text style={styles.navTitle}>Challenges</Text>
+          <Text style={styles.navTitle}>{localizedText('Challenges', 'Retos')}</Text>
           <View style={{ width: 36 }} />
         </View>
       </SafeAreaView>
@@ -284,9 +301,12 @@ export default function ChallengesScreen() {
         <Animated.View style={{ opacity: fadeAnim }}>
           <View style={styles.introCard}>
             <Text style={styles.introEmoji}>🎯</Text>
-            <Text style={styles.introTitle}>Community Challenges</Text>
+            <Text style={styles.introTitle}>{localizedText('Community Challenges', 'Retos de la comunidad')}</Text>
             <Text style={styles.introText}>
-              Join challenges with other members. Practice skills together, track progress, and encourage each other along the way.
+              {localizedText(
+                'Join challenges with other members. Practice skills together, track progress, and encourage each other along the way.',
+                'Únete a retos con otras personas. Practiquen habilidades juntas, registren avances y anímense en el camino.',
+              )}
             </Text>
           </View>
 
@@ -300,7 +320,7 @@ export default function ChallengesScreen() {
             <>
               <View style={styles.sectionHeader}>
                 <Flame size={16} color={Colors.brandAmber} />
-                <Text style={styles.sectionTitle}>Your active challenges</Text>
+                <Text style={styles.sectionTitle}>{localizedText('Your active challenges', 'Tus retos activos')}</Text>
               </View>
               {joinedChallenges.map((challenge) => (
                 <ChallengeCard
@@ -320,7 +340,7 @@ export default function ChallengesScreen() {
             <>
               <View style={styles.sectionHeader}>
                 <Trophy size={16} color={Colors.brandLilac} />
-                <Text style={styles.sectionTitle}>Available challenges</Text>
+                <Text style={styles.sectionTitle}>{localizedText('Available challenges', 'Retos disponibles')}</Text>
               </View>
               {availableChallenges.map((challenge) => (
                 <ChallengeCard

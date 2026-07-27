@@ -16,6 +16,8 @@ import { X, Check, ArrowRight, Shield, Heart, Compass } from 'lucide-react-nativ
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useConflictAlignment, useIdentityValues } from '@/hooks/useIdentity';
+import { localizedText } from '@/lib/i18n/staticText';
+import { useLanguage } from '@/hooks/useLanguage';
 
 
 type Step = 'feeling' | 'fear' | 'need' | 'values' | 'protects' | 'summary';
@@ -24,37 +26,37 @@ const STEPS: Step[] = ['feeling', 'fear', 'need', 'values', 'protects', 'summary
 
 const STEP_CONFIG: Record<Step, { title: string; question: string; placeholder: string; icon: React.ReactNode }> = {
   feeling: {
-    title: 'What are you feeling?',
-    question: 'Name the emotion that is most present right now.',
-    placeholder: 'Hurt, angry, abandoned, anxious...',
+    get title() { return localizedText('What are you feeling?', '¿Que estas sintiendo?'); },
+    get question() { return localizedText('Name the emotion that is most present right now.', 'Nombra la emocion que esta mas presente ahora.'); },
+    get placeholder() { return localizedText('Hurt, angry, abandoned, anxious...', 'Herido/a, enojado/a, abandonado/a, ansioso/a...'); },
     icon: <Heart size={20} color="#3B82F6" />,
   },
   fear: {
-    title: 'What are you afraid this means?',
-    question: 'What story is your mind telling you about this situation?',
-    placeholder: 'They don\'t care, I\'m too much, this is ending...',
+    get title() { return localizedText('What are you afraid this means?', '¿Que temes que signifique esto?'); },
+    get question() { return localizedText('What story is your mind telling you about this situation?', '¿Que historia te esta contando tu mente sobre esta situacion?'); },
+    get placeholder() { return localizedText("They don't care, I'm too much, this is ending...", 'No le importo, soy demasiado, esto se esta acabando...'); },
     icon: <Shield size={20} color="#67E8F9" />,
   },
   need: {
-    title: 'What do you actually need?',
-    question: 'Separate from panic, what would truly help right now?',
-    placeholder: 'Reassurance, space, honesty, to feel safe...',
+    get title() { return localizedText('What do you actually need?', '¿Que necesitas realmente?'); },
+    get question() { return localizedText('Separate from panic, what would truly help right now?', 'Separado del panico, ¿que ayudaria de verdad ahora?'); },
+    get placeholder() { return localizedText('Reassurance, space, honesty, to feel safe...', 'Tranquilidad, espacio, honestidad, sentir seguridad...'); },
     icon: <Compass size={20} color="#14B8A6" />,
   },
   values: {
-    title: 'What response aligns with your values?',
-    question: 'Thinking about what matters most to you, how would you want to respond?',
-    placeholder: 'I want to respond with dignity and honesty...',
+    get title() { return localizedText('What response aligns with your values?', '¿Que respuesta se alinea con tus valores?'); },
+    get question() { return localizedText('Thinking about what matters most to you, how would you want to respond?', 'Pensando en lo que mas te importa, ¿como quisieras responder?'); },
+    get placeholder() { return localizedText('I want to respond with dignity and honesty...', 'Quiero responder con dignidad y honestidad...'); },
     icon: <Check size={20} color="#3B82F6" />,
   },
   protects: {
-    title: 'What protects both connection and self-respect?',
-    question: 'What action would honor both the relationship and your own worth?',
-    placeholder: 'Taking a pause, expressing needs calmly...',
+    get title() { return localizedText('What protects both connection and self-respect?', '¿Que protege la conexion y tu autorrespeto?'); },
+    get question() { return localizedText('What action would honor both the relationship and your own worth?', '¿Que accion honraria la relacion y tambien tu valor?'); },
+    get placeholder() { return localizedText('Taking a pause, expressing needs calmly...', 'Tomar una pausa, expresar necesidades con calma...'); },
     icon: <Shield size={20} color="#3B82F6" />,
   },
   summary: {
-    title: 'Your Alignment',
+    get title() { return localizedText('Your Alignment', 'Tu alineacion'); },
     question: '',
     placeholder: '',
     icon: <Check size={20} color={Colors.primary} />,
@@ -62,6 +64,7 @@ const STEP_CONFIG: Record<Step, { title: string; question: string; placeholder: 
 };
 
 export default function ConflictAlignmentScreen() {
+  useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { sessions, save, isSaving } = useConflictAlignment();
@@ -164,7 +167,7 @@ export default function ConflictAlignmentScreen() {
             <X size={22} color={Colors.text} />
           </TouchableOpacity>
           <View style={styles.headerCenter}>
-            <Text style={styles.headerTitle}>Past Sessions</Text>
+            <Text style={styles.headerTitle}>{localizedText('Past Sessions', 'Sesiones anteriores')}</Text>
           </View>
           <View style={styles.closeBtn} />
         </View>
@@ -189,14 +192,14 @@ export default function ConflictAlignmentScreen() {
                 <Text style={styles.historyValue}>{session.valuesResponse}</Text>
               </View>
               <View style={styles.historyRow}>
-                <Text style={styles.historyLabel}>Protects Both</Text>
+                <Text style={styles.historyLabel}>{localizedText('Protects Both', 'Protege ambos')}</Text>
                 <Text style={styles.historyValue}>{session.protectsBoth}</Text>
               </View>
             </View>
           ))}
           {sessions.length === 0 && (
             <View style={styles.emptyCard}>
-              <Text style={styles.emptyText}>No sessions yet.</Text>
+              <Text style={styles.emptyText}>{localizedText('No sessions yet.', 'Aun no hay sesiones.')}</Text>
             </View>
           )}
           <View style={{ height: 40 }} />
@@ -219,8 +222,8 @@ export default function ConflictAlignmentScreen() {
           <X size={22} color={Colors.text} />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>Self-Alignment</Text>
-          <Text style={styles.headerSubtitle}>Pause. Align. Respond.</Text>
+          <Text style={styles.headerTitle}>{localizedText('Self-Alignment', 'Alineacion personal')}</Text>
+          <Text style={styles.headerSubtitle}>{localizedText('Pause. Align. Respond.', 'Pausa. Alinea. Responde.')}</Text>
         </View>
         {sessions.length > 0 ? (
           <TouchableOpacity style={styles.closeBtn} onPress={() => setShowHistory(true)}>
@@ -264,9 +267,9 @@ export default function ConflictAlignmentScreen() {
                 <View style={styles.summaryIcon}>
                   <Compass size={28} color={Colors.primary} />
                 </View>
-                <Text style={styles.summaryTitle}>Your Alignment</Text>
+                <Text style={styles.summaryTitle}>{localizedText('Your Alignment', 'Tu alineacion')}</Text>
                 <Text style={styles.summarySubtitle}>
-                  Here is what came up for you in this moment.
+                  {localizedText('Here is what came up for you in this moment.', 'Esto es lo que aparecio para ti en este momento.')}
                 </Text>
               </View>
 
@@ -282,23 +285,23 @@ export default function ConflictAlignmentScreen() {
               )}
 
               <View style={styles.summaryCard}>
-                <Text style={styles.summaryCardLabel}>Feeling</Text>
+                <Text style={styles.summaryCardLabel}>{localizedText('Feeling', 'Sentimiento')}</Text>
                 <Text style={styles.summaryCardValue}>{feeling}</Text>
               </View>
               <View style={styles.summaryCard}>
-                <Text style={styles.summaryCardLabel}>Underneath the fear</Text>
+                <Text style={styles.summaryCardLabel}>{localizedText('Underneath the fear', 'Debajo del miedo')}</Text>
                 <Text style={styles.summaryCardValue}>{fear}</Text>
               </View>
               <View style={styles.summaryCard}>
-                <Text style={styles.summaryCardLabel}>What you actually need</Text>
+                <Text style={styles.summaryCardLabel}>{localizedText('What you actually need', 'Lo que realmente necesitas')}</Text>
                 <Text style={styles.summaryCardValue}>{need}</Text>
               </View>
               <View style={[styles.summaryCard, { backgroundColor: Colors.primaryLight, borderColor: '#D9E2EC' }]}>
-                <Text style={[styles.summaryCardLabel, { color: Colors.primaryDark }]}>Values-aligned response</Text>
+                <Text style={[styles.summaryCardLabel, { color: Colors.primaryDark }]}>{localizedText('Values-aligned response', 'Respuesta alineada con valores')}</Text>
                 <Text style={[styles.summaryCardValue, { color: Colors.primaryDark }]}>{valuesResponse}</Text>
               </View>
               <View style={[styles.summaryCard, { backgroundColor: '#FFFFFF', borderColor: '#D9E2EC' }]}>
-                <Text style={[styles.summaryCardLabel, { color: '#3B82F6' }]}>Protects connection + self-respect</Text>
+                <Text style={[styles.summaryCardLabel, { color: '#3B82F6' }]}>{localizedText('Protects connection + self-respect', 'Protege conexion + autorrespeto')}</Text>
                 <Text style={[styles.summaryCardValue, { color: '#2E2A72' }]}>{protectsBoth}</Text>
               </View>
 
@@ -311,14 +314,14 @@ export default function ConflictAlignmentScreen() {
                   testID="save-session"
                 >
                   <Check size={18} color={Colors.white} />
-                  <Text style={styles.saveSessionBtnText}>Save & Close</Text>
+                  <Text style={styles.saveSessionBtnText}>{localizedText('Save & Close', 'Guardar y cerrar')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.newSessionBtn}
                   onPress={handleStartNew}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.newSessionBtnText}>Start Over</Text>
+                  <Text style={styles.newSessionBtnText}>{localizedText('Start Over', 'Empezar de nuevo')}</Text>
                 </TouchableOpacity>
               </View>
             </View>

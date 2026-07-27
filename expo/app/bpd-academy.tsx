@@ -25,6 +25,8 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useAppTheme } from '@/providers/ThemeProvider';
 import { trackEvent } from '@/services/analytics/analyticsService';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import {
   BPD_ACADEMY_LESSONS,
   BPD_ACADEMY_SECTION_DESCRIPTIONS,
@@ -49,6 +51,7 @@ export default function BPDAcademyScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
+  useLanguage();
   const scrollRef = useRef<ScrollView>(null);
   const lessonCardY = useRef(0);
   const [progress, setProgress] = useState<BPDAcademyProgress | null>(null);
@@ -133,10 +136,13 @@ export default function BPDAcademyScreen() {
             <ArrowLeft size={20} color={colors.text} />
           </TouchableOpacity>
           <View style={styles.headerTextWrap}>
-            <Text style={[styles.eyebrow, { color: colors.brandTeal }]}>BPD Academy</Text>
-            <Text style={[styles.title, { color: colors.text }]}>Tiny lessons for real moments</Text>
+            <Text style={[styles.eyebrow, { color: colors.brandTeal }]}>{localizedText('BPD Academy', 'Academia TLP')}</Text>
+            <Text style={[styles.title, { color: colors.text }]}>{localizedText('Tiny lessons for real moments', 'Lecciones breves para momentos reales')}</Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Short 2-5 minute practices. Educational support only, not medical advice.
+              {localizedText(
+                'Short 2-5 minute practices. Educational support only, not medical advice.',
+                'Prácticas breves de 2 a 5 minutos. Apoyo educativo solamente, no consejo médico.',
+              )}
             </Text>
           </View>
         </View>
@@ -145,17 +151,17 @@ export default function BPDAcademyScreen() {
           <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
             <Target size={16} color={colors.primary} />
             <Text style={[styles.statValue, { color: colors.text }]}>{completionPercent}%</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Complete</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{localizedText('Complete', 'Completado')}</Text>
           </View>
           <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
             <Trophy size={16} color={colors.brandTeal} />
             <Text style={[styles.statValue, { color: colors.text }]}>{completedCount}/{totalCount}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Lessons</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{localizedText('Lessons', 'Lecciones')}</Text>
           </View>
           <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
             <Sparkles size={16} color={colors.accent} />
             <Text style={[styles.statValue, { color: colors.text }]}>{progress?.currentStreak ?? 0}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Streak</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{localizedText('Streak', 'Racha')}</Text>
           </View>
         </View>
 
@@ -179,10 +185,10 @@ export default function BPDAcademyScreen() {
           </View>
 
           <View style={styles.lessonBlocks}>
-            <LessonBlock title="Explain" body={selectedLesson.explain} icon={<BookOpen size={16} color={colors.primary} />} />
-            <LessonBlock title="Example" body={selectedLesson.example} icon={<Sparkles size={16} color={colors.brandTeal} />} />
-            <LessonBlock title="Real-life application" body={selectedLesson.application} icon={<Target size={16} color={colors.accent} />} />
-            <LessonBlock title="Mini exercise" body={selectedLesson.miniExercise} icon={<Clock size={16} color={colors.primary} />} />
+            <LessonBlock title={localizedText('Explain', 'Explicación')} body={selectedLesson.explain} icon={<BookOpen size={16} color={colors.primary} />} />
+            <LessonBlock title={localizedText('Example', 'Ejemplo')} body={selectedLesson.example} icon={<Sparkles size={16} color={colors.brandTeal} />} />
+            <LessonBlock title={localizedText('Real-life application', 'Aplicación en la vida real')} body={selectedLesson.application} icon={<Target size={16} color={colors.accent} />} />
+            <LessonBlock title={localizedText('Mini exercise', 'Mini ejercicio')} body={selectedLesson.miniExercise} icon={<Clock size={16} color={colors.primary} />} />
           </View>
 
           <TouchableOpacity
@@ -201,14 +207,14 @@ export default function BPDAcademyScreen() {
               <>
                 <CheckCircle2 size={18} color={selectedCompleted ? colors.brandTeal : Colors.white} />
                 <Text style={[styles.completeButtonText, { color: selectedCompleted ? colors.brandTeal : Colors.white }]}>
-                  {selectedCompleted ? 'Lesson complete' : 'Mark complete'}
+                  {selectedCompleted ? localizedText('Lesson complete', 'Lección completa') : localizedText('Mark complete', 'Marcar completa')}
                 </Text>
               </>
             )}
           </TouchableOpacity>
         </View>
 
-        <Text style={[styles.sectionHeading, { color: colors.text }]}>Choose a lesson</Text>
+        <Text style={[styles.sectionHeading, { color: colors.text }]}>{localizedText('Choose a lesson', 'Elige una lección')}</Text>
 
         {SECTIONS.map(section => {
           const sectionLessons = getBPDAcademyLessonsBySection(section);

@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Colors from '@/constants/colors';
+import { localizedText } from '@/lib/i18n/staticText';
 
 type CompanionErrorBoundaryProps = {
   children: React.ReactNode;
@@ -31,14 +32,19 @@ export default class CompanionErrorBoundary extends React.Component<CompanionErr
     return (
       <View style={styles.container}>
         <View style={styles.card}>
-          <Text style={styles.title}>Companion is loading</Text>
-          <Text style={styles.body}>Please try again. Your other tabs are still available.</Text>
+          <Text style={styles.title}>{localizedText('Companion is loading', 'El Companion se está cargando')}</Text>
+          <Text style={styles.body}>
+            {localizedText(
+              'Please try again. Your other tabs are still available.',
+              'Inténtalo de nuevo. Tus otras pestañas siguen disponibles.',
+            )}
+          </Text>
           <TouchableOpacity
             style={styles.button}
             onPress={() => this.setState({ hasError: false })}
             activeOpacity={0.8}
           >
-            <Text style={styles.buttonText}>Try again</Text>
+            <Text style={styles.buttonText}>{localizedText('Try again', 'Intentar de nuevo')}</Text>
           </TouchableOpacity>
         </View>
       </View>

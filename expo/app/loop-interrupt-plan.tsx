@@ -33,6 +33,8 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { useLoopInterruptPlans } from '@/hooks/useLoopInterruptPlans';
 import { useEmotionalLoops } from '@/hooks/useEmotionalLoops';
 import { generateDefaultPlan } from '@/services/patterns/loopInterruptService';
@@ -45,6 +47,7 @@ const STEP_ICONS: Record<string, typeof Timer> = {
 export default function LoopInterruptPlanScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  useLanguage();
   const { planId } = useLocalSearchParams<{ planId?: string }>();
   const { plans, savePlan, toggleFavorite, markHelpful, deletePlan } = useLoopInterruptPlans();
   const report = useEmotionalLoops();
@@ -162,7 +165,7 @@ export default function LoopInterruptPlanScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <Animated.View style={{ opacity: fadeAnim }}>
             <View style={styles.triggerSection}>
-              <Text style={styles.triggerLabel}>When I notice...</Text>
+              <Text style={styles.triggerLabel}>{localizedText('When I notice...', 'Cuando noto...')}</Text>
               {editingTrigger ? (
                 <View style={styles.triggerEditRow}>
                   <TextInput
@@ -170,7 +173,7 @@ export default function LoopInterruptPlanScreen() {
                     value={triggerText}
                     onChangeText={setTriggerText}
                     multiline
-                    placeholder="Describe what starts this loop..."
+                    placeholder={localizedText('Describe what starts this loop...', 'Describe qué inicia este ciclo...')}
                     placeholderTextColor={Colors.textMuted}
                     testID="trigger-input"
                   />
@@ -301,7 +304,7 @@ export default function LoopInterruptPlanScreen() {
               <View style={styles.emptyIconWrap}>
                 <Shield size={32} color={Colors.textMuted} />
               </View>
-              <Text style={styles.emptyTitle}>No interrupt plans yet</Text>
+              <Text style={styles.emptyTitle}>{localizedText('No interrupt plans yet', 'Aún no hay planes de interrupción')}</Text>
               <Text style={styles.emptyDesc}>
                 When you view a loop detail, you can create a personalized interrupt plan with steps to follow when that pattern starts.
               </Text>
@@ -310,7 +313,7 @@ export default function LoopInterruptPlanScreen() {
 
           {plans.length > 0 && (
             <>
-              <Text style={styles.listSectionTitle}>Your Plans</Text>
+              <Text style={styles.listSectionTitle}>{localizedText('Your Plans', 'Tus planes')}</Text>
               {plans.map(plan => (
                 <PlanListItem
                   key={plan.id}

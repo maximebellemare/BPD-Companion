@@ -12,6 +12,8 @@ import { useRouter } from 'expo-router';
 import { Users, Phone, MessageCircle, ChevronRight, Shield, Heart } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { useSupportContacts } from '@/hooks/useSupportContacts';
 import {
   RELATIONSHIP_TYPE_COLORS,
@@ -30,6 +32,7 @@ const TrustedSupportCard = React.memo(function TrustedSupportCard({
   maxContacts = 3,
 }: TrustedSupportCardProps) {
   const router = useRouter();
+  useLanguage();
   const { contacts, crisisModeContacts, hasContacts } = useSupportContacts();
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
@@ -72,12 +75,15 @@ const TrustedSupportCard = React.memo(function TrustedSupportCard({
   const handleText = useCallback((contact: TrustedContact) => {
     handleHaptic();
     const defaultMsg = encodeURIComponent(
-      "I'm having a difficult moment and could use some support.",
+      localizedText(
+        "I'm having a difficult moment and could use some support.",
+        'Estoy pasando por un momento difícil y me vendría bien un poco de apoyo.',
+      ),
     );
     if (contact.phone) {
       void Linking.openURL(`sms:${contact.phone}?body=${defaultMsg}`);
     } else if (contact.email) {
-      void Linking.openURL(`mailto:${contact.email}?subject=Reaching out&body=${defaultMsg}`);
+      void Linking.openURL(`mailto:${contact.email}?subject=${encodeURIComponent(localizedText('Reaching out', 'Necesito apoyo'))}&body=${defaultMsg}`);
     }
   }, [handleHaptic]);
 
@@ -98,8 +104,8 @@ const TrustedSupportCard = React.memo(function TrustedSupportCard({
           <Heart size={18} color={Colors.primary} />
         </View>
         <View style={styles.emptyContent}>
-          <Text style={styles.emptyTitle}>Trusted Support Network</Text>
-          <Text style={styles.emptyDesc}>Add people you trust for moments of distress</Text>
+          <Text style={styles.emptyTitle}>{localizedText('Trusted Support Network', 'Red de apoyo de confianza')}</Text>
+          <Text style={styles.emptyDesc}>{localizedText('Add people you trust for moments of distress', 'Agrega personas de confianza para momentos de malestar')}</Text>
         </View>
         <ChevronRight size={16} color={Colors.textMuted} />
       </TouchableOpacity>
@@ -128,11 +134,13 @@ const TrustedSupportCard = React.memo(function TrustedSupportCard({
         </View>
         <View style={styles.headerText}>
           <Text style={[styles.headerTitle, isCrisis && styles.headerTitleCrisis]}>
-            {isCrisis ? 'Reach out to someone you trust' : 'Trusted Support'}
+            {isCrisis
+              ? localizedText('Reach out to someone you trust', 'Contacta a alguien de confianza')
+              : localizedText('Trusted Support', 'Apoyo de confianza')}
           </Text>
           {isCrisis && (
             <Text style={styles.headerSubtitle}>
-              You don't have to go through this alone
+              {localizedText("You don't have to go through this alone", 'No tienes que atravesar esto solo/a')}
             </Text>
           )}
         </View>
@@ -180,7 +188,10 @@ const TrustedSupportCard = React.memo(function TrustedSupportCard({
 
       {displayContacts.length > maxContacts && (
         <Text style={styles.moreText}>
-          +{displayContacts.length - maxContacts} more contact{displayContacts.length - maxContacts !== 1 ? 's' : ''}
+          {localizedText(
+            `+${displayContacts.length - maxContacts} more contact${displayContacts.length - maxContacts !== 1 ? 's' : ''}`,
+            `+${displayContacts.length - maxContacts} contacto${displayContacts.length - maxContacts !== 1 ? 's' : ''} más`,
+          )}
         </Text>
       )}
 
@@ -190,7 +201,7 @@ const TrustedSupportCard = React.memo(function TrustedSupportCard({
           onPress={handleManage}
           activeOpacity={0.7}
         >
-          <Text style={styles.manageButtonText}>Manage Contacts</Text>
+          <Text style={styles.manageButtonText}>{localizedText('Manage Contacts', 'Gestionar contactos')}</Text>
           <ChevronRight size={14} color={Colors.primary} />
         </TouchableOpacity>
       )}

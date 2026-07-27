@@ -27,6 +27,8 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { RitualType, RitualCompletion } from '@/types/ritual';
 import { dailyRitualsRepository } from '@/services/repositories';
 import {
@@ -45,6 +47,7 @@ type ScreenMode = 'hub' | 'morning' | 'midday_breathe' | 'midday_ground' | 'even
 export default function DailyRitualsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  useLanguage();
   const queryClient = useQueryClient();
 
   const [mode, setMode] = useState<ScreenMode>('hub');
@@ -221,7 +224,9 @@ export default function DailyRitualsScreen() {
   });
 
   const getDayLabel = (dateStr: string): string => {
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const days = localizedText('en', 'es') === 'es'
+      ? ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab']
+      : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const d = new Date(dateStr + 'T12:00:00');
     return days[d.getDay()];
   };
@@ -229,8 +234,8 @@ export default function DailyRitualsScreen() {
   const renderHub = () => (
     <ScrollView contentContainerStyle={styles.hubContent} showsVerticalScrollIndicator={false}>
       <View style={styles.heroSection}>
-        <Text style={styles.heroTitle}>Daily Rituals</Text>
-        <Text style={styles.heroSubtitle}>Simple routines for emotional awareness</Text>
+        <Text style={styles.heroTitle}>{localizedText('Daily Rituals', 'Rituales diarios')}</Text>
+        <Text style={styles.heroSubtitle}>{localizedText('Simple routines for emotional awareness', 'Rutinas simples para la conciencia emocional')}</Text>
       </View>
 
       {streak.currentStreak > 0 && (
@@ -238,20 +243,20 @@ export default function DailyRitualsScreen() {
           <View style={styles.streakLeft}>
             <Flame size={22} color="#3B82F6" />
             <View>
-              <Text style={styles.streakCount}>{streak.currentStreak} day streak</Text>
+              <Text style={styles.streakCount}>{localizedText(`${streak.currentStreak} day streak`, `Racha de ${streak.currentStreak} dia${streak.currentStreak === 1 ? '' : 's'}`)}</Text>
               <Text style={styles.streakMsg}>{getRitualStreakMessage(streak)}</Text>
             </View>
           </View>
           {streak.longestStreak > streak.currentStreak && (
             <View style={styles.bestBadge}>
               <Award size={12} color={Colors.primary} />
-              <Text style={styles.bestText}>Best: {streak.longestStreak}</Text>
+              <Text style={styles.bestText}>{localizedText('Best:', 'Mejor:')} {streak.longestStreak}</Text>
             </View>
           )}
         </View>
       )}
 
-      <Text style={styles.sectionLabel}>TODAY'S RITUALS</Text>
+      <Text style={styles.sectionLabel}>{localizedText("TODAY'S RITUALS", 'RITUALES DE HOY')}</Text>
       <View style={styles.ritualsGrid}>
         {(['morning', 'midday', 'evening'] as RitualType[]).map((type) => {
           const config = RITUAL_CONFIG[type];
@@ -282,12 +287,12 @@ export default function DailyRitualsScreen() {
               </View>
               <Text style={[styles.ritualLabel, completed && { color: config.color }]}>{config.shortLabel}</Text>
               <Text style={styles.ritualDesc}>
-                {completed ? 'Complete' : config.description}
+                {completed ? localizedText('Complete', 'Completado') : config.description}
               </Text>
               {isCurrent && !completed && (
                 <View style={[styles.currentBadge, { backgroundColor: `${config.color}20` }]}>
                   <Clock size={10} color={config.color} />
-                  <Text style={[styles.currentBadgeText, { color: config.color }]}>Now</Text>
+                  <Text style={[styles.currentBadgeText, { color: config.color }]}>{localizedText('Now', 'Ahora')}</Text>
                 </View>
               )}
             </TouchableOpacity>
@@ -298,12 +303,12 @@ export default function DailyRitualsScreen() {
       {todayStatus.completedCount === 3 && (
         <View style={styles.allCompleteCard}>
           <Text style={styles.allCompleteEmoji}>✨</Text>
-          <Text style={styles.allCompleteTitle}>All rituals complete</Text>
-          <Text style={styles.allCompleteDesc}>You showed up for yourself in every part of today.</Text>
+          <Text style={styles.allCompleteTitle}>{localizedText('All rituals complete', 'Todos los rituales completados')}</Text>
+          <Text style={styles.allCompleteDesc}>{localizedText('You showed up for yourself in every part of today.', 'Estuviste presente para ti en cada parte del dia.')}</Text>
         </View>
       )}
 
-      <Text style={styles.sectionLabel}>THIS WEEK</Text>
+      <Text style={styles.sectionLabel}>{localizedText('THIS WEEK', 'ESTA SEMANA')}</Text>
       <View style={styles.weekGrid}>
         {weekData.map((day) => {
           const isToday = day.date === getTodayDateString();
@@ -325,7 +330,7 @@ export default function DailyRitualsScreen() {
         <View style={styles.completionRateCard}>
           <Calendar size={16} color={Colors.primary} />
           <Text style={styles.completionRateText}>
-            {streak.weeklyCompletionRate}% weekly completion
+            {localizedText(`${streak.weeklyCompletionRate}% weekly completion`, `${streak.weeklyCompletionRate}% de completado semanal`)}
           </Text>
           <View style={styles.completionBarBg}>
             <View style={[styles.completionBarFill, { width: `${streak.weeklyCompletionRate}%` }]} />
@@ -335,7 +340,7 @@ export default function DailyRitualsScreen() {
 
       {recentReflections.length > 0 && (
         <>
-          <Text style={styles.sectionLabel}>RECENT REFLECTIONS</Text>
+          <Text style={styles.sectionLabel}>{localizedText('RECENT REFLECTIONS', 'REFLEXIONES RECIENTES')}</Text>
           {recentReflections.map((ref) => (
             <View key={ref.id} style={styles.reflectionCard}>
               <View style={styles.reflectionHeader}>
@@ -348,19 +353,19 @@ export default function DailyRitualsScreen() {
               </View>
               {ref.intention && (
                 <View style={styles.reflectionRow}>
-                  <Text style={styles.reflectionLabel}>Intention</Text>
+                  <Text style={styles.reflectionLabel}>{localizedText('Intention', 'Intencion')}</Text>
                   <Text style={styles.reflectionValue}>{ref.intention}</Text>
                 </View>
               )}
               {ref.keyMoment && (
                 <View style={styles.reflectionRow}>
-                  <Text style={styles.reflectionLabel}>Key moment</Text>
+                  <Text style={styles.reflectionLabel}>{localizedText('Key moment', 'Momento clave')}</Text>
                   <Text style={styles.reflectionValue}>{ref.keyMoment}</Text>
                 </View>
               )}
               {ref.lessonLearned && (
                 <View style={styles.reflectionRow}>
-                  <Text style={styles.reflectionLabel}>Lesson</Text>
+                  <Text style={styles.reflectionLabel}>{localizedText('Lesson', 'Leccion')}</Text>
                   <Text style={styles.reflectionValue}>{ref.lessonLearned}</Text>
                 </View>
               )}
@@ -376,9 +381,9 @@ export default function DailyRitualsScreen() {
   const renderMorning = () => (
     <ScrollView contentContainerStyle={styles.ritualContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
       <Text style={styles.ritualTitle}>{RITUAL_CONFIG.morning.prompt}</Text>
-      <Text style={styles.ritualSubtitle}>Start your day with gentle awareness</Text>
+      <Text style={styles.ritualSubtitle}>{localizedText('Start your day with gentle awareness', 'Empieza tu dia con conciencia suave')}</Text>
 
-      <Text style={styles.fieldLabel}>How are you feeling?</Text>
+      <Text style={styles.fieldLabel}>{localizedText('How are you feeling?', '¿Como te sientes?')}</Text>
       <View style={styles.emotionGrid}>
         {RITUAL_CONFIG.morning.emotions.map(e => {
           const isSelected = selectedEmotion === e.id;
@@ -399,11 +404,11 @@ export default function DailyRitualsScreen() {
         })}
       </View>
 
-      <Text style={styles.fieldLabel}>Energy level</Text>
+      <Text style={styles.fieldLabel}>{localizedText('Energy level', 'Nivel de energia')}</Text>
       <View style={styles.energyContainer}>
         <Text style={styles.energyValue}>{energyLevel}</Text>
         <Text style={styles.energyDesc}>
-          {energyLevel <= 2 ? 'Very low' : energyLevel <= 4 ? 'Low' : energyLevel <= 6 ? 'Moderate' : energyLevel <= 8 ? 'Good' : 'High energy'}
+          {energyLevel <= 2 ? localizedText('Very low', 'Muy baja') : energyLevel <= 4 ? localizedText('Low', 'Baja') : energyLevel <= 6 ? localizedText('Moderate', 'Moderada') : energyLevel <= 8 ? localizedText('Good', 'Buena') : localizedText('High energy', 'Energia alta')}
         </Text>
         <View style={styles.energyDots}>
           {Array.from({ length: 10 }, (_, i) => (
@@ -427,10 +432,10 @@ export default function DailyRitualsScreen() {
         </View>
       </View>
 
-      <Text style={styles.fieldLabel}>Set an intention for today</Text>
+      <Text style={styles.fieldLabel}>{localizedText('Set an intention for today', 'Define una intencion para hoy')}</Text>
       <TextInput
         style={styles.textInputField}
-        placeholder="What do you want to carry into today?"
+        placeholder={localizedText('What do you want to carry into today?', '¿Qué quieres llevar contigo hoy?')}
         placeholderTextColor={Colors.textMuted}
         value={intention}
         onChangeText={setIntention}
@@ -455,20 +460,20 @@ export default function DailyRitualsScreen() {
 
   const renderMiddayBreathe = () => (
     <View style={styles.middayContainer}>
-      <Text style={styles.ritualTitle}>Take a moment to breathe</Text>
-      <Text style={styles.ritualSubtitle}>A gentle reset for the middle of your day</Text>
+      <Text style={styles.ritualTitle}>{localizedText('Take a moment to breathe', 'Toma un momento para respirar')}</Text>
+      <Text style={styles.ritualSubtitle}>{localizedText('A gentle reset for the middle of your day', 'Un reinicio suave a mitad del dia')}</Text>
 
       <View style={styles.breatheCircleWrap}>
         <Animated.View style={[styles.breatheCircle, { transform: [{ scale: breatheScale }], opacity: breatheOpacity }]}>
           <Wind size={36} color={Colors.white} />
         </Animated.View>
         <View style={styles.breatheLabelWrap}>
-          <Animated.Text style={[styles.breatheLabel, { opacity: breatheLabel }]}>Breathe in...</Animated.Text>
-          <Animated.Text style={[styles.breatheLabel, { opacity: exhaleLabel }]}>Breathe out...</Animated.Text>
+          <Animated.Text style={[styles.breatheLabel, { opacity: breatheLabel }]}>{localizedText('Breathe in...', 'Inhala...')}</Animated.Text>
+          <Animated.Text style={[styles.breatheLabel, { opacity: exhaleLabel }]}>{localizedText('Breathe out...', 'Exhala...')}</Animated.Text>
         </View>
       </View>
 
-      <Text style={styles.breatheCount}>{breathCount} breaths</Text>
+      <Text style={styles.breatheCount}>{localizedText(`${breathCount} breaths`, `${breathCount} respiracion${breathCount === 1 ? '' : 'es'}`)}</Text>
 
       <View style={styles.middayActions}>
         <TouchableOpacity
@@ -478,7 +483,7 @@ export default function DailyRitualsScreen() {
           disabled={breathCount < 1}
         >
           <Check size={20} color={Colors.white} />
-          <Text style={styles.middayFinishText}>I feel calmer</Text>
+          <Text style={styles.middayFinishText}>{localizedText('I feel calmer', 'Me siento mas tranquilo/a')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -487,7 +492,7 @@ export default function DailyRitualsScreen() {
           activeOpacity={0.7}
         >
           <Leaf size={16} color={Colors.primary} />
-          <Text style={styles.middaySwitchText}>Try grounding instead</Text>
+          <Text style={styles.middaySwitchText}>{localizedText('Try grounding instead', 'Probar grounding')}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -495,20 +500,20 @@ export default function DailyRitualsScreen() {
 
   const renderMiddayGround = () => (
     <View style={styles.middayContainer}>
-      <Text style={styles.ritualTitle}>Grounding exercise</Text>
-      <Text style={styles.ritualSubtitle}>Notice 5 things you can see, 4 you can touch, 3 you can hear, 2 you can smell, 1 you can taste</Text>
+      <Text style={styles.ritualTitle}>{localizedText('Grounding exercise', 'Ejercicio de grounding')}</Text>
+      <Text style={styles.ritualSubtitle}>{localizedText('Notice 5 things you can see, 4 you can touch, 3 you can hear, 2 you can smell, 1 you can taste', 'Nota 5 cosas que puedes ver, 4 que puedes tocar, 3 que puedes oir, 2 que puedes oler y 1 que puedes saborear')}</Text>
 
       <View style={styles.groundingSteps}>
         {[
-          { count: 5, sense: 'see', emoji: '👁️' },
-          { count: 4, sense: 'touch', emoji: '✋' },
-          { count: 3, sense: 'hear', emoji: '👂' },
-          { count: 2, sense: 'smell', emoji: '👃' },
-          { count: 1, sense: 'taste', emoji: '👅' },
+          { count: 5, sense: localizedText('see', 'ver'), emoji: '👁️' },
+          { count: 4, sense: localizedText('touch', 'tocar'), emoji: '✋' },
+          { count: 3, sense: localizedText('hear', 'oir'), emoji: '👂' },
+          { count: 2, sense: localizedText('smell', 'oler'), emoji: '👃' },
+          { count: 1, sense: localizedText('taste', 'saborear'), emoji: '👅' },
         ].map((step) => (
           <View key={step.sense} style={styles.groundingStep}>
             <Text style={styles.groundingEmoji}>{step.emoji}</Text>
-            <Text style={styles.groundingText}>{step.count} thing{step.count > 1 ? 's' : ''} you can {step.sense}</Text>
+            <Text style={styles.groundingText}>{localizedText(`${step.count} thing${step.count > 1 ? 's' : ''} you can ${step.sense}`, `${step.count} cosa${step.count > 1 ? 's' : ''} que puedes ${step.sense}`)}</Text>
           </View>
         ))}
       </View>
@@ -520,7 +525,7 @@ export default function DailyRitualsScreen() {
           activeOpacity={0.8}
         >
           <Check size={20} color={Colors.white} />
-          <Text style={styles.middayFinishText}>I feel more grounded</Text>
+          <Text style={styles.middayFinishText}>{localizedText('I feel more grounded', 'Me siento mas presente')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -529,7 +534,7 @@ export default function DailyRitualsScreen() {
           activeOpacity={0.7}
         >
           <Wind size={16} color={Colors.primary} />
-          <Text style={styles.middaySwitchText}>Try breathing instead</Text>
+          <Text style={styles.middaySwitchText}>{localizedText('Try breathing instead', 'Probar respiracion')}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -538,9 +543,9 @@ export default function DailyRitualsScreen() {
   const renderEvening = () => (
     <ScrollView contentContainerStyle={styles.ritualContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
       <Text style={styles.ritualTitle}>{RITUAL_CONFIG.evening.prompt}</Text>
-      <Text style={styles.ritualSubtitle}>Close the day with gentle reflection</Text>
+      <Text style={styles.ritualSubtitle}>{localizedText('Close the day with gentle reflection', 'Cierra el dia con una reflexion suave')}</Text>
 
-      <Text style={styles.fieldLabel}>How are you feeling now?</Text>
+      <Text style={styles.fieldLabel}>{localizedText('How are you feeling now?', '¿Como te sientes ahora?')}</Text>
       <View style={styles.emotionGrid}>
         {RITUAL_CONFIG.evening.emotions.map(e => {
           const isSelected = selectedEmotion === e.id;
@@ -561,10 +566,10 @@ export default function DailyRitualsScreen() {
         })}
       </View>
 
-      <Text style={styles.fieldLabel}>What stood out emotionally today?</Text>
+      <Text style={styles.fieldLabel}>{localizedText('What stood out emotionally today?', '¿Que destaco emocionalmente hoy?')}</Text>
       <TextInput
         style={[styles.textInputField, { minHeight: 80 }]}
-        placeholder="A moment, feeling, or interaction that stayed with you..."
+        placeholder={localizedText('A moment, feeling, or interaction that stayed with you...', 'Un momento, sentimiento o interacción que se quedó contigo...')}
         placeholderTextColor={Colors.textMuted}
         multiline
         value={keyMoment}
@@ -572,7 +577,7 @@ export default function DailyRitualsScreen() {
         textAlignVertical="top"
       />
 
-      <Text style={styles.fieldLabel}>What helped today?</Text>
+      <Text style={styles.fieldLabel}>{localizedText('What helped today?', '¿Que ayudo hoy?')}</Text>
       <View style={styles.copingGrid}>
         {COPING_TOOLS.map(tool => {
           const isSelected = selectedCoping.includes(tool.id);
@@ -595,10 +600,10 @@ export default function DailyRitualsScreen() {
         })}
       </View>
 
-      <Text style={styles.fieldLabel}>What did you learn about yourself?</Text>
+      <Text style={styles.fieldLabel}>{localizedText('What did you learn about yourself?', '¿Que aprendiste sobre ti?')}</Text>
       <TextInput
         style={styles.textInputField}
-        placeholder="Optional — a small takeaway from today"
+        placeholder={localizedText('Optional — a small takeaway from today', 'Opcional: un pequeño aprendizaje de hoy')}
         placeholderTextColor={Colors.textMuted}
         value={lessonLearned}
         onChangeText={setLessonLearned}
@@ -611,22 +616,22 @@ export default function DailyRitualsScreen() {
     return (
       <View style={styles.completeContainer}>
         <Text style={styles.completeEmoji}>{config.emoji}</Text>
-        <Text style={styles.completeTitle}>{config.shortLabel} ritual complete</Text>
-        <Text style={styles.completeSubtitle}>You showed up for yourself</Text>
+        <Text style={styles.completeTitle}>{localizedText(`${config.shortLabel} ritual complete`, `Ritual ${config.shortLabel} completado`)}</Text>
+        <Text style={styles.completeSubtitle}>{localizedText('You showed up for yourself', 'Estuviste presente para ti')}</Text>
 
         {streak.currentStreak > 0 && (
           <View style={styles.completeStreakBadge}>
             <Flame size={18} color="#3B82F6" />
-            <Text style={styles.completeStreakText}>{streak.currentStreak + 1} day streak</Text>
+            <Text style={styles.completeStreakText}>{localizedText(`${streak.currentStreak + 1} day streak`, `Racha de ${streak.currentStreak + 1} dia${streak.currentStreak + 1 === 1 ? '' : 's'}`)}</Text>
           </View>
         )}
 
         <TouchableOpacity style={styles.completeBackBtn} onPress={resetAndGoHub} activeOpacity={0.8}>
-          <Text style={styles.completeBackText}>Back to rituals</Text>
+          <Text style={styles.completeBackText}>{localizedText('Back to rituals', 'Volver a rituales')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.completeDoneBtn} onPress={() => router.back()} activeOpacity={0.7}>
-          <Text style={styles.completeDoneText}>Done</Text>
+          <Text style={styles.completeDoneText}>{localizedText('Done', 'Listo')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -635,9 +640,9 @@ export default function DailyRitualsScreen() {
   const getFooterAction = (): { label: string; onPress: () => void; disabled: boolean } | null => {
     switch (mode) {
       case 'morning':
-        return { label: 'Complete Morning Check-In', onPress: completeMorning, disabled: !selectedEmotion };
+        return { label: localizedText('Complete Morning Check-In', 'Completar check-in de la manana'), onPress: completeMorning, disabled: !selectedEmotion };
       case 'evening':
-        return { label: 'Complete Evening Reflection', onPress: completeEvening, disabled: false };
+        return { label: localizedText('Complete Evening Reflection', 'Completar reflexion de la noche'), onPress: completeEvening, disabled: false };
       default:
         return null;
     }
@@ -663,7 +668,7 @@ export default function DailyRitualsScreen() {
           <X size={22} color={Colors.textSecondary} />
         </TouchableOpacity>
         <Text style={styles.topBarTitle}>
-          {mode === 'hub' ? 'Daily Rituals' : mode === 'complete' ? '' : RITUAL_CONFIG[mode === 'midday_breathe' || mode === 'midday_ground' ? 'midday' : mode].label}
+          {mode === 'hub' ? localizedText('Daily Rituals', 'Rituales diarios') : mode === 'complete' ? '' : RITUAL_CONFIG[mode === 'midday_breathe' || mode === 'midday_ground' ? 'midday' : mode].label}
         </Text>
         <View style={{ width: 36 }} />
       </View>

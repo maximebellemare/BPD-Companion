@@ -28,6 +28,8 @@ import {
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { EMOTIONS, URGES } from '@/constants/data';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -76,6 +78,7 @@ const EMOTION_SUBSET = EMOTIONS.slice(0, 8);
 const URGE_SUBSET = URGES.slice(0, 8);
 
 export default function GuidedRegulationScreen() {
+  useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
@@ -319,8 +322,8 @@ export default function GuidedRegulationScreen() {
       </View>
       <Text style={styles.breatheCountText}>
         {breathCount < 3
-          ? `Breath ${breathCount + 1} of 3`
-          : 'Great. You can continue or keep breathing.'}
+          ? localizedText(`Breath ${breathCount + 1} of 3`, `Respiración ${breathCount + 1} de 3`)
+          : localizedText('Great. You can continue or keep breathing.', 'Bien. Puedes continuar o seguir respirando.')}
       </Text>
       {canProceedBreathing && (
         <TouchableOpacity
@@ -329,7 +332,7 @@ export default function GuidedRegulationScreen() {
           activeOpacity={0.8}
           testID="breathing-continue"
         >
-          <Text style={styles.continueText}>I'm ready to continue</Text>
+          <Text style={styles.continueText}>{localizedText("I'm ready to continue", 'Estoy listo/a para continuar')}</Text>
           <ArrowRight size={18} color={Colors.white} />
         </TouchableOpacity>
       )}
@@ -347,11 +350,11 @@ export default function GuidedRegulationScreen() {
             {prompt.count}
           </Text>
           <Text style={styles.groundingSense}>
-            things you can {prompt.sense}
+            {localizedText('things you can', 'cosas que puedes')} {prompt.sense}
           </Text>
         </Animated.View>
         <Text style={styles.groundingHint}>
-          Take your time. Notice each one slowly.
+          {localizedText('Take your time. Notice each one slowly.', 'Tómate tu tiempo. Nota cada una lentamente.')}
         </Text>
         <View style={styles.groundingDots}>
           {GROUNDING_PROMPTS.map((_, i) => (
@@ -371,7 +374,7 @@ export default function GuidedRegulationScreen() {
           testID="grounding-next"
         >
           <Text style={styles.continueText}>
-            {canProceedGrounding ? 'Continue' : 'Next sense'}
+            {canProceedGrounding ? localizedText('Continue', 'Continuar') : localizedText('Next sense', 'Siguiente sentido')}
           </Text>
           <ArrowRight size={18} color={Colors.white} />
         </TouchableOpacity>
@@ -406,8 +409,8 @@ export default function GuidedRegulationScreen() {
       </View>
       <Text style={styles.selectionHint}>
         {selectedEmotions.length === 0
-          ? 'Select what fits. No pressure.'
-          : `${selectedEmotions.length} selected — naming helps regulate.`}
+          ? localizedText('Select what fits. No pressure.', 'Elige lo que encaje. Sin presión.')
+          : localizedText(`${selectedEmotions.length} selected — naming helps regulate.`, `${selectedEmotions.length} seleccionado(s): nombrarlo ayuda a regular.`)}
       </Text>
       <TouchableOpacity
         style={styles.continueButton}
@@ -416,7 +419,7 @@ export default function GuidedRegulationScreen() {
         testID="emotions-continue"
       >
         <Text style={styles.continueText}>
-          {selectedEmotions.length === 0 ? 'Skip' : 'Continue'}
+          {selectedEmotions.length === 0 ? localizedText('Skip', 'Omitir') : localizedText('Continue', 'Continuar')}
         </Text>
         <ArrowRight size={18} color={Colors.white} />
       </TouchableOpacity>
@@ -455,7 +458,7 @@ export default function GuidedRegulationScreen() {
         })}
       </View>
       <Text style={styles.selectionHint}>
-        Urges are normal. Noticing them gives you a choice.
+        {localizedText('Urges are normal. Noticing them gives you a choice.', 'Los impulsos son normales. Notarlos te devuelve opciones.')}
       </Text>
       <TouchableOpacity
         style={styles.continueButton}
@@ -464,7 +467,7 @@ export default function GuidedRegulationScreen() {
         testID="urges-continue"
       >
         <Text style={styles.continueText}>
-          {selectedUrges.length === 0 ? 'Skip' : 'Continue'}
+          {selectedUrges.length === 0 ? localizedText('Skip', 'Omitir') : localizedText('Continue', 'Continuar')}
         </Text>
         <ArrowRight size={18} color={Colors.white} />
       </TouchableOpacity>
@@ -476,32 +479,32 @@ export default function GuidedRegulationScreen() {
       {
         id: 'message-pause',
         icon: MessageCircle,
-        label: 'Wait before messaging',
-        desc: 'Give yourself space first',
+        label: localizedText('Wait before messaging', 'Esperar antes de escribir'),
+        desc: localizedText('Give yourself space first', 'Date espacio primero'),
         color: '#14B8A6',
         bg: '#D9E2EC',
       },
       {
         id: 'journal',
         icon: BookOpen,
-        label: 'Write in journal',
-        desc: 'Put thoughts into words',
+        label: localizedText('Write in journal', 'Escribir en el diario'),
+        desc: localizedText('Put thoughts into words', 'Poner tus pensamientos en palabras'),
         color: Colors.accent,
         bg: Colors.accentLight,
       },
       {
         id: 'companion',
         icon: Bot,
-        label: 'Talk to AI Companion',
-        desc: 'Process with support',
+        label: localizedText('Talk to AI Companion', 'Hablar con Companion IA'),
+        desc: localizedText('Process with support', 'Procesarlo con apoyo'),
         color: '#3B82F6',
         bg: '#FFFFFF',
       },
       {
         id: 'exercise',
         icon: Activity,
-        label: 'Another coping exercise',
-        desc: 'Keep building calm',
+        label: localizedText('Another coping exercise', 'Otro ejercicio de afrontamiento'),
+        desc: localizedText('Keep building calm', 'Seguir construyendo calma'),
         color: Colors.primary,
         bg: Colors.primaryLight,
       },
@@ -510,7 +513,7 @@ export default function GuidedRegulationScreen() {
     return (
       <View style={styles.stepContent}>
         <Text style={styles.nextIntro}>
-          You've slowed down. That takes real strength.
+          {localizedText("You've slowed down. That takes real strength.", 'Lograste bajar el ritmo. Eso requiere mucha fuerza.')}
         </Text>
         <View style={styles.actionsList}>
           {actions.map(action => {
@@ -541,7 +544,7 @@ export default function GuidedRegulationScreen() {
           activeOpacity={0.7}
           testID="done-button"
         >
-          <Text style={styles.doneText}>I'm feeling better now</Text>
+          <Text style={styles.doneText}>{localizedText("I'm feeling better now", 'Ahora me siento mejor')}</Text>
         </TouchableOpacity>
       </View>
     );

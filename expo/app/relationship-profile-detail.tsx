@@ -28,12 +28,15 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { useRelationshipDetail } from '@/hooks/useRelationships';
 import { RELATIONSHIP_TYPE_META } from '@/types/relationship';
 
 export default function RelationshipProfileDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  useLanguage();
   const { id } = useLocalSearchParams<{ id: string }>();
   const {
     profile,
@@ -69,12 +72,15 @@ export default function RelationshipProfileDetailScreen() {
   const handleDelete = useCallback(() => {
     if (!profile) return;
     Alert.alert(
-      'Remove Profile',
-      `Remove ${profile.name}? This won't delete check-in or journal data.`,
+      localizedText('Remove Profile', 'Eliminar perfil'),
+      localizedText(
+        `Remove ${profile.name}? This won't delete check-in or journal data.`,
+        `¿Eliminar a ${profile.name}? Esto no eliminará datos de check-ins ni diarios.`,
+      ),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: localizedText('Cancel', 'Cancelar'), style: 'cancel' },
         {
-          text: 'Remove',
+          text: localizedText('Remove', 'Eliminar'),
           style: 'destructive',
           onPress: () => {
             deleteProfile();
@@ -137,7 +143,9 @@ export default function RelationshipProfileDetailScreen() {
           </TouchableOpacity>
         </View>
         <View style={styles.loadingWrap}>
-          <Text style={styles.loadingText}>{isLoading ? 'Loading...' : 'Profile not found'}</Text>
+          <Text style={styles.loadingText}>
+            {isLoading ? localizedText('Loading...', 'Cargando...') : localizedText('Profile not found', 'No se encontró el perfil')}
+          </Text>
         </View>
       </View>
     );
@@ -195,19 +203,19 @@ export default function RelationshipProfileDetailScreen() {
               <View style={styles.heroStats}>
                 {topEmotion && (
                   <View style={styles.heroStat}>
-                    <Text style={styles.heroStatLabel}>Top emotion</Text>
+                    <Text style={styles.heroStatLabel}>{localizedText('Top emotion', 'Emoción principal')}</Text>
                     <Text style={[styles.heroStatValue, { color: meta.color }]}>{topEmotion}</Text>
                   </View>
                 )}
                 {topTrigger && (
                   <View style={styles.heroStat}>
-                    <Text style={styles.heroStatLabel}>Top trigger</Text>
+                    <Text style={styles.heroStatLabel}>{localizedText('Top trigger', 'Detonante principal')}</Text>
                     <Text style={[styles.heroStatValue, { color: meta.color }]}>{topTrigger}</Text>
                   </View>
                 )}
                 {distressAvg > 0 && (
                   <View style={styles.heroStat}>
-                    <Text style={styles.heroStatLabel}>Avg distress</Text>
+                    <Text style={styles.heroStatLabel}>{localizedText('Avg distress', 'Angustia prom.')}</Text>
                     <Text style={[styles.heroStatValue, { color: distressAvg >= 6 ? '#3B82F6' : meta.color }]}>
                       {distressAvg.toFixed(1)}/10
                     </Text>
@@ -223,17 +231,17 @@ export default function RelationshipProfileDetailScreen() {
               testID="open-copilot-from-profile"
             >
               <Heart size={16} color={Colors.white} />
-              <Text style={styles.copilotButtonText}>Open Relationship Copilot</Text>
+              <Text style={styles.copilotButtonText}>{localizedText('Open Relationship Copilot', 'Abrir Copilot de relaciones')}</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Edit3 size={16} color={Colors.textMuted} />
-              <Text style={styles.sectionTitle}>Notes</Text>
+              <Text style={styles.sectionTitle}>{localizedText('Notes', 'Notas')}</Text>
               {!editingNotes && (
                 <TouchableOpacity onPress={() => setEditingNotes(true)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                  <Text style={styles.editLink}>Edit</Text>
+                  <Text style={styles.editLink}>{localizedText('Edit', 'Editar')}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -243,7 +251,10 @@ export default function RelationshipProfileDetailScreen() {
                   style={styles.notesInput}
                   value={notes}
                   onChangeText={setNotes}
-                  placeholder="What helps, what makes things hard, common patterns..."
+                  placeholder={localizedText(
+                    'What helps, what makes things hard, common patterns...',
+                    'Lo que ayuda, lo que lo hace difícil, patrones comunes...',
+                  )}
                   placeholderTextColor={Colors.textMuted}
                   multiline
                   textAlignVertical="top"
@@ -251,17 +262,17 @@ export default function RelationshipProfileDetailScreen() {
                 />
                 <View style={styles.notesActions}>
                   <TouchableOpacity style={styles.notesCancelBtn} onPress={() => { setEditingNotes(false); setNotes(profile.notes); }}>
-                    <Text style={styles.notesCancelText}>Cancel</Text>
+                    <Text style={styles.notesCancelText}>{localizedText('Cancel', 'Cancelar')}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.notesSaveBtn} onPress={handleSaveNotes}>
                     <Check size={14} color={Colors.white} />
-                    <Text style={styles.notesSaveText}>Save</Text>
+                    <Text style={styles.notesSaveText}>{localizedText('Save', 'Guardar')}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
             ) : (
               <Text style={styles.notesText}>
-                {profile.notes || 'No notes yet. Tap Edit to add context about this relationship.'}
+                {profile.notes || localizedText('No notes yet. Tap Edit to add context about this relationship.', 'Aún no hay notas. Toca Editar para agregar contexto sobre esta relación.')}
               </Text>
             )}
           </View>
@@ -269,7 +280,7 @@ export default function RelationshipProfileDetailScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Zap size={16} color={Colors.textMuted} />
-              <Text style={styles.sectionTitle}>Known Triggers</Text>
+              <Text style={styles.sectionTitle}>{localizedText('Known Triggers', 'Detonantes conocidos')}</Text>
               <TouchableOpacity onPress={() => setShowAddTrigger(!showAddTrigger)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                 <Plus size={18} color={Colors.primary} />
               </TouchableOpacity>
@@ -280,7 +291,7 @@ export default function RelationshipProfileDetailScreen() {
                   style={styles.addInput}
                   value={newTrigger}
                   onChangeText={setNewTrigger}
-                  placeholder="e.g. delayed replies, mixed signals"
+                  placeholder={localizedText('e.g. delayed replies, mixed signals', 'p. ej., respuestas tardías, señales confusas')}
                   placeholderTextColor={Colors.textMuted}
                   onSubmitEditing={handleAddTrigger}
                   testID="add-trigger-input"
@@ -291,7 +302,7 @@ export default function RelationshipProfileDetailScreen() {
               </View>
             )}
             {profile.emotionalTriggers.length === 0 && !showAddTrigger && (
-              <Text style={styles.emptyListText}>No triggers recorded yet</Text>
+              <Text style={styles.emptyListText}>{localizedText('No triggers recorded yet', 'Aún no hay detonantes registrados')}</Text>
             )}
             <View style={styles.chipGrid}>
               {profile.emotionalTriggers.map((trigger, i) => (
@@ -311,7 +322,7 @@ export default function RelationshipProfileDetailScreen() {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Shield size={16} color={Colors.textMuted} />
-                <Text style={styles.sectionTitle}>What Seems to Help</Text>
+                <Text style={styles.sectionTitle}>{localizedText('What Seems to Help', 'Lo que parece ayudar')}</Text>
               </View>
               <View style={styles.chipGrid}>
                 {helpfulTools.map((tool, i) => (
@@ -326,7 +337,7 @@ export default function RelationshipProfileDetailScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Heart size={16} color={Colors.textMuted} />
-              <Text style={styles.sectionTitle}>Positive Moments</Text>
+              <Text style={styles.sectionTitle}>{localizedText('Positive Moments', 'Momentos positivos')}</Text>
               <TouchableOpacity onPress={() => setShowAddPositive(!showAddPositive)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                 <Plus size={18} color={Colors.primary} />
               </TouchableOpacity>
@@ -337,7 +348,7 @@ export default function RelationshipProfileDetailScreen() {
                   style={styles.addInput}
                   value={newPositive}
                   onChangeText={setNewPositive}
-                  placeholder="e.g. they checked in on me, we laughed together"
+                  placeholder={localizedText('e.g. they checked in on me, we laughed together', 'p. ej., me preguntó cómo estaba, nos reímos juntas/os')}
                   placeholderTextColor={Colors.textMuted}
                   onSubmitEditing={handleAddPositive}
                   testID="add-positive-input"
@@ -348,7 +359,12 @@ export default function RelationshipProfileDetailScreen() {
               </View>
             )}
             {profile.positiveInteractions.length === 0 && !showAddPositive && (
-              <Text style={styles.emptyListText}>Recording positive moments can help balance your perspective during hard times.</Text>
+              <Text style={styles.emptyListText}>
+                {localizedText(
+                  'Recording positive moments can help balance your perspective during hard times.',
+                  'Registrar momentos positivos puede ayudarte a equilibrar tu perspectiva en momentos difíciles.',
+                )}
+              </Text>
             )}
             <View style={styles.chipGrid}>
               {profile.positiveInteractions.map((item, i) => (
@@ -363,7 +379,7 @@ export default function RelationshipProfileDetailScreen() {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Sparkles size={16} color={Colors.textMuted} />
-                <Text style={styles.sectionTitle}>Pattern Insights</Text>
+                <Text style={styles.sectionTitle}>{localizedText('Pattern Insights', 'Insights de patrones')}</Text>
               </View>
               {insights.slice(0, 5).map(insight => (
                 <View key={insight.id} style={styles.insightCard}>
@@ -381,7 +397,7 @@ export default function RelationshipProfileDetailScreen() {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Activity size={16} color={Colors.textMuted} />
-                <Text style={styles.sectionTitle}>What May Help</Text>
+                <Text style={styles.sectionTitle}>{localizedText('What May Help', 'Lo que podría ayudar')}</Text>
               </View>
               {interventions.slice(0, 4).map(intv => (
                 <TouchableOpacity
@@ -412,7 +428,7 @@ export default function RelationshipProfileDetailScreen() {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <TrendingUp size={16} color={Colors.textMuted} />
-                <Text style={styles.sectionTitle}>Recent Activity</Text>
+                <Text style={styles.sectionTitle}>{localizedText('Recent Activity', 'Actividad reciente')}</Text>
               </View>
               {recentEvents.map(event => (
                 <View key={event.id} style={styles.eventRow}>

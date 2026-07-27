@@ -39,28 +39,31 @@ import { buildCrossLoopContext } from '@/services/crossLoop/crossLoopBridgeServi
 import { useQuery } from '@tanstack/react-query';
 import { getEnhancedOutcomes } from '@/services/messages/enhancedOutcomeService';
 import { trackEvent } from '@/services/analytics/analyticsService';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedField, localizedText } from '@/lib/i18n/staticText';
 
-function formatDate(ts: number): string {
+function formatDate(ts: number, language: string): string {
   const d = new Date(ts);
   const now = new Date();
   const diffMs = now.getTime() - d.getTime();
   const diffHours = diffMs / (1000 * 60 * 60);
 
-  if (diffHours < 1) return 'Just now';
-  if (diffHours < 24) return `${Math.floor(diffHours)}h ago`;
-  if (diffHours < 48) return 'Yesterday';
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  if (diffHours < 1) return localizedText('Just now', 'Ahora mismo');
+  if (diffHours < 24) return localizedText(`${Math.floor(diffHours)}h ago`, `hace ${Math.floor(diffHours)} h`);
+  if (diffHours < 48) return localizedText('Yesterday', 'Ayer');
+  return d.toLocaleDateString(language === 'es' ? 'es' : 'en-US', { month: 'short', day: 'numeric' });
 }
 
-function formatTime(ts: number): string {
-  return new Date(ts).toLocaleTimeString('en-US', {
+function formatTime(ts: number, language: string): string {
+  return new Date(ts).toLocaleTimeString(language === 'es' ? 'es' : 'en-US', {
     hour: 'numeric',
     minute: '2-digit',
-    hour12: true,
+    hour12: language !== 'es',
   });
 }
 
 function CheckInEntryCard({ entry }: { entry: JournalEntry }) {
+  const { language } = useLanguage();
   const [expanded, setExpanded] = useState<boolean>(false);
   const intensityColor =
     entry.checkIn.intensityLevel <= 3 ? Colors.success
@@ -75,13 +78,13 @@ function CheckInEntryCard({ entry }: { entry: JournalEntry }) {
             <Text style={styles.intensityBadgeText}>{entry.checkIn.intensityLevel}</Text>
           </View>
           <View>
-            <Text style={styles.entryTime}>{formatDate(entry.timestamp)}</Text>
-            <Text style={styles.entryTimeDetail}>{formatTime(entry.timestamp)}</Text>
+            <Text style={styles.entryTime}>{formatDate(entry.timestamp, language)}</Text>
+            <Text style={styles.entryTimeDetail}>{formatTime(entry.timestamp, language)}</Text>
           </View>
         </View>
         <View style={styles.entryRight}>
           <View style={styles.checkInBadge}>
-            <Text style={styles.checkInBadgeText}>Check-in</Text>
+            <Text style={styles.checkInBadgeText}>{localizedText('Check-in', 'Check-in')}</Text>
           </View>
           {expanded ? <ChevronUp size={18} color={Colors.textMuted} /> : <ChevronDown size={18} color={Colors.textMuted} />}
         </View>
@@ -101,19 +104,19 @@ function CheckInEntryCard({ entry }: { entry: JournalEntry }) {
         <View style={styles.entryDetails}>
           {entry.checkIn.triggers.length > 0 && (
             <View style={styles.detailSection}>
-              <Text style={styles.detailLabel}>Triggers</Text>
+              <Text style={styles.detailLabel}>{localizedText('Triggers', 'Detonantes')}</Text>
               <Text style={styles.detailText}>{entry.checkIn.triggers.map(t => t.label).join(', ')}</Text>
             </View>
           )}
           {entry.checkIn.urges.length > 0 && (
             <View style={styles.detailSection}>
-              <Text style={styles.detailLabel}>Urges</Text>
+              <Text style={styles.detailLabel}>{localizedText('Urges', 'Impulsos')}</Text>
               <Text style={styles.detailText}>{entry.checkIn.urges.map(u => u.label).join(', ')}</Text>
             </View>
           )}
           {entry.checkIn.notes ? (
             <View style={styles.detailSection}>
-              <Text style={styles.detailLabel}>Notes</Text>
+              <Text style={styles.detailLabel}>{localizedText('Notes', 'Notas')}</Text>
               <Text style={styles.detailText}>{entry.checkIn.notes}</Text>
             </View>
           ) : null}
@@ -130,6 +133,7 @@ const SmartEntryCard = React.memo(function SmartEntryCard({
   entry: SmartJournalEntry;
   onPress: (id: string) => void;
 }) {
+  const { language } = useLanguage();
   const config = FORMAT_CONFIG[entry.format];
   const distressColor = entry.distressLevel <= 3 ? Colors.success : entry.distressLevel <= 6 ? Colors.accent : Colors.danger;
 
@@ -142,7 +146,7 @@ const SmartEntryCard = React.memo(function SmartEntryCard({
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.smartEntryTitle} numberOfLines={1}>{entry.title || config.label}</Text>
-            <Text style={styles.smartEntryTime}>{formatDate(entry.timestamp)}</Text>
+            <Text style={styles.smartEntryTime}>{formatDate(entry.timestamp, language)}</Text>
           </View>
         </View>
         <View style={styles.smartEntryMeta}>
@@ -169,27 +173,28 @@ const SmartEntryCard = React.memo(function SmartEntryCard({
 });
 
 const WRITE_FORMATS: { format: JournalEntryFormat; emoji: string; label: string }[] = [
-  { format: 'free_writing', emoji: '✍️', label: 'Free Write' },
-  { format: 'emotional_event', emoji: '🌊', label: 'Emotional Event' },
-  { format: 'relationship_conflict', emoji: '💬', label: 'Conflict' },
-  { format: 'letter_not_sent', emoji: '📨', label: 'Letter Not Sent' },
-  { format: 'letter_to_future_self', emoji: '🕊️', label: 'Future Self' },
-  { format: 'gratitude', emoji: '🙏', label: 'Gratitude' },
-  { format: 'breakthrough_insight', emoji: '💡', label: 'Breakthrough' },
+  localizedField({ format: 'free_writing', emoji: '✍️', label: 'Free Write' }, 'label', 'Free Write', 'Escritura libre'),
+  localizedField({ format: 'emotional_event', emoji: '🌊', label: 'Emotional Event' }, 'label', 'Emotional Event', 'Evento emocional'),
+  localizedField({ format: 'relationship_conflict', emoji: '💬', label: 'Conflict' }, 'label', 'Conflict', 'Conflicto'),
+  localizedField({ format: 'letter_not_sent', emoji: '📨', label: 'Letter Not Sent' }, 'label', 'Letter Not Sent', 'Carta no enviada'),
+  localizedField({ format: 'letter_to_future_self', emoji: '🕊️', label: 'Future Self' }, 'label', 'Future Self', 'Yo futuro'),
+  localizedField({ format: 'gratitude', emoji: '🙏', label: 'Gratitude' }, 'label', 'Gratitude', 'Gratitud'),
+  localizedField({ format: 'breakthrough_insight', emoji: '💡', label: 'Breakthrough' }, 'label', 'Breakthrough', 'Descubrimiento'),
 ];
 
 const AI_MODES: { mode: AIJournalMode; emoji: string; label: string }[] = [
-  { mode: 'free_reflection', emoji: '🪞', label: 'Free Reflection' },
-  { mode: 'emotional_event', emoji: '🌊', label: 'Process Event' },
-  { mode: 'relationship_conflict', emoji: '💬', label: 'Relationship' },
-  { mode: 'shame_recovery', emoji: '🫂', label: 'Shame Recovery' },
-  { mode: 'therapy_prep', emoji: '📋', label: 'Therapy Prep' },
-  { mode: 'breakthrough', emoji: '💡', label: 'Insight' },
+  localizedField({ mode: 'free_reflection', emoji: '🪞', label: 'Free Reflection' }, 'label', 'Free Reflection', 'Reflexión libre'),
+  localizedField({ mode: 'emotional_event', emoji: '🌊', label: 'Process Event' }, 'label', 'Process Event', 'Procesar evento'),
+  localizedField({ mode: 'relationship_conflict', emoji: '💬', label: 'Relationship' }, 'label', 'Relationship', 'Relación'),
+  localizedField({ mode: 'shame_recovery', emoji: '🫂', label: 'Shame Recovery' }, 'label', 'Shame Recovery', 'Recuperar de la vergüenza'),
+  localizedField({ mode: 'therapy_prep', emoji: '📋', label: 'Therapy Prep' }, 'label', 'Therapy Prep', 'Preparar terapia'),
+  localizedField({ mode: 'breakthrough', emoji: '💡', label: 'Insight' }, 'label', 'Insight', 'Insight'),
 ];
 
 export default function JournalScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  useLanguage();
   const { journalEntries } = useApp();
   const {
     smartEntries,
@@ -267,8 +272,8 @@ export default function JournalScreen() {
       <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
         <View style={styles.header}>
           <View>
-            <Text style={styles.title}>Journal</Text>
-            <Text style={styles.subtitle}>Your private reflection space</Text>
+            <Text style={styles.title}>{localizedText('Journal', 'Diario')}</Text>
+            <Text style={styles.subtitle}>{localizedText('Your private reflection space', 'Tu espacio privado para reflexionar')}</Text>
           </View>
           <View style={styles.headerActions}>
             <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/journal/timeline')}>
@@ -307,12 +312,14 @@ export default function JournalScreen() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.dailyCardTitle}>
-                    {isMorningTime && !todayReflections.morning ? 'Morning Check-In' : 'Evening Reflection'}
+                    {isMorningTime && !todayReflections.morning
+                      ? localizedText('Morning Check-In', 'Check-in de la mañana')
+                      : localizedText('Evening Reflection', 'Reflexión de la noche')}
                   </Text>
                   <Text style={styles.dailyCardDesc}>
                     {isMorningTime && !todayReflections.morning
-                      ? 'Set your emotional intention for today'
-                      : 'Reflect on what stood out emotionally'}
+                      ? localizedText('Set your emotional intention for today', 'Define tu intención emocional para hoy')
+                      : localizedText('Reflect on what stood out emotionally', 'Reflexiona sobre lo que destacó emocionalmente')}
                   </Text>
                 </View>
                 <ChevronRight size={20} color={Colors.textMuted} />
@@ -321,7 +328,7 @@ export default function JournalScreen() {
                 <View style={styles.streakRow}>
                   <Flame size={13} color="#67E8F9" />
                   <Text style={styles.streakText}>
-                    {reflectionStreak.currentStreak} day streak
+                    {localizedText(`${reflectionStreak.currentStreak} day streak`, `racha de ${reflectionStreak.currentStreak} días`)}
                   </Text>
                 </View>
               )}
@@ -334,8 +341,10 @@ export default function JournalScreen() {
                     <Flame size={16} color="#67E8F9" />
                   </View>
                   <Text style={styles.dailyCompletedText}>
-                    Today's reflections complete
-                    {reflectionStreak.currentStreak > 1 ? ` · ${reflectionStreak.currentStreak} day streak` : ''}
+                    {localizedText("Today's reflections complete", 'Reflexiones de hoy completas')}
+                    {reflectionStreak.currentStreak > 1
+                      ? localizedText(` · ${reflectionStreak.currentStreak} day streak`, ` · racha de ${reflectionStreak.currentStreak} días`)
+                      : ''}
                   </Text>
                 </View>
               </View>
@@ -346,17 +355,17 @@ export default function JournalScreen() {
             <View style={styles.statsBar}>
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>{reflectionStreak.currentStreak || stats.streakDays}</Text>
-                <Text style={styles.statLabel}>streak</Text>
+                <Text style={styles.statLabel}>{localizedText('streak', 'racha')}</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>{stats.thisWeekEntries}</Text>
-                <Text style={styles.statLabel}>this week</Text>
+                <Text style={styles.statLabel}>{localizedText('this week', 'esta semana')}</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>{stats.totalEntries + journalEntries.length}</Text>
-                <Text style={styles.statLabel}>total</Text>
+                <Text style={styles.statLabel}>{localizedText('total', 'total')}</Text>
               </View>
             </View>
           )}
@@ -372,14 +381,17 @@ export default function JournalScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <View style={styles.aiTherapistTitleRow}>
-                  <Text style={styles.aiTherapistTitle}>AI Journal Guide</Text>
+                  <Text style={styles.aiTherapistTitle}>{localizedText('AI Journal Guide', 'Guía de diario con IA')}</Text>
                   <View style={styles.premiumBadge}>
                     <Sparkles size={10} color={Colors.brandLilac} />
-                    <Text style={styles.premiumBadgeText}>Membership</Text>
+                    <Text style={styles.premiumBadgeText}>{localizedText('Membership', 'Membresía')}</Text>
                   </View>
                 </View>
                 <Text style={styles.aiTherapistDesc}>
-                  Write with AI-guided reflection — like therapy for your thoughts
+                  {localizedText(
+                    'Write with AI-guided reflection — like therapy for your thoughts',
+                    'Escribe con reflexión guiada por IA: como terapia para tus pensamientos',
+                  )}
                 </Text>
               </View>
             </View>
@@ -443,7 +455,7 @@ export default function JournalScreen() {
             <View style={styles.predictionsSection}>
               <View style={styles.sectionTitleRow}>
                 <AlertTriangle size={15} color={Colors.accent} />
-                <Text style={styles.sectionTitle}>Pattern Insight</Text>
+                <Text style={styles.sectionTitle}>{localizedText('Pattern Insight', 'Insight de patrones')}</Text>
               </View>
               {predictions.slice(0, 2).map(prediction => (
                 <TouchableOpacity
@@ -477,18 +489,18 @@ export default function JournalScreen() {
             >
               <View style={styles.weeklyHeader}>
                 <BookOpen size={16} color={Colors.brandTeal} />
-                <Text style={styles.weeklyTitle}>Weekly Reflection</Text>
+                <Text style={styles.weeklyTitle}>{localizedText('Weekly Reflection', 'Reflexión semanal')}</Text>
               </View>
               <Text style={styles.weeklyPreview} numberOfLines={2}>
                 {weeklyReport.reflectionLetter}
               </Text>
-              <Text style={styles.weeklyLink}>Read full report →</Text>
+              <Text style={styles.weeklyLink}>{localizedText('Read full report →', 'Leer reporte completo →')}</Text>
             </TouchableOpacity>
           )}
 
           {showWriteOptions && (
             <View style={styles.writeOptionsCard}>
-              <Text style={styles.writeOptionsTitle}>What would you like to write?</Text>
+              <Text style={styles.writeOptionsTitle}>{localizedText('What would you like to write?', '¿Qué te gustaría escribir?')}</Text>
               <View style={styles.writeGrid}>
                 {WRITE_FORMATS.map(item => (
                   <TouchableOpacity
@@ -501,7 +513,7 @@ export default function JournalScreen() {
                   </TouchableOpacity>
                 ))}
               </View>
-              <Text style={styles.guidedTitle}>Guided Reflections</Text>
+              <Text style={styles.guidedTitle}>{localizedText('Guided Reflections', 'Reflexiones guiadas')}</Text>
               {freeFlows.slice(0, 4).map(flow => (
                 <TouchableOpacity
                   key={flow.id}
@@ -521,7 +533,7 @@ export default function JournalScreen() {
 
           {hasAnyEntries && (
             <View style={styles.entriesSection}>
-              <Text style={styles.entriesSectionTitle}>Recent Entries</Text>
+              <Text style={styles.entriesSectionTitle}>{localizedText('Recent Entries', 'Entradas recientes')}</Text>
               <View style={styles.tabRow}>
                 {(['all', 'journal', 'checkins'] as const).map(tab => (
                   <TouchableOpacity
@@ -530,7 +542,11 @@ export default function JournalScreen() {
                     onPress={() => setActiveTab(tab)}
                   >
                     <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
-                      {tab === 'all' ? 'All' : tab === 'journal' ? 'Journal' : 'Check-ins'}
+                      {tab === 'all'
+                        ? localizedText('All', 'Todo')
+                        : tab === 'journal'
+                          ? localizedText('Journal', 'Diario')
+                          : localizedText('Check-ins', 'Check-ins')}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -543,16 +559,19 @@ export default function JournalScreen() {
               <View style={styles.emptyIconCircle}>
                 <PenLine size={28} color={Colors.brandTeal} />
               </View>
-              <Text style={styles.emptyTitle}>Your journal is ready</Text>
+              <Text style={styles.emptyTitle}>{localizedText('Your journal is ready', 'Tu diario está listo')}</Text>
               <Text style={styles.emptyDesc}>
-                This is your private space to reflect.{'\n'}Write freely, follow guided prompts, or just check in.
+                {localizedText(
+                  'This is your private space to reflect.\nWrite freely, follow guided prompts, or just check in.',
+                  'Este es tu espacio privado para reflexionar.\nEscribe libremente, sigue preguntas guiadas o simplemente haz un check-in.',
+                )}
               </Text>
               <TouchableOpacity
                 style={styles.emptyBtn}
                 onPress={() => setShowWriteOptions(true)}
               >
                 <PenLine size={16} color={Colors.white} />
-                <Text style={styles.emptyBtnText}>Start writing</Text>
+                <Text style={styles.emptyBtnText}>{localizedText('Start writing', 'Empezar a escribir')}</Text>
               </TouchableOpacity>
             </View>
           ) : (

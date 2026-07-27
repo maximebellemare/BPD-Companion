@@ -26,6 +26,8 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedField, localizedText } from '@/lib/i18n/staticText';
 import { useRelationships } from '@/hooks/useRelationships';
 import {
   RelationshipType,
@@ -33,19 +35,20 @@ import {
 } from '@/types/relationship';
 
 const RELATIONSHIP_TYPES: { type: RelationshipType; label: string; emoji: string; color: string }[] = [
-  { type: 'partner', label: 'Partner', emoji: '💕', color: '#3B82F6' },
-  { type: 'ex', label: 'Ex', emoji: '💔', color: '#67E8F9' },
-  { type: 'friend', label: 'Friend', emoji: '🤝', color: '#14B8A6' },
-  { type: 'parent', label: 'Parent', emoji: '🏠', color: '#3B82F6' },
-  { type: 'sibling', label: 'Sibling', emoji: '👫', color: '#3B82F6' },
-  { type: 'coworker', label: 'Coworker', emoji: '💼', color: '#14B8A6' },
-  { type: 'therapist', label: 'Therapist', emoji: '🧠', color: '#14B8A6' },
-  { type: 'other', label: 'Other', emoji: '👤', color: '#2E2A72' },
+  localizedField({ type: 'partner', label: 'Partner', emoji: '💕', color: '#3B82F6' }, 'label', 'Partner', 'Pareja'),
+  localizedField({ type: 'ex', label: 'Ex', emoji: '💔', color: '#67E8F9' }, 'label', 'Ex', 'Expareja'),
+  localizedField({ type: 'friend', label: 'Friend', emoji: '🤝', color: '#14B8A6' }, 'label', 'Friend', 'Amistad'),
+  localizedField({ type: 'parent', label: 'Parent', emoji: '🏠', color: '#3B82F6' }, 'label', 'Parent', 'Madre/padre'),
+  localizedField({ type: 'sibling', label: 'Sibling', emoji: '👫', color: '#3B82F6' }, 'label', 'Sibling', 'Hermana/o'),
+  localizedField({ type: 'coworker', label: 'Coworker', emoji: '💼', color: '#14B8A6' }, 'label', 'Coworker', 'Trabajo'),
+  localizedField({ type: 'therapist', label: 'Therapist', emoji: '🧠', color: '#14B8A6' }, 'label', 'Therapist', 'Terapeuta'),
+  localizedField({ type: 'other', label: 'Other', emoji: '👤', color: '#2E2A72' }, 'label', 'Other', 'Otro'),
 ];
 
 export default function RelationshipProfilesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  useLanguage();
   const { profiles, analyses, isLoading, addProfile, deleteProfile } = useRelationships();
 
   const [showCreate, setShowCreate] = useState<boolean>(false);
@@ -100,12 +103,15 @@ export default function RelationshipProfilesScreen() {
 
   const handleDelete = useCallback((id: string, name: string) => {
     Alert.alert(
-      'Remove Profile',
-      `Remove ${name} from your relationship profiles? This won't delete any check-in or journal data.`,
+      localizedText('Remove Profile', 'Eliminar perfil'),
+      localizedText(
+        `Remove ${name} from your relationship profiles? This won't delete any check-in or journal data.`,
+        `¿Eliminar a ${name} de tus perfiles de relación? Esto no eliminará datos de check-ins ni diarios.`,
+      ),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: localizedText('Cancel', 'Cancelar'), style: 'cancel' },
         {
-          text: 'Remove',
+          text: localizedText('Remove', 'Eliminar'),
           style: 'destructive',
           onPress: () => {
             if (Platform.OS !== 'web') {
@@ -158,8 +164,10 @@ export default function RelationshipProfilesScreen() {
           <ArrowLeft size={20} color={Colors.text} />
         </TouchableOpacity>
         <View style={styles.headerTextWrap}>
-          <Text style={styles.headerTitle}>Relationships</Text>
-          <Text style={styles.headerSubtitle}>Understanding your patterns in connection</Text>
+          <Text style={styles.headerTitle}>{localizedText('Relationships', 'Relaciones')}</Text>
+          <Text style={styles.headerSubtitle}>
+            {localizedText('Understanding your patterns in connection', 'Entiende tus patrones en la conexión')}
+          </Text>
         </View>
         <TouchableOpacity
           style={styles.addButton}
@@ -188,7 +196,7 @@ export default function RelationshipProfilesScreen() {
                 <Heart size={18} color="#3B82F6" />
               </View>
               <Text style={styles.quickLabel}>Copilot</Text>
-              <Text style={styles.quickDesc}>Get guided support</Text>
+              <Text style={styles.quickDesc}>{localizedText('Get guided support', 'Recibe apoyo guiado')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -200,8 +208,8 @@ export default function RelationshipProfilesScreen() {
               <View style={[styles.quickIconWrap, { backgroundColor: '#FFFFFF' }]}>
                 <Shield size={18} color="#3B82F6" />
               </View>
-              <Text style={styles.quickLabel}>Spiral Guard</Text>
-              <Text style={styles.quickDesc}>Detect patterns</Text>
+              <Text style={styles.quickLabel}>{localizedText('Spiral Guard', 'Protector de espirales')}</Text>
+              <Text style={styles.quickDesc}>{localizedText('Detect patterns', 'Detecta patrones')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -213,8 +221,8 @@ export default function RelationshipProfilesScreen() {
               <View style={[styles.quickIconWrap, { backgroundColor: Colors.primaryLight }]}>
                 <TrendingUp size={18} color={Colors.primary} />
               </View>
-              <Text style={styles.quickLabel}>Insights</Text>
-              <Text style={styles.quickDesc}>See patterns</Text>
+              <Text style={styles.quickLabel}>{localizedText('Insights', 'Insights')}</Text>
+              <Text style={styles.quickDesc}>{localizedText('See patterns', 'Ver patrones')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -223,9 +231,12 @@ export default function RelationshipProfilesScreen() {
               <View style={styles.emptyIcon}>
                 <Users size={36} color={Colors.primary} />
               </View>
-              <Text style={styles.emptyTitle}>No profiles yet</Text>
+              <Text style={styles.emptyTitle}>{localizedText('No profiles yet', 'Aún no hay perfiles')}</Text>
               <Text style={styles.emptyDesc}>
-                Create a relationship profile to track patterns, triggers, and what helps in specific relationships. This is optional — you can still use all features without it.
+                {localizedText(
+                  'Create a relationship profile to track patterns, triggers, and what helps in specific relationships. This is optional — you can still use all features without it.',
+                  'Crea un perfil de relación para registrar patrones, detonantes y lo que ayuda en relaciones específicas. Es opcional: puedes usar todas las funciones sin hacerlo.',
+                )}
               </Text>
               <TouchableOpacity
                 style={styles.emptyButton}
@@ -233,7 +244,7 @@ export default function RelationshipProfilesScreen() {
                 activeOpacity={0.8}
               >
                 <Plus size={16} color={Colors.white} />
-                <Text style={styles.emptyButtonText}>Add someone</Text>
+                <Text style={styles.emptyButtonText}>{localizedText('Add someone', 'Agregar a alguien')}</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -295,8 +306,8 @@ export default function RelationshipProfilesScreen() {
                 <View style={styles.profileFooter}>
                   <Text style={styles.profileFooterText}>
                     {eventCount > 0
-                      ? `${eventCount} data point${eventCount !== 1 ? 's' : ''}`
-                      : 'No data yet — use check-ins and messages to build patterns'}
+                      ? localizedText(`${eventCount} data point${eventCount !== 1 ? 's' : ''}`, `${eventCount} dato${eventCount !== 1 ? 's' : ''}`)
+                      : localizedText('No data yet — use check-ins and messages to build patterns', 'Aún no hay datos: usa check-ins y mensajes para construir patrones')}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -307,7 +318,10 @@ export default function RelationshipProfilesScreen() {
             <View style={styles.footerHint}>
               <Sparkles size={14} color={Colors.textMuted} />
               <Text style={styles.footerHintText}>
-                Long press a profile to remove it. Patterns build automatically from your check-ins, journals, and messages.
+                {localizedText(
+                  'Long press a profile to remove it. Patterns build automatically from your check-ins, journals, and messages.',
+                  'Mantén presionado un perfil para eliminarlo. Los patrones se construyen automáticamente desde tus check-ins, diarios y mensajes.',
+                )}
               </Text>
             </View>
           )}
@@ -324,24 +338,24 @@ export default function RelationshipProfilesScreen() {
             <Animated.View style={[styles.createSheet, { transform: [{ translateY: createSlide }] }]}>
               <View style={styles.createHandle} />
               <View style={styles.createHeader}>
-                <Text style={styles.createTitle}>Add a relationship</Text>
+                <Text style={styles.createTitle}>{localizedText('Add a relationship', 'Agregar una relación')}</Text>
                 <TouchableOpacity onPress={closeCreate} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
                   <X size={20} color={Colors.textSecondary} />
                 </TouchableOpacity>
               </View>
 
-              <Text style={styles.createLabel}>Name or nickname</Text>
+              <Text style={styles.createLabel}>{localizedText('Name or nickname', 'Nombre o apodo')}</Text>
               <TextInput
                 style={styles.createInput}
                 value={newName}
                 onChangeText={setNewName}
-                placeholder="How you know them"
+                placeholder={localizedText('How you know them', 'Cómo les conoces')}
                 placeholderTextColor={Colors.textMuted}
                 autoCapitalize="words"
                 testID="new-profile-name"
               />
 
-              <Text style={styles.createLabel}>Relationship type</Text>
+              <Text style={styles.createLabel}>{localizedText('Relationship type', 'Tipo de relación')}</Text>
               <View style={styles.typeGrid}>
                 {RELATIONSHIP_TYPES.map(rt => (
                   <TouchableOpacity
@@ -369,12 +383,15 @@ export default function RelationshipProfilesScreen() {
                 ))}
               </View>
 
-              <Text style={styles.createLabel}>Notes (optional)</Text>
+              <Text style={styles.createLabel}>{localizedText('Notes (optional)', 'Notas (opcional)')}</Text>
               <TextInput
                 style={[styles.createInput, styles.createInputMulti]}
                 value={newNotes}
                 onChangeText={setNewNotes}
-                placeholder="Common triggers, what helps, what makes it hard..."
+                placeholder={localizedText(
+                  'Common triggers, what helps, what makes it hard...',
+                  'Detonantes comunes, lo que ayuda, lo que lo hace difícil...',
+                )}
                 placeholderTextColor={Colors.textMuted}
                 multiline
                 numberOfLines={3}
@@ -392,7 +409,7 @@ export default function RelationshipProfilesScreen() {
                 disabled={!newName.trim() || !newType}
                 testID="create-profile-submit"
               >
-                <Text style={styles.createSubmitText}>Create Profile</Text>
+                <Text style={styles.createSubmitText}>{localizedText('Create Profile', 'Crear perfil')}</Text>
               </TouchableOpacity>
             </Animated.View>
           </KeyboardAvoidingView>

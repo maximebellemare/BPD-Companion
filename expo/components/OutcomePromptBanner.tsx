@@ -13,12 +13,15 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useEmotionalContext, OutcomeRecord } from '@/providers/EmotionalContextProvider';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 interface OutcomePromptBannerProps {
   draftId?: string;
 }
 
 export default React.memo(function OutcomePromptBanner({ draftId }: OutcomePromptBannerProps) {
+  useLanguage();
   const router = useRouter();
   const { journeyPhase, recordOutcome, advanceJourney } = useEmotionalContext();
   const { trackEvent } = useAnalytics();
@@ -74,11 +77,16 @@ export default React.memo(function OutcomePromptBanner({ draftId }: OutcomePromp
         <View style={styles.successCard}>
           <CheckCircle size={20} color={Colors.success} />
           <View style={styles.successContent}>
-            <Text style={styles.successTitle}>Outcome recorded</Text>
-            <Text style={styles.successDesc}>This will appear in your weekly reflection and therapy report.</Text>
+            <Text style={styles.successTitle}>{localizedText('Outcome recorded', 'Resultado registrado')}</Text>
+            <Text style={styles.successDesc}>
+              {localizedText(
+                'This will appear in your weekly reflection and therapy report.',
+                'Esto aparecerá en tu reflexión semanal y en tu informe para terapia.',
+              )}
+            </Text>
           </View>
           <TouchableOpacity onPress={handleReflect} style={styles.reflectButton} activeOpacity={0.7}>
-            <Text style={styles.reflectText}>Reflect</Text>
+            <Text style={styles.reflectText}>{localizedText('Reflect', 'Reflexionar')}</Text>
             <ChevronRight size={14} color={Colors.primary} />
           </TouchableOpacity>
         </View>
@@ -94,8 +102,13 @@ export default React.memo(function OutcomePromptBanner({ draftId }: OutcomePromp
       ]}
     >
       <View style={styles.card}>
-        <Text style={styles.title}>How did that go?</Text>
-        <Text style={styles.subtitle}>Recording outcomes helps track what works for you.</Text>
+        <Text style={styles.title}>{localizedText('How did that go?', '¿Cómo salió?')}</Text>
+        <Text style={styles.subtitle}>
+          {localizedText(
+            'Recording outcomes helps track what works for you.',
+            'Registrar resultados ayuda a identificar qué te funciona.',
+          )}
+        </Text>
 
         <View style={styles.optionsRow}>
           <TouchableOpacity
@@ -105,7 +118,9 @@ export default React.memo(function OutcomePromptBanner({ draftId }: OutcomePromp
             testID="outcome-helped"
           >
             <CheckCircle size={18} color={Colors.success} />
-            <Text style={[styles.optionText, { color: Colors.success }]}>Helped</Text>
+            <Text style={[styles.optionText, { color: Colors.success }]}>
+              {localizedText('Helped', 'Ayudó')}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -115,7 +130,9 @@ export default React.memo(function OutcomePromptBanner({ draftId }: OutcomePromp
             testID="outcome-neutral"
           >
             <Minus size={18} color={Colors.textSecondary} />
-            <Text style={[styles.optionText, { color: Colors.textSecondary }]}>Neutral</Text>
+            <Text style={[styles.optionText, { color: Colors.textSecondary }]}>
+              {localizedText('Neutral', 'Neutral')}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -125,7 +142,9 @@ export default React.memo(function OutcomePromptBanner({ draftId }: OutcomePromp
             testID="outcome-worse"
           >
             <XCircle size={18} color="#3B82F6" />
-            <Text style={[styles.optionText, { color: '#3B82F6' }]}>Harder</Text>
+            <Text style={[styles.optionText, { color: '#3B82F6' }]}>
+              {localizedText('Harder', 'Más difícil')}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -135,7 +154,9 @@ export default React.memo(function OutcomePromptBanner({ draftId }: OutcomePromp
             testID="outcome-not-sent"
           >
             <MessageSquareOff size={18} color={Colors.textMuted} />
-            <Text style={[styles.optionText, { color: Colors.textMuted }]}>Didn't send</Text>
+            <Text style={[styles.optionText, { color: Colors.textMuted }]}>
+              {localizedText("Didn't send", 'No lo envié')}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>

@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Activity, ChevronRight, TrendingUp } from 'lucide-react-native';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { EpisodeReplayState } from '@/types/emotionalEpisode';
 
 interface Props {
@@ -11,6 +13,7 @@ interface Props {
 
 export default React.memo(function EmotionalTimelineCard({ replayState }: Props) {
   const router = useRouter();
+  useLanguage();
 
   const hasEpisodes = replayState.episodes.length > 0;
   const latestEpisode = hasEpisodes ? replayState.episodes[0] : null;
@@ -27,11 +30,14 @@ export default React.memo(function EmotionalTimelineCard({ replayState }: Props)
           <Activity size={18} color="#14B8A6" />
         </View>
         <View style={styles.headerText}>
-          <Text style={styles.title}>Emotional Timeline</Text>
+          <Text style={styles.title}>{localizedText('Emotional Timeline', 'Línea emocional')}</Text>
           <Text style={styles.subtitle}>
             {hasEpisodes
-              ? `${replayState.episodes.length} episode${replayState.episodes.length !== 1 ? 's' : ''} recorded`
-              : 'Replay emotional episodes step-by-step'}
+              ? localizedText(
+                `${replayState.episodes.length} episode${replayState.episodes.length !== 1 ? 's' : ''} recorded`,
+                `${replayState.episodes.length} episodio${replayState.episodes.length !== 1 ? 's' : ''} registrado${replayState.episodes.length !== 1 ? 's' : ''}`,
+              )
+              : localizedText('Replay emotional episodes step-by-step', 'Repasa episodios emocionales paso a paso')}
           </Text>
         </View>
         <ChevronRight size={16} color={Colors.textMuted} />
@@ -42,15 +48,15 @@ export default React.memo(function EmotionalTimelineCard({ replayState }: Props)
           <View style={styles.statsRow}>
             <View style={styles.statPill}>
               <Text style={styles.statPillValue}>{replayState.recentEpisodeCount}</Text>
-              <Text style={styles.statPillLabel}>this week</Text>
+              <Text style={styles.statPillLabel}>{localizedText('this week', 'esta semana')}</Text>
             </View>
             <View style={[styles.statPill, { backgroundColor: '#FFFFFF' }]}>
               <Text style={[styles.statPillValue, { color: '#3B82F6' }]}>{replayState.highIntensityCount}</Text>
-              <Text style={[styles.statPillLabel, { color: '#3B82F6' }]}>high intensity</Text>
+              <Text style={[styles.statPillLabel, { color: '#3B82F6' }]}>{localizedText('high intensity', 'alta intensidad')}</Text>
             </View>
             <View style={[styles.statPill, { backgroundColor: '#FFFFFF' }]}>
               <Text style={[styles.statPillValue, { color: '#14B8A6' }]}>{replayState.managedCount}</Text>
-              <Text style={[styles.statPillLabel, { color: '#14B8A6' }]}>managed</Text>
+              <Text style={[styles.statPillLabel, { color: '#14B8A6' }]}>{localizedText('managed', 'manejado')}</Text>
             </View>
           </View>
 
@@ -63,7 +69,7 @@ export default React.memo(function EmotionalTimelineCard({ replayState }: Props)
 
           {latestEpisode && (
             <View style={styles.latestRow}>
-              <Text style={styles.latestLabel}>Latest:</Text>
+              <Text style={styles.latestLabel}>{localizedText('Latest:', 'Más reciente:')}</Text>
               <Text style={styles.latestEmotion} numberOfLines={1}>{latestEpisode.dominantEmotion}</Text>
               <View style={styles.latestChainPreview}>
                 {latestEpisode.nodes.slice(0, 4).map((node, idx) => (

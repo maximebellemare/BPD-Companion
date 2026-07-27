@@ -36,6 +36,8 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { useAICompanion } from '@/providers/AICompanionProvider';
 import { InsightCard, PatternItem } from '@/types/memory';
 import { SupportiveInterpretation } from '@/types/ai';
@@ -219,6 +221,7 @@ export default function InsightsScreen() {
   const { insightCards, memoryProfile, supportiveInterpretations } = useAICompanion();
   const { recommendations, hasData: hasRecData } = useRecommendations();
   const router = useRouter();
+  useLanguage();
 
   const hasData = memoryProfile.recentCheckInCount > 0;
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -271,7 +274,7 @@ export default function InsightsScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: 'Your Insights' }} />
+      <Stack.Screen options={{ title: localizedText('Your Insights', 'Tus insights') }} />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -285,7 +288,7 @@ export default function InsightsScreen() {
                   <View style={styles.overviewIconWrap}>
                     <Sparkles size={16} color={Colors.primary} />
                   </View>
-                  <Text style={styles.overviewTitle}>Overview</Text>
+                  <Text style={styles.overviewTitle}>{localizedText('Overview', 'Resumen')}</Text>
                 </View>
                 <Text style={styles.overviewText}>{memoryProfile.supportiveSummary}</Text>
                 {memoryProfile.distressTrendDescription ? (
@@ -302,19 +305,19 @@ export default function InsightsScreen() {
             <View style={styles.statsRow}>
               <View style={styles.statCard}>
                 <Text style={styles.statValue}>{memoryProfile.recentCheckInCount}</Text>
-                <Text style={styles.statLabel}>Check-ins</Text>
+                <Text style={styles.statLabel}>{localizedText('Check-ins', 'Check-ins')}</Text>
               </View>
               <View style={styles.statCard}>
                 <Text style={styles.statValue}>
                   {memoryProfile.averageIntensity > 0 ? memoryProfile.averageIntensity : '\u2014'}
                 </Text>
-                <Text style={styles.statLabel}>Avg Intensity</Text>
+                <Text style={styles.statLabel}>{localizedText('Avg Intensity', 'Intensidad prom.')}</Text>
               </View>
               <View style={styles.statCard}>
                 <Text style={[styles.statValue, { color: trendColor }]}>
                   {memoryProfile.copingSuccessRate > 0 ? `${memoryProfile.copingSuccessRate}%` : '\u2014'}
                 </Text>
-                <Text style={styles.statLabel}>Managed</Text>
+                <Text style={styles.statLabel}>{localizedText('Managed', 'Regulado')}</Text>
               </View>
             </View>
 
@@ -324,10 +327,10 @@ export default function InsightsScreen() {
                   <View style={[styles.sectionIcon, { backgroundColor: Colors.accentLight }]}>
                     <Zap size={16} color={Colors.accent} />
                   </View>
-                  <Text style={styles.sectionTitle}>Top Triggers</Text>
+                  <Text style={styles.sectionTitle}>{localizedText('Top Triggers', 'Detonantes principales')}</Text>
                 </View>
                 <Text style={styles.sectionHint}>
-                  Patterns in what activates your emotions
+                  {localizedText('Patterns in what activates your emotions', 'Patrones en lo que activa tus emociones')}
                 </Text>
                 {memoryProfile.topTriggers.slice(0, 5).map((item, i) => (
                   <AnimatedBarRow
@@ -347,10 +350,10 @@ export default function InsightsScreen() {
                   <View style={[styles.sectionIcon, { backgroundColor: '#FFFFFF' }]}>
                     <Heart size={16} color="#3B82F6" />
                   </View>
-                  <Text style={styles.sectionTitle}>Recurring Emotions</Text>
+                  <Text style={styles.sectionTitle}>{localizedText('Recurring Emotions', 'Emociones recurrentes')}</Text>
                 </View>
                 <Text style={styles.sectionHint}>
-                  The feelings that show up most in your check-ins
+                  {localizedText('The feelings that show up most in your check-ins', 'Los sentimientos que aparecen más en tus check-ins')}
                 </Text>
                 {memoryProfile.topEmotions.slice(0, 5).map((item, i) => (
                   <AnimatedBarRow
@@ -370,10 +373,10 @@ export default function InsightsScreen() {
                   <View style={[styles.sectionIcon, { backgroundColor: '#FFFFFF' }]}>
                     <AlertTriangle size={16} color="#67E8F9" />
                   </View>
-                  <Text style={styles.sectionTitle}>Urge Patterns</Text>
+                  <Text style={styles.sectionTitle}>{localizedText('Urge Patterns', 'Patrones de impulsos')}</Text>
                 </View>
                 <Text style={styles.sectionHint}>
-                  What your body and mind reach for when distressed
+                  {localizedText('What your body and mind reach for when distressed', 'A qué recurren tu cuerpo y mente cuando hay angustia')}
                 </Text>
                 {memoryProfile.topUrges.slice(0, 5).map((item, i) => (
                   <AnimatedBarRow
@@ -393,10 +396,10 @@ export default function InsightsScreen() {
                   <View style={[styles.sectionIcon, { backgroundColor: Colors.successLight }]}>
                     <Shield size={16} color={Colors.success} />
                   </View>
-                  <Text style={styles.sectionTitle}>Coping Tools Used</Text>
+                  <Text style={styles.sectionTitle}>{localizedText('Coping Tools Used', 'Herramientas usadas')}</Text>
                 </View>
                 <Text style={styles.sectionHint}>
-                  The strategies you lean on most
+                  {localizedText('The strategies you lean on most', 'Las estrategias en las que más te apoyas')}
                 </Text>
                 {memoryProfile.copingToolsUsed.slice(0, 5).map((item, i) => (
                   <AnimatedBarRow
@@ -416,7 +419,7 @@ export default function InsightsScreen() {
                   <View style={[styles.sectionIcon, { backgroundColor: Colors.accentLight }]}>
                     <Users size={16} color={Colors.accent} />
                   </View>
-                  <Text style={styles.sectionTitle}>Relationship Patterns</Text>
+                  <Text style={styles.sectionTitle}>{localizedText('Relationship Patterns', 'Patrones relacionales')}</Text>
                 </View>
                 {memoryProfile.relationshipPatternSummary ? (
                   <Text style={styles.sectionHint}>
@@ -427,7 +430,7 @@ export default function InsightsScreen() {
                   <View key={rp.id} style={styles.relationshipCard}>
                     <Text style={styles.relationshipText}>{rp.pattern}</Text>
                     <Text style={styles.relationshipMeta}>
-                      Observed {rp.frequency} times
+                      {localizedText(`Observed ${rp.frequency} times`, `Observado ${rp.frequency} veces`)}
                     </Text>
                   </View>
                 ))}
@@ -440,19 +443,19 @@ export default function InsightsScreen() {
                   <View style={[styles.sectionIcon, { backgroundColor: Colors.primaryLight }]}>
                     <MessageSquareText size={16} color={Colors.primary} />
                   </View>
-                  <Text style={styles.sectionTitle}>Message Awareness</Text>
+                  <Text style={styles.sectionTitle}>{localizedText('Message Awareness', 'Conciencia al comunicar')}</Text>
                 </View>
                 <View style={styles.messageStatsRow}>
                   {memoryProfile.messageUsage.totalRewrites > 0 && (
                     <View style={styles.messageStatCard}>
                       <Text style={styles.messageStatValue}>{memoryProfile.messageUsage.totalRewrites}</Text>
-                      <Text style={styles.messageStatLabel}>Rewrites</Text>
+                      <Text style={styles.messageStatLabel}>{localizedText('Rewrites', 'Reescrituras')}</Text>
                     </View>
                   )}
                   {memoryProfile.messageUsage.totalPauses > 0 && (
                     <View style={styles.messageStatCard}>
                       <Text style={styles.messageStatValue}>{memoryProfile.messageUsage.totalPauses}</Text>
-                      <Text style={styles.messageStatLabel}>Pauses</Text>
+                      <Text style={styles.messageStatLabel}>{localizedText('Pauses', 'Pausas')}</Text>
                     </View>
                   )}
                   {memoryProfile.messageUsage.pauseSuccessRate > 0 && (
@@ -460,12 +463,15 @@ export default function InsightsScreen() {
                       <Text style={[styles.messageStatValue, { color: Colors.success }]}>
                         {memoryProfile.messageUsage.pauseSuccessRate}%
                       </Text>
-                      <Text style={styles.messageStatLabel}>Held back</Text>
+                      <Text style={styles.messageStatLabel}>{localizedText('Held back', 'Retenidos')}</Text>
                     </View>
                   )}
                 </View>
                 <Text style={styles.messageHint}>
-                  Taking time before reacting shows real emotional awareness.
+                  {localizedText(
+                    'Taking time before reacting shows real emotional awareness.',
+                    'Tomarte tiempo antes de reaccionar muestra verdadera conciencia emocional.',
+                  )}
                 </Text>
               </View>
             )}
@@ -474,10 +480,10 @@ export default function InsightsScreen() {
               <View style={interpStyles.section}>
                 <View style={interpStyles.headerRow}>
                   <Eye size={16} color={Colors.primary} />
-                  <Text style={interpStyles.headerTitle}>What We Notice</Text>
+                  <Text style={interpStyles.headerTitle}>{localizedText('What We Notice', 'Lo que notamos')}</Text>
                 </View>
                 <Text style={interpStyles.headerHint}>
-                  Gentle observations based on your patterns
+                  {localizedText('Gentle observations based on your patterns', 'Observaciones suaves basadas en tus patrones')}
                 </Text>
                 {supportiveInterpretations.map((interp, i) => (
                   <InterpretationRow key={interp.id} item={interp} index={i} />
@@ -489,7 +495,7 @@ export default function InsightsScreen() {
               <View style={styles.cardsSection}>
                 <View style={styles.cardsSectionHeader}>
                   <BarChart3 size={16} color={Colors.primary} />
-                  <Text style={styles.cardsSectionTitle}>Pattern Summary</Text>
+                  <Text style={styles.cardsSectionTitle}>{localizedText('Pattern Summary', 'Resumen de patrones')}</Text>
                 </View>
                 {insightCards.map((card, i) => (
                   <InsightCardView key={card.id} card={card} index={i} />
@@ -501,10 +507,10 @@ export default function InsightsScreen() {
               <View style={recStyles.section}>
                 <View style={recStyles.headerRow}>
                   <Lightbulb size={16} color={Colors.accent} />
-                  <Text style={recStyles.headerTitle}>Suggested Coping Tools</Text>
+                  <Text style={recStyles.headerTitle}>{localizedText('Suggested Coping Tools', 'Herramientas sugeridas')}</Text>
                 </View>
                 <Text style={recStyles.headerHint}>
-                  Based on your recent emotions and triggers
+                  {localizedText('Based on your recent emotions and triggers', 'Según tus emociones y detonantes recientes')}
                 </Text>
                 <View style={recStyles.list}>
                   {recommendations.slice(0, 3).map(rec => (
@@ -516,7 +522,10 @@ export default function InsightsScreen() {
 
             <View style={styles.footerMessage}>
               <Text style={styles.footerText}>
-                Every check-in builds a clearer picture.{'\n'}You're doing something meaningful.
+                {localizedText(
+                  "Every check-in builds a clearer picture.\nYou're doing something meaningful.",
+                  'Cada check-in construye una imagen más clara.\nEstás haciendo algo significativo.',
+                )}
               </Text>
             </View>
           </Animated.View>
@@ -525,9 +534,12 @@ export default function InsightsScreen() {
             <View style={styles.emptyIconWrap}>
               <Sparkles size={40} color={Colors.primary} />
             </View>
-            <Text style={styles.emptyTitle}>Your insights will grow here</Text>
+            <Text style={styles.emptyTitle}>{localizedText('Your insights will grow here', 'Tus insights crecerán aquí')}</Text>
             <Text style={styles.emptySubtitle}>
-              As you use the app more, this space will help you notice patterns with more clarity. Check-ins, journaling, and coping exercises all contribute.
+              {localizedText(
+                'As you use the app more, this space will help you notice patterns with more clarity. Check-ins, journaling, and coping exercises all contribute.',
+                'A medida que uses más la app, este espacio te ayudará a notar patrones con más claridad. Check-ins, diario y ejercicios de afrontamiento contribuyen.',
+              )}
             </Text>
             <TouchableOpacity
               style={styles.emptyButton}
@@ -535,7 +547,7 @@ export default function InsightsScreen() {
               activeOpacity={0.8}
               testID="insights-start-checkin"
             >
-              <Text style={styles.emptyButtonText}>Start a Check-in</Text>
+              <Text style={styles.emptyButtonText}>{localizedText('Start a Check-in', 'Iniciar check-in')}</Text>
             </TouchableOpacity>
           </Animated.View>
         )}

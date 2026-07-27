@@ -38,6 +38,8 @@ import { getLearnState } from '@/services/learn/learnService';
 import { LearningPathState } from '@/types/learningPath';
 import { LearnState } from '@/types/learn';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
+import { localizedText } from '@/lib/i18n/staticText';
+import { useLanguage } from '@/hooks/useLanguage';
 
 const PATH_ICONS: Record<string, React.ComponentType<{ size: number; color: string }>> = {
   heart: Heart,
@@ -49,6 +51,7 @@ const PATH_ICONS: Record<string, React.ComponentType<{ size: number; color: stri
 };
 
 export default function LearningPathScreen() {
+  useLanguage();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -172,7 +175,7 @@ export default function LearningPathScreen() {
           <View style={styles.heroStats}>
             <View style={styles.heroStatItem}>
               <Text style={styles.heroStatValue}>{path.steps.length}</Text>
-              <Text style={styles.heroStatLabel}>Lessons</Text>
+              <Text style={styles.heroStatLabel}>{localizedText('Lessons', 'Lecciones')}</Text>
             </View>
             <View style={styles.heroStatDivider} />
             <View style={styles.heroStatItem}>
@@ -184,7 +187,7 @@ export default function LearningPathScreen() {
             <View style={styles.heroStatDivider} />
             <View style={styles.heroStatItem}>
               <Text style={[styles.heroStatValue, { color: path.color }]}>{completion}%</Text>
-              <Text style={styles.heroStatLabel}>Complete</Text>
+              <Text style={styles.heroStatLabel}>{localizedText('Complete', 'Completado')}</Text>
             </View>
           </View>
 
@@ -203,7 +206,7 @@ export default function LearningPathScreen() {
             testID="start-path"
           >
             <Play size={20} color="#fff" />
-            <Text style={styles.startButtonText}>Start This Path</Text>
+            <Text style={styles.startButtonText}>{localizedText('Start This Path', 'Iniciar esta ruta')}</Text>
           </TouchableOpacity>
         )}
 
@@ -215,20 +218,25 @@ export default function LearningPathScreen() {
             testID="continue-path"
           >
             <ArrowRight size={20} color="#fff" />
-            <Text style={styles.continueButtonText}>Continue: {path.steps[nextStepIndex].title}</Text>
+            <Text style={styles.continueButtonText}>{localizedText('Continue', 'Continuar')}: {path.steps[nextStepIndex].title}</Text>
           </TouchableOpacity>
         )}
 
         {isCompleted && (
           <View style={styles.completedBanner}>
             <CheckCircle size={24} color={Colors.success} />
-            <Text style={styles.completedBannerTitle}>Path Complete</Text>
-            <Text style={styles.completedBannerDesc}>You've completed all lessons in this path. Great work building your understanding.</Text>
+            <Text style={styles.completedBannerTitle}>{localizedText('Path Complete', 'Ruta completada')}</Text>
+            <Text style={styles.completedBannerDesc}>
+              {localizedText(
+                "You've completed all lessons in this path. Great work building your understanding.",
+                'Completaste todas las lecciones de esta ruta. Gran trabajo construyendo comprensión.',
+              )}
+            </Text>
           </View>
         )}
 
         <View style={styles.stepsSection}>
-          <Text style={styles.sectionLabel}>Lessons in this path</Text>
+          <Text style={styles.sectionLabel}>{localizedText('Lessons in this path', 'Lecciones en esta ruta')}</Text>
           {path.steps.map((step, index) => {
             const isStepCompleted = completedStepIds.has(step.id);
             const isLessonCompleted = learnState?.progress[step.lessonId]?.completed ?? false;
@@ -266,7 +274,7 @@ export default function LearningPathScreen() {
                       <Text style={styles.stepTime}>{step.estimatedMinutes} min</Text>
                       {isNext && (
                         <View style={[styles.nextBadge, { backgroundColor: path.color + '18' }]}>
-                          <Text style={[styles.nextBadgeText, { color: path.color }]}>Up next</Text>
+                          <Text style={[styles.nextBadgeText, { color: path.color }]}>{localizedText('Up next', 'Siguiente')}</Text>
                         </View>
                       )}
                     </View>
@@ -280,7 +288,7 @@ export default function LearningPathScreen() {
 
         {path.suggestedToolIds.length > 0 && (
           <View style={styles.toolsSection}>
-            <Text style={styles.sectionLabel}>Related Tools</Text>
+            <Text style={styles.sectionLabel}>{localizedText('Related Tools', 'Herramientas relacionadas')}</Text>
             <TouchableOpacity
               style={styles.toolsCard}
               onPress={handleToolsPress}
@@ -288,8 +296,8 @@ export default function LearningPathScreen() {
             >
               <Wrench size={22} color={Colors.primary} />
               <View style={styles.toolsCardContent}>
-                <Text style={styles.toolsCardTitle}>Practice These Skills</Text>
-                <Text style={styles.toolsCardDesc}>Open the Tools tab to practice what you've learned</Text>
+                <Text style={styles.toolsCardTitle}>{localizedText('Practice These Skills', 'Practicar estas habilidades')}</Text>
+                <Text style={styles.toolsCardDesc}>{localizedText("Open the Tools tab to practice what you've learned", 'Abre la pestana Herramientas para practicar lo que aprendiste')}</Text>
               </View>
               <ArrowRight size={18} color={Colors.primary} />
             </TouchableOpacity>

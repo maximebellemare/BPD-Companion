@@ -41,6 +41,8 @@ import {
   LEVEL_LABELS,
   TRACK_LABELS,
 } from '@/services/dbt/dbtAcademyService';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 const TRACK_ICONS: Record<DBTAcademyTrack, React.ComponentType<{ size: number; color: string }>> = {
   abandonment: Heart,
@@ -77,6 +79,7 @@ export default function DBTAcademyScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
+  useLanguage();
   const [progress, setProgress] = useState<DBTAcademyProgress>(DEFAULT_DBT_ACADEMY_PROGRESS);
   const [selectedTrack, setSelectedTrack] = useState<DBTAcademyTrack>('abandonment');
   const [selectedLevel, setSelectedLevel] = useState<DBTAcademyLevel>('beginner');
@@ -165,10 +168,13 @@ export default function DBTAcademyScreen() {
             <ArrowLeft size={20} color={colors.text} />
           </TouchableOpacity>
           <View style={styles.headerTextWrap}>
-            <Text style={[styles.eyebrow, { color: colors.brandTeal }]}>DBT Skills Academy</Text>
-            <Text style={[styles.title, { color: colors.text }]}>Practice real moments</Text>
+            <Text style={[styles.eyebrow, { color: colors.brandTeal }]}>{localizedText('DBT Skills Academy', 'Academia de habilidades DBT')}</Text>
+            <Text style={[styles.title, { color: colors.text }]}>{localizedText('Practice real moments', 'Practica momentos reales')}</Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Learn application, not theory. Choose what you would do, then see the skill that fits.
+              {localizedText(
+                'Learn application, not theory. Choose what you would do, then see the skill that fits.',
+                'Aprende aplicación, no teoría. Elige qué harías y luego mira qué habilidad encaja.',
+              )}
             </Text>
           </View>
         </View>
@@ -179,9 +185,12 @@ export default function DBTAcademyScreen() {
               <Award size={22} color={colors.primary} />
             </View>
             <View style={styles.progressCopy}>
-              <Text style={[styles.progressTitle, { color: colors.text }]}>Emotional mastery progress</Text>
+              <Text style={[styles.progressTitle, { color: colors.text }]}>{localizedText('Emotional mastery progress', 'Progreso en dominio emocional')}</Text>
               <Text style={[styles.progressBody, { color: colors.textSecondary }]}>
-                {progress.completedScenarioIds.length} scenarios completed · {progress.currentStreak} day streak
+                {localizedText(
+                  `${progress.completedScenarioIds.length} scenarios completed · ${progress.currentStreak} day streak`,
+                  `${progress.completedScenarioIds.length} escenarios completados · racha de ${progress.currentStreak} día${progress.currentStreak === 1 ? '' : 's'}`,
+                )}
               </Text>
             </View>
             <Text style={[styles.progressPercent, { color: colors.primary }]}>{completionPercent}%</Text>
@@ -190,7 +199,10 @@ export default function DBTAcademyScreen() {
             <View style={[styles.progressBarFill, { backgroundColor: colors.brandTeal, width: `${completionPercent}%` }]} />
           </View>
           <Text style={[styles.progressHint, { color: colors.textMuted }]}>
-            Best streak: {progress.longestStreak} day{progress.longestStreak === 1 ? '' : 's'}
+            {localizedText(
+              `Best streak: ${progress.longestStreak} day${progress.longestStreak === 1 ? '' : 's'}`,
+              `Mejor racha: ${progress.longestStreak} día${progress.longestStreak === 1 ? '' : 's'}`,
+            )}
           </Text>
         </View>
 
@@ -203,7 +215,7 @@ export default function DBTAcademyScreen() {
               <Text style={[styles.scenarioTrack, { color: colors.textMuted }]}>{TRACK_LABELS[activeScenario.track]}</Text>
             </View>
 
-            <Text style={[styles.scenarioLabel, { color: colors.brandTeal }]}>Scenario</Text>
+            <Text style={[styles.scenarioLabel, { color: colors.brandTeal }]}>{localizedText('Scenario', 'Escenario')}</Text>
             <Text style={[styles.scenarioText, { color: colors.text }]}>{activeScenario.scenario}</Text>
             <Text style={[styles.questionText, { color: colors.text }]}>{activeScenario.question}</Text>
 
@@ -238,13 +250,13 @@ export default function DBTAcademyScreen() {
                 <View style={styles.feedbackHeader}>
                   <CheckCircle2 size={18} color={answerResult.isCorrect ? colors.success : colors.primary} />
                   <Text style={[styles.feedbackTitle, { color: colors.text }]}>
-                    {answerResult.isCorrect ? 'Skillful choice' : 'Useful learning moment'}
+                    {answerResult.isCorrect ? localizedText('Skillful choice', 'Elección hábil') : localizedText('Useful learning moment', 'Momento útil de aprendizaje')}
                   </Text>
                 </View>
-                <Text style={[styles.feedbackSkill, { color: colors.primary }]}>Skill: {activeScenario.skill}</Text>
-                <Text style={[styles.feedbackText, { color: colors.textSecondary }]}>Why: {activeScenario.why}</Text>
+                <Text style={[styles.feedbackSkill, { color: colors.primary }]}>{localizedText('Skill:', 'Habilidad:')} {activeScenario.skill}</Text>
+                <Text style={[styles.feedbackText, { color: colors.textSecondary }]}>{localizedText('Why:', 'Por qué:')} {activeScenario.why}</Text>
                 <Text style={[styles.feedbackText, { color: colors.textSecondary }]}>
-                  What usually happens: {activeScenario.whatUsuallyHappens}
+                  {localizedText('What usually happens:', 'Lo que suele pasar:')} {activeScenario.whatUsuallyHappens}
                 </Text>
                 <TouchableOpacity
                   style={[styles.primaryButton, { backgroundColor: colors.primary }]}
@@ -252,7 +264,7 @@ export default function DBTAcademyScreen() {
                   activeOpacity={0.84}
                   testID="dbt-next-scenario"
                 >
-                  <Text style={styles.primaryButtonText}>Continue training</Text>
+                  <Text style={styles.primaryButtonText}>{localizedText('Continue training', 'Continuar práctica')}</Text>
                   <ChevronRight size={17} color={Colors.white} />
                 </TouchableOpacity>
               </View>
@@ -264,7 +276,7 @@ export default function DBTAcademyScreen() {
                 activeOpacity={0.84}
                 testID="dbt-submit-answer"
               >
-                <Text style={styles.primaryButtonText}>Check answer</Text>
+                <Text style={styles.primaryButtonText}>{localizedText('Check answer', 'Revisar respuesta')}</Text>
                 <ChevronRight size={17} color={Colors.white} />
               </TouchableOpacity>
             )}
@@ -272,7 +284,7 @@ export default function DBTAcademyScreen() {
         ) : (
           <>
             <View style={styles.section}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Choose a track</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>{localizedText('Choose a track', 'Elige una ruta')}</Text>
               <View style={styles.trackGrid}>
                 {TRACK_ORDER.map((track) => {
                   const Icon = TRACK_ICONS[track];
@@ -302,7 +314,7 @@ export default function DBTAcademyScreen() {
             </View>
 
             <View style={styles.section}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Progression</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>{localizedText('Progression', 'Progresión')}</Text>
               <View style={styles.levelRow}>
                 {LEVEL_ORDER.map((level, index) => {
                   const selected = selectedLevel === level;
@@ -348,7 +360,7 @@ export default function DBTAcademyScreen() {
                       <View style={styles.scenarioCardText}>
                         <Text style={[styles.scenarioCardTitle, { color: colors.text }]} numberOfLines={2}>{scenario.scenario}</Text>
                         <Text style={[styles.scenarioCardBody, { color: colors.textSecondary }]} numberOfLines={2}>
-                          Practice choosing {scenario.skill} in the moment.
+                          {localizedText(`Practice choosing ${scenario.skill} in the moment.`, `Practica elegir ${scenario.skill} en el momento.`)}
                         </Text>
                       </View>
                       <ChevronRight size={18} color={colors.textMuted} />
@@ -358,7 +370,10 @@ export default function DBTAcademyScreen() {
                   <View style={[styles.emptyCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
                     <Sparkles size={18} color={colors.textMuted} />
                     <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-                      This level is coming next. Try another level in this track.
+                      {localizedText(
+                        'This level is coming next. Try another level in this track.',
+                        'Este nivel vendrá más adelante. Prueba otro nivel de esta ruta.',
+                      )}
                     </Text>
                   </View>
                 )}

@@ -12,6 +12,8 @@ import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
 import { SpiralRiskLevel, SpiralSignal, SpiralIntervention } from '@/types/relationshipPrediction';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 interface Props {
   riskLevel: SpiralRiskLevel;
@@ -23,10 +25,10 @@ interface Props {
 }
 
 const RISK_THEME: Record<SpiralRiskLevel, { bg: string; border: string; accent: string; label: string }> = {
-  calm: { bg: Colors.white, border: Colors.border, accent: Colors.primary, label: 'Calm' },
-  watchful: { bg: '#FFFFFF', border: '#D9E2EC', accent: '#67E8F9', label: 'Watchful' },
-  rising: { bg: '#FFFFFF', border: '#D9E2EC', accent: '#3B82F6', label: 'Rising' },
-  urgent: { bg: '#FFFFFF', border: '#D9E2EC', accent: '#3B82F6', label: 'Needs attention' },
+  calm: { bg: Colors.white, border: Colors.border, accent: Colors.primary, get label() { return localizedText('Calm', 'Calma'); } },
+  watchful: { bg: '#FFFFFF', border: '#D9E2EC', accent: '#67E8F9', get label() { return localizedText('Watchful', 'Atento'); } },
+  rising: { bg: '#FFFFFF', border: '#D9E2EC', accent: '#3B82F6', get label() { return localizedText('Rising', 'Subiendo'); } },
+  urgent: { bg: '#FFFFFF', border: '#D9E2EC', accent: '#3B82F6', get label() { return localizedText('Needs attention', 'Necesita atención'); } },
 };
 
 const ICON_MAP: Record<string, typeof Timer> = {
@@ -43,6 +45,7 @@ export default React.memo(function RelationshipSpiralCard({
   interventions,
   score: _score,
 }: Props) {
+  useLanguage();
   const router = useRouter();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(12)).current;
@@ -108,7 +111,7 @@ export default React.memo(function RelationshipSpiralCard({
           </View>
           <View style={styles.headerText}>
             <View style={styles.titleRow}>
-              <Text style={[styles.title, { color: theme.accent }]}>Relationship Signal</Text>
+              <Text style={[styles.title, { color: theme.accent }]}>{localizedText('Relationship Signal', 'Señal relacional')}</Text>
               <View style={[styles.riskBadge, { backgroundColor: theme.accent + '18' }]}>
                 <Text style={[styles.riskBadgeText, { color: theme.accent }]}>{theme.label}</Text>
               </View>
@@ -155,7 +158,7 @@ export default React.memo(function RelationshipSpiralCard({
               ]}
             />
           ))}
-          <Text style={styles.tapHint}>Tap to see full analysis</Text>
+          <Text style={styles.tapHint}>{localizedText('Tap to see full analysis', 'Toca para ver el análisis completo')}</Text>
         </View>
       </TouchableOpacity>
     </Animated.View>

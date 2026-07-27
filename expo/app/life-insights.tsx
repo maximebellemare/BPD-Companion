@@ -36,6 +36,8 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useLifeInsights } from '@/hooks/useLifeInsights';
 import { LifeInsight, WeeklySummary } from '@/types/lifeInsight';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 const CATEGORY_CONFIG: Record<string, { icon: React.ReactNode; color: string; bgColor: string }> = {
   trigger: { icon: <Zap size={16} color="#67E8F9" />, color: '#67E8F9', bgColor: '#D9E2EC' },
@@ -101,7 +103,7 @@ function InsightCard({ insight, index, onPress }: { insight: LifeInsight; index:
         {!insight.viewed && (
           <View style={[styles.newBadge, { backgroundColor: accentColor + '18' }]}>
             <View style={[styles.newDot, { backgroundColor: accentColor }]} />
-            <Text style={[styles.newBadgeText, { color: accentColor }]}>New</Text>
+            <Text style={[styles.newBadgeText, { color: accentColor }]}>{localizedText('New', 'Nuevo')}</Text>
           </View>
         )}
       </TouchableOpacity>
@@ -146,7 +148,7 @@ function InsightDetailModal({
         <View style={styles.detailSection}>
           <View style={styles.detailSectionHeader}>
             <Lightbulb size={14} color={Colors.primary} />
-            <Text style={styles.detailSectionTitle}>Supportive note</Text>
+            <Text style={styles.detailSectionTitle}>{localizedText('Supportive note', 'Nota de apoyo')}</Text>
           </View>
           <Text style={styles.detailSectionText}>{insight.supportiveNote}</Text>
         </View>
@@ -154,13 +156,13 @@ function InsightDetailModal({
         <View style={[styles.detailSection, styles.actionSection]}>
           <View style={styles.detailSectionHeader}>
             <Sparkles size={14} color={Colors.accent} />
-            <Text style={styles.detailSectionTitle}>What might help</Text>
+            <Text style={styles.detailSectionTitle}>{localizedText('What might help', 'Qué podría ayudar')}</Text>
           </View>
           <Text style={styles.detailSectionText}>{insight.suggestedAction}</Text>
         </View>
 
         <TouchableOpacity style={styles.detailCloseBtn} onPress={onClose} activeOpacity={0.8}>
-          <Text style={styles.detailCloseBtnText}>Got it</Text>
+          <Text style={styles.detailCloseBtnText}>{localizedText('Got it', 'Entendido')}</Text>
         </TouchableOpacity>
       </View>
     </Animated.View>
@@ -185,9 +187,9 @@ function WeeklySummaryCard({ summary }: { summary: WeeklySummary }) {
       : <Minus size={14} color={Colors.textMuted} />;
 
   const trendLabel = summary.distressTrend === 'improving'
-    ? 'Improving' : summary.distressTrend === 'elevated'
-      ? 'Elevated' : summary.distressTrend === 'stable'
-        ? 'Stable' : 'Not enough data';
+    ? localizedText('Improving', 'Mejorando') : summary.distressTrend === 'elevated'
+      ? localizedText('Elevated', 'Elevado') : summary.distressTrend === 'stable'
+        ? localizedText('Stable', 'Estable') : localizedText('Not enough data', 'Aún faltan datos');
 
   const trendColor = summary.distressTrend === 'improving'
     ? Colors.success : summary.distressTrend === 'elevated'
@@ -209,23 +211,23 @@ function WeeklySummaryCard({ summary }: { summary: WeeklySummary }) {
       <View style={styles.weeklyStats}>
         <View style={styles.weeklyStat}>
           <Text style={styles.weeklyStatValue}>{summary.totalCheckIns}</Text>
-          <Text style={styles.weeklyStatLabel}>Check-ins</Text>
+          <Text style={styles.weeklyStatLabel}>{localizedText('Check-ins', 'Registros')}</Text>
         </View>
         <View style={styles.weeklyStatDivider} />
         <View style={styles.weeklyStat}>
           <Text style={styles.weeklyStatValue}>{summary.averageDistress || '—'}</Text>
-          <Text style={styles.weeklyStatLabel}>Avg Distress</Text>
+          <Text style={styles.weeklyStatLabel}>{localizedText('Avg Distress', 'Malestar prom.')}</Text>
         </View>
         <View style={styles.weeklyStatDivider} />
         <View style={styles.weeklyStat}>
           <Text style={styles.weeklyStatValue}>{summary.insights.length}</Text>
-          <Text style={styles.weeklyStatLabel}>Insights</Text>
+          <Text style={styles.weeklyStatLabel}>{localizedText('Insights', 'Insights')}</Text>
         </View>
       </View>
 
       {summary.topEmotions.length > 0 && (
         <View style={styles.weeklyEmotions}>
-          <Text style={styles.weeklySubLabel}>Top emotions</Text>
+          <Text style={styles.weeklySubLabel}>{localizedText('Top emotions', 'Emociones principales')}</Text>
           <View style={styles.weeklyEmotionRow}>
             {summary.topEmotions.slice(0, 4).map(em => (
               <View key={em.label} style={styles.weeklyEmotionChip}>
@@ -239,7 +241,7 @@ function WeeklySummaryCard({ summary }: { summary: WeeklySummary }) {
 
       {summary.topTriggers.length > 0 && (
         <View style={styles.weeklyTriggers}>
-          <Text style={styles.weeklySubLabel}>Top triggers</Text>
+          <Text style={styles.weeklySubLabel}>{localizedText('Top triggers', 'Disparadores principales')}</Text>
           {summary.topTriggers.slice(0, 3).map(t => (
             <View key={t.label} style={styles.weeklyTriggerRow}>
               <Text style={styles.weeklyTriggerLabel}>{t.label}</Text>
@@ -251,7 +253,7 @@ function WeeklySummaryCard({ summary }: { summary: WeeklySummary }) {
 
       {summary.growthSignals.length > 0 && (
         <View style={styles.weeklyGrowth}>
-          <Text style={styles.weeklySubLabel}>Growth signals</Text>
+          <Text style={styles.weeklySubLabel}>{localizedText('Growth signals', 'Señales de crecimiento')}</Text>
           {summary.growthSignals.map((signal, i) => (
             <View key={i} style={styles.weeklyGrowthRow}>
               <View style={styles.weeklyGrowthDot} />
@@ -272,6 +274,7 @@ function WeeklySummaryCard({ summary }: { summary: WeeklySummary }) {
 }
 
 export default function LifeInsightsScreen() {
+  useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const {
@@ -350,7 +353,7 @@ export default function LifeInsightsScreen() {
         >
           <ArrowLeft size={22} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Life Insights</Text>
+        <Text style={styles.headerTitle}>{localizedText('Life Insights', 'Insights de vida')}</Text>
         <TouchableOpacity
           onPress={handleGenerate}
           style={styles.refreshButton}
@@ -372,7 +375,7 @@ export default function LifeInsightsScreen() {
           activeOpacity={0.7}
         >
           <Sparkles size={15} color={activeTab === 'insights' ? Colors.primary : Colors.textMuted} />
-          <Text style={[styles.tabText, activeTab === 'insights' && styles.tabTextActive]}>Insights</Text>
+          <Text style={[styles.tabText, activeTab === 'insights' && styles.tabTextActive]}>{localizedText('Insights', 'Insights')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'weekly' && styles.tabActive]}
@@ -380,7 +383,7 @@ export default function LifeInsightsScreen() {
           activeOpacity={0.7}
         >
           <Calendar size={15} color={activeTab === 'weekly' ? Colors.primary : Colors.textMuted} />
-          <Text style={[styles.tabText, activeTab === 'weekly' && styles.tabTextActive]}>Weekly</Text>
+          <Text style={[styles.tabText, activeTab === 'weekly' && styles.tabTextActive]}>{localizedText('Weekly', 'Semanal')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -397,7 +400,7 @@ export default function LifeInsightsScreen() {
         <View style={styles.correlationBannerIcon}>
           <Link2 size={16} color="#3B82F6" />
         </View>
-        <Text style={styles.correlationBannerText}>Correlation Insights</Text>
+        <Text style={styles.correlationBannerText}>{localizedText('Correlation Insights', 'Insights de correlación')}</Text>
         <ChevronRight size={14} color={Colors.textMuted} />
       </TouchableOpacity>
 
@@ -412,14 +415,17 @@ export default function LifeInsightsScreen() {
         {isLoading ? (
           <View style={styles.loadingState}>
             <ActivityIndicator size="large" color={Colors.primary} />
-            <Text style={styles.loadingText}>Analyzing your patterns...</Text>
+            <Text style={styles.loadingText}>{localizedText('Analyzing your patterns...', 'Analizando tus patrones...')}</Text>
           </View>
         ) : activeTab === 'insights' ? (
           <Animated.View style={{ opacity: fadeAnim }}>
             {hasInsights ? (
               <>
                 <Text style={styles.sectionIntro}>
-                  Personalized insights from your recent emotional patterns
+                  {localizedText(
+                    'Personalized insights from your recent emotional patterns',
+                    'Insights personalizados de tus patrones emocionales recientes',
+                  )}
                 </Text>
                 {insights.map((insight, i) => (
                   <InsightCard
@@ -431,7 +437,10 @@ export default function LifeInsightsScreen() {
                 ))}
                 <View style={styles.footerMessage}>
                   <Text style={styles.footerText}>
-                    Every check-in helps build a clearer picture.{'\n'}You are doing something meaningful.
+                    {localizedText(
+                      'Every check-in helps build a clearer picture.\nYou are doing something meaningful.',
+                      'Cada registro ayuda a formar una imagen más clara.\nEstás haciendo algo significativo.',
+                    )}
                   </Text>
                 </View>
               </>
@@ -440,16 +449,19 @@ export default function LifeInsightsScreen() {
                 <View style={styles.emptyIconWrap}>
                   <Sparkles size={40} color={Colors.primary} />
                 </View>
-                <Text style={styles.emptyTitle}>Insights are building</Text>
+                <Text style={styles.emptyTitle}>{localizedText('Insights are building', 'Los insights se están construyendo')}</Text>
                 <Text style={styles.emptySubtitle}>
-                  Complete a few check-ins and your personalized emotional insights will start appearing here.
+                  {localizedText(
+                    'Complete a few check-ins and your personalized emotional insights will start appearing here.',
+                    'Completa algunos registros y tus insights emocionales personalizados empezarán a aparecer aquí.',
+                  )}
                 </Text>
                 <TouchableOpacity
                   style={styles.emptyButton}
                   onPress={() => router.push('/check-in')}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.emptyButtonText}>Start a Check-in</Text>
+                  <Text style={styles.emptyButtonText}>{localizedText('Start a Check-in', 'Iniciar registro')}</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -458,7 +470,7 @@ export default function LifeInsightsScreen() {
           <Animated.View style={{ opacity: fadeAnim }}>
             <View style={styles.weeklyActions}>
               <Text style={styles.sectionIntro}>
-                Weekly emotional summaries and patterns
+                {localizedText('Weekly emotional summaries and patterns', 'Resúmenes y patrones emocionales semanales')}
               </Text>
               <TouchableOpacity
                 style={styles.generateWeeklyBtn}
@@ -471,7 +483,7 @@ export default function LifeInsightsScreen() {
                 ) : (
                   <>
                     <RefreshCw size={15} color={Colors.white} />
-                    <Text style={styles.generateWeeklyText}>Generate This Week</Text>
+                    <Text style={styles.generateWeeklyText}>{localizedText('Generate This Week', 'Generar esta semana')}</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -486,9 +498,12 @@ export default function LifeInsightsScreen() {
                 <View style={styles.emptyIconWrap}>
                   <Calendar size={40} color={Colors.primary} />
                 </View>
-                <Text style={styles.emptyTitle}>No weekly summaries yet</Text>
+                <Text style={styles.emptyTitle}>{localizedText('No weekly summaries yet', 'Aún no hay resúmenes semanales')}</Text>
                 <Text style={styles.emptySubtitle}>
-                  Generate your first weekly summary to see emotional patterns over time.
+                  {localizedText(
+                    'Generate your first weekly summary to see emotional patterns over time.',
+                    'Genera tu primer resumen semanal para ver patrones emocionales a lo largo del tiempo.',
+                  )}
                 </Text>
               </View>
             )}

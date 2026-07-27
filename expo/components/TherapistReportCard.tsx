@@ -4,6 +4,8 @@ import { useRouter } from 'expo-router';
 import { FileText, ChevronRight, Share2 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 interface TherapistReportCardProps {
   checkInCount: number;
@@ -18,6 +20,7 @@ function TherapistReportCardComponent({
   overviewNarrative,
   discussionPromptCount,
 }: TherapistReportCardProps) {
+  useLanguage();
   const router = useRouter();
   const pulseAnim = useRef(new Animated.Value(0)).current;
 
@@ -56,7 +59,10 @@ function TherapistReportCardComponent({
     ? overviewNarrative.length > 90
       ? overviewNarrative.slice(0, 90) + '…'
       : overviewNarrative
-    : 'Complete a few more check-ins to generate a therapy report.';
+    : localizedText(
+      'Complete a few more check-ins to generate a therapy report.',
+      'Completa algunos registros más para generar un informe para terapia.',
+    );
 
   return (
     <TouchableOpacity
@@ -80,14 +86,14 @@ function TherapistReportCardComponent({
           {hasEnoughData && (
             <View style={styles.shareBadge}>
               <Share2 size={11} color={Colors.accent} />
-              <Text style={styles.shareBadgeText}>Shareable</Text>
+              <Text style={styles.shareBadgeText}>{localizedText('Shareable', 'Compartible')}</Text>
             </View>
           )}
         </View>
         <ChevronRight size={16} color={Colors.textMuted} />
       </View>
 
-      <Text style={styles.title}>Therapist Report</Text>
+      <Text style={styles.title}>{localizedText('Therapist Report', 'Informe para terapia')}</Text>
       <Text style={styles.preview}>{previewText}</Text>
 
       {hasEnoughData && (
@@ -95,14 +101,20 @@ function TherapistReportCardComponent({
           {checkInCount > 0 && (
             <View style={styles.metaChip}>
               <Text style={styles.metaChipText}>
-                {checkInCount} check-in{checkInCount !== 1 ? 's' : ''}
+                {checkInCount} {localizedText(
+                  `check-in${checkInCount !== 1 ? 's' : ''}`,
+                  `registro${checkInCount !== 1 ? 's' : ''}`,
+                )}
               </Text>
             </View>
           )}
           {discussionPromptCount > 0 && (
             <View style={[styles.metaChip, styles.metaChipAccent]}>
               <Text style={[styles.metaChipText, styles.metaChipTextAccent]}>
-                {discussionPromptCount} discussion topic{discussionPromptCount !== 1 ? 's' : ''}
+                {discussionPromptCount} {localizedText(
+                  `discussion topic${discussionPromptCount !== 1 ? 's' : ''}`,
+                  `tema${discussionPromptCount !== 1 ? 's' : ''} para conversar`,
+                )}
               </Text>
             </View>
           )}

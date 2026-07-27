@@ -31,8 +31,11 @@ import {
   getDefaultTimesForSchedule,
   formatTime,
 } from '@/types/medication';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 export default function MedicationAddScreen() {
+  useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
@@ -40,7 +43,7 @@ export default function MedicationAddScreen() {
   const { trackEvent } = useAnalytics();
   const medicationContext = useMedications();
   const addMedication = medicationContext?.addMedication ?? (async () => {
-    throw new Error('Medication tracking is still loading. Please try again.');
+    throw new Error(localizedText('Medication tracking is still loading. Please try again.', 'El registro de medicamentos todavía se está cargando. Intenta de nuevo.'));
   });
   const updateMedication = medicationContext?.updateMedication ?? (async () => null);
   const getMedicationById = medicationContext?.getMedicationById ?? (() => null);
@@ -92,7 +95,7 @@ export default function MedicationAddScreen() {
   }, []);
 
   const addTimeSlot = useCallback(() => {
-    setTimes(prev => [...prev, { hour: 12, minute: 0, label: `Dose ${prev.length + 1}` }]);
+    setTimes(prev => [...prev, { hour: 12, minute: 0, label: localizedText(`Dose ${prev.length + 1}`, `Dosis ${prev.length + 1}`) }]);
   }, []);
 
   const removeTimeSlot = useCallback((index: number) => {
@@ -112,15 +115,15 @@ export default function MedicationAddScreen() {
 
   const handleSave = useCallback(async () => {
     if (!name.trim()) {
-      Alert.alert('Name required', 'Please enter the medication name.');
+      Alert.alert(localizedText('Name required', 'Nombre requerido'), localizedText('Please enter the medication name.', 'Ingresa el nombre del medicamento.'));
       return;
     }
     if (schedule !== 'as_needed' && times.length === 0) {
-      Alert.alert('Time required', 'Please add at least one time for this medication.');
+      Alert.alert(localizedText('Time required', 'Hora requerida'), localizedText('Please add at least one time for this medication.', 'Agrega al menos una hora para este medicamento.'));
       return;
     }
     if ((schedule === 'weekly' || schedule === 'custom') && daysOfWeek.length === 0) {
-      Alert.alert('Days required', 'Please choose at least one day for this medication.');
+      Alert.alert(localizedText('Days required', 'Días requeridos'), localizedText('Please choose at least one day for this medication.', 'Elige al menos un día para este medicamento.'));
       return;
     }
 
@@ -163,7 +166,7 @@ export default function MedicationAddScreen() {
       router.back();
     } catch (error) {
       console.log('[MedicationAdd] Error saving:', error);
-      Alert.alert('Error', 'Could not save medication. Please try again.');
+      Alert.alert(localizedText('Error', 'Error'), localizedText('Could not save medication. Please try again.', 'No se pudo guardar el medicamento. Intenta de nuevo.'));
     }
   }, [
     name, dosage, category, schedule, times, daysOfWeek, purpose, reminderEnabled,
@@ -185,7 +188,7 @@ export default function MedicationAddScreen() {
         >
           <X size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>{isEditing ? 'Edit Medication' : 'Add Medication'}</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>{isEditing ? localizedText('Edit Medication', 'Editar medicamento') : localizedText('Add Medication', 'Agregar medicamento')}</Text>
         <TouchableOpacity
           style={[styles.saveButton, { backgroundColor: colors.primary }, !name.trim() && styles.saveButtonDisabled]}
           onPress={handleSave}
@@ -206,36 +209,36 @@ export default function MedicationAddScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.fieldGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Medication Name</Text>
+            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>{localizedText('Medication Name', 'Nombre del medicamento')}</Text>
             <TextInput
               style={[styles.textInput, { backgroundColor: colors.card, borderColor: colors.borderLight, color: colors.text }]}
               value={name}
               onChangeText={setName}
-              placeholder="e.g. Lamotrigine, Sertraline..."
+              placeholder={localizedText('e.g. Lamotrigine, Sertraline...', 'ej. Lamotrigina, Sertralina...')}
               placeholderTextColor={colors.textMuted}
               testID="medication-name-input"
             />
           </View>
 
           <View style={styles.fieldGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Dosage</Text>
+            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>{localizedText('Dosage', 'Dosis')}</Text>
             <TextInput
               style={[styles.textInput, { backgroundColor: colors.card, borderColor: colors.borderLight, color: colors.text }]}
               value={dosage}
               onChangeText={setDosage}
-              placeholder="e.g. 50mg, 100mg..."
+              placeholder={localizedText('e.g. 50mg, 100mg...', 'ej. 50 mg, 100 mg...')}
               placeholderTextColor={colors.textMuted}
               testID="medication-dosage-input"
             />
           </View>
 
           <View style={styles.fieldGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Category</Text>
+            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>{localizedText('Category', 'Categoría')}</Text>
             <TouchableOpacity
               style={[styles.pickerButton, { backgroundColor: colors.card, borderColor: colors.borderLight }]}
               onPress={() => setShowCategoryPicker(!showCategoryPicker)}
             >
-              <Text style={[styles.pickerValue, { color: colors.text }]}>{selectedCategory?.label ?? 'Select'}</Text>
+              <Text style={[styles.pickerValue, { color: colors.text }]}>{selectedCategory?.label ?? localizedText('Select', 'Seleccionar')}</Text>
               <ChevronDown size={16} color={colors.textMuted} />
             </TouchableOpacity>
             {showCategoryPicker && (
@@ -263,13 +266,13 @@ export default function MedicationAddScreen() {
           </View>
 
           <View style={styles.fieldGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Schedule</Text>
+            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>{localizedText('Schedule', 'Horario')}</Text>
             <TouchableOpacity
               style={[styles.pickerButton, { backgroundColor: colors.card, borderColor: colors.borderLight }]}
               onPress={() => setShowSchedulePicker(!showSchedulePicker)}
             >
               <View>
-                <Text style={[styles.pickerValue, { color: colors.text }]}>{selectedSchedule?.label ?? 'Select'}</Text>
+                <Text style={[styles.pickerValue, { color: colors.text }]}>{selectedSchedule?.label ?? localizedText('Select', 'Seleccionar')}</Text>
                 <Text style={[styles.pickerDesc, { color: colors.textMuted }]}>{selectedSchedule?.description}</Text>
               </View>
               <ChevronDown size={16} color={colors.textMuted} />
@@ -298,7 +301,7 @@ export default function MedicationAddScreen() {
 
           {shouldShowDayPicker ? (
             <View style={styles.fieldGroup}>
-              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Days</Text>
+              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>{localizedText('Days', 'Días')}</Text>
               <View style={styles.dayGrid}>
                 {MEDICATION_WEEKDAYS.map(day => {
                   const active = daysOfWeek.includes(day.value);
@@ -326,9 +329,9 @@ export default function MedicationAddScreen() {
 
           {schedule !== 'as_needed' && (
             <View style={styles.fieldGroup}>
-              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Times</Text>
+              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>{localizedText('Times', 'Horas')}</Text>
               <Text style={[styles.fieldHint, { color: colors.textMuted }]}>
-                Add as many dose times as this medication needs.
+                {localizedText('Add as many dose times as this medication needs.', 'Agrega tantos horarios de dosis como necesite este medicamento.')}
               </Text>
               {times.map((time, idx) => (
                 <View key={idx} style={[styles.timeRow, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
@@ -355,7 +358,7 @@ export default function MedicationAddScreen() {
                     >
                       <Minus size={14} color={colors.textSecondary} />
                     </TouchableOpacity>
-                    <Text style={[styles.timeMinLabel, { color: colors.textMuted }]}>min</Text>
+                    <Text style={[styles.timeMinLabel, { color: colors.textMuted }]}>{localizedText('min', 'min')}</Text>
                     <TouchableOpacity
                       style={[styles.timeAdjustBtn, { backgroundColor: colors.surface }]}
                       onPress={() => adjustTimeMinute(idx, 15)}
@@ -375,26 +378,26 @@ export default function MedicationAddScreen() {
               ))}
               <TouchableOpacity style={[styles.addTimeBtn, { borderColor: colors.borderLight }]} onPress={addTimeSlot}>
                 <Plus size={14} color={colors.primary} />
-                <Text style={[styles.addTimeBtnText, { color: colors.primary }]}>Add Time</Text>
+                <Text style={[styles.addTimeBtnText, { color: colors.primary }]}>{localizedText('Add Time', 'Agregar hora')}</Text>
               </TouchableOpacity>
             </View>
           )}
 
           <View style={styles.fieldGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Purpose (optional)</Text>
+            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>{localizedText('Purpose (optional)', 'Propósito (opcional)')}</Text>
             <TextInput
               style={[styles.textInput, { backgroundColor: colors.card, borderColor: colors.borderLight, color: colors.text }]}
               value={purpose}
               onChangeText={setPurpose}
-              placeholder="e.g. Mood stability, anxiety..."
+              placeholder={localizedText('e.g. Mood stability, anxiety...', 'ej. estabilidad del ánimo, ansiedad...')}
               placeholderTextColor={colors.textMuted}
             />
           </View>
 
           <View style={[styles.switchRow, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
             <View style={styles.switchInfo}>
-              <Text style={[styles.switchLabel, { color: colors.text }]}>Reminders</Text>
-              <Text style={[styles.switchDesc, { color: colors.textMuted }]}>Get notified when it's time</Text>
+              <Text style={[styles.switchLabel, { color: colors.text }]}>{localizedText('Reminders', 'Recordatorios')}</Text>
+              <Text style={[styles.switchDesc, { color: colors.textMuted }]}>{localizedText("Get notified when it's time", 'Recibe una notificación cuando sea hora')}</Text>
             </View>
             <Switch
               value={reminderEnabled}
@@ -405,12 +408,12 @@ export default function MedicationAddScreen() {
           </View>
 
           <View style={styles.fieldGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Side effects to watch (optional)</Text>
+            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>{localizedText('Side effects to watch (optional)', 'Efectos secundarios a observar (opcional)')}</Text>
             <TextInput
               style={[styles.textInput, styles.textArea, { backgroundColor: colors.card, borderColor: colors.borderLight, color: colors.text }]}
               value={sideEffectNotes}
               onChangeText={setSideEffectNotes}
-              placeholder="Any side effects you want to track..."
+              placeholder={localizedText('Any side effects you want to track...', 'Cualquier efecto secundario que quieras registrar...')}
               placeholderTextColor={colors.textMuted}
               multiline
               numberOfLines={3}
@@ -418,12 +421,12 @@ export default function MedicationAddScreen() {
           </View>
 
           <View style={styles.fieldGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Notes (optional)</Text>
+            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>{localizedText('Notes (optional)', 'Notas (opcional)')}</Text>
             <TextInput
               style={[styles.textInput, styles.textArea, { backgroundColor: colors.card, borderColor: colors.borderLight, color: colors.text }]}
               value={generalNotes}
               onChangeText={setGeneralNotes}
-              placeholder="Any other notes..."
+              placeholder={localizedText('Any other notes...', 'Cualquier otra nota...')}
               placeholderTextColor={colors.textMuted}
               multiline
               numberOfLines={3}

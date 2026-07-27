@@ -14,6 +14,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, CheckCircle2, ChevronRight, MessageSquareText, Sparkles, Target, Trophy } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { useAppTheme } from '@/providers/ThemeProvider';
 import { trackEvent } from '@/services/analytics/analyticsService';
 import {
@@ -45,6 +47,7 @@ function latestImprovement(progress: RewriteMessageProgress | null): string {
 export default function RewriteTheMessageScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  useLanguage();
   const { colors } = useAppTheme();
   const [progress, setProgress] = useState<RewriteMessageProgress | null>(null);
   const [loading, setLoading] = useState(true);
@@ -127,10 +130,13 @@ export default function RewriteTheMessageScreen() {
             <ArrowLeft size={20} color={colors.text} />
           </TouchableOpacity>
           <View style={styles.headerTextWrap}>
-            <Text style={[styles.eyebrow, { color: colors.brandTeal }]}>Rewrite The Message</Text>
-            <Text style={[styles.title, { color: colors.text }]}>Practice healthier words</Text>
+            <Text style={[styles.eyebrow, { color: colors.brandTeal }]}>{localizedText('Rewrite The Message', 'Reescribir el mensaje')}</Text>
+            <Text style={[styles.title, { color: colors.text }]}>{localizedText('Practice healthier words', 'Practica palabras más sanas')}</Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Rewrite emotionally loaded messages into clearer, steadier communication.
+              {localizedText(
+                'Rewrite emotionally loaded messages into clearer, steadier communication.',
+                'Reescribe mensajes emocionalmente cargados para comunicarte con más claridad y estabilidad.',
+              )}
             </Text>
           </View>
         </View>
@@ -139,17 +145,17 @@ export default function RewriteTheMessageScreen() {
           <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
             <Target size={16} color={colors.primary} />
             <Text style={[styles.statValue, { color: colors.text }]}>{averageScore(progress)}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Avg score</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{localizedText('Avg score', 'Puntaje prom.')}</Text>
           </View>
           <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
             <Trophy size={16} color={colors.brandTeal} />
             <Text style={[styles.statValue, { color: colors.text }]}>{progress?.attempts.length ?? 0}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Rewrites</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{localizedText('Rewrites', 'Reescrituras')}</Text>
           </View>
           <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
             <Sparkles size={16} color={colors.accent} />
             <Text style={[styles.statValue, { color: colors.text }]}>{latestImprovement(progress)}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Last change</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{localizedText('Last change', 'Último cambio')}</Text>
           </View>
         </View>
 
@@ -186,21 +192,24 @@ export default function RewriteTheMessageScreen() {
           <Text style={[styles.scenarioTitle, { color: colors.text }]}>{scenario.title}</Text>
           <Text style={[styles.contextText, { color: colors.textSecondary }]}>{scenario.context}</Text>
           <View style={[styles.originalBox, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
-            <Text style={[styles.boxLabel, { color: colors.textSecondary }]}>Original</Text>
+            <Text style={[styles.boxLabel, { color: colors.textSecondary }]}>{localizedText('Original', 'Original')}</Text>
             <Text style={[styles.originalText, { color: colors.text }]}>“{scenario.original}”</Text>
           </View>
-          <Text style={[styles.goalText, { color: colors.textSecondary }]}>Goal: {scenario.goal}</Text>
+          <Text style={[styles.goalText, { color: colors.textSecondary }]}>{localizedText('Goal', 'Objetivo')}: {scenario.goal}</Text>
         </View>
 
         <View style={[styles.writeCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
-          <Text style={[styles.writeTitle, { color: colors.text }]}>Your rewrite</Text>
+          <Text style={[styles.writeTitle, { color: colors.text }]}>{localizedText('Your rewrite', 'Tu reescritura')}</Text>
           <TextInput
             value={rewrite}
             onChangeText={(text) => {
               setRewrite(text);
               setAttempt(null);
             }}
-            placeholder="Try rewriting it with a feeling, context, and one clear ask..."
+            placeholder={localizedText(
+              'Try rewriting it with a feeling, context, and one clear ask...',
+              'Intenta reescribirlo con un sentimiento, contexto y una petición clara...',
+            )}
             placeholderTextColor={colors.textMuted}
             multiline
             textAlignVertical="top"
@@ -222,7 +231,7 @@ export default function RewriteTheMessageScreen() {
             activeOpacity={0.86}
             testID="rewrite-message-submit"
           >
-            <Text style={styles.submitText}>Score my rewrite</Text>
+            <Text style={styles.submitText}>{localizedText('Score my rewrite', 'Evaluar mi reescritura')}</Text>
             <ChevronRight size={18} color={Colors.white} />
           </TouchableOpacity>
         </View>
@@ -230,11 +239,11 @@ export default function RewriteTheMessageScreen() {
         {attempt ? (
           <View style={styles.resultsWrap}>
             <View style={[styles.scoreCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
-              <Text style={[styles.resultTitle, { color: colors.text }]}>Overall score: {attempt.score.overall}</Text>
+              <Text style={[styles.resultTitle, { color: colors.text }]}>{localizedText('Overall score', 'Puntaje general')}: {attempt.score.overall}</Text>
               {[
-                ['Emotional regulation', attempt.score.emotionalRegulation],
-                ['Validation', attempt.score.validation],
-                ['Effectiveness', attempt.score.effectiveness],
+                [localizedText('Emotional regulation', 'Regulación emocional'), attempt.score.emotionalRegulation],
+                [localizedText('Validation', 'Validación'), attempt.score.validation],
+                [localizedText('Effectiveness', 'Efectividad'), attempt.score.effectiveness],
               ].map(([label, value]) => (
                 <View key={label} style={styles.scoreRow}>
                   <Text style={[styles.scoreLabel, { color: colors.text }]}>{label}</Text>
@@ -244,7 +253,7 @@ export default function RewriteTheMessageScreen() {
             </View>
 
             <View style={[styles.feedbackCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
-              <Text style={[styles.resultTitle, { color: colors.text }]}>What worked</Text>
+              <Text style={[styles.resultTitle, { color: colors.text }]}>{localizedText('What worked', 'Qué funcionó')}</Text>
               {attempt.score.feedback.map(item => (
                 <View key={item} style={styles.feedbackRow}>
                   <CheckCircle2 size={15} color={colors.brandTeal} />
@@ -254,9 +263,9 @@ export default function RewriteTheMessageScreen() {
             </View>
 
             {[
-              ['Stronger version', scenario.strongerVersion],
-              ['DBT version', scenario.dbtVersion],
-              ['Assertive version', scenario.assertiveVersion],
+              [localizedText('Stronger version', 'Versión más sólida'), scenario.strongerVersion],
+              [localizedText('DBT version', 'Versión DBT'), scenario.dbtVersion],
+              [localizedText('Assertive version', 'Versión asertiva'), scenario.assertiveVersion],
             ].map(([label, value]) => (
               <View key={label} style={[styles.versionCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
                 <Text style={[styles.versionLabel, { color: colors.brandTeal }]}>{label}</Text>
@@ -270,7 +279,7 @@ export default function RewriteTheMessageScreen() {
               activeOpacity={0.86}
               testID="rewrite-message-next"
             >
-              <Text style={styles.submitText}>Next message</Text>
+              <Text style={styles.submitText}>{localizedText('Next message', 'Siguiente mensaje')}</Text>
               <ChevronRight size={18} color={Colors.white} />
             </TouchableOpacity>
           </View>

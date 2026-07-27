@@ -32,14 +32,16 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { usePlaybook } from '@/hooks/usePlaybook';
 import type { PlaybookStrategy } from '@/types/playbook';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 type TabKey = 'coping' | 'relationship' | 'calming' | 'identity';
 
 const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
-  { key: 'coping', label: 'Coping', icon: <Shield size={16} color={Colors.primary} /> },
-  { key: 'relationship', label: 'Relationships', icon: <Heart size={16} color="#3B82F6" /> },
-  { key: 'calming', label: 'Calming', icon: <Wind size={16} color="#3B82F6" /> },
-  { key: 'identity', label: 'Identity', icon: <Sparkles size={16} color="#67E8F9" /> },
+  { key: 'coping', get label() { return localizedText('Coping', 'Afrontamiento'); }, icon: <Shield size={16} color={Colors.primary} /> },
+  { key: 'relationship', get label() { return localizedText('Relationships', 'Relaciones'); }, icon: <Heart size={16} color="#3B82F6" /> },
+  { key: 'calming', get label() { return localizedText('Calming', 'Calma'); }, icon: <Wind size={16} color="#3B82F6" /> },
+  { key: 'identity', get label() { return localizedText('Identity', 'Identidad'); }, icon: <Sparkles size={16} color="#67E8F9" /> },
 ];
 
 const ICON_MAP: Record<string, React.ReactNode> = {
@@ -174,6 +176,7 @@ function EmptySection({ category }: { category: TabKey }) {
 export default function EmotionalPlaybookScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  useLanguage();
   const playbook = usePlaybook();
   const [activeTab, setActiveTab] = useState<TabKey>('coping');
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -247,14 +250,14 @@ export default function EmotionalPlaybookScreen() {
           </TouchableOpacity>
           <View style={styles.heroTitleRow}>
             <BookOpen size={26} color={Colors.white} />
-            <Text style={styles.heroTitle}>My Emotional Playbook</Text>
+            <Text style={styles.heroTitle}>{localizedText('My Emotional Playbook', 'Mi manual emocional')}</Text>
           </View>
           <Text style={styles.heroSubtitle}>{playbook.personalNarrative}</Text>
 
           {playbook.topStrategy && effectivenessBar !== null && (
             <View style={styles.topStrategyHero}>
               <View style={styles.topStrategyHeroInner}>
-                <Text style={styles.topStrategyHeroLabel}>Most effective</Text>
+                <Text style={styles.topStrategyHeroLabel}>{localizedText('Most effective', 'Más efectivo')}</Text>
                 <Text style={styles.topStrategyHeroName}>{playbook.topStrategy.title}</Text>
                 <View style={styles.effectivenessBarBg}>
                   <View
@@ -262,7 +265,10 @@ export default function EmotionalPlaybookScreen() {
                   />
                 </View>
                 <Text style={styles.effectivenessText}>
-                  {effectivenessBar}% effectiveness · Reduces distress by {playbook.topStrategy.avgDistressReduction}
+                  {localizedText(
+                    `${effectivenessBar}% effectiveness · Reduces distress by ${playbook.topStrategy.avgDistressReduction}`,
+                    `${effectivenessBar}% de efectividad · Reduce el malestar en ${playbook.topStrategy.avgDistressReduction}`,
+                  )}
                 </Text>
               </View>
             </View>
@@ -274,22 +280,22 @@ export default function EmotionalPlaybookScreen() {
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
             <Text style={styles.statValue}>{playbook.totalStrategiesTracked}</Text>
-            <Text style={styles.statLabel}>Strategies</Text>
+            <Text style={styles.statLabel}>{localizedText('Strategies', 'Estrategias')}</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
             <Text style={styles.statValue}>{playbook.copingStrategies.length}</Text>
-            <Text style={styles.statLabel}>Coping</Text>
+            <Text style={styles.statLabel}>{localizedText('Coping', 'Afrontamiento')}</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
             <Text style={styles.statValue}>{playbook.relationshipStrategies.length}</Text>
-            <Text style={styles.statLabel}>Relationship</Text>
+            <Text style={styles.statLabel}>{localizedText('Relationship', 'Relación')}</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
             <Text style={styles.statValue}>{playbook.identityReminders.length}</Text>
-            <Text style={styles.statLabel}>Growth</Text>
+            <Text style={styles.statLabel}>{localizedText('Growth', 'Crecimiento')}</Text>
           </View>
         </View>
 

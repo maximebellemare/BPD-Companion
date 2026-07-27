@@ -25,6 +25,8 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useRewards } from '@/providers/RewardsProvider';
 import { MilestoneLevel } from '@/types/reward';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 const ICON_MAP: Record<string, React.ComponentType<{ size: number; color: string }>> = {
   Heart,
@@ -46,6 +48,7 @@ const LEVEL_COLORS: Record<MilestoneLevel, { bg: string; border: string; text: s
 };
 
 function MilestoneHomeCard() {
+  useLanguage();
   const router = useRouter();
   const { recentMilestone, markMilestoneSeen, totalUnlocked } = useRewards();
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -94,8 +97,13 @@ function MilestoneHomeCard() {
           <Award size={16} color={Colors.primary} />
         </View>
         <View style={styles.compactContent}>
-          <Text style={styles.compactTitle}>{totalUnlocked} Milestone{totalUnlocked !== 1 ? 's' : ''} Earned</Text>
-          <Text style={styles.compactDesc}>View your consistency progress</Text>
+          <Text style={styles.compactTitle}>
+            {totalUnlocked} {localizedText(
+              `Milestone${totalUnlocked !== 1 ? 's' : ''} Earned`,
+              `hito${totalUnlocked !== 1 ? 's' : ''} logrado${totalUnlocked !== 1 ? 's' : ''}`,
+            )}
+          </Text>
+          <Text style={styles.compactDesc}>{localizedText('View your consistency progress', 'Ver tu progreso de constancia')}</Text>
         </View>
         <ChevronRight size={14} color={Colors.textMuted} />
       </TouchableOpacity>
@@ -125,7 +133,11 @@ function MilestoneHomeCard() {
           </View>
           <View style={styles.headerText}>
             <Text style={[styles.levelBadge, { color: levelColors.text, backgroundColor: levelColors.accent + '18' }]}>
-              {recentMilestone.level === 'bronze' ? 'New' : recentMilestone.level === 'silver' ? 'Growing' : 'Strong'} Milestone
+              {recentMilestone.level === 'bronze'
+                ? localizedText('New', 'Nuevo')
+                : recentMilestone.level === 'silver'
+                  ? localizedText('Growing', 'En crecimiento')
+                  : localizedText('Strong', 'Fuerte')} {localizedText('Milestone', 'hito')}
             </Text>
             <Text style={[styles.title, { color: levelColors.text }]}>{recentMilestone.title}</Text>
           </View>
@@ -134,7 +146,7 @@ function MilestoneHomeCard() {
           {recentMilestone.celebrationMessage}
         </Text>
         <View style={styles.footer}>
-          <Text style={[styles.footerText, { color: levelColors.accent }]}>View all milestones</Text>
+          <Text style={[styles.footerText, { color: levelColors.accent }]}>{localizedText('View all milestones', 'Ver todos los hitos')}</Text>
           <ChevronRight size={14} color={levelColors.accent} />
         </View>
       </TouchableOpacity>

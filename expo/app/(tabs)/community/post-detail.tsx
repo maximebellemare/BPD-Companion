@@ -35,6 +35,8 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import {
   CATEGORIES,
   SUPPORT_REACTION_LABELS,
@@ -64,13 +66,14 @@ function timeAgo(timestamp: number): string {
   const now = Date.now();
   const diff = now - timestamp;
   const minutes = Math.floor(diff / 60000);
-  if (minutes < 1) return 'just now';
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 1) return localizedText('just now', 'ahora');
+  if (minutes < 60) return localizedText(`${minutes}m ago`, `hace ${minutes} min`);
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return localizedText(`${hours}h ago`, `hace ${hours} h`);
   const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
-  return `${Math.floor(days / 7)}w ago`;
+  if (days < 7) return localizedText(`${days}d ago`, `hace ${days} d`);
+  const weeks = Math.floor(days / 7);
+  return localizedText(`${weeks}w ago`, `hace ${weeks} sem`);
 }
 
 function SupportReactionBar({
@@ -158,7 +161,7 @@ function ReplyCard({
             {getPublicAuthorLabel(reply.author)}
           </Text>
           {reply.author.isTrustedHelper && (
-            <Text style={styles.trustedLabel}>Trusted helper</Text>
+            <Text style={styles.trustedLabel}>{localizedText('Trusted helper', 'Ayudante de confianza')}</Text>
           )}
         </View>
         <View style={styles.replyHeaderRight}>
@@ -213,7 +216,7 @@ function ReplyCard({
             </View>
           ) : (
             <>
-              <Text style={styles.helpfulnessLabel}>Was this helpful?</Text>
+              <Text style={styles.helpfulnessLabel}>{localizedText('Was this helpful?', '¿Fue útil?')}</Text>
               <View style={styles.helpfulnessOptions}>
                 {HELPFULNESS_OPTIONS.map((option) => (
                   <TouchableOpacity
@@ -238,13 +241,14 @@ function ReplyCard({
 }
 
 const REPLY_LABELS: { id: ReplyLabel; emoji: string; label: string }[] = [
-  { id: 'what-helped-me', emoji: '💡', label: 'What helped me' },
-  { id: 'a-skill-that-worked', emoji: '🧘', label: 'A skill that worked' },
-  { id: 'another-perspective', emoji: '🔄', label: 'Another perspective' },
-  { id: 'personal-experience', emoji: '🫂', label: 'Personal experience' },
+  { id: 'what-helped-me', emoji: '💡', get label() { return localizedText('What helped me', 'Lo que me ayudó'); } },
+  { id: 'a-skill-that-worked', emoji: '🧘', get label() { return localizedText('A skill that worked', 'Una habilidad que funcionó'); } },
+  { id: 'another-perspective', emoji: '🔄', get label() { return localizedText('Another perspective', 'Otra perspectiva'); } },
+  { id: 'personal-experience', emoji: '🫂', get label() { return localizedText('Personal experience', 'Experiencia personal'); } },
 ];
 
 export default function PostDetailScreen() {
+  useLanguage();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const {
@@ -341,11 +345,11 @@ export default function PostDetailScreen() {
     const safety = checkContentSafety(replyText);
     if (!safety.isSafe) {
       Alert.alert(
-        'A gentle reminder',
-        safety.suggestion ?? 'Please review your reply.',
+        localizedText('A gentle reminder', 'Un recordatorio amable'),
+        safety.suggestion ?? localizedText('Please review your reply.', 'Revisa tu respuesta.'),
         [
-          { text: 'Edit reply', style: 'cancel' },
-          { text: 'Send anyway', onPress: doSendReply },
+          { text: localizedText('Edit reply', 'Editar respuesta'), style: 'cancel' },
+          { text: localizedText('Send anyway', 'Enviar de todos modos'), onPress: doSendReply },
         ]
       );
       return;
@@ -393,16 +397,16 @@ export default function PostDetailScreen() {
   );
 
   const handleDeleteReply = useCallback((replyId: string) => {
-    Alert.alert('Delete reply?', 'This removes your reply from the thread.', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(localizedText('Delete reply?', '¿Eliminar respuesta?'), localizedText('This removes your reply from the thread.', 'Esto elimina tu respuesta del hilo.'), [
+      { text: localizedText('Cancel', 'Cancelar'), style: 'cancel' },
       {
-        text: 'Delete',
+        text: localizedText('Delete', 'Eliminar'),
         style: 'destructive',
         onPress: async () => {
           try {
             await deleteReply(replyId);
           } catch (error) {
-            Alert.alert('Could not delete reply', error instanceof Error ? error.message : 'Please try again.');
+            Alert.alert(localizedText('Could not delete reply', 'No se pudo eliminar la respuesta'), error instanceof Error ? error.message : localizedText('Please try again.', 'Inténtalo de nuevo.'));
           }
         },
       },
@@ -411,17 +415,17 @@ export default function PostDetailScreen() {
 
   const handleDeletePost = useCallback(() => {
     if (!post) return;
-    Alert.alert('Delete this post?', 'This removes your post and its replies from Community.', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(localizedText('Delete this post?', '¿Eliminar esta publicación?'), localizedText('This removes your post and its replies from Community.', 'Esto elimina tu publicación y sus respuestas de la comunidad.'), [
+      { text: localizedText('Cancel', 'Cancelar'), style: 'cancel' },
       {
-        text: 'Delete',
+        text: localizedText('Delete', 'Eliminar'),
         style: 'destructive',
         onPress: async () => {
           try {
             await deletePost();
             router.replace('/community' as never);
           } catch (error) {
-            Alert.alert('Could not delete post', error instanceof Error ? error.message : 'Please try again.');
+            Alert.alert(localizedText('Could not delete post', 'No se pudo eliminar la publicación'), error instanceof Error ? error.message : localizedText('Please try again.', 'Inténtalo de nuevo.'));
           }
         },
       },
@@ -455,7 +459,7 @@ export default function PostDetailScreen() {
       const conversation = await startPrivateConversation(post.author);
       router.push(`/community/private-message?id=${conversation.id}` as never);
     } catch (error) {
-      Alert.alert('Could not start message', error instanceof Error ? error.message : 'Please try again.');
+      Alert.alert(localizedText('Could not start message', 'No se pudo iniciar el mensaje'), error instanceof Error ? error.message : localizedText('Please try again.', 'Inténtalo de nuevo.'));
     }
   }, [handleHideActions, post, router]);
 
@@ -481,7 +485,7 @@ export default function PostDetailScreen() {
       console.log('[PostDetail] Report submitted for', reportTargetType, reportTargetId);
     } catch (error) {
       console.error('[PostDetail] Report failed:', error);
-      Alert.alert('Something went wrong', 'Please try again.');
+      Alert.alert(localizedText('Something went wrong', 'Algo salió mal'), localizedText('Please try again.', 'Inténtalo de nuevo.'));
     }
   }, [selectedReason, reportTargetId, reportTargetType, reportContent]);
 
@@ -489,19 +493,19 @@ export default function PostDetailScreen() {
     handleHideActions();
     if (!post) return;
     Alert.alert(
-      'Block this user?',
-      'You will no longer see their posts or replies.',
+      localizedText('Block this user?', '¿Bloquear a esta persona?'),
+      localizedText('You will no longer see their posts or replies.', 'Ya no verás sus publicaciones ni respuestas.'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: localizedText('Cancel', 'Cancelar'), style: 'cancel' },
         {
-          text: 'Block',
+          text: localizedText('Block', 'Bloquear'),
           style: 'destructive',
           onPress: async () => {
             try {
               void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
               await blockUser(post.author.id);
               console.log('[PostDetail] Blocked user:', post.author.id);
-              Alert.alert('User blocked', 'Their content will be hidden from your feed.');
+              Alert.alert(localizedText('User blocked', 'Usuario bloqueado'), localizedText('Their content will be hidden from your feed.', 'Su contenido se ocultará de tu feed.'));
               router.back();
             } catch (error) {
               console.error('[PostDetail] Block failed:', error);
@@ -520,16 +524,16 @@ export default function PostDetailScreen() {
             <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
               <ArrowLeft size={20} color={Colors.text} />
             </TouchableOpacity>
-            <Text style={styles.navTitle}>Post</Text>
+            <Text style={styles.navTitle}>{localizedText('Post', 'Publicación')}</Text>
             <View style={styles.backBtn} />
           </View>
         </SafeAreaView>
         <View style={styles.loadingContainer}>
           <ActivityIndicator color={Colors.primary} />
-          <Text style={styles.loadingText}>{id ? 'Loading thread...' : 'Thread not found.'}</Text>
+          <Text style={styles.loadingText}>{id ? localizedText('Loading thread...', 'Cargando hilo...') : localizedText('Thread not found.', 'Hilo no encontrado.')}</Text>
           {!isLoading && !post ? (
             <TouchableOpacity style={styles.emptyThreadButton} onPress={() => router.back()}>
-              <Text style={styles.emptyThreadButtonText}>Back to Community</Text>
+              <Text style={styles.emptyThreadButtonText}>{localizedText('Back to Community', 'Volver a Comunidad')}</Text>
             </TouchableOpacity>
           ) : null}
         </View>
@@ -571,7 +575,7 @@ export default function PostDetailScreen() {
               {post.isPinned && (
                 <View style={styles.pinnedBadge}>
                   <Pin size={10} color={Colors.primary} />
-                  <Text style={styles.pinnedText}>Pinned</Text>
+                  <Text style={styles.pinnedText}>{localizedText('Pinned', 'Fijado')}</Text>
                 </View>
               )}
               {category && (
@@ -600,7 +604,7 @@ export default function PostDetailScreen() {
                   {getPublicAuthorLabel(post.author)}
                 </Text>
                 {post.author.isTrustedHelper && (
-                  <Text style={styles.trustedLabel}>Trusted helper</Text>
+                  <Text style={styles.trustedLabel}>{localizedText('Trusted helper', 'Ayudante de confianza')}</Text>
                 )}
               </View>
               <Text style={styles.metaDot}>·</Text>
@@ -643,11 +647,11 @@ export default function PostDetailScreen() {
             {post.supportType && !post.emotionalContext?.supportRequestType && (
               <View style={styles.supportTypeBadge}>
                 <Text style={styles.supportTypeText}>
-                  {post.supportType === 'just-listening' ? '👂 Just needs to be heard' :
-                   post.supportType === 'advice' ? '💡 Looking for advice' :
-                   post.supportType === 'shared-experience' ? '🤝 Wants shared experiences' :
-                   post.supportType === 'encouragement' ? '💪 Needs encouragement' :
-                   '🧠 Help with a skill'}
+                  {post.supportType === 'just-listening' ? localizedText('👂 Just needs to be heard', '👂 Solo necesita ser escuchado/a') :
+                   post.supportType === 'advice' ? localizedText('💡 Looking for advice', '💡 Busca consejo') :
+                   post.supportType === 'shared-experience' ? localizedText('🤝 Wants shared experiences', '🤝 Quiere experiencias compartidas') :
+                   post.supportType === 'encouragement' ? localizedText('💪 Needs encouragement', '💪 Necesita ánimo') :
+                   localizedText('🧠 Help with a skill', '🧠 Ayuda con una habilidad')}
                 </Text>
               </View>
             )}
@@ -665,9 +669,9 @@ export default function PostDetailScreen() {
             {post.hasContentWarning && !showCW && (
               <TouchableOpacity style={styles.cwOverlay} onPress={() => setShowCW(true)} activeOpacity={0.8}>
                 <Shield size={20} color={Colors.accent} />
-                <Text style={styles.cwTitle}>Content Warning</Text>
+                <Text style={styles.cwTitle}>{localizedText('Content Warning', 'Advertencia de contenido')}</Text>
                 {post.contentWarningText && <Text style={styles.cwDesc}>{post.contentWarningText}</Text>}
-                <Text style={styles.cwAction}>Tap to reveal</Text>
+                <Text style={styles.cwAction}>{localizedText('Tap to reveal', 'Toca para mostrar')}</Text>
               </TouchableOpacity>
             )}
 
@@ -681,10 +685,10 @@ export default function PostDetailScreen() {
               <View style={styles.toolCard}>
                 <View style={styles.toolCardLeft}>
                   <Sparkles size={14} color={Colors.primary} />
-                  <Text style={styles.toolCardText}>Related tool: {suggestedTool.toolName}</Text>
+                  <Text style={styles.toolCardText}>{localizedText('Related tool:', 'Herramienta relacionada:')} {suggestedTool.toolName}</Text>
                 </View>
                 <TouchableOpacity style={styles.toolCardBtn}>
-                  <Text style={styles.toolCardBtnText}>Try it</Text>
+                  <Text style={styles.toolCardBtnText}>{localizedText('Try it', 'Probar')}</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -692,13 +696,18 @@ export default function PostDetailScreen() {
 
           <View style={styles.repliesSection}>
             <Text style={styles.repliesTitle}>
-              {replies.length > 0 ? `${replies.length} ${replies.length === 1 ? 'Reply' : 'Replies'}` : 'No replies yet'}
+              {replies.length > 0
+                ? localizedText(
+                  `${replies.length} ${replies.length === 1 ? 'Reply' : 'Replies'}`,
+                  `${replies.length} ${replies.length === 1 ? 'respuesta' : 'respuestas'}`,
+                )
+                : localizedText('No replies yet', 'Aún no hay respuestas')}
             </Text>
 
             {replies.length === 0 && (
               <View style={styles.emptyReplies}>
                 <Text style={styles.emptyRepliesEmoji}>💬</Text>
-                <Text style={styles.emptyRepliesText}>Be the first to share some support</Text>
+                <Text style={styles.emptyRepliesText}>{localizedText('Be the first to share some support', 'Sé la primera persona en compartir apoyo')}</Text>
               </View>
             )}
 
@@ -734,8 +743,8 @@ export default function PostDetailScreen() {
             >
               <Text style={styles.addClosureEmoji}>💬</Text>
               <View>
-                <Text style={styles.addClosureTitle}>Share a follow-up</Text>
-                <Text style={styles.addClosureDesc}>Let others know what helped or what you realized</Text>
+                <Text style={styles.addClosureTitle}>{localizedText('Share a follow-up', 'Compartir seguimiento')}</Text>
+                <Text style={styles.addClosureDesc}>{localizedText('Let others know what helped or what you realized', 'Cuéntales a otros qué ayudó o qué comprendiste')}</Text>
               </View>
             </TouchableOpacity>
           )}
@@ -745,7 +754,7 @@ export default function PostDetailScreen() {
 
         {showPausePrompt && (
           <View style={styles.pausePromptBar}>
-            <Text style={styles.pausePromptText}>Would you like to reread the post before responding?</Text>
+            <Text style={styles.pausePromptText}>{localizedText('Would you like to reread the post before responding?', '¿Quieres releer la publicación antes de responder?')}</Text>
             <View style={styles.pausePromptActions}>
               <TouchableOpacity
                 style={styles.pausePromptBtn}
@@ -754,7 +763,7 @@ export default function PostDetailScreen() {
                   scrollRef.current?.scrollTo({ y: 0, animated: true });
                 }}
               >
-                <Text style={styles.pausePromptBtnText}>Reread</Text>
+                <Text style={styles.pausePromptBtnText}>{localizedText('Reread', 'Releer')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.pausePromptBtn, styles.pausePromptBtnSend]}
@@ -763,7 +772,7 @@ export default function PostDetailScreen() {
                   doSendReply();
                 }}
               >
-                <Text style={[styles.pausePromptBtnText, styles.pausePromptBtnSendText]}>Send now</Text>
+                <Text style={[styles.pausePromptBtnText, styles.pausePromptBtnSendText]}>{localizedText('Send now', 'Enviar ahora')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -772,7 +781,7 @@ export default function PostDetailScreen() {
         {toneSuggestion && (
           <View style={styles.toneSuggestionBar}>
             <Sparkles size={12} color={Colors.brandLilac} />
-            <Text style={styles.toneSuggestionText}>Consider: "{toneSuggestion}"</Text>
+            <Text style={styles.toneSuggestionText}>{localizedText('Consider:', 'Considera:')} &quot;{toneSuggestion}&quot;</Text>
             <TouchableOpacity onPress={() => setToneSuggestion(null)}>
               <X size={12} color={Colors.textMuted} />
             </TouchableOpacity>
@@ -859,7 +868,9 @@ export default function PostDetailScreen() {
             </TouchableOpacity>
             <TextInput
               style={styles.composerInput}
-              placeholder={isAnonymous ? 'Reply anonymously...' : 'Write a supportive reply...'}
+              placeholder={isAnonymous
+                ? localizedText('Reply anonymously...', 'Responder de forma anónima...')
+                : localizedText('Write a supportive reply...', 'Escribe una respuesta de apoyo...')}
               placeholderTextColor={Colors.textMuted}
               value={replyText}
               onChangeText={handleReplyTextChange}
@@ -897,14 +908,14 @@ export default function PostDetailScreen() {
             >
               <SafeAreaView edges={['bottom']}>
                 <View style={styles.actionSheetHandle} />
-                <Text style={styles.actionSheetTitle}>Options</Text>
+                <Text style={styles.actionSheetTitle}>{localizedText('Options', 'Opciones')}</Text>
                 <TouchableOpacity style={styles.actionItem} onPress={handleMessageUser} testID="message-user-btn">
                   <View style={[styles.actionIcon, { backgroundColor: Colors.primaryLight }]}>
                     <MessageCircle size={18} color={Colors.primary} />
                   </View>
                   <View style={styles.actionTextGroup}>
-                    <Text style={styles.actionLabel}>Message user</Text>
-                    <Text style={styles.actionDesc}>Start a private peer-support conversation</Text>
+                    <Text style={styles.actionLabel}>{localizedText('Message user', 'Enviar mensaje')}</Text>
+                    <Text style={styles.actionDesc}>{localizedText('Start a private peer-support conversation', 'Iniciar una conversación privada de apoyo entre pares')}</Text>
                   </View>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.actionItem} onPress={handleOpenReportForPost} testID="report-post-btn">
@@ -912,8 +923,8 @@ export default function PostDetailScreen() {
                     <Flag size={18} color="#3B82F6" />
                   </View>
                   <View style={styles.actionTextGroup}>
-                    <Text style={styles.actionLabel}>Report this post</Text>
-                    <Text style={styles.actionDesc}>Let us know if something feels unsafe</Text>
+                    <Text style={styles.actionLabel}>{localizedText('Report this post', 'Reportar esta publicación')}</Text>
+                    <Text style={styles.actionDesc}>{localizedText('Let us know if something feels unsafe', 'Avísanos si algo se siente inseguro')}</Text>
                   </View>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.actionItem} onPress={handleBlockUser} testID="block-user-btn">
@@ -921,12 +932,12 @@ export default function PostDetailScreen() {
                     <Ban size={18} color={Colors.danger} />
                   </View>
                   <View style={styles.actionTextGroup}>
-                    <Text style={[styles.actionLabel, { color: Colors.danger }]}>Block this user</Text>
-                    <Text style={styles.actionDesc}>Hide all their content from your feed</Text>
+                    <Text style={[styles.actionLabel, { color: Colors.danger }]}>{localizedText('Block this user', 'Bloquear a esta persona')}</Text>
+                    <Text style={styles.actionDesc}>{localizedText('Hide all their content from your feed', 'Ocultar todo su contenido de tu feed')}</Text>
                   </View>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.actionCancelBtn} onPress={handleHideActions}>
-                  <Text style={styles.actionCancelText}>Cancel</Text>
+                  <Text style={styles.actionCancelText}>{localizedText('Cancel', 'Cancelar')}</Text>
                 </TouchableOpacity>
               </SafeAreaView>
             </Animated.View>
@@ -939,7 +950,7 @@ export default function PostDetailScreen() {
           <View style={styles.reportSheet}>
             <SafeAreaView edges={['bottom']}>
               <View style={styles.reportHeader}>
-                <Text style={styles.reportTitle}>{reportSubmitted ? 'Thank you' : 'Report content'}</Text>
+                <Text style={styles.reportTitle}>{reportSubmitted ? localizedText('Thank you', 'Gracias') : localizedText('Report content', 'Reportar contenido')}</Text>
                 <TouchableOpacity style={styles.reportCloseBtn} onPress={() => setShowReportModal(false)} testID="close-report-btn">
                   <X size={18} color={Colors.textSecondary} />
                 </TouchableOpacity>
@@ -950,17 +961,20 @@ export default function PostDetailScreen() {
                   <View style={styles.reportSuccessIcon}>
                     <Check size={24} color={Colors.primary} />
                   </View>
-                  <Text style={styles.reportSuccessTitle}>Report received</Text>
+                  <Text style={styles.reportSuccessTitle}>{localizedText('Report received', 'Reporte recibido')}</Text>
                   <Text style={styles.reportSuccessText}>
-                    We take community safety seriously. Our team will review this content.
+                    {localizedText(
+                      'We take community safety seriously. Our team will review this content.',
+                      'Tomamos la seguridad de la comunidad en serio. Nuestro equipo revisará este contenido.',
+                    )}
                   </Text>
                   <TouchableOpacity style={styles.reportDoneBtn} onPress={() => setShowReportModal(false)}>
-                    <Text style={styles.reportDoneBtnText}>Done</Text>
+                    <Text style={styles.reportDoneBtnText}>{localizedText('Done', 'Listo')}</Text>
                   </TouchableOpacity>
                 </View>
               ) : (
                 <>
-                  <Text style={styles.reportSubtext}>Help us understand what feels wrong. Your report is confidential.</Text>
+                  <Text style={styles.reportSubtext}>{localizedText('Help us understand what feels wrong. Your report is confidential.', 'Ayúdanos a entender qué se siente mal. Tu reporte es confidencial.')}</Text>
                   {REPORT_REASONS.map((reason) => (
                     <TouchableOpacity
                       key={reason.id}
@@ -990,7 +1004,7 @@ export default function PostDetailScreen() {
                       }}
                     >
                       <Ban size={14} color={Colors.textMuted} />
-                      <Text style={styles.reportBlockText}>You can also block this user</Text>
+                      <Text style={styles.reportBlockText}>{localizedText('You can also block this user', 'También puedes bloquear a esta persona')}</Text>
                     </TouchableOpacity>
                   )}
                   <TouchableOpacity
@@ -998,7 +1012,7 @@ export default function PostDetailScreen() {
                     onPress={handleSubmitReport}
                     disabled={!selectedReason}
                   >
-                    <Text style={[styles.reportSubmitText, selectedReason && styles.reportSubmitTextActive]}>Submit Report</Text>
+                    <Text style={[styles.reportSubmitText, selectedReason && styles.reportSubmitTextActive]}>{localizedText('Submit Report', 'Enviar reporte')}</Text>
                   </TouchableOpacity>
                 </>
               )}
@@ -1012,12 +1026,12 @@ export default function PostDetailScreen() {
           <View style={styles.reportSheet}>
             <SafeAreaView edges={['bottom']}>
               <View style={styles.reportHeader}>
-                <Text style={styles.reportTitle}>Share a follow-up</Text>
+                <Text style={styles.reportTitle}>{localizedText('Share a follow-up', 'Compartir seguimiento')}</Text>
                 <TouchableOpacity style={styles.reportCloseBtn} onPress={() => setShowClosureModal(false)}>
                   <X size={18} color={Colors.textSecondary} />
                 </TouchableOpacity>
               </View>
-              <Text style={styles.closureModalDesc}>Help future readers by sharing what you learned from this thread.</Text>
+              <Text style={styles.closureModalDesc}>{localizedText('Help future readers by sharing what you learned from this thread.', 'Ayuda a futuros lectores compartiendo lo que aprendiste de este hilo.')}</Text>
               <View style={styles.closureTypesRow}>
                 {CLOSURE_TYPES.map((ct) => {
                   const isSelected = closureType === ct.id;
@@ -1038,7 +1052,7 @@ export default function PostDetailScreen() {
               </View>
               <TextInput
                 style={styles.closureInput}
-                placeholder="Share your thoughts..."
+                placeholder={localizedText('Share your thoughts...', 'Comparte lo que piensas...')}
                 placeholderTextColor={Colors.textMuted}
                 value={closureText}
                 onChangeText={setClosureText}
@@ -1051,7 +1065,7 @@ export default function PostDetailScreen() {
                 onPress={handleSaveClosure}
                 disabled={!closureType || !closureText.trim()}
               >
-                <Text style={[styles.reportSubmitText, (closureType && closureText.trim()) ? styles.reportSubmitTextActive : undefined]}>Share follow-up</Text>
+                <Text style={[styles.reportSubmitText, (closureType && closureText.trim()) ? styles.reportSubmitTextActive : undefined]}>{localizedText('Share follow-up', 'Compartir seguimiento')}</Text>
               </TouchableOpacity>
             </SafeAreaView>
           </View>

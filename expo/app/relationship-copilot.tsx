@@ -43,27 +43,29 @@ import {
 } from '@/types/relationshipCopilot';
 import { RELATIONSHIP_TYPE_META } from '@/types/relationship';
 import { Users } from 'lucide-react-native';
+import { localizedText } from '@/lib/i18n/staticText';
+import { useLanguage } from '@/hooks/useLanguage';
 
 type Step = 'profile' | 'situation' | 'emotions' | 'urge' | 'intensity' | 'need' | 'result';
 const STEPS: Step[] = ['profile', 'situation', 'emotions', 'urge', 'intensity', 'need', 'result'];
 
 const STEP_TITLES: Record<Step, string> = {
-  profile: 'Who is this about?',
-  situation: 'What happened?',
-  emotions: 'What are you feeling?',
-  urge: 'What urge is strongest?',
-  intensity: 'How intense is this?',
-  need: 'What do you need most?',
+  get profile() { return localizedText('Who is this about?', '¿Sobre quien es esto?'); },
+  get situation() { return localizedText('What happened?', '¿Que paso?'); },
+  get emotions() { return localizedText('What are you feeling?', '¿Que estas sintiendo?'); },
+  get urge() { return localizedText('What urge is strongest?', '¿Que impulso es mas fuerte?'); },
+  get intensity() { return localizedText('How intense is this?', '¿Que tan intenso es esto?'); },
+  get need() { return localizedText('What do you need most?', '¿Que necesitas mas?'); },
   result: '',
 };
 
 const STEP_SUBTITLES: Record<Step, string> = {
-  profile: 'Optional — helps personalize support.',
-  situation: "Let's slow this down together.",
-  emotions: 'You can pick more than one.',
-  urge: 'No judgment — just awareness.',
-  intensity: 'On a scale of 1 to 10.',
-  need: 'What would help right now?',
+  get profile() { return localizedText('Optional - helps personalize support.', 'Opcional: ayuda a personalizar el apoyo.'); },
+  get situation() { return localizedText("Let's slow this down together.", 'Bajemos la velocidad juntos.'); },
+  get emotions() { return localizedText('You can pick more than one.', 'Puedes elegir mas de una.'); },
+  get urge() { return localizedText('No judgment - just awareness.', 'Sin juicio, solo conciencia.'); },
+  get intensity() { return localizedText('On a scale of 1 to 10.', 'En una escala del 1 al 10.'); },
+  get need() { return localizedText('What would help right now?', '¿Que ayudaria ahora?'); },
   result: '',
 };
 
@@ -78,6 +80,7 @@ const ICON_MAP: Record<string, typeof Wind> = {
 };
 
 export default function RelationshipCopilotScreen() {
+  useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { startSession, profiles } = useRelationshipCopilot();
@@ -265,7 +268,7 @@ export default function RelationshipCopilotScreen() {
           <View style={styles.noProfilesIconWrap}>
             <Users size={28} color="#3B82F6" />
           </View>
-          <Text style={styles.noProfilesTitle}>No relationship profiles yet</Text>
+          <Text style={styles.noProfilesTitle}>{localizedText('No relationship profiles yet', 'Aun no hay perfiles relacionales')}</Text>
           <Text style={styles.noProfilesDesc}>
             Adding a profile helps personalize support for specific relationships. You can still continue without one.
           </Text>
@@ -444,12 +447,12 @@ export default function RelationshipCopilotScreen() {
           <View style={styles.resultHeaderIcon}>
             <Heart size={24} color="#3B82F6" fill="#3B82F6" />
           </View>
-          <Text style={styles.resultHeaderTitle}>Let's slow this down</Text>
+          <Text style={styles.resultHeaderTitle}>{localizedText("Let's slow this down", 'Bajemos el ritmo')}</Text>
           <Text style={styles.resultAffirmation}>{result.affirmation}</Text>
         </View>
 
         <View style={styles.resultSection}>
-          <Text style={styles.resultSectionTitle}>What may be happening</Text>
+          <Text style={styles.resultSectionTitle}>{localizedText('What may be happening', 'Que puede estar pasando')}</Text>
           <View style={styles.resultCard}>
             <Text style={styles.resultCardText}>{result.interpretation.whatMayBeHappening}</Text>
           </View>
@@ -457,7 +460,7 @@ export default function RelationshipCopilotScreen() {
 
         {result.interpretation.whatUsuallyFollows && (
           <View style={styles.resultSection}>
-            <Text style={styles.resultSectionTitle}>What often follows</Text>
+            <Text style={styles.resultSectionTitle}>{localizedText('What often follows', 'Que suele venir despues')}</Text>
             <View style={styles.resultCard}>
               <Text style={styles.resultCardText}>{result.interpretation.whatUsuallyFollows}</Text>
             </View>
@@ -465,7 +468,7 @@ export default function RelationshipCopilotScreen() {
         )}
 
         <View style={styles.resultSection}>
-          <Text style={styles.resultSectionTitle}>Calmer next steps</Text>
+          <Text style={styles.resultSectionTitle}>{localizedText('Calmer next steps', 'Próximos pasos con más calma')}</Text>
           {result.nextSteps.map(stepItem => {
             const IconComp = ICON_MAP[stepItem.icon] ?? Heart;
             return (
@@ -490,7 +493,7 @@ export default function RelationshipCopilotScreen() {
         </View>
 
         <View style={styles.resultSection}>
-          <Text style={styles.resultSectionTitle}>If you choose to respond</Text>
+          <Text style={styles.resultSectionTitle}>{localizedText('If you choose to respond', 'Si eliges responder')}</Text>
           <View style={styles.secureMessageCard}>
             <View style={styles.secureMessageIcon}>
               <Shield size={18} color="#3B82F6" />
@@ -504,7 +507,7 @@ export default function RelationshipCopilotScreen() {
             testID="secure-message-btn"
           >
             <MessageSquare size={16} color={Colors.white} />
-            <Text style={styles.messageButtonText}>Open Message Support</Text>
+            <Text style={styles.messageButtonText}>{localizedText('Open Message Support', 'Abrir apoyo de mensajes')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.simulatorLink}
@@ -513,7 +516,7 @@ export default function RelationshipCopilotScreen() {
             testID="scenario-simulator-link"
           >
             <Sparkles size={15} color={Colors.primary} />
-            <Text style={styles.simulatorLinkText}>Practice responses first</Text>
+            <Text style={styles.simulatorLinkText}>{localizedText('Practice responses first', 'Practicar respuestas primero')}</Text>
             <ChevronRight size={14} color={Colors.textMuted} />
           </TouchableOpacity>
         </View>
@@ -529,7 +532,7 @@ export default function RelationshipCopilotScreen() {
           activeOpacity={0.8}
           testID="copilot-done"
         >
-          <Text style={styles.doneButtonText}>I'm okay for now</Text>
+          <Text style={styles.doneButtonText}>{localizedText("I'm okay for now", 'Estoy bien por ahora')}</Text>
         </TouchableOpacity>
       </Animated.View>
     );
@@ -548,14 +551,14 @@ export default function RelationshipCopilotScreen() {
         </TouchableOpacity>
         {step !== 'result' && (
           <View style={styles.headerCenter}>
-            <Text style={styles.headerLabel}>Relationship Copilot</Text>
+            <Text style={styles.headerLabel}>{localizedText('Relationship Copilot', 'Copiloto relacional')}</Text>
             <View style={styles.progressBar}>
               <Animated.View style={[styles.progressFill, { width: progressWidth }]} />
             </View>
           </View>
         )}
         {step === 'result' && (
-          <Text style={styles.headerLabel}>Relationship Copilot</Text>
+          <Text style={styles.headerLabel}>{localizedText('Relationship Copilot', 'Copiloto relacional')}</Text>
         )}
         <View style={styles.headerSpacer} />
       </View>

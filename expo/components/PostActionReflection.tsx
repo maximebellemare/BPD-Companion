@@ -19,6 +19,8 @@ import {
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useEmotionalContext, OutcomeRecord } from '@/providers/EmotionalContextProvider';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 interface Props {
   draftId?: string | null;
@@ -29,10 +31,10 @@ interface Props {
 type OutcomeChoice = 'helped' | 'made_worse' | 'neutral' | 'not_sent';
 
 const OUTCOME_OPTIONS: { id: OutcomeChoice; label: string; emoji: string; color: string }[] = [
-  { id: 'helped', label: 'It helped', emoji: '✓', color: Colors.success },
-  { id: 'neutral', label: 'Neutral', emoji: '—', color: Colors.textMuted },
-  { id: 'made_worse', label: 'Made things harder', emoji: '✗', color: '#3B82F6' },
-  { id: 'not_sent', label: "Didn't send it", emoji: '⏸', color: Colors.accent },
+  { id: 'helped', get label() { return localizedText('It helped', 'Ayudó'); }, emoji: '✓', color: Colors.success },
+  { id: 'neutral', get label() { return localizedText('Neutral', 'Neutral'); }, emoji: '—', color: Colors.textMuted },
+  { id: 'made_worse', get label() { return localizedText('Made things harder', 'Hizo las cosas más difíciles'); }, emoji: '✗', color: '#3B82F6' },
+  { id: 'not_sent', get label() { return localizedText("Didn't send it", 'No lo envié'); }, emoji: '⏸', color: Colors.accent },
 ];
 
 export default function PostActionReflection({
@@ -40,6 +42,7 @@ export default function PostActionReflection({
   onComplete,
   showReflectionLinks = true,
 }: Props) {
+  useLanguage();
   const router = useRouter();
   const { recordOutcome, journeyPhase, advanceJourney } = useEmotionalContext();
   const [selectedOutcome, setSelectedOutcome] = useState<OutcomeChoice | null>(null);
@@ -120,9 +123,12 @@ export default function PostActionReflection({
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
       {!recorded ? (
         <View style={styles.outcomeSection}>
-          <Text style={styles.title}>How did that go?</Text>
+          <Text style={styles.title}>{localizedText('How did that go?', '¿Cómo salió?')}</Text>
           <Text style={styles.subtitle}>
-            Recording outcomes helps the app learn what works for you.
+            {localizedText(
+              'Recording outcomes helps the app learn what works for you.',
+              'Registrar resultados ayuda a que la app aprenda qué te funciona.',
+            )}
           </Text>
 
           <View style={styles.outcomeGrid}>
@@ -156,15 +162,15 @@ export default function PostActionReflection({
           ]}>
             <CheckCircle size={28} color={Colors.success} />
           </Animated.View>
-          <Text style={styles.recordedTitle}>Recorded</Text>
+          <Text style={styles.recordedTitle}>{localizedText('Recorded', 'Registrado')}</Text>
           <Text style={styles.recordedSubtitle}>
             {selectedOutcome === 'helped'
-              ? "That's a sign of growth. Notice what worked."
+              ? localizedText("That's a sign of growth. Notice what worked.", 'Eso es una señal de crecimiento. Observa qué funcionó.')
               : selectedOutcome === 'made_worse'
-                ? "It's okay. Every experience teaches something."
+                ? localizedText("It's okay. Every experience teaches something.", 'Está bien. Cada experiencia enseña algo.')
                 : selectedOutcome === 'not_sent'
-                  ? 'Not sending can be its own form of strength.'
-                  : 'Awareness of the outcome matters.'}
+                  ? localizedText('Not sending can be its own form of strength.', 'No enviarlo también puede ser una forma de fortaleza.')
+                  : localizedText('Awareness of the outcome matters.', 'Tomar conciencia del resultado importa.')}
           </Text>
 
           {showReflectionLinks && (
@@ -176,7 +182,9 @@ export default function PostActionReflection({
                 testID="reflect-with-ai"
               >
                 <Sparkles size={16} color={Colors.white} />
-                <Text style={styles.reflectButtonText}>Talk it through with AI</Text>
+                <Text style={styles.reflectButtonText}>
+                  {localizedText('Talk it through with AI', 'Hablarlo con la IA')}
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -185,7 +193,9 @@ export default function PostActionReflection({
                 activeOpacity={0.7}
               >
                 <BookOpen size={15} color={Colors.primary} />
-                <Text style={styles.linkButtonText}>Save for weekly reflection</Text>
+                <Text style={styles.linkButtonText}>
+                  {localizedText('Save for weekly reflection', 'Guardar para la reflexión semanal')}
+                </Text>
                 <ChevronRight size={14} color={Colors.textMuted} />
               </TouchableOpacity>
 
@@ -195,7 +205,9 @@ export default function PostActionReflection({
                 activeOpacity={0.7}
                 testID="post-action-done"
               >
-                <Text style={styles.doneButtonText}>I'm good for now</Text>
+                <Text style={styles.doneButtonText}>
+                  {localizedText("I'm good for now", 'Estoy bien por ahora')}
+                </Text>
               </TouchableOpacity>
             </View>
           )}

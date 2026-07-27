@@ -15,6 +15,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { X, Send, Heart, Star, ChevronRight } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { useSelfTrustPrompts } from '@/hooks/useIdentity';
 import { SELF_TRUST_PROMPTS } from '@/services/identity/valuesService';
 import type { SelfTrustPrompt } from '@/types/identity';
@@ -30,6 +32,7 @@ const CATEGORY_COLORS: Record<string, { color: string; bg: string }> = {
 export default function SelfTrustPromptsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  useLanguage();
   const { responses, saveResponse, isSaving, toggleFavorite } = useSelfTrustPrompts();
   const [activePrompt, setActivePrompt] = useState<SelfTrustPrompt | null>(null);
   const [responseText, setResponseText] = useState('');
@@ -118,7 +121,7 @@ export default function SelfTrustPromptsScreen() {
             style={styles.promptSessionInput}
             value={responseText}
             onChangeText={setResponseText}
-            placeholder="What comes up for you..."
+            placeholder={localizedText('What comes up for you...', '¿Qué aparece para ti?...')}
             placeholderTextColor={Colors.textMuted}
             multiline
             textAlignVertical="top"
@@ -134,7 +137,7 @@ export default function SelfTrustPromptsScreen() {
             testID="submit-response"
           >
             <Send size={18} color={Colors.white} />
-            <Text style={styles.submitBtnText}>Save Response</Text>
+            <Text style={styles.submitBtnText}>{localizedText('Save Response', 'Guardar respuesta')}</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -171,14 +174,14 @@ export default function SelfTrustPromptsScreen() {
           {showHistory ? (
             <View style={styles.historySection}>
               <View style={styles.historyHeader}>
-                <Text style={styles.sectionTitle}>Your Responses</Text>
+                <Text style={styles.sectionTitle}>{localizedText('Your Responses', 'Tus respuestas')}</Text>
                 <TouchableOpacity onPress={() => setShowHistory(false)}>
                   <Text style={styles.toggleLink}>Show prompts</Text>
                 </TouchableOpacity>
               </View>
               {responses.length === 0 ? (
                 <View style={styles.emptyCard}>
-                  <Text style={styles.emptyText}>No responses yet. Start by choosing a prompt above.</Text>
+                  <Text style={styles.emptyText}>{localizedText('No responses yet. Start by choosing a prompt above.', 'Aún no hay respuestas. Empieza eligiendo una pregunta arriba.')}</Text>
                 </View>
               ) : (
                 responses.map((r) => (

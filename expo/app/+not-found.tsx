@@ -2,19 +2,25 @@ import { Link, Stack } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import Colors from '@/constants/colors';
 import BrandLogo from '@/components/branding/BrandLogo';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 export default function NotFoundScreen() {
+  useLanguage();
   return (
     <>
-      <Stack.Screen options={{ title: 'Not found' }} />
+      <Stack.Screen options={{ title: localizedText('Not found', 'No encontrado') }} />
       <View style={styles.container}>
         <BrandLogo size={72} />
-        <Text style={styles.title}>This page is not available</Text>
+        <Text style={styles.title}>{localizedText('This page is not available', 'Esta página no está disponible')}</Text>
         <Text style={styles.body}>
-          The screen may have moved as BPD Companion was simplified for daily use.
+          {localizedText(
+            'The screen may have moved as BPD Companion was simplified for daily use.',
+            'Es posible que esta pantalla se haya movido al simplificar BPD Companion para el uso diario.',
+          )}
         </Text>
         <Link href="/" style={styles.link}>
-          <Text style={styles.linkText}>Return to Today</Text>
+          <Text style={styles.linkText}>{localizedText('Return to Today', 'Volver a Hoy')}</Text>
         </Link>
       </View>
     </>

@@ -41,11 +41,13 @@ import {
   CommunicationTendency,
   GrowthSignal,
 } from '@/types/messageOutcome';
+import { localizedText } from '@/lib/i18n/staticText';
+import { useLanguage } from '@/hooks/useLanguage';
 
 const TREND_CONFIG = {
-  improving: { icon: TrendingUp, color: Colors.success, label: 'Improving' },
-  stable: { icon: Minus, color: Colors.textMuted, label: 'Stable' },
-  worsening: { icon: TrendingDown, color: Colors.danger, label: 'Needs attention' },
+  improving: { icon: TrendingUp, color: Colors.success, get label() { return localizedText('Improving', 'Mejorando'); } },
+  stable: { icon: Minus, color: Colors.textMuted, get label() { return localizedText('Stable', 'Estable'); } },
+  worsening: { icon: TrendingDown, color: Colors.danger, get label() { return localizedText('Needs attention', 'Necesita atencion'); } },
 };
 
 const TENDENCY_TREND_CONFIG = {
@@ -63,6 +65,7 @@ const INSIGHT_CATEGORY_COLORS: Record<string, string> = {
 };
 
 export default function CommunicationPatternsScreen() {
+  useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { messageDrafts } = useApp();
@@ -141,8 +144,8 @@ export default function CommunicationPatternsScreen() {
           <ArrowLeft size={20} color={Colors.text} />
         </TouchableOpacity>
         <View style={styles.headerTextWrap}>
-          <Text style={styles.headerTitle}>Your Communication Patterns</Text>
-          <Text style={styles.headerSub}>What the data shows about how you communicate</Text>
+          <Text style={styles.headerTitle}>{localizedText('Your Communication Patterns', 'Tus patrones de comunicacion')}</Text>
+          <Text style={styles.headerSub}>{localizedText('What the data shows about how you communicate', 'Lo que los datos muestran sobre como te comunicas')}</Text>
         </View>
       </View>
 
@@ -150,11 +153,11 @@ export default function CommunicationPatternsScreen() {
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{stats.total}</Text>
-            <Text style={styles.statLabel}>Sessions</Text>
+            <Text style={styles.statLabel}>{localizedText('Sessions', 'Sesiones')}</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={[styles.statValue, { color: Colors.success }]}>{stats.helped}</Text>
-            <Text style={styles.statLabel}>Helped</Text>
+            <Text style={styles.statLabel}>{localizedText('Helped', 'Ayudo')}</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={[styles.statValue, { color: Colors.accent }]}>{stats.paused}</Text>
@@ -170,7 +173,7 @@ export default function CommunicationPatternsScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Sparkles size={16} color={Colors.brandSage} />
-              <Text style={styles.sectionTitle}>Growth signals</Text>
+              <Text style={styles.sectionTitle}>{localizedText('Growth signals', 'Senales de crecimiento')}</Text>
             </View>
             {growthSignals.map((signal) => (
               <View key={signal.id} style={styles.growthCard}>
@@ -286,7 +289,7 @@ export default function CommunicationPatternsScreen() {
             <BookOpen size={18} color={Colors.brandSage} />
           </View>
           <View style={styles.playbookTextWrap}>
-            <Text style={styles.playbookTitle}>Your Communication Playbook</Text>
+            <Text style={styles.playbookTitle}>{localizedText('Your Communication Playbook', 'Tu guia de comunicacion')}</Text>
             <Text style={styles.playbookSub}>Personalized strategies based on what works for you</Text>
           </View>
           <ChevronRight size={16} color={Colors.textMuted} />

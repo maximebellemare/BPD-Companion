@@ -30,7 +30,9 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { localizedText } from '@/lib/i18n/staticText';
 import { useSupportContacts } from '@/hooks/useSupportContacts';
+import { useLanguage } from '@/hooks/useLanguage';
 import { TrustedContact, ContactRelationshipType, ContactMethod } from '@/types/profile';
 import {
   RELATIONSHIP_TYPE_LABELS,
@@ -51,6 +53,7 @@ const CONTACT_METHODS: { value: ContactMethod; label: string; icon: React.Compon
 ];
 
 export default function TrustedContactsScreen() {
+  useLanguage();
   const { contacts, addContact, replaceContact, removeContact } = useSupportContacts();
 
   const [mode, setMode] = useState<ScreenMode>('list');
@@ -114,12 +117,15 @@ export default function TrustedContactsScreen() {
 
   const handleRemove = useCallback((contact: TrustedContact) => {
     Alert.alert(
-      'Remove Contact',
-      `Remove ${contact.name} from your trusted contacts?`,
+      localizedText('Remove Contact', 'Eliminar contacto'),
+      localizedText(
+        `Remove ${contact.name} from your trusted contacts?`,
+        `¿Eliminar a ${contact.name} de tus contactos de confianza?`,
+      ),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: localizedText('Cancel', 'Cancelar'), style: 'cancel' },
         {
-          text: 'Remove',
+          text: localizedText('Remove', 'Eliminar'),
           style: 'destructive',
           onPress: () => {
             handleHaptic();
@@ -200,7 +206,7 @@ export default function TrustedContactsScreen() {
               {contact.showInCrisisMode && (
                 <View style={styles.crisisBadge}>
                   <Shield size={10} color={Colors.danger} />
-                  <Text style={styles.crisisBadgeText}>Crisis</Text>
+                  <Text style={styles.crisisBadgeText}>{localizedText('Crisis', 'Crisis')}</Text>
                 </View>
               )}
             </View>
@@ -226,7 +232,7 @@ export default function TrustedContactsScreen() {
               activeOpacity={0.7}
             >
               <Phone size={14} color={Colors.primary} />
-              <Text style={styles.actionButtonText}>Call</Text>
+              <Text style={styles.actionButtonText}>{localizedText('Call', 'Llamar')}</Text>
             </TouchableOpacity>
           ) : null}
           {(contact.phone || contact.email) ? (
@@ -237,7 +243,7 @@ export default function TrustedContactsScreen() {
             >
               <MessageCircle size={14} color="#3B82F6" />
               <Text style={[styles.actionButtonText, { color: '#3B82F6' }]}>
-                {contact.phone ? 'Text' : 'Email'}
+                {contact.phone ? localizedText('Text', 'Mensaje') : localizedText('Email', 'Email')}
               </Text>
             </TouchableOpacity>
           ) : null}
@@ -247,7 +253,7 @@ export default function TrustedContactsScreen() {
             activeOpacity={0.7}
           >
             <Send size={14} color={Colors.accent} />
-            <Text style={[styles.actionButtonText, { color: Colors.accent }]}>Template</Text>
+            <Text style={[styles.actionButtonText, { color: Colors.accent }]}>{localizedText('Template', 'Plantilla')}</Text>
           </TouchableOpacity>
           <View style={{ flex: 1 }} />
           <TouchableOpacity
@@ -270,7 +276,7 @@ export default function TrustedContactsScreen() {
       <View style={styles.formContainer}>
         <View style={styles.formHeader}>
           <Text style={styles.formTitle}>
-            {mode === 'add' ? 'Add Trusted Contact' : 'Edit Contact'}
+            {mode === 'add' ? localizedText('Add Trusted Contact', 'Agregar contacto de confianza') : localizedText('Edit Contact', 'Editar contacto')}
           </Text>
           <TouchableOpacity onPress={handleCancel} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <X size={20} color={Colors.textSecondary} />
@@ -284,12 +290,12 @@ export default function TrustedContactsScreen() {
         )}
 
         <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Name</Text>
+          <Text style={styles.inputLabel}>{localizedText('Name', 'Nombre')}</Text>
           <TextInput
             style={styles.textInput}
             value={editingContact.name}
             onChangeText={(v) => updateField('name', v)}
-            placeholder="Their name"
+            placeholder={localizedText('Their name', 'Su nombre')}
             placeholderTextColor={Colors.textMuted}
             testID="contact-name-input"
             autoFocus={mode === 'add'}
@@ -297,7 +303,7 @@ export default function TrustedContactsScreen() {
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Relationship</Text>
+          <Text style={styles.inputLabel}>{localizedText('Relationship', 'Relación')}</Text>
           <View style={styles.chipRow}>
             {RELATIONSHIP_TYPES.map((type) => {
               const active = editingContact.relationshipType === type;
@@ -321,12 +327,12 @@ export default function TrustedContactsScreen() {
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Phone</Text>
+          <Text style={styles.inputLabel}>{localizedText('Phone', 'Teléfono')}</Text>
           <TextInput
             style={styles.textInput}
             value={editingContact.phone}
             onChangeText={(v) => updateField('phone', v)}
-            placeholder="Phone number"
+            placeholder={localizedText('Phone number', 'Número de teléfono')}
             placeholderTextColor={Colors.textMuted}
             keyboardType="phone-pad"
             testID="contact-phone-input"
@@ -339,7 +345,7 @@ export default function TrustedContactsScreen() {
             style={styles.textInput}
             value={editingContact.email}
             onChangeText={(v) => updateField('email', v)}
-            placeholder="Email address"
+            placeholder={localizedText('Email address', 'Correo electrónico')}
             placeholderTextColor={Colors.textMuted}
             keyboardType="email-address"
             autoCapitalize="none"
@@ -348,7 +354,7 @@ export default function TrustedContactsScreen() {
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Preferred Contact Method</Text>
+          <Text style={styles.inputLabel}>{localizedText('Preferred Contact Method', 'Método de contacto preferido')}</Text>
           <View style={styles.chipRow}>
             {CONTACT_METHODS.map(({ value, label, icon: Icon }) => {
               const active = editingContact.preferredContactMethod === value;
@@ -360,7 +366,7 @@ export default function TrustedContactsScreen() {
                 >
                   <Icon size={14} color={active ? Colors.white : Colors.textSecondary} />
                   <Text style={[styles.methodChipText, active && styles.methodChipTextActive]}>
-                    {label}
+                    {localizedText(label, label === 'Call' ? 'Llamar' : label === 'Text' ? 'Mensaje' : 'Email')}
                   </Text>
                 </TouchableOpacity>
               );
@@ -369,12 +375,12 @@ export default function TrustedContactsScreen() {
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Notes (optional)</Text>
+          <Text style={styles.inputLabel}>{localizedText('Notes (optional)', 'Notas (opcional)')}</Text>
           <TextInput
             style={[styles.textInput, styles.textArea]}
             value={editingContact.notes}
             onChangeText={(v) => updateField('notes', v)}
-            placeholder="e.g. best to call after 6pm"
+            placeholder={localizedText('e.g. best to call after 6pm', 'p. ej., mejor llamar después de las 6 p. m.')}
             placeholderTextColor={Colors.textMuted}
             multiline
             numberOfLines={3}
@@ -386,8 +392,8 @@ export default function TrustedContactsScreen() {
           <View style={styles.switchLeft}>
             <Shield size={16} color={Colors.danger} />
             <View>
-              <Text style={styles.switchTitle}>Show in Crisis Mode</Text>
-              <Text style={styles.switchDesc}>Quick access during high distress</Text>
+              <Text style={styles.switchTitle}>{localizedText('Show in Crisis Mode', 'Mostrar en Modo Crisis')}</Text>
+              <Text style={styles.switchDesc}>{localizedText('Quick access during high distress', 'Acceso rápido durante angustia intensa')}</Text>
             </View>
           </View>
           <Switch
@@ -400,12 +406,12 @@ export default function TrustedContactsScreen() {
 
         <View style={styles.formActions}>
           <TouchableOpacity style={styles.cancelBtn} onPress={handleCancel} activeOpacity={0.7}>
-            <Text style={styles.cancelBtnText}>Cancel</Text>
+            <Text style={styles.cancelBtnText}>{localizedText('Cancel', 'Cancelar')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.saveBtn} onPress={handleSave} activeOpacity={0.7}>
             <Check size={16} color={Colors.white} />
             <Text style={styles.saveBtnText}>
-              {mode === 'add' ? 'Add Contact' : 'Save Changes'}
+              {mode === 'add' ? localizedText('Add Contact', 'Agregar contacto') : localizedText('Save Changes', 'Guardar cambios')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -419,7 +425,7 @@ export default function TrustedContactsScreen() {
     return (
       <View style={styles.messageContainer}>
         <View style={styles.formHeader}>
-          <Text style={styles.formTitle}>Send to {messageTarget.name}</Text>
+          <Text style={styles.formTitle}>{localizedText('Send to', 'Enviar a')} {messageTarget.name}</Text>
           <TouchableOpacity
             onPress={() => { setMode('list'); setMessageTarget(null); }}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -428,7 +434,10 @@ export default function TrustedContactsScreen() {
           </TouchableOpacity>
         </View>
         <Text style={styles.messageSubtitle}>
-          Choose a pre-written message to send. You can edit it before sending.
+          {localizedText(
+            'Choose a pre-written message to send. You can edit it before sending.',
+            'Elige un mensaje preparado para enviar. Puedes editarlo antes de enviarlo.',
+          )}
         </Text>
 
         {SUPPORT_MESSAGE_TEMPLATES.map((template) => (
@@ -456,7 +465,10 @@ export default function TrustedContactsScreen() {
           <Users size={18} color={Colors.primary} />
         </View>
         <Text style={styles.infoText}>
-          People you trust to reach out to during difficult moments. They appear as quick-access contacts during crisis mode.
+          {localizedText(
+            'People you trust to reach out to during difficult moments. They appear as quick-access contacts during crisis mode.',
+            'Personas de confianza a quienes puedes acudir en momentos difíciles. Aparecen como contactos rápidos en Modo Crisis.',
+          )}
         </Text>
       </View>
 
@@ -467,9 +479,12 @@ export default function TrustedContactsScreen() {
           <View style={styles.emptyIcon}>
             <Heart size={28} color={Colors.primary} />
           </View>
-          <Text style={styles.emptyTitle}>No trusted contacts yet</Text>
+          <Text style={styles.emptyTitle}>{localizedText('No trusted contacts yet', 'Aún no tienes contactos de confianza')}</Text>
           <Text style={styles.emptyText}>
-            Having people you trust to reach out to can make a real difference during intense moments.
+            {localizedText(
+              'Having people you trust to reach out to can make a real difference during intense moments.',
+              'Tener personas de confianza a quienes acudir puede hacer una gran diferencia en momentos intensos.',
+            )}
           </Text>
         </View>
       )}
@@ -481,13 +496,13 @@ export default function TrustedContactsScreen() {
         testID="add-contact-btn"
       >
         <Plus size={18} color={Colors.primary} />
-        <Text style={styles.addButtonText}>Add Trusted Contact</Text>
+        <Text style={styles.addButtonText}>{localizedText('Add Trusted Contact', 'Agregar contacto de confianza')}</Text>
       </TouchableOpacity>
 
       <View style={styles.gentleNote}>
         <Heart size={13} color={Colors.textMuted} />
         <Text style={styles.gentleNoteText}>
-          Building a support network is an act of courage.
+          {localizedText('Building a support network is an act of courage.', 'Construir una red de apoyo es un acto de valentía.')}
         </Text>
       </View>
     </>
@@ -497,7 +512,7 @@ export default function TrustedContactsScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: 'Trusted Support',
+          title: localizedText('Trusted Support', 'Apoyo de confianza'),
           headerStyle: { backgroundColor: Colors.background },
           headerTintColor: Colors.text,
           headerShadowVisible: false,

@@ -5,19 +5,22 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, MessageCircle, Shield } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useCommunityMessages } from '@/hooks/useCommunityMessages';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 function timeAgo(timestamp: number): string {
   const diff = Date.now() - timestamp;
   const minutes = Math.floor(diff / 60000);
-  if (minutes < 60) return `${Math.max(1, minutes)}m ago`;
+  if (minutes < 60) return localizedText(`${Math.max(1, minutes)}m ago`, `hace ${Math.max(1, minutes)} min`);
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
+  if (hours < 24) return localizedText(`${hours}h ago`, `hace ${hours} h`);
+  return localizedText(`${Math.floor(hours / 24)}d ago`, `hace ${Math.floor(hours / 24)} d`);
 }
 
 export default function CommunityMessagesScreen() {
   const router = useRouter();
   const { conversations, isLoading } = useCommunityMessages();
+  useLanguage();
 
   return (
     <View style={styles.container}>
@@ -27,7 +30,7 @@ export default function CommunityMessagesScreen() {
           <TouchableOpacity style={styles.iconButton} onPress={() => router.back()}>
             <ArrowLeft size={20} color={Colors.text} />
           </TouchableOpacity>
-          <Text style={styles.navTitle}>Private messages</Text>
+          <Text style={styles.navTitle}>{localizedText('Private messages', 'Mensajes privados')}</Text>
           <View style={styles.iconButton} />
         </View>
       </SafeAreaView>
@@ -36,20 +39,23 @@ export default function CommunityMessagesScreen() {
         <View style={styles.safetyCard}>
           <Shield size={18} color={Colors.primary} />
           <Text style={styles.safetyText}>
-            Private messages are peer support, not crisis support or medical advice. Report or block anyone who feels unsafe.
+            {localizedText(
+              'Private messages are peer support, not crisis support or medical advice. Report or block anyone who feels unsafe.',
+              'Los mensajes privados son apoyo entre pares, no apoyo de crisis ni consejo médico. Reporta o bloquea a cualquier persona que se sienta insegura.',
+            )}
           </Text>
         </View>
 
         {isLoading ? (
           <View style={styles.loading}>
             <ActivityIndicator color={Colors.primary} />
-            <Text style={styles.loadingText}>Loading messages...</Text>
+            <Text style={styles.loadingText}>{localizedText('Loading messages...', 'Cargando mensajes...')}</Text>
           </View>
         ) : conversations.length === 0 ? (
           <View style={styles.emptyCard}>
             <MessageCircle size={34} color={Colors.primary} />
-            <Text style={styles.emptyTitle}>No private messages yet</Text>
-            <Text style={styles.emptyBody}>Open a community post and tap Message user to start a supportive conversation.</Text>
+            <Text style={styles.emptyTitle}>{localizedText('No private messages yet', 'Aún no hay mensajes privados')}</Text>
+            <Text style={styles.emptyBody}>{localizedText('Open a community post and tap Message user to start a supportive conversation.', 'Abre una publicación de la comunidad y toca Enviar mensaje para iniciar una conversación de apoyo.')}</Text>
           </View>
         ) : (
           conversations.map(conversation => {
@@ -70,7 +76,7 @@ export default function CommunityMessagesScreen() {
                     <Text style={styles.rowTime}>{timeAgo(conversation.updatedAt)}</Text>
                   </View>
                   <Text style={styles.rowPreview} numberOfLines={1}>
-                    {conversation.blocked ? 'Blocked' : last?.body || 'Conversation started'}
+                    {conversation.blocked ? localizedText('Blocked', 'Bloqueado') : last?.body || localizedText('Conversation started', 'Conversación iniciada')}
                   </Text>
                 </View>
               </TouchableOpacity>

@@ -5,8 +5,11 @@ import { BarChart3, ChevronRight, TrendingUp, TrendingDown, Minus } from 'lucide
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { usePatternInsights } from '@/hooks/usePatternInsights';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 export default function EmotionalInsightsCard() {
+  useLanguage();
   const router = useRouter();
   const { analysis, insights } = usePatternInsights(30);
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -36,9 +39,9 @@ export default function EmotionalInsightsCard() {
       ? <TrendingUp size={13} color={Colors.danger} />
       : <Minus size={13} color={Colors.textMuted} />;
 
-  const trendLabel = analysis.distressTrend === 'improving' ? 'Improving'
-    : analysis.distressTrend === 'worsening' ? 'Elevated'
-    : analysis.distressTrend === 'stable' ? 'Stable'
+  const trendLabel = analysis.distressTrend === 'improving' ? localizedText('Improving', 'Mejorando')
+    : analysis.distressTrend === 'worsening' ? localizedText('Elevated', 'Elevado')
+    : analysis.distressTrend === 'stable' ? localizedText('Stable', 'Estable')
     : '';
 
   return (
@@ -54,8 +57,8 @@ export default function EmotionalInsightsCard() {
             <BarChart3 size={18} color={Colors.primary} />
           </View>
           <View style={styles.headerText}>
-            <Text style={styles.title}>Emotional Insights</Text>
-            <Text style={styles.subtitle}>Your patterns at a glance</Text>
+            <Text style={styles.title}>{localizedText('Emotional Insights', 'Insights emocionales')}</Text>
+            <Text style={styles.subtitle}>{localizedText('Your patterns at a glance', 'Tus patrones de un vistazo')}</Text>
           </View>
           <ChevronRight size={18} color={Colors.textMuted} />
         </View>
@@ -65,19 +68,19 @@ export default function EmotionalInsightsCard() {
             <View style={styles.statsRow}>
               {topTrigger && (
                 <View style={styles.stat}>
-                  <Text style={styles.statLabel}>Top trigger</Text>
+                  <Text style={styles.statLabel}>{localizedText('Top trigger', 'Disparador principal')}</Text>
                   <Text style={styles.statValue} numberOfLines={1}>{topTrigger.label}</Text>
                 </View>
               )}
               {topEmotion && (
                 <View style={styles.stat}>
-                  <Text style={styles.statLabel}>Top emotion</Text>
+                  <Text style={styles.statLabel}>{localizedText('Top emotion', 'Emoción principal')}</Text>
                   <Text style={styles.statValue} numberOfLines={1}>{topEmotion.emoji} {topEmotion.label}</Text>
                 </View>
               )}
               {trendLabel ? (
                 <View style={styles.stat}>
-                  <Text style={styles.statLabel}>Trend</Text>
+                  <Text style={styles.statLabel}>{localizedText('Trend', 'Tendencia')}</Text>
                   <View style={styles.trendRow}>
                     {trendIcon}
                     <Text style={styles.statValue}>{trendLabel}</Text>
@@ -88,7 +91,7 @@ export default function EmotionalInsightsCard() {
             {bestTool && bestTool.avgReduction > 0 && (
               <View style={styles.toolHint}>
                 <Text style={styles.toolHintText}>
-                  {bestTool.tool} reduced distress by ~{bestTool.avgReduction} pts
+                  {bestTool.tool} {localizedText('reduced distress by', 'redujo el malestar en')} ~{bestTool.avgReduction} {localizedText('pts', 'pts')}
                 </Text>
               </View>
             )}
@@ -96,7 +99,10 @@ export default function EmotionalInsightsCard() {
         ) : (
           <View style={styles.emptyBody}>
             <Text style={styles.emptyText}>
-              A few more check-ins will reveal your emotional patterns.
+              {localizedText(
+                'A few more check-ins will reveal your emotional patterns.',
+                'Unos registros más revelarán tus patrones emocionales.',
+              )}
             </Text>
           </View>
         )}

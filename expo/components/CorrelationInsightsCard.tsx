@@ -11,8 +11,11 @@ import { Link2, ChevronRight, Sprout } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useCorrelationInsights } from '@/hooks/useCorrelationInsights';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 export default React.memo(function CorrelationInsightsCard() {
+  useLanguage();
   const router = useRouter();
   const { insights, whatHelps, hasEnoughData } = useCorrelationInsights();
 
@@ -40,9 +43,12 @@ export default React.memo(function CorrelationInsightsCard() {
           <Link2 size={18} color="#3B82F6" />
         </View>
         <View style={styles.headerText}>
-          <Text style={styles.title}>Correlation Insights</Text>
+          <Text style={styles.title}>{localizedText('Correlation Insights', 'Insights de correlación')}</Text>
           <Text style={styles.subtitle}>
-            {insights.length} pattern{insights.length !== 1 ? 's' : ''} detected
+            {insights.length} {localizedText(
+              `pattern${insights.length !== 1 ? 's' : ''} detected`,
+              `patrón${insights.length !== 1 ? 'es' : ''} detectado${insights.length !== 1 ? 's' : ''}`,
+            )}
           </Text>
         </View>
         {unviewedCount > 0 && (

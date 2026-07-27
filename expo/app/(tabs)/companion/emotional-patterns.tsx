@@ -34,6 +34,8 @@ import {
   GrowthSignal,
   GraphPatternSummary,
 } from '@/types/memoryGraph';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 function SectionHeader({ icon, title, bgColor }: { icon: React.ReactNode; title: string; color: string; bgColor: string }) {
   return (
@@ -92,7 +94,7 @@ function TriggerChainCard({ chain, index }: { chain: TriggerChain; index: number
         <View style={styles.chainHelpRow}>
           <Shield size={12} color={Colors.success} />
           <Text style={styles.chainHelpText}>
-            {chain.copingTools.map(c => c.label).join(', ')} may help
+            {chain.copingTools.map(c => c.label).join(', ')} {localizedText('may help', 'puede ayudar')}
           </Text>
         </View>
       )}
@@ -126,7 +128,7 @@ function EmotionClusterCard({ cluster, index }: { cluster: EmotionCluster; index
       <Text style={styles.clusterNarrative}>{cluster.narrative}</Text>
       {cluster.commonTriggers.length > 0 && (
         <Text style={styles.clusterTriggers}>
-          Often after: {cluster.commonTriggers.join(', ')}
+          {localizedText('Often after:', 'A menudo después de:')} {cluster.commonTriggers.join(', ')}
         </Text>
       )}
     </Animated.View>
@@ -153,7 +155,7 @@ function CalmingPatternCard({ pattern, index }: { pattern: CalmingPattern; index
           <Shield size={14} color={Colors.success} />
           <Text style={styles.calmingToolText}>{pattern.copingTool}</Text>
         </View>
-        <Text style={styles.calmingUseCount}>{pattern.timesUsed}× used</Text>
+        <Text style={styles.calmingUseCount}>{pattern.timesUsed}× {localizedText('used', 'usada')}</Text>
       </View>
 
       <View style={styles.calmingBarTrack}>
@@ -252,6 +254,7 @@ const MemoizedGrowthSignalCard = React.memo(GrowthSignalCard);
 export default function EmotionalPatternsScreen() {
   const router = useRouter();
   const { journalEntries, messageDrafts } = useApp();
+  useLanguage();
 
   const patternSummary = useMemo<GraphPatternSummary>(() => {
     return getGraphPatternSummary(journalEntries, messageDrafts);
@@ -288,7 +291,7 @@ export default function EmotionalPatternsScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: 'Emotional Patterns',
+          title: localizedText('Emotional Patterns', 'Patrones emocionales'),
           headerTitleStyle: { fontWeight: '600' as const, fontSize: 17 },
           headerStyle: { backgroundColor: Colors.background },
           headerTintColor: Colors.text,
@@ -304,9 +307,12 @@ export default function EmotionalPatternsScreen() {
           <View style={styles.heroIconWrap}>
             <Brain size={28} color="#2E2A72" />
           </View>
-          <Text style={styles.heroTitle}>Your Emotional Patterns</Text>
+          <Text style={styles.heroTitle}>{localizedText('Your Emotional Patterns', 'Tus patrones emocionales')}</Text>
           <Text style={styles.heroSubtitle}>
-            Connections discovered across your check-ins, journal entries, and coping history.
+            {localizedText(
+              'Connections discovered across your check-ins, journal entries, and coping history.',
+              'Conexiones descubiertas en tus check-ins, entradas de diario e historial de afrontamiento.',
+            )}
           </Text>
         </Animated.View>
 
@@ -314,15 +320,15 @@ export default function EmotionalPatternsScreen() {
           <Animated.View style={[styles.statsRow, { opacity: headerFade }]}>
             <View style={styles.statPill}>
               <Text style={styles.statPillValue}>{graphStats.nodeCount}</Text>
-              <Text style={styles.statPillLabel}>Patterns</Text>
+              <Text style={styles.statPillLabel}>{localizedText('Patterns', 'Patrones')}</Text>
             </View>
             <View style={styles.statPill}>
               <Text style={styles.statPillValue}>{graphStats.edgeCount}</Text>
-              <Text style={styles.statPillLabel}>Connections</Text>
+              <Text style={styles.statPillLabel}>{localizedText('Connections', 'Conexiones')}</Text>
             </View>
             <View style={styles.statPill}>
               <Text style={styles.statPillValue}>{graphStats.dataPoints}</Text>
-              <Text style={styles.statPillLabel}>Data Points</Text>
+              <Text style={styles.statPillLabel}>{localizedText('Data Points', 'Puntos de datos')}</Text>
             </View>
           </Animated.View>
         )}
@@ -339,11 +345,14 @@ export default function EmotionalPatternsScreen() {
             <View style={styles.emptyIconWrap}>
               <Sparkles size={36} color={Colors.textMuted} />
             </View>
-            <Text style={styles.emptyTitle}>Patterns emerge with time</Text>
+            <Text style={styles.emptyTitle}>{localizedText('Patterns emerge with time', 'Los patrones aparecen con el tiempo')}</Text>
             <Text style={styles.emptyDesc}>
-              As you check in and use coping tools, this screen will reveal connections between your triggers, emotions, and what helps most.
+              {localizedText(
+                'As you check in and use coping tools, this screen will reveal connections between your triggers, emotions, and what helps most.',
+                'A medida que hagas check-ins y uses herramientas de afrontamiento, esta pantalla revelará conexiones entre tus desencadenantes, emociones y lo que más ayuda.',
+              )}
             </Text>
-            <Text style={styles.emptyHint}>Even small check-ins count.</Text>
+            <Text style={styles.emptyHint}>{localizedText('Even small check-ins count.', 'Incluso los check-ins pequeños cuentan.')}</Text>
           </View>
         )}
 
@@ -351,12 +360,12 @@ export default function EmotionalPatternsScreen() {
           <View style={styles.section} testID="trigger-chains-section">
             <SectionHeader
               icon={<Zap size={16} color="#3B82F6" />}
-              title="Common Trigger Chains"
+              title={localizedText('Common Trigger Chains', 'Cadenas comunes de desencadenantes')}
               color="#3B82F6"
               bgColor="#FFFFFF"
             />
             <Text style={styles.sectionDesc}>
-              What tends to follow your most common triggers
+              {localizedText('What tends to follow your most common triggers', 'Lo que suele seguir a tus desencadenantes más comunes')}
             </Text>
             {patternSummary.topTriggerChains.map((chain, i) => (
               <MemoizedTriggerChainCard key={chain.id} chain={chain} index={i} />
@@ -368,12 +377,12 @@ export default function EmotionalPatternsScreen() {
           <View style={styles.section} testID="emotion-clusters-section">
             <SectionHeader
               icon={<Heart size={16} color={Colors.primary} />}
-              title="Emotion Clusters"
+              title={localizedText('Emotion Clusters', 'Grupos de emociones')}
               color={Colors.primary}
               bgColor={Colors.primaryLight}
             />
             <Text style={styles.sectionDesc}>
-              Emotions that often appear together
+              {localizedText('Emotions that often appear together', 'Emociones que suelen aparecer juntas')}
             </Text>
             {patternSummary.topEmotionClusters.map((cluster, i) => (
               <MemoizedEmotionClusterCard key={cluster.id} cluster={cluster} index={i} />
@@ -385,12 +394,12 @@ export default function EmotionalPatternsScreen() {
           <View style={styles.section} testID="calming-patterns-section">
             <SectionHeader
               icon={<Leaf size={16} color={Colors.success} />}
-              title="Most Effective Calming Patterns"
+              title={localizedText('Most Effective Calming Patterns', 'Patrones de calma más efectivos')}
               color={Colors.success}
               bgColor={Colors.successLight}
             />
             <Text style={styles.sectionDesc}>
-              Tools and strategies that seem to help most
+              {localizedText('Tools and strategies that seem to help most', 'Herramientas y estrategias que parecen ayudar más')}
             </Text>
             {patternSummary.mostEffectiveCalming.map((pattern, i) => (
               <MemoizedCalmingPatternCard key={pattern.id} pattern={pattern} index={i} />
@@ -402,12 +411,12 @@ export default function EmotionalPatternsScreen() {
           <View style={styles.section} testID="relationship-chains-section">
             <SectionHeader
               icon={<MessageCircle size={16} color={Colors.accent} />}
-              title="Relationship Pattern Chains"
+              title={localizedText('Relationship Pattern Chains', 'Cadenas de patrones relacionales')}
               color={Colors.accent}
               bgColor={Colors.accentLight}
             />
             <Text style={styles.sectionDesc}>
-              How relationship situations tend to unfold
+              {localizedText('How relationship situations tend to unfold', 'Cómo suelen desarrollarse las situaciones relacionales')}
             </Text>
             {patternSummary.relationshipPatterns.map((chain, i) => (
               <MemoizedRelationshipChainCard key={chain.id} chain={chain} index={i} />
@@ -419,12 +428,12 @@ export default function EmotionalPatternsScreen() {
           <View style={styles.section} testID="growth-signals-section">
             <SectionHeader
               icon={<TrendingUp size={16} color={Colors.success} />}
-              title="Growth & Change Signals"
+              title={localizedText('Growth & Change Signals', 'Señales de crecimiento y cambio')}
               color={Colors.success}
               bgColor={Colors.successLight}
             />
             <Text style={styles.sectionDesc}>
-              Signs of progress and positive change
+              {localizedText('Signs of progress and positive change', 'Señales de progreso y cambio positivo')}
             </Text>
             {patternSummary.growthSignals.map((signal, i) => (
               <MemoizedGrowthSignalCard key={signal.id} signal={signal} index={i} />
@@ -443,7 +452,7 @@ export default function EmotionalPatternsScreen() {
             testID="explore-full-memory-btn"
           >
             <Brain size={18} color={Colors.primary} />
-            <Text style={styles.exploreMemoryText}>View Full Memory Profile</Text>
+            <Text style={styles.exploreMemoryText}>{localizedText('View Full Memory Profile', 'Ver perfil completo de memoria')}</Text>
             <ArrowRight size={16} color={Colors.primary} />
           </TouchableOpacity>
         )}
@@ -451,7 +460,10 @@ export default function EmotionalPatternsScreen() {
         <View style={styles.gentleNote}>
           <Heart size={13} color={Colors.textMuted} />
           <Text style={styles.gentleNoteText}>
-            Patterns aren't destiny — they're invitations to understand yourself more deeply.
+            {localizedText(
+              "Patterns aren't destiny — they're invitations to understand yourself more deeply.",
+              'Los patrones no son destino: son invitaciones a entenderte con más profundidad.',
+            )}
           </Text>
         </View>
 

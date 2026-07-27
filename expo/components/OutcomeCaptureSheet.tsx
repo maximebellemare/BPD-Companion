@@ -16,6 +16,8 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import {
   SentStatus,
   ConflictResult,
@@ -40,6 +42,7 @@ export default function OutcomeCaptureSheet({
   onComplete,
   onDismiss,
 }: OutcomeCaptureSheetProps) {
+  useLanguage();
   const [step, setStep] = useState<CaptureStep>('sent_status');
   const [sentStatus, setSentStatus] = useState<SentStatus | null>(null);
   const [regretReported, setRegretReported] = useState<boolean | null>(null);
@@ -102,8 +105,8 @@ export default function OutcomeCaptureSheet({
 
   const renderSentStatus = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepQuestion}>What happened with the message?</Text>
-      <Text style={styles.stepHint}>No judgment — just tracking what helps.</Text>
+      <Text style={styles.stepQuestion}>{localizedText('What happened with the message?', '¿Qué pasó con el mensaje?')}</Text>
+      <Text style={styles.stepHint}>{localizedText('No judgment — just tracking what helps.', 'Sin juicio; solo registramos qué ayuda.')}</Text>
       <View style={styles.optionsGrid}>
         {SENT_STATUS_OPTIONS.map((opt) => {
           const isSelected = sentStatus === opt.value;
@@ -126,7 +129,7 @@ export default function OutcomeCaptureSheet({
       </View>
       {sentStatus && (
         <TouchableOpacity style={styles.nextBtn} onPress={goNext} activeOpacity={0.8}>
-          <Text style={styles.nextBtnText}>Next</Text>
+          <Text style={styles.nextBtnText}>{localizedText('Next', 'Siguiente')}</Text>
           <ChevronRight size={16} color={Colors.white} />
         </TouchableOpacity>
       )}
@@ -135,8 +138,8 @@ export default function OutcomeCaptureSheet({
 
   const renderRegret = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepQuestion}>Do you regret sending it?</Text>
-      <Text style={styles.stepHint}>This helps the app learn what works for you.</Text>
+      <Text style={styles.stepQuestion}>{localizedText('Do you regret sending it?', '¿Te arrepientes de haberlo enviado?')}</Text>
+      <Text style={styles.stepHint}>{localizedText('This helps the app learn what works for you.', 'Esto ayuda a que la app aprenda qué te funciona.')}</Text>
       <View style={styles.binaryRow}>
         <TouchableOpacity
           style={[styles.binaryBtn, regretReported === false && styles.binaryBtnSelected]}
@@ -147,7 +150,7 @@ export default function OutcomeCaptureSheet({
           activeOpacity={0.7}
         >
           <Text style={styles.binaryEmoji}>{'\ud83d\ude0c'}</Text>
-          <Text style={[styles.binaryLabel, regretReported === false && styles.binaryLabelSelected]}>No regret</Text>
+          <Text style={[styles.binaryLabel, regretReported === false && styles.binaryLabelSelected]}>{localizedText('No regret', 'Sin arrepentimiento')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.binaryBtn, regretReported === true && styles.binaryBtnSelectedDanger]}
@@ -158,25 +161,25 @@ export default function OutcomeCaptureSheet({
           activeOpacity={0.7}
         >
           <Text style={styles.binaryEmoji}>{'\ud83d\udc94'}</Text>
-          <Text style={[styles.binaryLabel, regretReported === true && styles.binaryLabelSelectedDanger]}>Some regret</Text>
+          <Text style={[styles.binaryLabel, regretReported === true && styles.binaryLabelSelectedDanger]}>{localizedText('Some regret', 'Algo de arrepentimiento')}</Text>
         </TouchableOpacity>
       </View>
       {regretReported !== null && (
         <TouchableOpacity style={styles.nextBtn} onPress={goNext} activeOpacity={0.8}>
-          <Text style={styles.nextBtnText}>Next</Text>
+          <Text style={styles.nextBtnText}>{localizedText('Next', 'Siguiente')}</Text>
           <ChevronRight size={16} color={Colors.white} />
         </TouchableOpacity>
       )}
       <TouchableOpacity style={styles.skipBtn} onPress={goNext} activeOpacity={0.7}>
-        <Text style={styles.skipText}>Skip</Text>
+        <Text style={styles.skipText}>{localizedText('Skip', 'Omitir')}</Text>
       </TouchableOpacity>
     </View>
   );
 
   const renderConflict = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepQuestion}>How did it affect things?</Text>
-      <Text style={styles.stepHint}>Understanding the outcome helps improve future suggestions.</Text>
+      <Text style={styles.stepQuestion}>{localizedText('How did it affect things?', '¿Cómo afectó las cosas?')}</Text>
+      <Text style={styles.stepHint}>{localizedText('Understanding the outcome helps improve future suggestions.', 'Entender el resultado ayuda a mejorar futuras sugerencias.')}</Text>
       <View style={styles.optionsGrid}>
         {CONFLICT_RESULT_OPTIONS.map((opt) => {
           const isSelected = conflictResult === opt.value;
@@ -199,20 +202,20 @@ export default function OutcomeCaptureSheet({
       </View>
       {conflictResult && (
         <TouchableOpacity style={styles.nextBtn} onPress={goNext} activeOpacity={0.8}>
-          <Text style={styles.nextBtnText}>Next</Text>
+          <Text style={styles.nextBtnText}>{localizedText('Next', 'Siguiente')}</Text>
           <ChevronRight size={16} color={Colors.white} />
         </TouchableOpacity>
       )}
       <TouchableOpacity style={styles.skipBtn} onPress={goNext} activeOpacity={0.7}>
-        <Text style={styles.skipText}>Skip</Text>
+        <Text style={styles.skipText}>{localizedText('Skip', 'Omitir')}</Text>
       </TouchableOpacity>
     </View>
   );
 
   const renderDistress = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepQuestion}>How do you feel now?</Text>
-      <Text style={styles.stepHint}>Rate your distress level after this message experience.</Text>
+      <Text style={styles.stepQuestion}>{localizedText('How do you feel now?', '¿Cómo te sientes ahora?')}</Text>
+      <Text style={styles.stepHint}>{localizedText('Rate your distress level after this message experience.', 'Califica tu nivel de malestar después de esta experiencia con el mensaje.')}</Text>
       <View style={styles.distressRow}>
         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => {
           const isSelected = distressAfter === n;
@@ -233,11 +236,11 @@ export default function OutcomeCaptureSheet({
         })}
       </View>
       <View style={styles.distressLabels}>
-        <Text style={styles.distressLabelText}>Calm</Text>
-        <Text style={styles.distressLabelText}>Very distressed</Text>
+        <Text style={styles.distressLabelText}>{localizedText('Calm', 'Calma')}</Text>
+        <Text style={styles.distressLabelText}>{localizedText('Very distressed', 'Mucho malestar')}</Text>
       </View>
 
-      <Text style={[styles.stepQuestion, { marginTop: 24 }]}>Did you protect your dignity?</Text>
+      <Text style={[styles.stepQuestion, { marginTop: 24 }]}>{localizedText('Did you protect your dignity?', '¿Protegiste tu dignidad?')}</Text>
       <View style={styles.binaryRow}>
         <TouchableOpacity
           style={[styles.binaryBtn, selfRespect === true && styles.binaryBtnSelected]}
@@ -248,7 +251,7 @@ export default function OutcomeCaptureSheet({
           activeOpacity={0.7}
         >
           <Text style={styles.binaryEmoji}>{'\ud83d\udc9a'}</Text>
-          <Text style={[styles.binaryLabel, selfRespect === true && styles.binaryLabelSelected]}>Yes</Text>
+          <Text style={[styles.binaryLabel, selfRespect === true && styles.binaryLabelSelected]}>{localizedText('Yes', 'Sí')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.binaryBtn, selfRespect === false && styles.binaryBtnSelectedDanger]}
@@ -259,27 +262,27 @@ export default function OutcomeCaptureSheet({
           activeOpacity={0.7}
         >
           <Text style={styles.binaryEmoji}>{'\ud83d\ude14'}</Text>
-          <Text style={[styles.binaryLabel, selfRespect === false && styles.binaryLabelSelectedDanger]}>Not really</Text>
+          <Text style={[styles.binaryLabel, selfRespect === false && styles.binaryLabelSelectedDanger]}>{localizedText('Not really', 'No mucho')}</Text>
         </TouchableOpacity>
       </View>
 
       <TouchableOpacity style={styles.nextBtn} onPress={goNext} activeOpacity={0.8}>
-        <Text style={styles.nextBtnText}>Next</Text>
+        <Text style={styles.nextBtnText}>{localizedText('Next', 'Siguiente')}</Text>
         <ChevronRight size={16} color={Colors.white} />
       </TouchableOpacity>
       <TouchableOpacity style={styles.skipBtn} onPress={goNext} activeOpacity={0.7}>
-        <Text style={styles.skipText}>Skip</Text>
+        <Text style={styles.skipText}>{localizedText('Skip', 'Omitir')}</Text>
       </TouchableOpacity>
     </View>
   );
 
   const renderNotes = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepQuestion}>Anything else to note?</Text>
-      <Text style={styles.stepHint}>Optional — helps the app learn what matters to you.</Text>
+      <Text style={styles.stepQuestion}>{localizedText('Anything else to note?', '¿Algo más que quieras anotar?')}</Text>
+      <Text style={styles.stepHint}>{localizedText('Optional — helps the app learn what matters to you.', 'Opcional; ayuda a que la app entienda qué es importante para ti.')}</Text>
       <TextInput
         style={styles.notesInput}
-        placeholder="What happened after? What would you do differently?"
+        placeholder={localizedText('What happened after? What would you do differently?', '¿Qué pasó después? ¿Qué harías diferente?')}
         placeholderTextColor={Colors.textMuted}
         multiline
         value={notes}
@@ -288,10 +291,10 @@ export default function OutcomeCaptureSheet({
       />
       <TouchableOpacity style={styles.completeBtn} onPress={handleComplete} activeOpacity={0.8}>
         <Heart size={16} color={Colors.white} />
-        <Text style={styles.completeBtnText}>Save & finish</Text>
+        <Text style={styles.completeBtnText}>{localizedText('Save & finish', 'Guardar y terminar')}</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.skipBtn} onPress={handleComplete} activeOpacity={0.7}>
-        <Text style={styles.skipText}>Skip & finish</Text>
+        <Text style={styles.skipText}>{localizedText('Skip & finish', 'Omitir y terminar')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -301,10 +304,10 @@ export default function OutcomeCaptureSheet({
       <View style={styles.doneIconWrap}>
         <Check size={28} color={Colors.success} />
       </View>
-      <Text style={styles.doneTitle}>Thank you</Text>
-      <Text style={styles.doneDesc}>This helps the app learn what works best for you.</Text>
+      <Text style={styles.doneTitle}>{localizedText('Thank you', 'Gracias')}</Text>
+      <Text style={styles.doneDesc}>{localizedText('This helps the app learn what works best for you.', 'Esto ayuda a que la app aprenda qué te funciona mejor.')}</Text>
       <TouchableOpacity style={styles.doneBtn} onPress={onComplete} activeOpacity={0.8}>
-        <Text style={styles.doneBtnText}>Done</Text>
+        <Text style={styles.doneBtnText}>{localizedText('Done', 'Listo')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -325,9 +328,14 @@ export default function OutcomeCaptureSheet({
     <Animated.View style={[styles.container, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Text style={styles.headerTitle}>Quick check-in</Text>
+          <Text style={styles.headerTitle}>{localizedText('Quick check-in', 'Registro rápido')}</Text>
           <Text style={styles.headerSub}>
-            {step !== 'done' ? `Step ${Math.min(stepIndex + 1, totalVisibleSteps)} of ${totalVisibleSteps}` : 'Complete'}
+            {step !== 'done'
+              ? localizedText(
+                `Step ${Math.min(stepIndex + 1, totalVisibleSteps)} of ${totalVisibleSteps}`,
+                `Paso ${Math.min(stepIndex + 1, totalVisibleSteps)} de ${totalVisibleSteps}`,
+              )
+              : localizedText('Complete', 'Completo')}
           </Text>
         </View>
         <TouchableOpacity

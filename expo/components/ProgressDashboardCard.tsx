@@ -5,8 +5,11 @@ import { Award, TrendingDown, TrendingUp, Minus, ChevronRight, Flame } from 'luc
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useProgress } from '@/hooks/useProgress';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 function ProgressDashboardCardComponent() {
+  useLanguage();
   const router = useRouter();
   const progress = useProgress();
   const pulseAnim = useRef(new Animated.Value(0)).current;
@@ -57,10 +60,10 @@ function ProgressDashboardCardComponent() {
       : Colors.textMuted;
 
   const trendLabel = weekComparison.direction === 'improved'
-    ? `${weekComparison.changePercent}% lower`
+    ? localizedText(`${weekComparison.changePercent}% lower`, `${weekComparison.changePercent}% más bajo`)
     : weekComparison.direction === 'worsened'
-      ? `${weekComparison.changePercent}% higher`
-      : 'stable';
+      ? localizedText(`${weekComparison.changePercent}% higher`, `${weekComparison.changePercent}% más alto`)
+      : localizedText('stable', 'estable');
 
   return (
     <TouchableOpacity
@@ -76,11 +79,11 @@ function ProgressDashboardCardComponent() {
           <Award size={20} color="#67E8F9" />
         </View>
         <View style={styles.titleArea}>
-          <Text style={styles.title}>Recovery Progress</Text>
+          <Text style={styles.title}>{localizedText('Recovery Progress', 'Progreso de recuperación')}</Text>
           {hasEnoughData && (
             <View style={[styles.trendBadge, { backgroundColor: trendColor + '14' }]}>
               {trendIcon}
-              <Text style={[styles.trendText, { color: trendColor }]}>Distress {trendLabel}</Text>
+              <Text style={[styles.trendText, { color: trendColor }]}>{localizedText('Distress', 'Malestar')} {trendLabel}</Text>
             </View>
           )}
         </View>
@@ -92,7 +95,7 @@ function ProgressDashboardCardComponent() {
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{metrics.totalCheckIns}</Text>
-              <Text style={styles.statLabel}>Check-ins</Text>
+              <Text style={styles.statLabel}>{localizedText('Check-ins', 'Registros')}</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
@@ -100,19 +103,19 @@ function ProgressDashboardCardComponent() {
                 <Flame size={14} color="#67E8F9" />
                 <Text style={styles.statValue}>{metrics.journalStreak}</Text>
               </View>
-              <Text style={styles.statLabel}>Day streak</Text>
+              <Text style={styles.statLabel}>{localizedText('Day streak', 'Racha de días')}</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{metrics.copingExercisesUsed}</Text>
-              <Text style={styles.statLabel}>Tools used</Text>
+              <Text style={styles.statLabel}>{localizedText('Tools used', 'Herramientas usadas')}</Text>
             </View>
             {metrics.successfulMessagePauses > 0 && (
               <>
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
                   <Text style={styles.statValue}>{metrics.successfulMessagePauses}</Text>
-                  <Text style={styles.statLabel}>Pauses</Text>
+                  <Text style={styles.statLabel}>{localizedText('Pauses', 'Pausas')}</Text>
                 </View>
               </>
             )}
@@ -122,7 +125,10 @@ function ProgressDashboardCardComponent() {
         </>
       ) : (
         <Text style={styles.emptyText}>
-          Complete a few check-ins to see your progress dashboard come alive.
+          {localizedText(
+            'Complete a few check-ins to see your progress dashboard come alive.',
+            'Completa algunos registros para ver cómo cobra vida tu panel de progreso.',
+          )}
         </Text>
       )}
     </TouchableOpacity>

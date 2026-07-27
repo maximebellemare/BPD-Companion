@@ -28,8 +28,11 @@ import { useDailyInsight } from '@/hooks/useDailyInsight';
 import { getInsightById } from '@/services/learn/dailyInsightService';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
 import { InsightFeedback } from '@/types/dailyInsight';
+import { localizedText } from '@/lib/i18n/staticText';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export default function DailyInsightScreen() {
+  useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -127,7 +130,7 @@ export default function DailyInsightScreen() {
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.emptyState}>
           <Lightbulb size={48} color={Colors.textMuted} />
-          <Text style={styles.emptyTitle}>No insight available</Text>
+          <Text style={styles.emptyTitle}>{localizedText('No insight available', 'No hay insight disponible')}</Text>
           <Text style={styles.emptyDesc}>Check back tomorrow for a new insight.</Text>
           <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
             <Text style={styles.closeButtonText}>Go back</Text>
@@ -148,7 +151,7 @@ export default function DailyInsightScreen() {
         >
           <X size={22} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Daily Insight</Text>
+        <Text style={styles.headerTitle}>{localizedText('Daily Insight', 'Insight diario')}</Text>
         <TouchableOpacity
           onPress={handleSave}
           style={styles.headerButton}
@@ -192,7 +195,7 @@ export default function DailyInsightScreen() {
             <View style={styles.patternCard}>
               <View style={styles.patternHeader}>
                 <Sparkles size={14} color={Colors.brandTeal} />
-                <Text style={styles.patternLabel}>Pattern Notice</Text>
+                <Text style={styles.patternLabel}>{localizedText('Pattern Notice', 'Aviso de patron')}</Text>
               </View>
               <Text style={styles.patternText}>{patternMessage}</Text>
             </View>
@@ -204,7 +207,7 @@ export default function DailyInsightScreen() {
           </View>
 
           <View style={styles.actionsSection}>
-            <Text style={styles.actionsSectionTitle}>What you can do</Text>
+            <Text style={styles.actionsSectionTitle}>{localizedText('What you can do', 'Que puedes hacer')}</Text>
 
             <TouchableOpacity
               style={styles.actionCard}
@@ -216,7 +219,7 @@ export default function DailyInsightScreen() {
                 <Wrench size={18} color={Colors.brandAmber} />
               </View>
               <View style={styles.actionContent}>
-                <Text style={styles.actionTitle}>Try this skill</Text>
+                <Text style={styles.actionTitle}>{localizedText('Try this skill', 'Probar esta habilidad')}</Text>
                 <Text style={styles.actionDesc}>{insight.suggestedToolLabel}</Text>
               </View>
               <ChevronRight size={16} color={Colors.textMuted} />
@@ -232,7 +235,7 @@ export default function DailyInsightScreen() {
                 <PenLine size={18} color={Colors.brandTeal} />
               </View>
               <View style={styles.actionContent}>
-                <Text style={styles.actionTitle}>Journal about this</Text>
+                <Text style={styles.actionTitle}>{localizedText('Journal about this', 'Escribir sobre esto')}</Text>
                 <Text style={styles.actionDesc}>Reflect on how this applies to you</Text>
               </View>
               <ChevronRight size={16} color={Colors.textMuted} />
@@ -257,7 +260,7 @@ export default function DailyInsightScreen() {
 
           <View style={styles.feedbackSection}>
             <Text style={styles.feedbackTitle}>Was this helpful?</Text>
-            <Text style={styles.feedbackDesc}>Your feedback helps personalize future insights.</Text>
+            <Text style={styles.feedbackDesc}>{localizedText('Your feedback helps personalize future insights.', 'Tu respuesta ayuda a personalizar futuros insights.')}</Text>
 
             <View style={styles.feedbackButtons}>
               <TouchableOpacity

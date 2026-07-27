@@ -30,6 +30,8 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { SimulationResult, SimulatedResponse, ResponseStyle, QuickAction } from '@/types/simulator';
 import { simulateResponses, EXAMPLE_SCENARIOS } from '@/services/simulator/emotionalSimulationService';
 
@@ -43,14 +45,15 @@ const STYLE_ICONS: Record<ResponseStyle, React.ReactNode> = {
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
-  relationship: 'Relationship',
-  social: 'Social',
-  work: 'Work',
-  self: 'Self',
+  get relationship() { return localizedText('Relationship', 'Relación'); },
+  get social() { return localizedText('Social', 'Social'); },
+  get work() { return localizedText('Work', 'Trabajo'); },
+  get self() { return localizedText('Self', 'Yo'); },
 };
 
 export default function SimulatorScreen() {
   const router = useRouter();
+  useLanguage();
   const [situation, setSituation] = useState<string>('');
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [expandedCard, setExpandedCard] = useState<ResponseStyle | null>(null);
@@ -272,12 +275,12 @@ export default function SimulatorScreen() {
                 {response.isRecommended ? (
                   <View style={styles.recommendedBadge}>
                     <Check size={10} color={Colors.success} />
-                    <Text style={styles.recommendedText}>Recommended</Text>
+                    <Text style={styles.recommendedText}>{localizedText('Recommended', 'Recomendado')}</Text>
                   </View>
                 ) : (
                   <View style={styles.riskBadge}>
                     <Text style={styles.riskText}>
-                      {response.emotionalOutcome.intensity} risk
+                      {localizedText(`${response.emotionalOutcome.intensity} risk`, `Riesgo ${response.emotionalOutcome.intensity}`)}
                     </Text>
                   </View>
                 )}
@@ -302,30 +305,33 @@ export default function SimulatorScreen() {
         {isExpanded && (
           <View style={styles.responseCardBody}>
             <View style={styles.responseSection}>
-              <Text style={styles.responseSectionLabel}>What this looks like</Text>
+              <Text style={styles.responseSectionLabel}>{localizedText('What this looks like', 'Cómo se vería')}</Text>
               <Text style={styles.responseExampleText}>{response.exampleResponse}</Text>
             </View>
 
             <View style={styles.outcomeGrid}>
               <View style={styles.outcomeCard}>
-                <Text style={styles.outcomeLabel}>How you may feel</Text>
+                <Text style={styles.outcomeLabel}>{localizedText('How you may feel', 'Cómo podrías sentirte')}</Text>
                 <Text style={styles.outcomeEmotion}>{response.emotionalOutcome.emotion}</Text>
                 <View style={[styles.intensityPill, { backgroundColor: intensityColors[response.emotionalOutcome.intensity] + '18' }]}>
                   <View style={[styles.intensityDot, { backgroundColor: intensityColors[response.emotionalOutcome.intensity] }]} />
                   <Text style={[styles.intensityText, { color: intensityColors[response.emotionalOutcome.intensity] }]}>
-                    {response.emotionalOutcome.intensity} intensity
+                    {localizedText(`${response.emotionalOutcome.intensity} intensity`, `Intensidad ${response.emotionalOutcome.intensity}`)}
                   </Text>
                 </View>
                 <Text style={styles.outcomeDesc}>{response.emotionalOutcome.description}</Text>
               </View>
 
               <View style={styles.outcomeCard}>
-                <Text style={styles.outcomeLabel}>Relationship impact</Text>
+                <Text style={styles.outcomeLabel}>{localizedText('Relationship impact', 'Impacto en la relación')}</Text>
                 <View style={[styles.impactPill, { backgroundColor: impactDirectionColors[response.relationshipImpact.direction] + '18' }]}>
                   <View style={[styles.impactDot, { backgroundColor: impactDirectionColors[response.relationshipImpact.direction] }]} />
                   <Text style={[styles.impactText, { color: impactDirectionColors[response.relationshipImpact.direction] }]}>
-                    {response.relationshipImpact.direction === 'positive' ? 'Likely positive' :
-                     response.relationshipImpact.direction === 'negative' ? 'May cause strain' : 'Neutral'}
+                    {response.relationshipImpact.direction === 'positive'
+                      ? localizedText('Likely positive', 'Probablemente positivo')
+                      : response.relationshipImpact.direction === 'negative'
+                        ? localizedText('May cause strain', 'Puede generar tensión')
+                        : localizedText('Neutral', 'Neutral')}
                   </Text>
                 </View>
                 <Text style={styles.outcomeDesc}>{response.relationshipImpact.description}</Text>
@@ -336,7 +342,7 @@ export default function SimulatorScreen() {
               <View style={styles.healthierHeader}>
                 <Sparkles size={14} color={isHealthy ? Colors.success : Colors.primary} />
                 <Text style={[styles.healthierLabel, isHealthy && styles.healthierLabelGreen]}>
-                  {isHealthy ? 'Why this works' : 'A healthier path'}
+                  {isHealthy ? localizedText('Why this works', 'Por qué funciona') : localizedText('A healthier path', 'Una opción más saludable')}
                 </Text>
               </View>
               <Text style={[styles.healthierText, isHealthy && styles.healthierTextGreen]}>
@@ -354,9 +360,9 @@ export default function SimulatorScreen() {
 
     return (
       <Animated.View style={[styles.quickActionsSection, { opacity: actionsFadeAnim }]}>
-        <Text style={styles.quickActionsTitle}>What would help right now?</Text>
+        <Text style={styles.quickActionsTitle}>{localizedText('What would help right now?', '¿Qué ayudaría ahora mismo?')}</Text>
         <Text style={styles.quickActionsSubtitle}>
-          Choose a next step that feels right for you
+          {localizedText('Choose a next step that feels right for you', 'Elige un siguiente paso que se sienta adecuado para ti')}
         </Text>
 
         {showPauseTimer && (
@@ -364,7 +370,7 @@ export default function SimulatorScreen() {
             <View style={styles.pauseTimerCircle}>
               <Text style={styles.pauseTimerText}>{formatPauseTime(pauseSeconds)}</Text>
             </View>
-            <Text style={styles.pauseTimerLabel}>Breathe. This moment will pass.</Text>
+            <Text style={styles.pauseTimerLabel}>{localizedText('Breathe. This moment will pass.', 'Respira. Este momento va a pasar.')}</Text>
             <TouchableOpacity
               style={styles.pauseTimerStop}
               onPress={() => {
@@ -373,7 +379,7 @@ export default function SimulatorScreen() {
               }}
               activeOpacity={0.7}
             >
-              <Text style={styles.pauseTimerStopText}>I'm ready</Text>
+              <Text style={styles.pauseTimerStopText}>{localizedText("I'm ready", 'Estoy listo/a')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -407,7 +413,7 @@ export default function SimulatorScreen() {
       <View style={styles.loadingSection}>
         <View style={styles.loadingHeader}>
           <Animated.View style={[styles.loadingDot, { opacity: shimmerOpacity }]} />
-          <Text style={styles.loadingText}>Exploring response paths...</Text>
+          <Text style={styles.loadingText}>{localizedText('Exploring response paths...', 'Explorando posibles respuestas...')}</Text>
         </View>
         {[1, 2, 3].map((i) => (
           <Animated.View
@@ -426,7 +432,7 @@ export default function SimulatorScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: 'Response Paths',
+          title: localizedText('Response Paths', 'Caminos de respuesta'),
           headerTitleStyle: { fontWeight: '600' as const, fontSize: 17 },
         }}
       />
@@ -448,18 +454,21 @@ export default function SimulatorScreen() {
                 <Zap size={22} color={Colors.accent} />
               </View>
             </View>
-            <Text style={styles.introTitle}>Before You Respond</Text>
+            <Text style={styles.introTitle}>{localizedText('Before You Respond', 'Antes de responder')}</Text>
             <Text style={styles.introSubtitle}>
-              See how different reactions might play out — so you can choose the one that protects your peace.
+              {localizedText(
+                'See how different reactions might play out — so you can choose the one that protects your peace.',
+                'Mira cómo podrían desarrollarse distintas reacciones para elegir la que proteja tu calma.',
+              )}
             </Text>
           </Animated.View>
 
           <Animated.View style={[styles.inputSection, { opacity: fadeAnim }]}>
-            <Text style={styles.inputLabel}>What's the situation?</Text>
+            <Text style={styles.inputLabel}>{localizedText("What's the situation?", '¿Cuál es la situación?')}</Text>
             <View style={styles.inputContainer}>
               <TextInput
                 style={styles.textInput}
-                placeholder="e.g. My partner hasn't replied for hours..."
+                placeholder={localizedText("e.g. My partner hasn't replied for hours...", 'p. ej., mi pareja no responde hace horas...')}
                 placeholderTextColor={Colors.textMuted}
                 value={situation}
                 onChangeText={setSituation}
@@ -480,11 +489,11 @@ export default function SimulatorScreen() {
                   testID="simulate-btn"
                 >
                   {isSimulating ? (
-                    <Text style={styles.simulateButtonText}>Thinking...</Text>
+                    <Text style={styles.simulateButtonText}>{localizedText('Thinking...', 'Pensando...')}</Text>
                   ) : (
                     <>
                       <Send size={15} color={Colors.white} />
-                      <Text style={styles.simulateButtonText}>Simulate</Text>
+                      <Text style={styles.simulateButtonText}>{localizedText('Simulate', 'Simular')}</Text>
                     </>
                   )}
                 </TouchableOpacity>
@@ -494,7 +503,7 @@ export default function SimulatorScreen() {
 
           {!result && !isSimulating && (
             <Animated.View style={[styles.scenariosSection, { opacity: fadeAnim }]}>
-              <Text style={styles.scenariosTitle}>Or explore a common situation</Text>
+              <Text style={styles.scenariosTitle}>{localizedText('Or explore a common situation', 'O explora una situación común')}</Text>
 
               <ScrollView
                 horizontal
@@ -508,7 +517,7 @@ export default function SimulatorScreen() {
                   activeOpacity={0.7}
                 >
                   <Text style={[styles.categoryPillText, !activeCategory && styles.categoryPillTextActive]}>
-                    All
+                    {localizedText('All', 'Todo')}
                   </Text>
                 </TouchableOpacity>
                 {categories.map((cat) => (
@@ -549,8 +558,8 @@ export default function SimulatorScreen() {
             <Animated.View style={[styles.resultsSection, { opacity: resultFadeAnim }]}>
               <View style={styles.resultsHeader}>
                 <View>
-                  <Text style={styles.resultsTitle}>Response Paths</Text>
-                  <Text style={styles.resultsSubtitle}>6 ways this could go</Text>
+                  <Text style={styles.resultsTitle}>{localizedText('Response Paths', 'Caminos de respuesta')}</Text>
+                  <Text style={styles.resultsSubtitle}>{localizedText('6 ways this could go', '6 formas en que esto podría desarrollarse')}</Text>
                 </View>
                 <TouchableOpacity
                   style={styles.resetButton}
@@ -559,18 +568,18 @@ export default function SimulatorScreen() {
                   testID="reset-btn"
                 >
                   <RotateCcw size={14} color={Colors.primary} />
-                  <Text style={styles.resetText}>New</Text>
+                  <Text style={styles.resetText}>{localizedText('New', 'Nuevo')}</Text>
                 </TouchableOpacity>
               </View>
 
               <View style={styles.situationBubble}>
-                <Text style={styles.situationBubbleLabel}>Your situation</Text>
+                <Text style={styles.situationBubbleLabel}>{localizedText('Your situation', 'Tu situación')}</Text>
                 <Text style={styles.situationBubbleText}>{result.situation}</Text>
               </View>
 
               <View style={styles.dividerRow}>
                 <View style={styles.dividerLine} />
-                <Text style={styles.dividerLabel}>May escalate</Text>
+                <Text style={styles.dividerLabel}>{localizedText('May escalate', 'Puede intensificarse')}</Text>
                 <View style={styles.dividerLine} />
               </View>
 
@@ -580,7 +589,7 @@ export default function SimulatorScreen() {
 
               <View style={styles.dividerRow}>
                 <View style={[styles.dividerLine, styles.dividerLineGreen]} />
-                <Text style={[styles.dividerLabel, styles.dividerLabelGreen]}>May support you</Text>
+                <Text style={[styles.dividerLabel, styles.dividerLabelGreen]}>{localizedText('May support you', 'Puede apoyarte')}</Text>
                 <View style={[styles.dividerLine, styles.dividerLineGreen]} />
               </View>
 
@@ -591,7 +600,7 @@ export default function SimulatorScreen() {
               <View style={styles.summaryCard}>
                 <View style={styles.summaryHeader}>
                   <Sparkles size={16} color={Colors.primary} />
-                  <Text style={styles.summaryTitle}>Key Takeaway</Text>
+                  <Text style={styles.summaryTitle}>{localizedText('Key Takeaway', 'Idea clave')}</Text>
                 </View>
                 <Text style={styles.summaryText}>{result.summary}</Text>
               </View>

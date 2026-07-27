@@ -16,6 +16,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { X, ChevronLeft, ChevronRight, Check } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { useMovement } from '@/providers/MovementProvider';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
 import {
@@ -34,6 +36,7 @@ const STEPS: Step[] = ['type', 'duration', 'intensity', 'mood_before', 'mood_aft
 export default function MovementAddScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  useLanguage();
   const { trackEvent } = useAnalytics();
   const { addEntry, isAdding } = useMovement();
 
@@ -117,8 +120,8 @@ export default function MovementAddScreen() {
 
   const renderTypeStep = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>What kind of movement?</Text>
-      <Text style={styles.stepSubtitle}>Choose what feels right for today</Text>
+      <Text style={styles.stepTitle}>{localizedText('What kind of movement?', '¿Qué tipo de movimiento?')}</Text>
+      <Text style={styles.stepSubtitle}>{localizedText('Choose what feels right for today', 'Elige lo que se sienta bien para hoy')}</Text>
       <View style={styles.typeGrid}>
         {MOVEMENT_TYPES.map(t => (
           <TouchableOpacity
@@ -142,7 +145,7 @@ export default function MovementAddScreen() {
       {type === 'other' && (
         <TextInput
           style={styles.customTypeInput}
-          placeholder="Describe your movement..."
+          placeholder={localizedText('Describe your movement...', 'Describe tu movimiento...')}
           placeholderTextColor={Colors.textMuted}
           value={customType}
           onChangeText={setCustomType}
@@ -153,8 +156,8 @@ export default function MovementAddScreen() {
 
   const renderDurationStep = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>How long?</Text>
-      <Text style={styles.stepSubtitle}>Even a few minutes counts</Text>
+      <Text style={styles.stepTitle}>{localizedText('How long?', '¿Cuánto tiempo?')}</Text>
+      <Text style={styles.stepSubtitle}>{localizedText('Even a few minutes counts', 'Incluso unos minutos cuentan')}</Text>
       <View style={styles.durationGrid}>
         {DURATION_PRESETS.map(d => (
           <TouchableOpacity
@@ -182,7 +185,7 @@ export default function MovementAddScreen() {
         </TouchableOpacity>
         <View style={styles.durationDisplay}>
           <Text style={styles.durationValue}>{duration}</Text>
-          <Text style={styles.durationUnit}>minutes</Text>
+          <Text style={styles.durationUnit}>{localizedText('minutes', 'minutos')}</Text>
         </View>
         <TouchableOpacity
           style={styles.durationAdjustBtn}
@@ -196,8 +199,8 @@ export default function MovementAddScreen() {
 
   const renderIntensityStep = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>How intense?</Text>
-      <Text style={styles.stepSubtitle}>No judgment — gentle is powerful too</Text>
+      <Text style={styles.stepTitle}>{localizedText('How intense?', '¿Qué tan intenso?')}</Text>
+      <Text style={styles.stepSubtitle}>{localizedText('No judgment — gentle is powerful too', 'Sin juicio; lo suave también es poderoso')}</Text>
       <View style={styles.intensityList}>
         {INTENSITY_OPTIONS.map(opt => (
           <TouchableOpacity
@@ -233,10 +236,14 @@ export default function MovementAddScreen() {
     return (
       <View style={styles.stepContent}>
         <Text style={styles.stepTitle}>
-          {isBefore ? 'How are you feeling now?' : 'How do you feel after?'}
+          {isBefore
+            ? localizedText('How are you feeling now?', '¿Cómo te sientes ahora?')
+            : localizedText('How do you feel after?', '¿Cómo te sientes después?')}
         </Text>
         <Text style={styles.stepSubtitle}>
-          {isBefore ? 'Before you move — just notice' : 'Did movement shift anything?'}
+          {isBefore
+            ? localizedText('Before you move — just notice', 'Antes de moverte, solo observa')
+            : localizedText('Did movement shift anything?', '¿El movimiento cambió algo?')}
         </Text>
         <View style={styles.moodList}>
           {MOOD_LEVELS.map(m => (
@@ -261,8 +268,11 @@ export default function MovementAddScreen() {
           <View style={styles.moodCompare}>
             <Text style={styles.moodCompareText}>
               {moodAfter > moodBefore
-                ? `Movement helped — you went from ${MOOD_LEVELS.find(m => m.value === moodBefore)?.emoji} to ${MOOD_LEVELS.find(m => m.value === moodAfter)?.emoji}`
-                : `That's okay — not every session shifts things`}
+                ? localizedText(
+                  `Movement helped — you went from ${MOOD_LEVELS.find(m => m.value === moodBefore)?.emoji} to ${MOOD_LEVELS.find(m => m.value === moodAfter)?.emoji}`,
+                  `El movimiento ayudó: pasaste de ${MOOD_LEVELS.find(m => m.value === moodBefore)?.emoji} a ${MOOD_LEVELS.find(m => m.value === moodAfter)?.emoji}`,
+                )
+                : localizedText("That's okay — not every session shifts things", 'Está bien; no toda sesión cambia las cosas')}
             </Text>
           </View>
         )}
@@ -272,11 +282,11 @@ export default function MovementAddScreen() {
 
   const renderNotesStep = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>Any reflections?</Text>
-      <Text style={styles.stepSubtitle}>Optional — whatever comes to mind</Text>
+      <Text style={styles.stepTitle}>{localizedText('Any reflections?', '¿Alguna reflexión?')}</Text>
+      <Text style={styles.stepSubtitle}>{localizedText('Optional — whatever comes to mind', 'Opcional; lo que te venga a la mente')}</Text>
       <TextInput
         style={styles.notesInput}
-        placeholder="How did this movement feel? Did it help you reset?"
+        placeholder={localizedText('How did this movement feel? Did it help you reset?', '¿Cómo se sintió este movimiento? ¿Te ayudó a reiniciar?')}
         placeholderTextColor={Colors.textMuted}
         value={notes}
         onChangeText={setNotes}
@@ -284,7 +294,12 @@ export default function MovementAddScreen() {
         textAlignVertical="top"
       />
       <View style={styles.notePrompts}>
-        {['Helped me reset', 'Needed this today', 'Felt grounding', 'Released tension'].map(prompt => (
+        {[
+          localizedText('Helped me reset', 'Me ayudó a reiniciar'),
+          localizedText('Needed this today', 'Necesitaba esto hoy'),
+          localizedText('Felt grounding', 'Me ayudó a anclarme'),
+          localizedText('Released tension', 'Liberé tensión'),
+        ].map(prompt => (
           <TouchableOpacity
             key={prompt}
             style={styles.notePromptChip}
@@ -352,7 +367,7 @@ export default function MovementAddScreen() {
             ) : (
               <>
                 <Check size={20} color={Colors.white} />
-                <Text style={styles.primaryBtnText}>Save Movement</Text>
+                <Text style={styles.primaryBtnText}>{localizedText('Save Movement', 'Guardar movimiento')}</Text>
               </>
             )}
           </TouchableOpacity>
@@ -363,7 +378,7 @@ export default function MovementAddScreen() {
             disabled={!canProceed()}
             testID="movement-next"
           >
-            <Text style={styles.primaryBtnText}>Continue</Text>
+            <Text style={styles.primaryBtnText}>{localizedText('Continue', 'Continuar')}</Text>
             <ChevronRight size={20} color={Colors.white} />
           </TouchableOpacity>
         )}

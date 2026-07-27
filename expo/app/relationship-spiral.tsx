@@ -43,19 +43,21 @@ import {
   GuardSignalSummary,
   ResponseSimulation,
 } from '@/types/relationshipSpiral';
+import { localizedText } from '@/lib/i18n/staticText';
+import { useLanguage } from '@/hooks/useLanguage';
 
 const RISK_THEME: Record<SpiralRiskLevel, { bg: string; accent: string; label: string; icon: string }> = {
-  calm: { bg: Colors.primaryLight, accent: Colors.primary, label: 'Calm', icon: '🌿' },
-  watchful: { bg: '#FFFFFF', accent: '#67E8F9', label: 'Watchful', icon: '👀' },
-  rising: { bg: '#FFFFFF', accent: '#3B82F6', label: 'Rising', icon: '🌊' },
-  urgent: { bg: '#FFFFFF', accent: '#3B82F6', label: 'Needs Attention', icon: '⚡' },
+  calm: { bg: Colors.primaryLight, accent: Colors.primary, get label() { return localizedText('Calm', 'Calma'); }, icon: '🌿' },
+  watchful: { bg: '#FFFFFF', accent: '#67E8F9', get label() { return localizedText('Watchful', 'Atento/a'); }, icon: '👀' },
+  rising: { bg: '#FFFFFF', accent: '#3B82F6', get label() { return localizedText('Rising', 'Subiendo'); }, icon: '🌊' },
+  urgent: { bg: '#FFFFFF', accent: '#3B82F6', get label() { return localizedText('Needs Attention', 'Necesita atencion'); }, icon: '⚡' },
 };
 
 const ALERT_THEME: Record<GuardAlertLevel, { bg: string; accent: string; label: string }> = {
-  none: { bg: Colors.primaryLight, accent: Colors.primary, label: 'Clear' },
-  gentle: { bg: '#FFFFFF', accent: '#14B8A6', label: 'Gentle notice' },
-  moderate: { bg: '#FFFFFF', accent: '#67E8F9', label: 'Take care' },
-  strong: { bg: '#FFFFFF', accent: '#3B82F6', label: 'Slow down' },
+  none: { bg: Colors.primaryLight, accent: Colors.primary, get label() { return localizedText('Clear', 'Claro'); } },
+  gentle: { bg: '#FFFFFF', accent: '#14B8A6', get label() { return localizedText('Gentle notice', 'Aviso suave'); } },
+  moderate: { bg: '#FFFFFF', accent: '#67E8F9', get label() { return localizedText('Take care', 'Cuidate'); } },
+  strong: { bg: '#FFFFFF', accent: '#3B82F6', get label() { return localizedText('Slow down', 'Ve mas despacio'); } },
 };
 
 const INTERVENTION_ICONS: Record<string, typeof Timer> = {
@@ -70,6 +72,7 @@ const INTERVENTION_ICONS: Record<string, typeof Timer> = {
 };
 
 export default function RelationshipSpiralScreen() {
+  useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const spiral = useRelationshipSpiral();
@@ -139,7 +142,7 @@ export default function RelationshipSpiralScreen() {
             <View style={[styles.heroIcon, { backgroundColor: alertTheme.accent + '14' }]}>
               <HeartCrack size={28} color={alertTheme.accent} />
             </View>
-            <Text style={styles.heroTitle}>Relationship Spiral Guard</Text>
+            <Text style={styles.heroTitle}>{localizedText('Relationship Spiral Guard', 'Proteccion de espirales relacionales')}</Text>
             <Text style={styles.heroSubtitle}>
               Detecting patterns that may lead to impulsive communication or emotional spirals
             </Text>
@@ -199,7 +202,7 @@ export default function RelationshipSpiralScreen() {
             <>
               {guard.interventions.length > 0 && (
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>What may help right now</Text>
+                  <Text style={styles.sectionTitle}>{localizedText('What may help right now', 'Que puede ayudar ahora')}</Text>
                   {guard.interventions.slice(0, 4).map(intervention => (
                     <GuardInterventionCard
                       key={intervention.id}
@@ -292,7 +295,7 @@ export default function RelationshipSpiralScreen() {
 
               {spiral.interpretations.length > 0 && (
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>What this means</Text>
+                  <Text style={styles.sectionTitle}>{localizedText('What this means', 'Que significa esto')}</Text>
                   {spiral.interpretations.map(interp => (
                     <InterpretationCard key={interp.id} interpretation={interp} />
                   ))}
@@ -306,7 +309,7 @@ export default function RelationshipSpiralScreen() {
               <View style={styles.emptyIcon}>
                 <ShieldCheck size={32} color={Colors.primary} />
               </View>
-              <Text style={styles.emptyTitle}>No signals right now</Text>
+              <Text style={styles.emptyTitle}>{localizedText('No signals right now', 'No hay senales ahora')}</Text>
               <Text style={styles.emptyDesc}>
                 As you use the app more, this screen will detect relationship-triggered emotional patterns and help you intervene before spirals build.
               </Text>
@@ -375,17 +378,17 @@ function SimulationCard({
       {expanded && (
         <View style={styles.simBody}>
           <View style={styles.simMessageWrap}>
-            <Text style={styles.simMessageLabel}>Example message</Text>
-            <Text style={styles.simMessage}>"{simulation.exampleMessage}"</Text>
+            <Text style={styles.simMessageLabel}>{localizedText('Example message', 'Mensaje de ejemplo')}</Text>
+            <Text style={styles.simMessage}>{`"${simulation.exampleMessage}"`}</Text>
           </View>
 
           <View style={styles.simImpactRow}>
             <View style={styles.simImpactCard}>
-              <Text style={styles.simImpactLabel}>Emotional impact</Text>
+              <Text style={styles.simImpactLabel}>{localizedText('Emotional impact', 'Impacto emocional')}</Text>
               <Text style={styles.simImpactText}>{simulation.emotionalImpact}</Text>
             </View>
             <View style={styles.simImpactCard}>
-              <Text style={styles.simImpactLabel}>Relationship impact</Text>
+              <Text style={styles.simImpactLabel}>{localizedText('Relationship impact', 'Impacto relacional')}</Text>
               <Text style={styles.simImpactText}>{simulation.relationshipImpact}</Text>
             </View>
           </View>
@@ -516,7 +519,7 @@ function ChainCard({ chain }: { chain: SpiralChain }) {
     <View style={styles.chainCard}>
       <View style={styles.chainFlow}>
         <View style={styles.chainNode}>
-          <Text style={styles.chainNodeLabel}>Trigger</Text>
+          <Text style={styles.chainNodeLabel}>{localizedText('Trigger', 'Disparador')}</Text>
           <Text style={styles.chainNodeValue}>{chain.trigger}</Text>
         </View>
         <ArrowRight size={14} color={Colors.textMuted} />
@@ -526,7 +529,7 @@ function ChainCard({ chain }: { chain: SpiralChain }) {
         </View>
         <ArrowRight size={14} color={Colors.textMuted} />
         <View style={styles.chainNode}>
-          <Text style={styles.chainNodeLabel}>Urge</Text>
+          <Text style={styles.chainNodeLabel}>{localizedText('Urge', 'Impulso')}</Text>
           <Text style={styles.chainNodeValue}>{chain.urge}</Text>
         </View>
       </View>

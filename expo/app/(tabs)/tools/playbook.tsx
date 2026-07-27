@@ -48,6 +48,8 @@ import type {
 } from '@/types/personalPlaybook';
 import type { EmotionToolProfile } from '@/services/playbook/playbookLearningService';
 import { trackEvent } from '@/services/analytics/analyticsService';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 const SITUATION_ICON_MAP: Record<string, React.ComponentType<{ size: number; color: string }>> = {
   ShieldOff,
@@ -89,6 +91,7 @@ type ActiveTab = 'overview' | 'situations' | 'emotions' | 'insights';
 export default function PlaybookScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  useLanguage();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
   const playbook = usePersonalPlaybook();
@@ -149,23 +152,23 @@ export default function PlaybookScreen() {
           <View style={styles.headerCenter}>
             <View style={styles.headerTitleRow}>
               <Bookmark size={20} color={Colors.brandTeal} />
-              <Text style={styles.title}>My Playbook</Text>
+              <Text style={styles.title}>{localizedText('My Playbook', 'Mi manual')}</Text>
             </View>
-            <Text style={styles.subtitle}>What works best for you</Text>
+            <Text style={styles.subtitle}>{localizedText('What works best for you', 'Lo que mejor funciona para ti')}</Text>
           </View>
         </View>
 
         {playbook.hasData && playbook.stats && (
           <View style={styles.statsStrip}>
-            <StatPill label="Tools Used" value={String(playbook.stats.totalToolUses)} color={Colors.brandTeal} />
-            <StatPill label="This Week" value={String(playbook.stats.toolsThisWeek)} color={Colors.brandLilac} />
+            <StatPill label={localizedText('Tools Used', 'Herramientas usadas')} value={String(playbook.stats.totalToolUses)} color={Colors.brandTeal} />
+            <StatPill label={localizedText('This Week', 'Esta semana')} value={String(playbook.stats.toolsThisWeek)} color={Colors.brandLilac} />
             <StatPill
-              label="Avg Reduction"
+              label={localizedText('Avg Reduction', 'Reducción prom.')}
               value={playbook.stats.avgDistressReduction > 0 ? `-${playbook.stats.avgDistressReduction}` : '–'}
               color={Colors.success}
             />
             {playbook.stats.streakDays > 0 && (
-              <StatPill label="Streak" value={`${playbook.stats.streakDays}d`} color={Colors.accent} />
+              <StatPill label={localizedText('Streak', 'Racha')} value={`${playbook.stats.streakDays}d`} color={Colors.accent} />
             )}
           </View>
         )}
@@ -185,7 +188,13 @@ export default function PlaybookScreen() {
               testID={`playbook-tab-${tab}`}
             >
               <Text style={[styles.tabLabel, activeTab === tab && styles.tabLabelActive]}>
-                {tab === 'overview' ? 'Overview' : tab === 'situations' ? 'By Situation' : tab === 'emotions' ? 'By Emotion' : 'Insights'}
+                {tab === 'overview'
+                  ? localizedText('Overview', 'Resumen')
+                  : tab === 'situations'
+                    ? localizedText('By Situation', 'Por situación')
+                    : tab === 'emotions'
+                      ? localizedText('By Emotion', 'Por emoción')
+                      : localizedText('Insights', 'Insights')}
               </Text>
             </TouchableOpacity>
           ))}
@@ -239,17 +248,20 @@ function EmptyPlaybook({ onExplore }: { onExplore: () => void }) {
       <View style={styles.emptyIconWrap}>
         <Bookmark size={36} color={Colors.brandTeal} />
       </View>
-      <Text style={styles.emptyTitle}>Your personal playbook</Text>
+      <Text style={styles.emptyTitle}>{localizedText('Your personal playbook', 'Tu manual personal')}</Text>
       <Text style={styles.emptyDesc}>
-        As you use tools and rate what helps, your playbook learns which strategies work best for you — and when.
+        {localizedText(
+          'As you use tools and rate what helps, your playbook learns which strategies work best for you — and when.',
+          'A medida que uses herramientas y califiques qué ayuda, tu manual aprende qué estrategias funcionan mejor para ti y cuándo.',
+        )}
       </Text>
       <View style={styles.emptySteps}>
-        <EmptyStep number="1" text="Use a tool from the library" />
-        <EmptyStep number="2" text="Rate if it helped after" />
-        <EmptyStep number="3" text="Your playbook builds itself" />
+        <EmptyStep number="1" text={localizedText('Use a tool from the library', 'Usa una herramienta de la biblioteca')} />
+        <EmptyStep number="2" text={localizedText('Rate if it helped after', 'Luego califica si ayudó')} />
+        <EmptyStep number="3" text={localizedText('Your playbook builds itself', 'Tu manual se construye solo')} />
       </View>
       <TouchableOpacity style={styles.emptyBtn} onPress={onExplore} activeOpacity={0.7}>
-        <Text style={styles.emptyBtnText}>Explore Tools</Text>
+        <Text style={styles.emptyBtnText}>{localizedText('Explore Tools', 'Explorar herramientas')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -305,7 +317,7 @@ function OverviewTab({
               <TrendingDown size={14} color={Colors.textMuted} />
             )}
             <Text style={[styles.trendLabel, trends.improving && { color: Colors.success }]}>
-              {trends.improving ? 'Building momentum' : 'This week'}
+              {trends.improving ? localizedText('Building momentum', 'Construyendo impulso') : localizedText('This week', 'Esta semana')}
             </Text>
           </View>
           <Text style={styles.trendText}>
@@ -320,7 +332,7 @@ function OverviewTab({
         <View style={styles.topToolCard}>
           <View style={styles.topToolBadge}>
             <Award size={14} color={Colors.white} />
-            <Text style={styles.topToolBadgeText}>Most Effective</Text>
+            <Text style={styles.topToolBadgeText}>{localizedText('Most Effective', 'Más efectiva')}</Text>
           </View>
           <Text style={styles.topToolName}>{stats.mostEffectiveTool.toolTitle}</Text>
           <View style={styles.topToolStats}>
@@ -328,17 +340,17 @@ function OverviewTab({
               <Text style={styles.topToolStatValue}>
                 -{stats.mostEffectiveTool.avgDistressReduction}
               </Text>
-              <Text style={styles.topToolStatLabel}>avg reduction</Text>
+              <Text style={styles.topToolStatLabel}>{localizedText('avg reduction', 'reducción prom.')}</Text>
             </View>
             <View style={styles.topToolStatDivider} />
             <View style={styles.topToolStat}>
               <Text style={styles.topToolStatValue}>{stats.mostEffectiveTool.totalUses}x</Text>
-              <Text style={styles.topToolStatLabel}>used</Text>
+              <Text style={styles.topToolStatLabel}>{localizedText('used', 'usada')}</Text>
             </View>
             <View style={styles.topToolStatDivider} />
             <View style={styles.topToolStat}>
               <Text style={styles.topToolStatValue}>{stats.mostEffectiveTool.effectivenessScore}%</Text>
-              <Text style={styles.topToolStatLabel}>effective</Text>
+              <Text style={styles.topToolStatLabel}>{localizedText('effective', 'efectiva')}</Text>
             </View>
           </View>
           <View style={styles.topToolBar}>
@@ -356,7 +368,7 @@ function OverviewTab({
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Pin size={15} color={Colors.accent} />
-            <Text style={styles.sectionTitle}>Quick Access</Text>
+            <Text style={styles.sectionTitle}>{localizedText('Quick Access', 'Acceso rápido')}</Text>
           </View>
           {pinnedTools.map(tool => (
             <ToolCard key={tool.toolId} tool={tool} isPinned onPin={onPin} />
@@ -368,7 +380,7 @@ function OverviewTab({
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <TrendingUp size={15} color={Colors.success} />
-            <Text style={styles.sectionTitle}>Top Performing Tools</Text>
+            <Text style={styles.sectionTitle}>{localizedText('Top Performing Tools', 'Herramientas con mejor resultado')}</Text>
           </View>
           {topTools.map((tool, idx) => (
             <ToolCard key={tool.toolId} tool={tool} rank={idx + 1} isPinned={tool.pinned} onPin={onPin} />
@@ -380,7 +392,7 @@ function OverviewTab({
         <View style={styles.milestoneCard}>
           <View style={styles.milestoneHeader}>
             <Target size={16} color={Colors.brandLilac} />
-            <Text style={styles.milestoneTitle}>Next Milestone</Text>
+            <Text style={styles.milestoneTitle}>{localizedText('Next Milestone', 'Próximo hito')}</Text>
           </View>
           <Text style={styles.milestoneName}>{nextMilestone.label}</Text>
           <Text style={styles.milestoneDesc}>{nextMilestone.description}</Text>
@@ -427,7 +439,10 @@ function SituationsTab({
       {activeSituations.length > 0 ? (
         <>
           <Text style={styles.situationIntro}>
-            Based on your tool usage, here's what works best in different moments.
+            {localizedText(
+              "Based on your tool usage, here's what works best in different moments.",
+              'Según tu uso de herramientas, esto es lo que mejor funciona en distintos momentos.',
+            )}
           </Text>
           {activeSituations.map(rec => {
             const cat = allSituations.find(c => c.id === rec.situation);
@@ -459,8 +474,8 @@ function SituationsTab({
                       <View style={styles.situationToolInfo}>
                         <Text style={styles.situationToolName}>{tool.toolTitle}</Text>
                         <Text style={styles.situationToolMeta}>
-                          {tool.avgDistressReduction > 0 && `-${tool.avgDistressReduction} distress · `}
-                          {tool.totalUses}x used
+                          {tool.avgDistressReduction > 0 && localizedText(`-${tool.avgDistressReduction} distress · `, `-${tool.avgDistressReduction} malestar · `)}
+                          {localizedText(`${tool.totalUses}x used`, `${tool.totalUses} veces`)}
                         </Text>
                       </View>
                     </View>
@@ -473,16 +488,19 @@ function SituationsTab({
       ) : (
         <View style={styles.emptyTab}>
           <BarChart3 size={28} color={Colors.textMuted} />
-          <Text style={styles.emptyTabTitle}>Building situation data</Text>
+          <Text style={styles.emptyTabTitle}>{localizedText('Building situation data', 'Construyendo datos de situaciones')}</Text>
           <Text style={styles.emptyTabDesc}>
-            Keep using tools and tracking how they help. Your playbook will learn which tools work best for each emotional situation.
+            {localizedText(
+              'Keep using tools and tracking how they help. Your playbook will learn which tools work best for each emotional situation.',
+              'Sigue usando herramientas y registrando cómo ayudan. Tu guía aprenderá qué funciona mejor en cada situación emocional.',
+            )}
           </Text>
         </View>
       )}
 
       {emptySituations.length > 0 && activeSituations.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle2}>Not enough data yet</Text>
+          <Text style={styles.sectionTitle2}>{localizedText('Not enough data yet', 'Todavía no hay suficientes datos')}</Text>
           <View style={styles.emptySituationGrid}>
             {emptySituations.map(cat => {
               const IconComp = SITUATION_ICON_MAP[cat.iconName];
@@ -505,9 +523,12 @@ function EmotionsTab({ profiles }: { profiles: EmotionToolProfile[] }) {
     return (
       <View style={styles.emptyTab}>
         <Heart size={28} color={Colors.textMuted} />
-        <Text style={styles.emptyTabTitle}>Learning your patterns</Text>
+        <Text style={styles.emptyTabTitle}>{localizedText('Learning your patterns', 'Aprendiendo tus patrones')}</Text>
         <Text style={styles.emptyTabDesc}>
-          As you log emotions when using tools, your playbook will show which tools work best for each feeling.
+          {localizedText(
+            'As you log emotions when using tools, your playbook will show which tools work best for each feeling.',
+            'A medida que registres emociones al usar herramientas, tu guía mostrará qué funciona mejor para cada sentimiento.',
+          )}
         </Text>
       </View>
     );
@@ -516,7 +537,10 @@ function EmotionsTab({ profiles }: { profiles: EmotionToolProfile[] }) {
   return (
     <>
       <Text style={styles.situationIntro}>
-        Tools that work best for you, organized by how you're feeling.
+        {localizedText(
+          "Tools that work best for you, organized by how you're feeling.",
+          'Herramientas que mejor funcionan para ti, organizadas según cómo te sientes.',
+        )}
       </Text>
       {profiles.map(profile => {
         const colors = getEmotionColor(profile.emotion);

@@ -24,15 +24,17 @@ import Colors from '@/constants/colors';
 import { getEnhancedOutcomes } from '@/services/messages/enhancedOutcomeService';
 import { generatePlaybook } from '@/services/messages/communicationProfileService';
 import { PlaybookEntry } from '@/types/messageOutcome';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 const CATEGORY_CONFIG: Record<string, { icon: typeof Shield; color: string; label: string }> = {
-  best_style: { icon: Heart, color: Colors.brandSage, label: 'Best response style' },
-  before_texting: { icon: Clock, color: Colors.primary, label: 'Before texting when activated' },
-  regret_triggers: { icon: AlertTriangle, color: Colors.danger, label: 'What leads to regret' },
-  do_not_send: { icon: Shield, color: Colors.accent, label: 'Best "do not send" moments' },
-  after_silence: { icon: MessageCircle, color: Colors.brandLilac, label: 'After relationship silence' },
-  after_disrespect: { icon: Shield, color: Colors.brandMist, label: 'After feeling disrespected' },
-  secure_style: { icon: Heart, color: Colors.brandSage, label: 'Best secure response style' },
+  best_style: { icon: Heart, color: Colors.brandSage, get label() { return localizedText('Best response style', 'Mejor estilo de respuesta'); } },
+  before_texting: { icon: Clock, color: Colors.primary, get label() { return localizedText('Before texting when activated', 'Antes de escribir cuando estás activado/a'); } },
+  regret_triggers: { icon: AlertTriangle, color: Colors.danger, get label() { return localizedText('What leads to regret', 'Lo que suele llevar al arrepentimiento'); } },
+  do_not_send: { icon: Shield, color: Colors.accent, get label() { return localizedText('Best "do not send" moments', 'Mejores momentos para no enviar'); } },
+  after_silence: { icon: MessageCircle, color: Colors.brandLilac, get label() { return localizedText('After relationship silence', 'Después del silencio en la relación'); } },
+  after_disrespect: { icon: Shield, color: Colors.brandMist, get label() { return localizedText('After feeling disrespected', 'Después de sentirte faltado/a al respeto'); } },
+  secure_style: { icon: Heart, color: Colors.brandSage, get label() { return localizedText('Best secure response style', 'Mejor estilo de respuesta segura'); } },
 };
 
 const CONFIDENCE_COLORS = {
@@ -44,6 +46,7 @@ const CONFIDENCE_COLORS = {
 export default function CommunicationPlaybookScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  useLanguage();
 
   const enhancedQuery = useQuery({
     queryKey: ['enhanced-message-outcomes'],
@@ -81,8 +84,8 @@ export default function CommunicationPlaybookScreen() {
           <ArrowLeft size={20} color={Colors.text} />
         </TouchableOpacity>
         <View style={styles.headerTextWrap}>
-          <Text style={styles.headerTitle}>Communication Playbook</Text>
-          <Text style={styles.headerSub}>Personalized strategies based on your patterns</Text>
+          <Text style={styles.headerTitle}>{localizedText('Communication Playbook', 'Manual de comunicación')}</Text>
+          <Text style={styles.headerSub}>{localizedText('Personalized strategies based on your patterns', 'Estrategias personalizadas según tus patrones')}</Text>
         </View>
       </View>
 
@@ -93,9 +96,12 @@ export default function CommunicationPlaybookScreen() {
               <View style={styles.heroIconWrap}>
                 <BookOpen size={22} color={Colors.white} />
               </View>
-              <Text style={styles.heroTitle}>Your Personal Playbook</Text>
+              <Text style={styles.heroTitle}>{localizedText('Your Personal Playbook', 'Tu manual personal')}</Text>
               <Text style={styles.heroDesc}>
-                These strategies are built from your actual communication outcomes. They reflect what works best for you.
+                {localizedText(
+                  'These strategies are built from your actual communication outcomes. They reflect what works best for you.',
+                  'Estas estrategias se crean a partir de tus resultados reales de comunicación. Reflejan lo que mejor funciona para ti.',
+                )}
               </Text>
             </View>
 
@@ -122,11 +128,17 @@ export default function CommunicationPlaybookScreen() {
                         <View style={[styles.confidenceBadge, { backgroundColor: CONFIDENCE_COLORS[entry.confidence] + '15' }]}>
                           <View style={[styles.confidenceDot, { backgroundColor: CONFIDENCE_COLORS[entry.confidence] }]} />
                           <Text style={[styles.confidenceText, { color: CONFIDENCE_COLORS[entry.confidence] }]}>
-                            {entry.confidence} confidence
+                            {localizedText(
+                              `${entry.confidence} confidence`,
+                              `Confianza ${entry.confidence}`,
+                            )}
                           </Text>
                         </View>
                         <Text style={styles.entryBasis}>
-                          Based on {entry.basedOnOutcomes} outcomes
+                          {localizedText(
+                            `Based on ${entry.basedOnOutcomes} outcomes`,
+                            `Basado en ${entry.basedOnOutcomes} resultado${entry.basedOnOutcomes === 1 ? '' : 's'}`,
+                          )}
                         </Text>
                       </View>
                     </View>
@@ -136,7 +148,7 @@ export default function CommunicationPlaybookScreen() {
             })}
 
             <View style={styles.tipsSection}>
-              <Text style={styles.tipsTitle}>General communication tips</Text>
+              <Text style={styles.tipsTitle}>{localizedText('General communication tips', 'Consejos generales de comunicación')}</Text>
               {GENERAL_TIPS.map((tip, i) => (
                 <View key={i} style={styles.tipCard}>
                   <Text style={styles.tipEmoji}>{tip.emoji}</Text>
@@ -153,27 +165,30 @@ export default function CommunicationPlaybookScreen() {
             <View style={styles.emptyIconWrap}>
               <BookOpen size={32} color={Colors.textMuted} />
             </View>
-            <Text style={styles.emptyTitle}>Building your playbook</Text>
+            <Text style={styles.emptyTitle}>{localizedText('Building your playbook', 'Estamos creando tu manual')}</Text>
             <Text style={styles.emptyDesc}>
-              Use the message tool and record outcomes a few more times. The playbook will fill with personalized strategies based on what works for you.
+              {localizedText(
+                'Use the message tool and record outcomes a few more times. The playbook will fill with personalized strategies based on what works for you.',
+                'Usa la herramienta de mensajes y registra los resultados algunas veces más. Tu manual se llenará con estrategias personalizadas según lo que funciona para ti.',
+              )}
             </Text>
             <View style={styles.emptyPreview}>
-              <Text style={styles.emptyPreviewTitle}>What you'll see:</Text>
+              <Text style={styles.emptyPreviewTitle}>{localizedText("What you'll see:", 'Lo que verás:')}</Text>
               <View style={styles.emptyPreviewItem}>
                 <Heart size={14} color={Colors.brandSage} />
-                <Text style={styles.emptyPreviewText}>Best response style for you</Text>
+                <Text style={styles.emptyPreviewText}>{localizedText('Best response style for you', 'El mejor estilo de respuesta para ti')}</Text>
               </View>
               <View style={styles.emptyPreviewItem}>
                 <Clock size={14} color={Colors.primary} />
-                <Text style={styles.emptyPreviewText}>What to do before texting when activated</Text>
+                <Text style={styles.emptyPreviewText}>{localizedText('What to do before texting when activated', 'Qué hacer antes de escribir cuando estás activado/a')}</Text>
               </View>
               <View style={styles.emptyPreviewItem}>
                 <AlertTriangle size={14} color={Colors.danger} />
-                <Text style={styles.emptyPreviewText}>What usually leads to regret</Text>
+                <Text style={styles.emptyPreviewText}>{localizedText('What usually leads to regret', 'Lo que suele llevar al arrepentimiento')}</Text>
               </View>
               <View style={styles.emptyPreviewItem}>
                 <Shield size={14} color={Colors.accent} />
-                <Text style={styles.emptyPreviewText}>Best "do not send" moments</Text>
+                <Text style={styles.emptyPreviewText}>{localizedText('Best "do not send" moments', 'Mejores momentos para no enviar')}</Text>
               </View>
             </View>
           </View>
@@ -182,7 +197,10 @@ export default function CommunicationPlaybookScreen() {
         <View style={styles.privacyCard}>
           <Lock size={14} color={Colors.textMuted} />
           <Text style={styles.privacyText}>
-            Your playbook is generated locally. Nothing leaves your device.
+            {localizedText(
+              'Your playbook is generated locally. Nothing leaves your device.',
+              'Tu manual se genera de forma local. Nada sale de tu dispositivo.',
+            )}
           </Text>
         </View>
       </ScrollView>
@@ -193,28 +211,28 @@ export default function CommunicationPlaybookScreen() {
 const GENERAL_TIPS = [
   {
     emoji: '\u23f3',
-    title: 'Pause before reacting',
-    description: 'Even 2 minutes can reduce emotional flooding and regret risk significantly.',
+    get title() { return localizedText('Pause before reacting', 'Haz una pausa antes de reaccionar'); },
+    get description() { return localizedText('Even 2 minutes can reduce emotional flooding and regret risk significantly.', 'Incluso 2 minutos pueden reducir mucho la inundación emocional y el riesgo de arrepentirte.'); },
   },
   {
     emoji: '\ud83c\udf3f',
-    title: 'Choose secure over urgent',
-    description: 'Secure responses protect your dignity while still expressing what matters.',
+    get title() { return localizedText('Choose secure over urgent', 'Elige seguridad antes que urgencia'); },
+    get description() { return localizedText('Secure responses protect your dignity while still expressing what matters.', 'Las respuestas seguras protegen tu dignidad y aun así expresan lo que importa.'); },
   },
   {
     emoji: '\ud83d\udee1\ufe0f',
-    title: 'Short boundaries land better',
-    description: 'Long explanations often come from urgency. Brevity signals calm confidence.',
+    get title() { return localizedText('Short boundaries land better', 'Los límites breves suelen llegar mejor'); },
+    get description() { return localizedText('Long explanations often come from urgency. Brevity signals calm confidence.', 'Las explicaciones largas suelen venir de la urgencia. La brevedad transmite calma y seguridad.'); },
   },
   {
     emoji: '\ud83c\udf19',
-    title: 'Be extra careful at night',
-    description: 'Late-night messages tend to carry more emotional intensity and higher regret risk.',
+    get title() { return localizedText('Be extra careful at night', 'Ten más cuidado por la noche'); },
+    get description() { return localizedText('Late-night messages tend to carry more emotional intensity and higher regret risk.', 'Los mensajes tarde en la noche suelen traer más intensidad emocional y más riesgo de arrepentimiento.'); },
   },
   {
     emoji: '\ud83d\ude0c',
-    title: 'Not sending is a valid choice',
-    description: 'Choosing silence when activated often protects both you and the relationship.',
+    get title() { return localizedText('Not sending is a valid choice', 'No enviar también es una opción válida'); },
+    get description() { return localizedText('Choosing silence when activated often protects both you and the relationship.', 'Elegir silencio cuando estás activado/a muchas veces te protege a ti y a la relación.'); },
   },
 ];
 

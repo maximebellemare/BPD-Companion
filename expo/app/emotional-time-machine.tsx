@@ -41,6 +41,8 @@ import {
   AIHistoryInsight,
   DistressDataPoint,
 } from '@/services/history/emotionalHistoryService';
+import { localizedText } from '@/lib/i18n/staticText';
+import { useLanguage } from '@/hooks/useLanguage';
 
 const INSIGHT_ICONS: Record<string, React.ElementType> = {
   TrendingDown,
@@ -56,9 +58,9 @@ const INSIGHT_ICONS: Record<string, React.ElementType> = {
 };
 
 const TREND_CONFIG = {
-  up: { icon: TrendingUp, color: '#3B82F6', label: 'Rising' },
-  down: { icon: TrendingDown, color: '#14B8A6', label: 'Declining' },
-  stable: { icon: Minus, color: '#2E2A72', label: 'Stable' },
+  up: { icon: TrendingUp, color: '#3B82F6', get label() { return localizedText('Rising', 'Subiendo'); } },
+  down: { icon: TrendingDown, color: '#14B8A6', get label() { return localizedText('Declining', 'Bajando'); } },
+  stable: { icon: Minus, color: '#2E2A72', get label() { return localizedText('Stable', 'Estable'); } },
 } as const;
 
 const GROWTH_TYPE_CONFIG = {
@@ -68,6 +70,7 @@ const GROWTH_TYPE_CONFIG = {
 } as const;
 
 export default function EmotionalTimeMachineScreen() {
+  useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { snapshot, selectedPeriod, changePeriod, periods, isLoading, hasData } = useEmotionalHistory();
@@ -119,7 +122,7 @@ export default function EmotionalTimeMachineScreen() {
     return (
       <View style={[styles.loadingContainer, { paddingTop: insets.top }]}>
         <ActivityIndicator size="large" color={Colors.primary} />
-        <Text style={styles.loadingText}>Loading your emotional history...</Text>
+        <Text style={styles.loadingText}>{localizedText('Loading your emotional history...', 'Cargando tu historial emocional...')}</Text>
       </View>
     );
   }
@@ -138,7 +141,7 @@ export default function EmotionalTimeMachineScreen() {
           <View style={styles.headerContent}>
             <View style={styles.headerIconRow}>
               <Clock size={20} color="rgba(255,255,255,0.8)" />
-              <Text style={styles.headerTitle}>Emotional Time Machine</Text>
+              <Text style={styles.headerTitle}>{localizedText('Emotional Time Machine', 'Maquina del tiempo emocional')}</Text>
             </View>
             <Text style={styles.headerSubtitle}>
               Explore your emotional journey over time
@@ -228,7 +231,7 @@ function EmptyState() {
       <View style={styles.emptyIconWrap}>
         <Clock size={48} color={Colors.textMuted} />
       </View>
-      <Text style={styles.emptyTitle}>No data yet</Text>
+      <Text style={styles.emptyTitle}>{localizedText('No data yet', 'Aun no hay datos')}</Text>
       <Text style={styles.emptySubtitle}>
         Complete check-ins and use tools to build your emotional history.
       </Text>
@@ -276,7 +279,7 @@ const OverviewCards = React.memo(function OverviewCards({
       <View style={styles.overviewCard}>
         <View style={styles.overviewCardHeader}>
           <Eye size={14} color={Colors.accent} />
-          <Text style={styles.overviewLabelSmall}>Check-ins</Text>
+          <Text style={styles.overviewLabelSmall}>{localizedText('Check-ins', 'Check-ins')}</Text>
         </View>
         <Text style={styles.overviewValueSmall}>{totalEntries}</Text>
       </View>
@@ -292,7 +295,7 @@ const OverviewCards = React.memo(function OverviewCards({
       <View style={styles.overviewCard}>
         <View style={styles.overviewCardHeader}>
           <AlertTriangle size={14} color={Colors.danger} />
-          <Text style={styles.overviewLabelSmall}>Crisis</Text>
+          <Text style={styles.overviewLabelSmall}>{localizedText('Crisis', 'Crisis')}</Text>
         </View>
         <Text style={styles.overviewValueSmall}>{crisisCount}</Text>
       </View>
@@ -419,7 +422,7 @@ const TriggersSection = React.memo(function TriggersSection({
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
         <Zap size={18} color="#3B82F6" />
-        <Text style={styles.sectionTitle}>Common Triggers</Text>
+        <Text style={styles.sectionTitle}>{localizedText('Common Triggers', 'Disparadores comunes')}</Text>
       </View>
       {triggers.map((tr) => {
         const trendCfg = TREND_CONFIG[tr.trend];
@@ -509,7 +512,7 @@ const RelationshipSection = React.memo(function RelationshipSection({
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
         <Users size={18} color="#2E2A72" />
-        <Text style={styles.sectionTitle}>Relationship Stress</Text>
+        <Text style={styles.sectionTitle}>{localizedText('Relationship Stress', 'Estres relacional')}</Text>
       </View>
       <View style={styles.relCard}>
         <View style={styles.relStatRow}>
@@ -550,7 +553,7 @@ const AIInsightsSection = React.memo(function AIInsightsSection({
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
         <Lightbulb size={18} color="#67E8F9" />
-        <Text style={styles.sectionTitle}>AI Insights</Text>
+        <Text style={styles.sectionTitle}>{localizedText('AI Insights', 'Insights de IA')}</Text>
       </View>
       {insights.map((insight) => {
         const IconComp = INSIGHT_ICONS[insight.icon] ?? Lightbulb;
@@ -587,7 +590,7 @@ const GrowthSection = React.memo(function GrowthSection({
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
         <Sprout size={18} color={Colors.success} />
-        <Text style={styles.sectionTitle}>Growth Markers</Text>
+        <Text style={styles.sectionTitle}>{localizedText('Growth Markers', 'Marcadores de crecimiento')}</Text>
       </View>
       {markers.map((marker) => {
         const cfg = GROWTH_TYPE_CONFIG[marker.type];

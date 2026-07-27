@@ -13,12 +13,15 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useDailyInsight } from '@/hooks/useDailyInsight';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 interface DailyInsightCardProps {
   variant?: 'learn' | 'home';
 }
 
 export default React.memo(function DailyInsightCard({ variant = 'learn' }: DailyInsightCardProps) {
+  useLanguage();
   const router = useRouter();
   const { selection, isSaved, toggleSave, markViewed } = useDailyInsight();
   const { trackEvent } = useAnalytics();
@@ -91,7 +94,7 @@ export default React.memo(function DailyInsightCard({ variant = 'learn' }: Daily
             <View style={styles.homeIconWrap}>
               <Lightbulb size={16} color="#67E8F9" />
             </View>
-            <Text style={styles.homeLabel}>Today's Insight</Text>
+            <Text style={styles.homeLabel}>{localizedText("Today's Insight", 'Insight de hoy')}</Text>
             <TouchableOpacity
               onPress={handleSave}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -130,11 +133,11 @@ export default React.memo(function DailyInsightCard({ variant = 'learn' }: Daily
               <Lightbulb size={18} color="#67E8F9" />
             </View>
             <View style={styles.labelTextWrap}>
-              <Text style={styles.label}>Today's Emotional Insight</Text>
+              <Text style={styles.label}>{localizedText("Today's Emotional Insight", 'Insight emocional de hoy')}</Text>
               {isPatternTriggered && (
                 <View style={styles.patternBadge}>
                   <Sparkles size={10} color={Colors.brandTeal} />
-                  <Text style={styles.patternBadgeText}>Personalized</Text>
+                  <Text style={styles.patternBadgeText}>{localizedText('Personalized', 'Personalizado')}</Text>
                 </View>
               )}
             </View>
@@ -164,10 +167,12 @@ export default React.memo(function DailyInsightCard({ variant = 'learn' }: Daily
 
         <View style={styles.footer}>
           <View style={styles.toolChip}>
-            <Text style={styles.toolChipText}>Try: {insight.suggestedToolLabel}</Text>
+            <Text style={styles.toolChipText}>
+              {localizedText('Try:', 'Prueba:')} {insight.suggestedToolLabel}
+            </Text>
           </View>
           <View style={styles.readMore}>
-            <Text style={styles.readMoreText}>Read more</Text>
+            <Text style={styles.readMoreText}>{localizedText('Read more', 'Leer más')}</Text>
             <ChevronRight size={14} color={Colors.brandTeal} />
           </View>
         </View>

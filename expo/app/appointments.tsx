@@ -37,6 +37,8 @@ import {
   formatAppointmentTime,
   isAppointmentPast,
 } from '@/types/appointment';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 const LocationIcon = ({ type }: { type: string }) => {
   switch (type) {
@@ -47,6 +49,7 @@ const LocationIcon = ({ type }: { type: string }) => {
 };
 
 function AppointmentCard({ appointment, onPress }: { appointment: Appointment; onPress: () => void }) {
+  useLanguage();
   const isPast = isAppointmentPast(appointment);
   const typeColor = APPOINTMENT_TYPE_COLORS[appointment.appointmentType];
   const needsPostSession = isPast && !appointment.completed && !appointment.postSessionNotes;
@@ -66,7 +69,7 @@ function AppointmentCard({ appointment, onPress }: { appointment: Appointment; o
           )}
           {needsPostSession && (
             <View style={styles.reflectBadge}>
-              <Text style={styles.reflectBadgeText}>Reflect</Text>
+              <Text style={styles.reflectBadgeText}>{localizedText('Reflect', 'Reflexionar')}</Text>
             </View>
           )}
         </View>
@@ -91,7 +94,10 @@ function AppointmentCard({ appointment, onPress }: { appointment: Appointment; o
           <View style={styles.topicsRow}>
             <FileText size={11} color={Colors.primary} />
             <Text style={styles.topicsText}>
-              {appointment.topicsToDiscuss.length} topic{appointment.topicsToDiscuss.length !== 1 ? 's' : ''} to discuss
+              {localizedText(
+                `${appointment.topicsToDiscuss.length} topic${appointment.topicsToDiscuss.length !== 1 ? 's' : ''} to discuss`,
+                `${appointment.topicsToDiscuss.length} tema${appointment.topicsToDiscuss.length !== 1 ? 's' : ''} para hablar`,
+              )}
             </Text>
           </View>
         )}
@@ -102,6 +108,7 @@ function AppointmentCard({ appointment, onPress }: { appointment: Appointment; o
 }
 
 export default function AppointmentsScreen() {
+  useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { trackEvent } = useAnalytics();
@@ -152,7 +159,7 @@ export default function AppointmentsScreen() {
         <TouchableOpacity onPress={handleClose} style={styles.closeBtn} testID="close-appointments">
           <X size={22} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.topTitle}>Appointments</Text>
+        <Text style={styles.topTitle}>{localizedText('Appointments', 'Citas')}</Text>
         <TouchableOpacity onPress={handleAdd} style={styles.addBtn} testID="add-appointment">
           <Plus size={20} color={Colors.white} />
         </TouchableOpacity>
@@ -170,10 +177,13 @@ export default function AppointmentsScreen() {
               </View>
               <View style={styles.reflectionBannerContent}>
                 <Text style={styles.reflectionBannerTitle}>
-                  {needsPostSession.length} session{needsPostSession.length !== 1 ? 's' : ''} awaiting reflection
+                  {localizedText(
+                    `${needsPostSession.length} session${needsPostSession.length !== 1 ? 's' : ''} awaiting reflection`,
+                    `${needsPostSession.length} sesión${needsPostSession.length !== 1 ? 'es' : ''} pendiente${needsPostSession.length !== 1 ? 's' : ''} de reflexión`,
+                  )}
                 </Text>
                 <Text style={styles.reflectionBannerText}>
-                  Capture your takeaways while they're fresh
+                  {localizedText("Capture your takeaways while they're fresh", 'Registra tus aprendizajes mientras están frescos')}
                 </Text>
               </View>
             </View>
@@ -181,7 +191,7 @@ export default function AppointmentsScreen() {
 
           {upcomingAppointments.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Upcoming</Text>
+              <Text style={styles.sectionTitle}>{localizedText('Upcoming', 'Próximas')}</Text>
               {upcomingAppointments.map(appt => (
                 <AppointmentCard
                   key={appt.id}
@@ -194,7 +204,7 @@ export default function AppointmentsScreen() {
 
           {needsPostSession.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Needs Reflection</Text>
+              <Text style={styles.sectionTitle}>{localizedText('Needs Reflection', 'Necesitan reflexión')}</Text>
               {needsPostSession.map(appt => (
                 <AppointmentCard
                   key={appt.id}
@@ -207,7 +217,7 @@ export default function AppointmentsScreen() {
 
           {pastAppointments.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Past</Text>
+              <Text style={styles.sectionTitle}>{localizedText('Past', 'Pasadas')}</Text>
               {pastAppointments.filter(a => a.completed).map(appt => (
                 <AppointmentCard
                   key={appt.id}
@@ -223,13 +233,16 @@ export default function AppointmentsScreen() {
               <View style={styles.emptyIconWrap}>
                 <Calendar size={40} color={Colors.primary} />
               </View>
-              <Text style={styles.emptyTitle}>No Appointments Yet</Text>
+              <Text style={styles.emptyTitle}>{localizedText('No Appointments Yet', 'Aún no hay citas')}</Text>
               <Text style={styles.emptyText}>
-                Track your therapy, psychiatry, and support appointments to stay organized and prepared.
+                {localizedText(
+                  'Track your therapy, psychiatry, and support appointments to stay organized and prepared.',
+                  'Registra tus citas de terapia, psiquiatría y apoyo para mantenerte organizado/a y preparado/a.',
+                )}
               </Text>
               <TouchableOpacity style={styles.emptyAction} onPress={handleAdd} activeOpacity={0.7}>
                 <Plus size={18} color={Colors.white} />
-                <Text style={styles.emptyActionText}>Add Your First Appointment</Text>
+                <Text style={styles.emptyActionText}>{localizedText('Add Your First Appointment', 'Agregar tu primera cita')}</Text>
               </TouchableOpacity>
             </View>
           )}

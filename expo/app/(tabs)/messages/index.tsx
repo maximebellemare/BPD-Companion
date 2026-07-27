@@ -27,6 +27,8 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { useApp } from '@/providers/AppProvider';
 import { useMessageRewrite } from '@/hooks/useMessageRewrite';
 import CoachingNudgeBanner from '@/components/CoachingNudgeBanner';
@@ -72,15 +74,18 @@ type MainView = 'home' | 'flow';
 type FlowStep = 'situation' | 'draft' | 'emotion' | 'interpretation' | 'urge' | 'outcome' | 'analysis';
 
 const FLOW_STEPS: FlowStep[] = ['situation', 'draft', 'emotion', 'interpretation', 'urge', 'outcome', 'analysis'];
-const FLOW_LABELS: Record<FlowStep, string> = {
-  situation: 'Context',
-  draft: 'Message',
-  emotion: 'Feeling',
-  interpretation: 'Meaning',
-  urge: 'Urge',
-  outcome: 'Goal',
-  analysis: 'Insight',
-};
+function getFlowLabel(step: FlowStep): string {
+  const labels: Record<FlowStep, string> = {
+    situation: localizedText('Context', 'Contexto'),
+    draft: localizedText('Message', 'Mensaje'),
+    emotion: localizedText('Feeling', 'Sentir'),
+    interpretation: localizedText('Meaning', 'Significado'),
+    urge: localizedText('Urge', 'Impulso'),
+    outcome: localizedText('Goal', 'Meta'),
+    analysis: localizedText('Insight', 'Insight'),
+  };
+  return labels[step];
+}
 
 function FlowStepIndicator({ currentStep }: { currentStep: FlowStep }) {
   const currentIndex = FLOW_STEPS.indexOf(currentStep);
@@ -162,6 +167,7 @@ function formatTimestamp(ts: number): string {
 export default function MessagesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  useLanguage();
   const { messageDrafts } = useApp();
   const messageRewrite = useMessageRewrite();
   const messageCoachingNudge = useMessageCoaching();
@@ -414,15 +420,18 @@ export default function MessagesScreen() {
           <View style={styles.heroIconBadge}>
             <Shield size={20} color={Colors.white} />
           </View>
-          <Text style={styles.heroTitle}>Message Safety</Text>
+          <Text style={styles.heroTitle}>{localizedText('Message Safety', 'Seguridad de mensajes')}</Text>
         </View>
         <Text style={styles.heroSubtitle}>
-          Decide whether to send, understand what you feel, and communicate with clarity.
+          {localizedText(
+            'Decide whether to send, understand what you feel, and communicate with clarity.',
+            'Decide si enviar, entiende lo que sientes y comunícate con claridad.',
+          )}
         </Text>
       </View>
 
       <View style={styles.quickEntrySection}>
-        <Text style={styles.sectionLabel}>What's happening?</Text>
+        <Text style={styles.sectionLabel}>{localizedText("What's happening?", '¿Qué está pasando?')}</Text>
         <View style={styles.quickEntryGrid}>
           {QUICK_ENTRY_CARDS.map((card) => (
             <TouchableOpacity
@@ -472,7 +481,7 @@ export default function MessagesScreen() {
           <View style={[styles.toolStripIcon, { backgroundColor: '#3B82F6' + '18' }]}>
             <Archive size={16} color="#3B82F6" />
           </View>
-          <Text style={styles.toolStripLabel}>Draft Vault</Text>
+          <Text style={styles.toolStripLabel}>{localizedText('Draft Vault', 'Borradores')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -491,7 +500,7 @@ export default function MessagesScreen() {
             <BarChart3 size={16} color={Colors.primary} />
           </View>
           <View style={styles.toolStripLabelRow}>
-            <Text style={styles.toolStripLabel}>My Patterns</Text>
+            <Text style={styles.toolStripLabel}>{localizedText('My Patterns', 'Mis patrones')}</Text>
             {!isPremium && <PremiumBadge />}
           </View>
         </TouchableOpacity>
@@ -512,7 +521,7 @@ export default function MessagesScreen() {
             <BookOpen size={16} color={Colors.brandSage} />
           </View>
           <View style={styles.toolStripLabelRow}>
-            <Text style={styles.toolStripLabel}>Playbook</Text>
+            <Text style={styles.toolStripLabel}>{localizedText('Playbook', 'Guía')}</Text>
             {!isPremium && <PremiumBadge />}
           </View>
         </TouchableOpacity>
@@ -526,7 +535,7 @@ export default function MessagesScreen() {
           <View style={[styles.toolStripIcon, { backgroundColor: '#3B82F6' + '18' }]}>
             <Eye size={16} color="#3B82F6" />
           </View>
-          <Text style={styles.toolStripLabel}>Guard</Text>
+          <Text style={styles.toolStripLabel}>{localizedText('Guard', 'Protector')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -534,7 +543,7 @@ export default function MessagesScreen() {
         <View style={styles.homeInsightsSection}>
           <View style={styles.homeInsightsHeader}>
             <Lightbulb size={14} color={Colors.accent} />
-            <Text style={styles.homeInsightsTitle}>From your patterns</Text>
+            <Text style={styles.homeInsightsTitle}>{localizedText('From your patterns', 'Desde tus patrones')}</Text>
           </View>
           {homeInsights.map((insight) => (
             <TouchableOpacity
@@ -555,7 +564,7 @@ export default function MessagesScreen() {
 
       {messageDrafts.length > 0 && (
         <View style={styles.historySection}>
-          <Text style={styles.sectionLabel}>Recent</Text>
+          <Text style={styles.sectionLabel}>{localizedText('Recent', 'Reciente')}</Text>
           {messageDrafts.slice(0, 4).map(draft => (
             <TouchableOpacity
               key={draft.id}
@@ -592,7 +601,7 @@ export default function MessagesScreen() {
               {expandedDraftId === draft.id && draft.rewrittenText && (
                 <View style={styles.historyRewriteSection}>
                   <View style={styles.historyDivider} />
-                  <Text style={styles.historyRewriteLabel}>Rewritten</Text>
+                  <Text style={styles.historyRewriteLabel}>{localizedText('Rewritten', 'Reescrito')}</Text>
                   <Text style={styles.historyRewriteText}>
                     {draft.rewrittenText.replace(/\[.*?\]\n\n/, '').replace(/\n---\n.*/, '')}
                   </Text>
@@ -600,7 +609,7 @@ export default function MessagesScreen() {
               )}
               {expandedDraftId === draft.id && draft.outcome && (
                 <View style={styles.historyOutcomeRow}>
-                  <Text style={styles.historyOutcomeLabel}>Outcome:</Text>
+                  <Text style={styles.historyOutcomeLabel}>{localizedText('Outcome:', 'Resultado:')}</Text>
                   <View style={[
                     styles.historyOutcomeBadge,
                     { backgroundColor: (MESSAGE_OUTCOME_OPTIONS.find(o => o.value === draft.outcome)?.color ?? Colors.primary) + '18' },
@@ -626,11 +635,19 @@ export default function MessagesScreen() {
 
   const renderFlowSituation = () => (
     <View style={styles.flowSection}>
-      <Text style={styles.flowQuestion}>What happened?</Text>
-      <Text style={styles.flowHint}>Briefly describe the situation. This helps generate better insights.</Text>
+      <Text style={styles.flowQuestion}>{localizedText('What happened?', '¿Qué pasó?')}</Text>
+      <Text style={styles.flowHint}>
+        {localizedText(
+          'Briefly describe the situation. This helps generate better insights.',
+          'Describe brevemente la situación. Esto ayuda a generar mejores insights.',
+        )}
+      </Text>
       <TextInput
         style={styles.flowTextInput}
-        placeholder="e.g. They haven't replied in 3 hours and I'm spiraling..."
+        placeholder={localizedText(
+          "e.g. They haven't replied in 3 hours and I'm spiraling...",
+          'p. ej., no responde hace 3 horas y estoy entrando en espiral...',
+        )}
         placeholderTextColor={Colors.textMuted}
         multiline
         value={enhancedContext.situation}
@@ -645,22 +662,27 @@ export default function MessagesScreen() {
         disabled={!enhancedContext.situation.trim()}
         testID="next-situation"
       >
-        <Text style={styles.flowNextBtnText}>Next</Text>
+        <Text style={styles.flowNextBtnText}>{localizedText('Next', 'Siguiente')}</Text>
         <ChevronRight size={16} color={Colors.white} />
       </TouchableOpacity>
       <TouchableOpacity style={styles.flowSkipBtn} onPress={goNextFlow} activeOpacity={0.7}>
-        <Text style={styles.flowSkipText}>Skip this step</Text>
+        <Text style={styles.flowSkipText}>{localizedText('Skip this step', 'Saltar este paso')}</Text>
       </TouchableOpacity>
     </View>
   );
 
   const renderFlowDraft = () => (
     <View style={styles.flowSection}>
-      <Text style={styles.flowQuestion}>What do you want to say?</Text>
-      <Text style={styles.flowHint}>Write the message you're thinking of sending — raw and unfiltered is okay.</Text>
+      <Text style={styles.flowQuestion}>{localizedText('What do you want to say?', '¿Qué quieres decir?')}</Text>
+      <Text style={styles.flowHint}>
+        {localizedText(
+          "Write the message you're thinking of sending — raw and unfiltered is okay.",
+          'Escribe el mensaje que estás pensando enviar; puede estar crudo y sin filtro.',
+        )}
+      </Text>
       <TextInput
         style={[styles.flowTextInput, { minHeight: 120 }]}
-        placeholder="Type your message here..."
+        placeholder={localizedText('Type your message here...', 'Escribe tu mensaje aquí...')}
         placeholderTextColor={Colors.textMuted}
         multiline
         value={enhancedContext.draft}
@@ -669,7 +691,7 @@ export default function MessagesScreen() {
         testID="draft-input"
       />
       {enhancedContext.draft.trim().length > 0 && (
-        <Text style={styles.charCount}>{enhancedContext.draft.length} characters</Text>
+        <Text style={styles.charCount}>{localizedText(`${enhancedContext.draft.length} characters`, `${enhancedContext.draft.length} caracteres`)}</Text>
       )}
       <TouchableOpacity
         style={[styles.flowNextBtn, !enhancedContext.draft.trim() && styles.flowNextBtnDisabled]}
@@ -678,7 +700,7 @@ export default function MessagesScreen() {
         disabled={!enhancedContext.draft.trim()}
         testID="next-draft"
       >
-        <Text style={styles.flowNextBtnText}>Next</Text>
+        <Text style={styles.flowNextBtnText}>{localizedText('Next', 'Siguiente')}</Text>
         <ChevronRight size={16} color={Colors.white} />
       </TouchableOpacity>
     </View>
@@ -686,8 +708,10 @@ export default function MessagesScreen() {
 
   const renderFlowEmotion = () => (
     <View style={styles.flowSection}>
-      <Text style={styles.flowQuestion}>How are you feeling?</Text>
-      <Text style={styles.flowHint}>Your emotional state shapes how messages come across.</Text>
+      <Text style={styles.flowQuestion}>{localizedText('How are you feeling?', '¿Cómo te sientes?')}</Text>
+      <Text style={styles.flowHint}>
+        {localizedText('Your emotional state shapes how messages come across.', 'Tu estado emocional influye en cómo se perciben los mensajes.')}
+      </Text>
       {whatHelpedReminder && (
         <View style={styles.whatHelpedBanner}>
           <Text style={styles.whatHelpedEmoji}>{whatHelpedReminder.emoji}</Text>
@@ -706,19 +730,24 @@ export default function MessagesScreen() {
         disabled={!enhancedContext.emotionalState}
         testID="next-emotion"
       >
-        <Text style={styles.flowNextBtnText}>Next</Text>
+        <Text style={styles.flowNextBtnText}>{localizedText('Next', 'Siguiente')}</Text>
         <ChevronRight size={16} color={Colors.white} />
       </TouchableOpacity>
       <TouchableOpacity style={styles.flowSkipBtn} onPress={goNextFlow} activeOpacity={0.7}>
-        <Text style={styles.flowSkipText}>Skip</Text>
+        <Text style={styles.flowSkipText}>{localizedText('Skip', 'Saltar')}</Text>
       </TouchableOpacity>
     </View>
   );
 
   const renderFlowInterpretation = () => (
     <View style={styles.flowSection}>
-      <Text style={styles.flowQuestion}>What do you think this means?</Text>
-      <Text style={styles.flowHint}>Our interpretation of a situation often drives the message more than what actually happened.</Text>
+      <Text style={styles.flowQuestion}>{localizedText('What do you think this means?', '¿Qué crees que significa esto?')}</Text>
+      <Text style={styles.flowHint}>
+        {localizedText(
+          'Our interpretation of a situation often drives the message more than what actually happened.',
+          'Nuestra interpretación de una situación suele impulsar el mensaje más que lo que realmente pasó.',
+        )}
+      </Text>
       <FlowChips
         options={INTERPRETATION_OPTIONS}
         selected={enhancedContext.interpretation}
@@ -731,19 +760,21 @@ export default function MessagesScreen() {
         disabled={!enhancedContext.interpretation}
         testID="next-interpretation"
       >
-        <Text style={styles.flowNextBtnText}>Next</Text>
+        <Text style={styles.flowNextBtnText}>{localizedText('Next', 'Siguiente')}</Text>
         <ChevronRight size={16} color={Colors.white} />
       </TouchableOpacity>
       <TouchableOpacity style={styles.flowSkipBtn} onPress={goNextFlow} activeOpacity={0.7}>
-        <Text style={styles.flowSkipText}>Skip</Text>
+        <Text style={styles.flowSkipText}>{localizedText('Skip', 'Saltar')}</Text>
       </TouchableOpacity>
     </View>
   );
 
   const renderFlowUrge = () => (
     <View style={styles.flowSection}>
-      <Text style={styles.flowQuestion}>What's your strongest urge?</Text>
-      <Text style={styles.flowHint}>Naming the urge creates space between feeling and acting.</Text>
+      <Text style={styles.flowQuestion}>{localizedText("What's your strongest urge?", '¿Cuál es tu impulso más fuerte?')}</Text>
+      <Text style={styles.flowHint}>
+        {localizedText('Naming the urge creates space between feeling and acting.', 'Nombrar el impulso crea espacio entre sentir y actuar.')}
+      </Text>
       <FlowChips
         options={URGE_OPTIONS}
         selected={enhancedContext.urge}
@@ -756,19 +787,19 @@ export default function MessagesScreen() {
         disabled={!enhancedContext.urge}
         testID="next-urge"
       >
-        <Text style={styles.flowNextBtnText}>Next</Text>
+        <Text style={styles.flowNextBtnText}>{localizedText('Next', 'Siguiente')}</Text>
         <ChevronRight size={16} color={Colors.white} />
       </TouchableOpacity>
       <TouchableOpacity style={styles.flowSkipBtn} onPress={goNextFlow} activeOpacity={0.7}>
-        <Text style={styles.flowSkipText}>Skip</Text>
+        <Text style={styles.flowSkipText}>{localizedText('Skip', 'Saltar')}</Text>
       </TouchableOpacity>
     </View>
   );
 
   const renderFlowOutcome = () => (
     <View style={styles.flowSection}>
-      <Text style={styles.flowQuestion}>What do you actually want?</Text>
-      <Text style={styles.flowHint}>The real goal behind the message — not just the emotion.</Text>
+      <Text style={styles.flowQuestion}>{localizedText('What do you actually want?', '¿Qué quieres realmente?')}</Text>
+      <Text style={styles.flowHint}>{localizedText('The real goal behind the message — not just the emotion.', 'La meta real detrás del mensaje, no solo la emoción.')}</Text>
       <FlowChips
         options={DESIRED_OUTCOME_OPTIONS}
         selected={enhancedContext.desiredOutcome}
@@ -781,11 +812,11 @@ export default function MessagesScreen() {
         disabled={!enhancedContext.desiredOutcome}
         testID="next-outcome"
       >
-        <Text style={styles.flowNextBtnText}>See my analysis</Text>
+        <Text style={styles.flowNextBtnText}>{localizedText('See my analysis', 'Ver mi análisis')}</Text>
         <Sparkles size={16} color={Colors.white} />
       </TouchableOpacity>
       <TouchableOpacity style={styles.flowSkipBtn} onPress={goNextFlow} activeOpacity={0.7}>
-        <Text style={styles.flowSkipText}>Skip to analysis</Text>
+        <Text style={styles.flowSkipText}>{localizedText('Skip to analysis', 'Saltar al análisis')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -826,7 +857,7 @@ export default function MessagesScreen() {
           <AlertOctagon size={14} color={Colors.accent} />
           <Text style={styles.doNotSendConsequenceText}>{doNotSend.likelyConsequence}</Text>
         </View>
-        <Text style={styles.doNotSendOptionsLabel}>What you can do instead</Text>
+        <Text style={styles.doNotSendOptionsLabel}>{localizedText('What you can do instead', 'Que puedes hacer en su lugar')}</Text>
         <View style={styles.doNotSendOptions}>
           {doNotSend.options.map((opt) => (
             <TouchableOpacity
@@ -850,7 +881,12 @@ export default function MessagesScreen() {
     return (
       <View style={styles.safeRewritesSection}>
         <Text style={styles.safeRewritesTitle}>Safer alternatives</Text>
-        <Text style={styles.safeRewritesHint}>These replace the original — they don't preserve harmful language.</Text>
+        <Text style={styles.safeRewritesHint}>
+          {localizedText(
+            "These replace the original — they don't preserve harmful language.",
+            'Estas alternativas reemplazan el original: no conservan lenguaje dañino.',
+          )}
+        </Text>
         {safeRewrites.map((rw) => {
           const isSelected = selectedSafeRewrite?.type === rw.type;
           return (
@@ -881,7 +917,7 @@ export default function MessagesScreen() {
               <Text style={styles.safeRewriteText} numberOfLines={isSelected ? undefined : 3}>{rw.text}</Text>
               {isSelected && (
                 <View style={styles.safeRewriteWhySection}>
-                  <Text style={styles.safeRewriteWhyLabel}>Why this helps</Text>
+                  <Text style={styles.safeRewriteWhyLabel}>{localizedText('Why this helps', 'Por que ayuda')}</Text>
                   <Text style={styles.safeRewriteWhyText}>{rw.whyThisHelps}</Text>
                 </View>
               )}
@@ -947,7 +983,7 @@ export default function MessagesScreen() {
 
             {analysis.topConcerns.length > 0 && (
               <View style={styles.concernsSection}>
-                <Text style={styles.concernsSectionTitle}>What we noticed</Text>
+                <Text style={styles.concernsSectionTitle}>{localizedText('What we noticed', 'Lo que notamos')}</Text>
                 {analysis.topConcerns.map((concern, i) => (
                   <View key={i} style={styles.concernCard}>
                     <View style={[styles.concernDot, {
@@ -979,7 +1015,7 @@ export default function MessagesScreen() {
             {(isHighRisk || showSafeRewrites) && renderSafeRewrites()}
 
             <View style={styles.draftPreviewCard}>
-              <Text style={styles.draftPreviewLabel}>Your message</Text>
+              <Text style={styles.draftPreviewLabel}>{localizedText('Your message', 'Tu mensaje')}</Text>
               <Text style={styles.draftPreviewText} numberOfLines={3}>{enhancedContext.draft}</Text>
             </View>
 
@@ -1011,7 +1047,7 @@ export default function MessagesScreen() {
                   testID="rewrite-limit-btn"
                 >
                   <Sparkles size={16} color={Colors.white} />
-                  <Text style={styles.analysisPrimaryBtnText}>Start membership</Text>
+                  <Text style={styles.analysisPrimaryBtnText}>{localizedText('Start membership', 'Iniciar membresia')}</Text>
                 </TouchableOpacity>
               )}
               {!isPremium && remainingRewrites !== null && remainingRewrites > 0 && (
@@ -1062,7 +1098,7 @@ export default function MessagesScreen() {
                       activeOpacity={0.7}
                     >
                       <Archive size={13} color={Colors.textSecondary} />
-                      <Text style={styles.analysisSmallBtnText}>Save to vault</Text>
+                      <Text style={styles.analysisSmallBtnText}>{localizedText('Save to vault', 'Guardar en borradores')}</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -1086,7 +1122,7 @@ export default function MessagesScreen() {
                       activeOpacity={0.7}
                     >
                       <BookOpen size={13} color={Colors.textSecondary} />
-                      <Text style={styles.analysisSmallBtnText}>Journal first</Text>
+                      <Text style={styles.analysisSmallBtnText}>{localizedText('Journal first', 'Escribir en diario primero')}</Text>
                     </TouchableOpacity>
                   </View>
 
@@ -1176,7 +1212,7 @@ export default function MessagesScreen() {
                       activeOpacity={0.7}
                     >
                       <Archive size={13} color={Colors.textSecondary} />
-                      <Text style={styles.analysisSmallBtnText}>Save to vault</Text>
+                      <Text style={styles.analysisSmallBtnText}>{localizedText('Save to vault', 'Guardar en borradores')}</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -1239,7 +1275,7 @@ export default function MessagesScreen() {
     }
   };
 
-  const flowStepTitle = FLOW_LABELS[flowStep] ?? '';
+  const flowStepTitle = getFlowLabel(flowStep) ?? '';
   const flowStepNumber = FLOW_STEPS.indexOf(flowStep) + 1;
 
   return (
@@ -1275,8 +1311,8 @@ export default function MessagesScreen() {
           ) : (
             <View style={styles.headerRow}>
               <View style={styles.headerTextContainer}>
-                <Text style={styles.title}>Messages</Text>
-                <Text style={styles.subtitle}>Your communication safety system</Text>
+                <Text style={styles.title}>{localizedText('Messages', 'Mensajes')}</Text>
+                <Text style={styles.subtitle}>{localizedText('Your communication safety system', 'Tu sistema de seguridad para comunicarte')}</Text>
               </View>
             </View>
           )}

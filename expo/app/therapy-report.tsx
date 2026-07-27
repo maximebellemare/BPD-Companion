@@ -40,16 +40,19 @@ import { useAnalytics } from '@/providers/AnalyticsProvider';
 import { PremiumInlinePrompt } from '@/components/PremiumGate';
 import { generateTherapyReport, formatReportAsText } from '@/services/therapy/therapyReportService';
 import { TherapyReport, TherapyReportPeriod, TherapyDiscussionPrompt } from '@/types/therapyReport';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedField, localizedText } from '@/lib/i18n/staticText';
 
 const PERIOD_OPTIONS: { label: string; value: TherapyReportPeriod }[] = [
-  { label: '7 Days', value: '7' },
-  { label: '14 Days', value: '14' },
-  { label: '30 Days', value: '30' },
+  localizedField({ label: '7 Days', value: '7' }, 'label', '7 Days', '7 días'),
+  localizedField({ label: '14 Days', value: '14' }, 'label', '14 Days', '14 días'),
+  localizedField({ label: '30 Days', value: '30' }, 'label', '30 Days', '30 días'),
 ];
 
 export default function TherapyReportScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  useLanguage();
   const { journalEntries, messageDrafts } = useApp();
   const { trackEvent } = useAnalytics();
   const [selectedPeriod, setSelectedPeriod] = useState<TherapyReportPeriod>('7');
@@ -126,7 +129,7 @@ export default function TherapyReportScreen() {
       const text = formatReportAsText(report);
       await Share.share({
         message: text,
-        title: `Therapy Report — ${report.periodLabel}`,
+        title: localizedText(`Therapy Report — ${report.periodLabel}`, `Informe terapéutico — ${report.periodLabel}`),
       });
       console.log('[TherapyReport] Report shared successfully');
     } catch (error) {
@@ -173,16 +176,19 @@ export default function TherapyReportScreen() {
           <View style={styles.emptyIconWrap}>
             <ClipboardList size={40} color={Colors.primary} />
           </View>
-          <Text style={styles.emptyTitle}>Not Enough Data Yet</Text>
+          <Text style={styles.emptyTitle}>{localizedText('Not Enough Data Yet', 'Aún no hay suficientes datos')}</Text>
           <Text style={styles.emptyText}>
-            Complete at least 2 check-ins to generate a therapy report. Each check-in adds depth to your summary.
+            {localizedText(
+              'Complete at least 2 check-ins to generate a therapy report. Each check-in adds depth to your summary.',
+              'Completa al menos 2 check-ins para generar un informe terapéutico. Cada check-in le da más profundidad a tu resumen.',
+            )}
           </Text>
           <TouchableOpacity
             style={styles.emptyAction}
             onPress={() => router.push('/check-in')}
             activeOpacity={0.7}
           >
-            <Text style={styles.emptyActionText}>Start a Check-In</Text>
+            <Text style={styles.emptyActionText}>{localizedText('Start a Check-In', 'Iniciar check-in')}</Text>
             <ArrowRight size={16} color={Colors.white} />
           </TouchableOpacity>
         </View>
@@ -206,7 +212,7 @@ export default function TherapyReportScreen() {
           testID="export-report"
         >
           <Share2 size={16} color={Colors.white} />
-          <Text style={styles.exportButtonText}>{isExporting ? 'Exporting…' : 'Share'}</Text>
+          <Text style={styles.exportButtonText}>{isExporting ? localizedText('Exporting…', 'Exportando…') : localizedText('Share', 'Compartir')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -217,13 +223,16 @@ export default function TherapyReportScreen() {
         <Animated.View style={[styles.headerSection, { opacity: fadeAnim }]}>
           <View style={styles.headerBadge}>
             <FileText size={14} color={Colors.primaryDark} />
-            <Text style={styles.headerBadgeText}>Therapy Report</Text>
+            <Text style={styles.headerBadgeText}>{localizedText('Therapy Report', 'Informe terapéutico')}</Text>
           </View>
-          <Text style={styles.headerTitle}>Session Summary</Text>
+          <Text style={styles.headerTitle}>{localizedText('Session Summary', 'Resumen de sesión')}</Text>
           <Text style={styles.dateRange}>{report.dateRange}</Text>
           <PremiumInlinePrompt
             feature="therapist_report"
-            message="Start membership for full therapy reports with discussion prompts and sharing."
+            message={localizedText(
+              'Start membership for full therapy reports with discussion prompts and sharing.',
+              'Inicia tu membresía para acceder a informes terapéuticos completos con temas de conversación y opción de compartir.',
+            )}
           />
 
           <View style={styles.periodSelector}>
@@ -250,19 +259,19 @@ export default function TherapyReportScreen() {
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{report.checkInCount}</Text>
-              <Text style={styles.statLabel}>Check-ins</Text>
+              <Text style={styles.statLabel}>{localizedText('Check-ins', 'Check-ins')}</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{report.journalReflectionCount}</Text>
-              <Text style={styles.statLabel}>Reflections</Text>
+              <Text style={styles.statLabel}>{localizedText('Reflections', 'Reflexiones')}</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
               <Text style={[styles.statValue, { color: getDirectionColor(report.distressTrend.direction) }]}>
                 {report.distressTrend.average}
               </Text>
-              <Text style={styles.statLabel}>Avg Distress</Text>
+              <Text style={styles.statLabel}>{localizedText('Avg Distress', 'Malestar prom.')}</Text>
             </View>
           </View>
         </Animated.View>
@@ -276,7 +285,7 @@ export default function TherapyReportScreen() {
             <View style={[styles.sectionIconWrap, { backgroundColor: '#FFFFFF' }]}>
               <Heart size={18} color="#3B82F6" />
             </View>
-            <Text style={styles.sectionTitle}>Emotional Patterns</Text>
+            <Text style={styles.sectionTitle}>{localizedText('Emotional Patterns', 'Patrones emocionales')}</Text>
           </View>
 
           {report.emotions.length > 0 ? (
@@ -300,7 +309,7 @@ export default function TherapyReportScreen() {
               ))}
             </View>
           ) : (
-            <Text style={styles.placeholderText}>No emotions recorded yet.</Text>
+            <Text style={styles.placeholderText}>{localizedText('No emotions recorded yet.', 'Aún no hay emociones registradas.')}</Text>
           )}
         </Animated.View>
 
@@ -309,7 +318,7 @@ export default function TherapyReportScreen() {
             <View style={[styles.sectionIconWrap, { backgroundColor: Colors.accentLight }]}>
               <Zap size={18} color={Colors.accent} />
             </View>
-            <Text style={styles.sectionTitle}>Top Triggers</Text>
+            <Text style={styles.sectionTitle}>{localizedText('Top Triggers', 'Detonantes principales')}</Text>
           </View>
 
           {report.triggers.length > 0 ? (
@@ -334,7 +343,7 @@ export default function TherapyReportScreen() {
               ))}
             </View>
           ) : (
-            <Text style={styles.placeholderText}>No triggers recorded yet.</Text>
+            <Text style={styles.placeholderText}>{localizedText('No triggers recorded yet.', 'Aún no hay detonantes registrados.')}</Text>
           )}
         </Animated.View>
 
@@ -343,24 +352,24 @@ export default function TherapyReportScreen() {
             <View style={[styles.sectionIconWrap, { backgroundColor: '#FFFFFF' }]}>
               <Calendar size={18} color="#3B82F6" />
             </View>
-            <Text style={styles.sectionTitle}>Distress Trend</Text>
+            <Text style={styles.sectionTitle}>{localizedText('Distress Trend', 'Tendencia de malestar')}</Text>
           </View>
 
           <Text style={styles.narrativeText}>{report.distressTrend.narrative}</Text>
 
           <View style={styles.distressStatsRow}>
             <View style={styles.distressStat}>
-              <Text style={styles.distressStatLabel}>Average</Text>
+              <Text style={styles.distressStatLabel}>{localizedText('Average', 'Promedio')}</Text>
               <Text style={[styles.distressStatValue, { color: getDirectionColor(report.distressTrend.direction) }]}>
                 {report.distressTrend.average}/10
               </Text>
             </View>
             <View style={styles.distressStat}>
-              <Text style={styles.distressStatLabel}>Peak</Text>
+              <Text style={styles.distressStatLabel}>{localizedText('Peak', 'Pico')}</Text>
               <Text style={[styles.distressStatValue, { color: '#3B82F6' }]}>{report.distressTrend.peak}/10</Text>
             </View>
             <View style={styles.distressStat}>
-              <Text style={styles.distressStatLabel}>Lowest</Text>
+              <Text style={styles.distressStatLabel}>{localizedText('Lowest', 'Más bajo')}</Text>
               <Text style={[styles.distressStatValue, { color: Colors.success }]}>{report.distressTrend.lowest}/10</Text>
             </View>
           </View>
@@ -393,7 +402,7 @@ export default function TherapyReportScreen() {
               <View style={[styles.sectionIconWrap, { backgroundColor: Colors.dangerLight }]}>
                 <AlertTriangle size={18} color={Colors.danger} />
               </View>
-              <Text style={styles.sectionTitle}>Urges</Text>
+              <Text style={styles.sectionTitle}>{localizedText('Urges', 'Impulsos')}</Text>
             </View>
 
             <Text style={styles.narrativeText}>{report.urges.narrative}</Text>
@@ -418,7 +427,7 @@ export default function TherapyReportScreen() {
             <View style={[styles.sectionIconWrap, { backgroundColor: '#FFFFFF' }]}>
               <MessageCircle size={18} color="#3B82F6" />
             </View>
-            <Text style={styles.sectionTitle}>Relationship Patterns</Text>
+            <Text style={styles.sectionTitle}>{localizedText('Relationship Patterns', 'Patrones relacionales')}</Text>
           </View>
 
           <Text style={styles.narrativeText}>{report.relationships.narrative}</Text>
@@ -450,7 +459,7 @@ export default function TherapyReportScreen() {
             <View style={[styles.sectionIconWrap, { backgroundColor: Colors.successLight }]}>
               <Shield size={18} color={Colors.success} />
             </View>
-            <Text style={styles.sectionTitle}>Coping Strategies</Text>
+            <Text style={styles.sectionTitle}>{localizedText('Coping Strategies', 'Estrategias de afrontamiento')}</Text>
           </View>
 
           <Text style={styles.narrativeText}>{report.coping.narrative}</Text>
@@ -482,7 +491,7 @@ export default function TherapyReportScreen() {
               <View style={[styles.sectionIconWrap, { backgroundColor: '#FFFFFF' }]}>
                 <PauseCircle size={18} color="#3B82F6" />
               </View>
-              <Text style={styles.sectionTitle}>Regulation Behavior</Text>
+              <Text style={styles.sectionTitle}>{localizedText('Regulation Behavior', 'Conductas de regulación')}</Text>
             </View>
 
             <Text style={styles.narrativeText}>{report.regulation.narrative}</Text>
@@ -490,22 +499,22 @@ export default function TherapyReportScreen() {
             <View style={styles.regulationStatsRow}>
               <View style={styles.regulationStat}>
                 <Text style={[styles.regulationStatValue, { color: Colors.primary }]}>{report.regulation.totalPauses}</Text>
-                <Text style={styles.regulationStatLabel}>Pauses</Text>
+                <Text style={styles.regulationStatLabel}>{localizedText('Pauses', 'Pausas')}</Text>
               </View>
               <View style={styles.regulationStat}>
                 <Text style={[styles.regulationStatValue, { color: Colors.accent }]}>{report.regulation.totalRewrites}</Text>
-                <Text style={styles.regulationStatLabel}>Rewrites</Text>
+                <Text style={styles.regulationStatLabel}>{localizedText('Rewrites', 'Reescrituras')}</Text>
               </View>
               {report.regulation.helpedCount > 0 && (
                 <View style={styles.regulationStat}>
                   <Text style={[styles.regulationStatValue, { color: Colors.success }]}>{report.regulation.helpedCount}</Text>
-                  <Text style={styles.regulationStatLabel}>Helped</Text>
+                  <Text style={styles.regulationStatLabel}>{localizedText('Helped', 'Ayudó')}</Text>
                 </View>
               )}
               {report.regulation.madeWorseCount > 0 && (
                 <View style={styles.regulationStat}>
                   <Text style={[styles.regulationStatValue, { color: '#3B82F6' }]}>{report.regulation.madeWorseCount}</Text>
-                  <Text style={styles.regulationStatLabel}>Harder</Text>
+                  <Text style={styles.regulationStatLabel}>{localizedText('Harder', 'Más difícil')}</Text>
                 </View>
               )}
             </View>
@@ -517,7 +526,7 @@ export default function TherapyReportScreen() {
             <View style={[styles.sectionIconWrap, { backgroundColor: '#FFFFFF' }]}>
               <Award size={18} color="#67E8F9" />
             </View>
-            <Text style={styles.sectionTitle}>Progress Highlights</Text>
+            <Text style={styles.sectionTitle}>{localizedText('Progress Highlights', 'Avances destacados')}</Text>
           </View>
 
           <Text style={styles.narrativeText}>{report.progress.narrative}</Text>
@@ -547,7 +556,7 @@ export default function TherapyReportScreen() {
         <Animated.View style={[styles.therapistNoteCard, { opacity: slideOpacities[8], transform: [{ translateY: slideAnims[8] }] }]}>
           <View style={styles.therapistNoteHeader}>
             <FileText size={16} color={Colors.primaryDark} />
-            <Text style={styles.therapistNoteTitle}>Note for Therapist</Text>
+            <Text style={styles.therapistNoteTitle}>{localizedText('Note for Therapist', 'Nota para terapeuta')}</Text>
           </View>
           <Text style={styles.therapistNoteText}>{report.therapistNote}</Text>
         </Animated.View>
@@ -558,11 +567,14 @@ export default function TherapyReportScreen() {
               <View style={[styles.sectionIconWrap, { backgroundColor: '#FFFFFF' }]}>
                 <MessageCircle size={18} color="#3B82F6" />
               </View>
-              <Text style={styles.sectionTitle}>Possible Therapy Topics</Text>
+              <Text style={styles.sectionTitle}>{localizedText('Possible Therapy Topics', 'Posibles temas para terapia')}</Text>
             </View>
 
             <Text style={styles.discussionIntro}>
-              These topics emerged from your data and may be worth exploring in session.
+              {localizedText(
+                'These topics emerged from your data and may be worth exploring in session.',
+                'Estos temas surgieron de tus datos y podrían valer la pena explorar en sesión.',
+              )}
             </Text>
 
             <View style={styles.discussionList}>
@@ -585,19 +597,19 @@ export default function TherapyReportScreen() {
             <View style={styles.discussionCategoryLegend}>
               <View style={styles.legendItem}>
                 <View style={[styles.legendDot, { backgroundColor: '#3B82F6' }]} />
-                <Text style={styles.legendText}>Emotional</Text>
+                <Text style={styles.legendText}>{localizedText('Emotional', 'Emocional')}</Text>
               </View>
               <View style={styles.legendItem}>
                 <View style={[styles.legendDot, { backgroundColor: '#3B82F6' }]} />
-                <Text style={styles.legendText}>Relational</Text>
+                <Text style={styles.legendText}>{localizedText('Relational', 'Relacional')}</Text>
               </View>
               <View style={styles.legendItem}>
                 <View style={[styles.legendDot, { backgroundColor: Colors.accent }]} />
-                <Text style={styles.legendText}>Behavioral</Text>
+                <Text style={styles.legendText}>{localizedText('Behavioral', 'Conductual')}</Text>
               </View>
               <View style={styles.legendItem}>
                 <View style={[styles.legendDot, { backgroundColor: Colors.success }]} />
-                <Text style={styles.legendText}>Growth</Text>
+                <Text style={styles.legendText}>{localizedText('Growth', 'Crecimiento')}</Text>
               </View>
             </View>
           </Animated.View>
@@ -613,15 +625,18 @@ export default function TherapyReportScreen() {
             <BookOpen size={18} color={Colors.primary} />
           </View>
           <View style={styles.reflectionLinkContent}>
-            <Text style={styles.reflectionLinkTitle}>Weekly Reflection</Text>
-            <Text style={styles.reflectionLinkDesc}>Read your personal narrative reflection</Text>
+            <Text style={styles.reflectionLinkTitle}>{localizedText('Weekly Reflection', 'Reflexión semanal')}</Text>
+            <Text style={styles.reflectionLinkDesc}>{localizedText('Read your personal narrative reflection', 'Lee tu reflexión narrativa personal')}</Text>
           </View>
           <ChevronRight size={16} color={Colors.textMuted} />
         </TouchableOpacity>
 
         <View style={styles.disclaimerSection}>
           <Text style={styles.disclaimerText}>
-            This report reflects self-reported data and should be discussed with a licensed professional. It does not constitute medical advice.
+            {localizedText(
+              'This report reflects self-reported data and should be discussed with a licensed professional. It does not constitute medical advice.',
+              'Este informe refleja datos reportados por ti y debe conversarse con un profesional autorizado. No constituye consejo médico.',
+            )}
           </Text>
         </View>
 
@@ -634,7 +649,7 @@ export default function TherapyReportScreen() {
         >
           <Share2 size={18} color={Colors.white} />
           <Text style={styles.bottomExportText}>
-            {isExporting ? 'Exporting…' : 'Share Report with Therapist'}
+            {isExporting ? localizedText('Exporting…', 'Exportando…') : localizedText('Share Report with Therapist', 'Compartir informe con terapeuta')}
           </Text>
         </TouchableOpacity>
       </ScrollView>

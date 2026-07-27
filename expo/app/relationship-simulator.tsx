@@ -15,6 +15,8 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useAppTheme } from '@/providers/ThemeProvider';
 import { trackEvent } from '@/services/analytics/analyticsService';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import {
   OUTCOME_LABELS,
   RELATIONSHIP_SIMULATOR_DIFFICULTY_LABELS,
@@ -48,6 +50,7 @@ export default function RelationshipSimulatorScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
+  useLanguage();
   const [progress, setProgress] = useState<RelationshipSimulatorProgress | null>(null);
   const [loading, setLoading] = useState(true);
   const [difficulty, setDifficulty] = useState<RelationshipSimulatorDifficulty>('beginner');
@@ -169,10 +172,13 @@ export default function RelationshipSimulatorScreen() {
             <ArrowLeft size={20} color={colors.text} />
           </TouchableOpacity>
           <View style={styles.headerTextWrap}>
-            <Text style={[styles.eyebrow, { color: colors.brandTeal }]}>Relationship Simulator</Text>
-            <Text style={[styles.title, { color: colors.text }]}>Practice the hard moment</Text>
+            <Text style={[styles.eyebrow, { color: colors.brandTeal }]}>{localizedText('Relationship Simulator', 'Simulador de relaciones')}</Text>
+            <Text style={[styles.title, { color: colors.text }]}>{localizedText('Practice the hard moment', 'Practica el momento difícil')}</Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Choose responses and watch the conversation move toward escalation, repair, or healthy communication.
+              {localizedText(
+                'Choose responses and watch the conversation move toward escalation, repair, or healthy communication.',
+                'Elige respuestas y observa si la conversación se mueve hacia escalada, reparación o comunicación saludable.',
+              )}
             </Text>
           </View>
         </View>
@@ -181,17 +187,17 @@ export default function RelationshipSimulatorScreen() {
           <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
             <Target size={16} color={colors.primary} />
             <Text style={[styles.statValue, { color: colors.text }]}>{averageScore(progress)}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Avg score</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{localizedText('Avg score', 'Puntaje prom.')}</Text>
           </View>
           <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
             <Trophy size={16} color={colors.brandTeal} />
             <Text style={[styles.statValue, { color: colors.text }]}>{progress?.attempts.length ?? 0}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Sessions</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{localizedText('Sessions', 'Sesiones')}</Text>
           </View>
           <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
             <Sparkles size={16} color={colors.accent} />
             <Text style={[styles.statValue, { color: colors.text }]}>{progress?.currentStreak ?? 0}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Streak</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{localizedText('Streak', 'Racha')}</Text>
           </View>
         </View>
 
@@ -230,7 +236,7 @@ export default function RelationshipSimulatorScreen() {
         </View>
 
         <View style={[styles.chatCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
-          <Text style={[styles.chatTitle, { color: colors.text }]}>Conversation</Text>
+          <Text style={[styles.chatTitle, { color: colors.text }]}>{localizedText('Conversation', 'Conversación')}</Text>
           {messages.map(message => {
             const isUser = message.speaker === 'user';
             return (
@@ -246,7 +252,7 @@ export default function RelationshipSimulatorScreen() {
                 ]}
               >
                 <Text style={[styles.messageSpeaker, { color: isUser ? Colors.white : colors.textSecondary }]}>
-                  {isUser ? 'You' : 'Partner'}
+                  {isUser ? localizedText('You', 'Tú') : localizedText('Partner', 'Pareja')}
                 </Text>
                 <Text style={[styles.messageText, { color: isUser ? Colors.white : colors.text }]}>
                   {message.text}
@@ -287,18 +293,21 @@ export default function RelationshipSimulatorScreen() {
         {attempt ? (
           <View style={styles.resultsWrap}>
             <View style={[styles.resultCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
-              <Text style={[styles.resultKicker, { color: colors.brandTeal }]}>Outcome</Text>
+              <Text style={[styles.resultKicker, { color: colors.brandTeal }]}>{localizedText('Outcome', 'Resultado')}</Text>
               <Text style={[styles.resultTitle, { color: colors.text }]}>{OUTCOME_LABELS[attempt.score.outcome]}</Text>
               <Text style={[styles.resultBody, { color: colors.textSecondary }]}>
-                Overall: {attempt.score.overall}. This is practice, not a judgment. The goal is seeing how choices shift the conversation.
+                {localizedText(
+                  `Overall: ${attempt.score.overall}. This is practice, not a judgment. The goal is seeing how choices shift the conversation.`,
+                  `General: ${attempt.score.overall}. Esto es práctica, no un juicio. La meta es ver cómo tus elecciones cambian la conversación.`,
+                )}
               </Text>
             </View>
 
             <View style={[styles.scoreCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
               {[
-                ['Emotional regulation', attempt.score.emotionalRegulation],
-                ['Interpersonal effectiveness', attempt.score.interpersonalEffectiveness],
-                ['Impulse control', attempt.score.impulseControl],
+                [localizedText('Emotional regulation', 'Regulación emocional'), attempt.score.emotionalRegulation],
+                [localizedText('Interpersonal effectiveness', 'Efectividad interpersonal'), attempt.score.interpersonalEffectiveness],
+                [localizedText('Impulse control', 'Control de impulsos'), attempt.score.impulseControl],
               ].map(([label, value]) => (
                 <View key={label} style={styles.scoreRow}>
                   <Text style={[styles.scoreLabel, { color: colors.text }]}>{label}</Text>
@@ -313,7 +322,7 @@ export default function RelationshipSimulatorScreen() {
               activeOpacity={0.86}
               testID="relationship-simulator-next"
             >
-              <Text style={styles.submitText}>Next conversation</Text>
+              <Text style={styles.submitText}>{localizedText('Next conversation', 'Siguiente conversación')}</Text>
               <ChevronRight size={18} color={Colors.white} />
             </TouchableOpacity>
           </View>

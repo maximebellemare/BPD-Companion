@@ -12,12 +12,15 @@ import { Repeat, X, ChevronRight } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { ActiveLoopSignal } from '@/types/emotionalLoop';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 interface Props {
   signals: ActiveLoopSignal[];
 }
 
 export default React.memo(function ActiveLoopBanner({ signals }: Props) {
+  useLanguage();
   const router = useRouter();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(-8)).current;
@@ -69,7 +72,7 @@ export default React.memo(function ActiveLoopBanner({ signals }: Props) {
           <Repeat size={15} color={confidenceColor} />
         </View>
         <View style={styles.textWrap}>
-          <Text style={[styles.label, { color: confidenceColor }]}>Familiar Pattern</Text>
+          <Text style={[styles.label, { color: confidenceColor }]}>{localizedText('Familiar Pattern', 'Patrón familiar')}</Text>
           <Text style={styles.message} numberOfLines={2}>{topSignal.message}</Text>
         </View>
         <ChevronRight size={14} color={confidenceColor} style={{ opacity: 0.5 }} />

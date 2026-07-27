@@ -25,6 +25,8 @@ import {
   RELATIONSHIP_TYPE_META,
   RelationshipProfileAnalysis,
 } from '@/types/relationship';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 function ProfileCard({
   analysis,
@@ -139,6 +141,7 @@ function ProfileCard({
 export default function RelationshipProfilesScreen() {
   const router = useRouter();
   const { analyses, isLoading } = useRelationships();
+  useLanguage();
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -159,7 +162,7 @@ export default function RelationshipProfilesScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: 'Relationship Profiles',
+          title: localizedText('Relationship Profiles', 'Perfiles de relación'),
           headerStyle: { backgroundColor: Colors.background },
           headerTintColor: Colors.text,
           headerShadowVisible: false,
@@ -174,9 +177,12 @@ export default function RelationshipProfilesScreen() {
           <View style={styles.headerIconWrap}>
             <Heart size={28} color={Colors.white} />
           </View>
-          <Text style={styles.headerTitle}>Your People</Text>
+          <Text style={styles.headerTitle}>{localizedText('Your People', 'Tus personas')}</Text>
           <Text style={styles.headerDesc}>
-            Track emotional patterns with the people who matter most. This helps you understand your reactions and respond more securely.
+            {localizedText(
+              'Track emotional patterns with the people who matter most. This helps you understand your reactions and respond more securely.',
+              'Registra patrones emocionales con las personas que más importan. Esto te ayuda a entender tus reacciones y responder con más seguridad.',
+            )}
           </Text>
         </Animated.View>
 
@@ -205,9 +211,12 @@ export default function RelationshipProfilesScreen() {
                 <View style={styles.emptyIconWrap}>
                   <Heart size={36} color={Colors.textMuted} />
                 </View>
-                <Text style={styles.emptyTitle}>No profiles yet</Text>
+                <Text style={styles.emptyTitle}>{localizedText('No profiles yet', 'Aún no hay perfiles')}</Text>
                 <Text style={styles.emptyDesc}>
-                  Add someone you'd like to understand your emotional patterns with. Everything stays private and local.
+                  {localizedText(
+                    "Add someone you'd like to understand your emotional patterns with. Everything stays private and local.",
+                    'Agrega a alguien con quien quieras entender tus patrones emocionales. Todo se mantiene privado y local.',
+                  )}
                 </Text>
               </Animated.View>
             )}
@@ -222,14 +231,17 @@ export default function RelationshipProfilesScreen() {
               testID="add-relationship-btn"
             >
               <Plus size={20} color={Colors.white} />
-              <Text style={styles.addButtonText}>Add Relationship Profile</Text>
+              <Text style={styles.addButtonText}>{localizedText('Add Relationship Profile', 'Agregar perfil de relación')}</Text>
             </TouchableOpacity>
           </>
         )}
 
         <View style={styles.footerNote}>
           <Text style={styles.footerNoteText}>
-            All relationship data stays on your device. It's here to help you grow, never to judge.
+            {localizedText(
+              "All relationship data stays on your device. It's here to help you grow, never to judge.",
+              'Todos los datos de relaciones permanecen en tu dispositivo. Están aquí para ayudarte a crecer, nunca para juzgarte.',
+            )}
           </Text>
         </View>
 

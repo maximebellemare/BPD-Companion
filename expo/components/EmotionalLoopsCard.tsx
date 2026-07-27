@@ -4,6 +4,8 @@ import { useRouter } from 'expo-router';
 import { Repeat, ArrowRight, ChevronRight } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { EmotionalLoopReport, LoopNodeType } from '@/types/emotionalLoop';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 const NODE_DOT_COLORS: Record<LoopNodeType, string> = {
   trigger: '#3B82F6',
@@ -19,6 +21,7 @@ interface Props {
 }
 
 export default React.memo(function EmotionalLoopsCard({ report }: Props) {
+  useLanguage();
   const router = useRouter();
   const pulseAnim = useRef(new Animated.Value(0.4)).current;
 
@@ -47,11 +50,14 @@ export default React.memo(function EmotionalLoopsCard({ report }: Props) {
           <Repeat size={18} color={Colors.accent} />
         </Animated.View>
         <View style={styles.headerText}>
-          <Text style={styles.title}>Emotional Loops</Text>
+          <Text style={styles.title}>{localizedText('Emotional Loops', 'Bucles emocionales')}</Text>
           <Text style={styles.subtitle}>
             {report.totalPatternsDetected > 0
-              ? `${report.totalPatternsDetected} pattern${report.totalPatternsDetected !== 1 ? 's' : ''} detected`
-              : 'Discover your patterns'}
+              ? localizedText(
+                `${report.totalPatternsDetected} pattern${report.totalPatternsDetected !== 1 ? 's' : ''} detected`,
+                `${report.totalPatternsDetected} patrón${report.totalPatternsDetected !== 1 ? 'es' : ''} detectado${report.totalPatternsDetected !== 1 ? 's' : ''}`,
+              )
+              : localizedText('Discover your patterns', 'Descubre tus patrones')}
           </Text>
         </View>
         <ChevronRight size={18} color={Colors.textMuted} />
@@ -76,7 +82,12 @@ export default React.memo(function EmotionalLoopsCard({ report }: Props) {
       {topLoop?.narrative ? (
         <Text style={styles.narrative} numberOfLines={2}>{topLoop.narrative}</Text>
       ) : (
-        <Text style={styles.narrative}>Check in regularly to reveal emotional loops you can learn to interrupt.</Text>
+        <Text style={styles.narrative}>
+          {localizedText(
+            'Check in regularly to reveal emotional loops you can learn to interrupt.',
+            'Haz registros con frecuencia para revelar bucles emocionales que puedes aprender a interrumpir.',
+          )}
+        </Text>
       )}
     </TouchableOpacity>
   );

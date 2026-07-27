@@ -32,6 +32,8 @@ import {
   TrendingUp,
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { useAICompanion } from '@/providers/AICompanionProvider';
 import { EpisodicMemory, SemanticMemory, SessionSummary } from '@/types/companionMemory';
 import { trackEvent } from '@/services/analytics/analyticsService';
@@ -49,9 +51,9 @@ function formatTimestamp(ts: number): string {
   const diffMs = now.getTime() - date.getTime();
   const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
 
-  if (diffDays === 0) return 'Today';
-  if (diffDays === 1) return 'Yesterday';
-  if (diffDays < 7) return `${diffDays} days ago`;
+  if (diffDays === 0) return localizedText('Today', 'Hoy');
+  if (diffDays === 1) return localizedText('Yesterday', 'Ayer');
+  if (diffDays < 7) return localizedText(`${diffDays} days ago`, `Hace ${diffDays} dias`);
   if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
@@ -71,6 +73,7 @@ function getEmotionColor(emotion: string): string {
 
 export default function EmotionalMemoriesScreen() {
   const router = useRouter();
+  useLanguage();
   const { companionMemoryStore, deleteMemory, editMemoryLesson } = useAICompanion();
 
   const [activeTab, setActiveTab] = useState<MemoryTab>('events');
@@ -135,12 +138,12 @@ export default function EmotionalMemoriesScreen() {
 
   const handleDelete = useCallback((memoryId: string, memoryType: string) => {
     Alert.alert(
-      'Remove Memory',
-      'Are you sure you want to remove this memory? This cannot be undone.',
+      localizedText('Remove Memory', 'Eliminar recuerdo'),
+      localizedText('Are you sure you want to remove this memory? This cannot be undone.', '¿Seguro que quieres eliminar este recuerdo? Esto no se puede deshacer.'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: localizedText('Cancel', 'Cancelar'), style: 'cancel' },
         {
-          text: 'Remove',
+          text: localizedText('Remove', 'Eliminar'),
           style: 'destructive',
           onPress: () => {
             Animated.timing(fadeAnim, {
@@ -192,9 +195,9 @@ export default function EmotionalMemoriesScreen() {
   const renderEmptyState = useCallback(() => (
     <View style={styles.emptyContainer}>
       <Brain size={48} color={Colors.textMuted} />
-      <Text style={styles.emptyTitle}>No memories yet</Text>
+      <Text style={styles.emptyTitle}>{localizedText('No memories yet', 'Aun no hay recuerdos')}</Text>
       <Text style={styles.emptyDescription}>
-        As you use the AI Companion and check in regularly, meaningful emotional events will be remembered here.
+        {localizedText('As you use the AI Companion and check in regularly, meaningful emotional events will be remembered here.', 'A medida que uses el AI Companion y hagas check-ins con regularidad, aqui se recordaran eventos emocionales significativos.')}
       </Text>
     </View>
   ), []);
@@ -246,7 +249,7 @@ export default function EmotionalMemoriesScreen() {
               <View style={styles.copingRow}>
                 <Shield size={14} color={Colors.primary} />
                 <Text style={styles.copingLabel}>
-                  Coping: {memory.copingUsed.join(', ')}
+                  {localizedText('Coping:', 'Afrontamiento:')} {memory.copingUsed.join(', ')}
                 </Text>
               </View>
             )}
@@ -260,27 +263,27 @@ export default function EmotionalMemoriesScreen() {
 
             {isEditing ? (
               <View style={styles.editContainer}>
-                <Text style={styles.editLabel}>Lesson / Insight</Text>
+                <Text style={styles.editLabel}>{localizedText('Lesson / Insight', 'Leccion / insight')}</Text>
                 <TextInput
                   style={styles.editInput}
                   value={editText}
                   onChangeText={setEditText}
                   multiline
-                  placeholder="What did you learn from this moment?"
+                  placeholder={localizedText('What did you learn from this moment?', '¿Qué aprendiste de este momento?')}
                   placeholderTextColor={Colors.textMuted}
                   testID="edit-lesson-input"
                 />
                 <View style={styles.editActions}>
                   <TouchableOpacity style={styles.editCancelBtn} onPress={handleCancelEdit}>
                     <X size={16} color={Colors.textSecondary} />
-                    <Text style={styles.editCancelText}>Cancel</Text>
+                    <Text style={styles.editCancelText}>{localizedText('Cancel', 'Cancelar')}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.editSaveBtn}
                     onPress={() => void handleSaveEdit(memory.id)}
                   >
                     <Check size={16} color={Colors.white} />
-                    <Text style={styles.editSaveText}>Save</Text>
+                    <Text style={styles.editSaveText}>{localizedText('Save', 'Guardar')}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -298,7 +301,7 @@ export default function EmotionalMemoriesScreen() {
               >
                 <Pencil size={14} color={Colors.primary} />
                 <Text style={styles.actionBtnText}>
-                  {memory.lesson ? 'Edit lesson' : 'Add lesson'}
+                  {memory.lesson ? localizedText('Edit lesson', 'Editar leccion') : localizedText('Add lesson', 'Agregar leccion')}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -306,7 +309,7 @@ export default function EmotionalMemoriesScreen() {
                 onPress={() => handleDelete(memory.id, 'episodic')}
               >
                 <Trash2 size={14} color={Colors.danger} />
-                <Text style={styles.actionBtnDangerText}>Remove</Text>
+                <Text style={styles.actionBtnDangerText}>{localizedText('Remove', 'Eliminar')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -324,7 +327,7 @@ export default function EmotionalMemoriesScreen() {
         <View style={styles.traitHeaderText}>
           <Text style={styles.traitLabel}>{memory.trait}</Text>
           <Text style={styles.traitMeta}>
-            Observed {memory.observationCount}x
+            {localizedText(`Observed ${memory.observationCount}x`, `Observado ${memory.observationCount}x`)}
           </Text>
         </View>
         <TouchableOpacity
@@ -345,7 +348,7 @@ export default function EmotionalMemoriesScreen() {
         />
       </View>
       <Text style={styles.confidenceLabel}>
-        Confidence: {Math.round(memory.confidence * 100)}%
+        {localizedText('Confidence:', 'Confianza:')} {Math.round(memory.confidence * 100)}%
       </Text>
     </View>
   ), [handleDelete]);
@@ -358,13 +361,13 @@ export default function EmotionalMemoriesScreen() {
       </View>
       {session.trigger && (
         <View style={styles.sessionRow}>
-          <Text style={styles.sessionLabel}>Trigger</Text>
+          <Text style={styles.sessionLabel}>{localizedText('Trigger', 'Disparador')}</Text>
           <Text style={styles.sessionValue}>{session.trigger}</Text>
         </View>
       )}
       {session.emotion && (
         <View style={styles.sessionRow}>
-          <Text style={styles.sessionLabel}>Emotion</Text>
+          <Text style={styles.sessionLabel}>{localizedText('Emotion', 'Emocion')}</Text>
           <Text style={styles.sessionValue}>{session.emotion}</Text>
         </View>
       )}
@@ -395,9 +398,9 @@ export default function EmotionalMemoriesScreen() {
           return searchQuery.trim() ? (
             <View style={styles.emptyContainer}>
               <Search size={36} color={Colors.textMuted} />
-              <Text style={styles.emptyTitle}>No matches found</Text>
+              <Text style={styles.emptyTitle}>{localizedText('No matches found', 'No se encontraron resultados')}</Text>
               <Text style={styles.emptyDescription}>
-                Try a different search term.
+                {localizedText('Try a different search term.', 'Prueba con otra busqueda.')}
               </Text>
             </View>
           ) : renderEmptyState();
@@ -412,13 +415,13 @@ export default function EmotionalMemoriesScreen() {
           <>
             {semanticMemories.length > 0 && (
               <View style={styles.sectionBlock}>
-                <Text style={styles.sectionLabel}>Recognized Patterns</Text>
+                <Text style={styles.sectionLabel}>{localizedText('Recognized Patterns', 'Patrones reconocidos')}</Text>
                 {semanticMemories.slice(0, 15).map(renderSemanticCard)}
               </View>
             )}
             {sessionSummaries.length > 0 && (
               <View style={styles.sectionBlock}>
-                <Text style={styles.sectionLabel}>Session Summaries</Text>
+                <Text style={styles.sectionLabel}>{localizedText('Session Summaries', 'Resumenes de sesiones')}</Text>
                 {sessionSummaries.slice(0, 10).map(renderSessionCard)}
               </View>
             )}
@@ -430,9 +433,9 @@ export default function EmotionalMemoriesScreen() {
           return (
             <View style={styles.emptyContainer}>
               <Users size={48} color={Colors.textMuted} />
-              <Text style={styles.emptyTitle}>No relationship memories</Text>
+              <Text style={styles.emptyTitle}>{localizedText('No relationship memories', 'No hay recuerdos relacionales')}</Text>
               <Text style={styles.emptyDescription}>
-                When relationship-related emotional events happen, they will appear here.
+                {localizedText('When relationship-related emotional events happen, they will appear here.', 'Cuando ocurran eventos emocionales relacionados con relaciones, apareceran aqui.')}
               </Text>
             </View>
           );
@@ -444,9 +447,9 @@ export default function EmotionalMemoriesScreen() {
           return (
             <View style={styles.emptyContainer}>
               <TrendingUp size={48} color={Colors.textMuted} />
-              <Text style={styles.emptyTitle}>Growth signals will appear here</Text>
+              <Text style={styles.emptyTitle}>{localizedText('Growth signals will appear here', 'Las senales de crecimiento apareceran aqui')}</Text>
               <Text style={styles.emptyDescription}>
-                As you practice skills and gain insights, your growth will be tracked here.
+                {localizedText('As you practice skills and gain insights, your growth will be tracked here.', 'A medida que practiques habilidades y ganes insights, tu crecimiento se registrara aqui.')}
               </Text>
             </View>
           );
@@ -455,13 +458,13 @@ export default function EmotionalMemoriesScreen() {
           <>
             {growthMemories.traits.length > 0 && (
               <View style={styles.sectionBlock}>
-                <Text style={styles.sectionLabel}>Strengths Developing</Text>
+                <Text style={styles.sectionLabel}>{localizedText('Strengths Developing', 'Fortalezas en desarrollo')}</Text>
                 {growthMemories.traits.map(renderSemanticCard)}
               </View>
             )}
             {growthMemories.episodes.length > 0 && (
               <View style={styles.sectionBlock}>
-                <Text style={styles.sectionLabel}>Coping Breakthroughs</Text>
+                <Text style={styles.sectionLabel}>{localizedText('Coping Breakthroughs', 'Avances de afrontamiento')}</Text>
                 {growthMemories.episodes.slice(0, 10).map(renderEpisodicCard)}
               </View>
             )}
@@ -475,10 +478,10 @@ export default function EmotionalMemoriesScreen() {
   ]);
 
   const tabs: Array<{ key: MemoryTab; label: string; icon: React.ReactNode; count: number }> = useMemo(() => [
-    { key: 'events', label: 'Events', icon: <Zap size={16} color={activeTab === 'events' ? Colors.primary : Colors.textMuted} />, count: episodicMemories.length },
-    { key: 'insights', label: 'Insights', icon: <Lightbulb size={16} color={activeTab === 'insights' ? Colors.primary : Colors.textMuted} />, count: semanticMemories.length },
-    { key: 'relationships', label: 'Relations', icon: <Users size={16} color={activeTab === 'relationships' ? Colors.primary : Colors.textMuted} />, count: relationshipMemories.length },
-    { key: 'growth', label: 'Growth', icon: <TrendingUp size={16} color={activeTab === 'growth' ? Colors.primary : Colors.textMuted} />, count: growthMemories.traits.length + growthMemories.episodes.length },
+    { key: 'events', label: localizedText('Events', 'Eventos'), icon: <Zap size={16} color={activeTab === 'events' ? Colors.primary : Colors.textMuted} />, count: episodicMemories.length },
+    { key: 'insights', label: localizedText('Insights', 'Insights'), icon: <Lightbulb size={16} color={activeTab === 'insights' ? Colors.primary : Colors.textMuted} />, count: semanticMemories.length },
+    { key: 'relationships', label: localizedText('Relations', 'Relaciones'), icon: <Users size={16} color={activeTab === 'relationships' ? Colors.primary : Colors.textMuted} />, count: relationshipMemories.length },
+    { key: 'growth', label: localizedText('Growth', 'Crecimiento'), icon: <TrendingUp size={16} color={activeTab === 'growth' ? Colors.primary : Colors.textMuted} />, count: growthMemories.traits.length + growthMemories.episodes.length },
   ], [activeTab, episodicMemories.length, semanticMemories.length, relationshipMemories.length, growthMemories]);
 
   return (
@@ -494,7 +497,7 @@ export default function EmotionalMemoriesScreen() {
           </TouchableOpacity>
           <View style={styles.headerCenter}>
             <Brain size={20} color={Colors.primary} />
-            <Text style={styles.headerTitle}>Emotional Memories</Text>
+            <Text style={styles.headerTitle}>{localizedText('Emotional Memories', 'Recuerdos emocionales')}</Text>
           </View>
           <View style={styles.headerBadge}>
             <Text style={styles.headerBadgeText}>{totalMemories}</Text>
@@ -507,7 +510,7 @@ export default function EmotionalMemoriesScreen() {
             style={styles.searchInput}
             value={searchQuery}
             onChangeText={setSearchQuery}
-            placeholder="Search memories..."
+            placeholder={localizedText('Search memories...', 'Buscar recuerdos...')}
             placeholderTextColor={Colors.textMuted}
             testID="search-input"
           />

@@ -15,6 +15,8 @@ import { X, ChevronRight, ChevronLeft, Check, Flame, Sparkles } from 'lucide-rea
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { DailyRitualEntry, DailyMood, EmotionTag } from '@/types/ritual';
 import { ritualRepository } from '@/services/repositories';
 import {
@@ -48,6 +50,7 @@ const STEP_SUBTITLES: Record<Step, string> = {
 export default function DailyRitualScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  useLanguage();
   const queryClient = useQueryClient();
 
   const [stepIndex, setStepIndex] = useState<number>(0);
@@ -281,7 +284,7 @@ export default function DailyRitualScreen() {
       </View>
       <TextInput
         style={styles.reflectionInput}
-        placeholder="Write whatever comes to mind..."
+        placeholder={localizedText('Write whatever comes to mind...', 'Escribe lo que venga a tu mente...')}
         placeholderTextColor={Colors.textMuted}
         multiline
         value={reflection}
@@ -295,7 +298,7 @@ export default function DailyRitualScreen() {
     <View>
       <TextInput
         style={styles.intentionInput}
-        placeholder="My intention for today..."
+        placeholder={localizedText('My intention for today...', 'Mi intención para hoy...')}
         placeholderTextColor={Colors.textMuted}
         value={intention}
         onChangeText={setIntention}
@@ -349,7 +352,7 @@ export default function DailyRitualScreen() {
       <View style={[styles.completeContainer, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
         <Animated.View style={[styles.completeContent, { opacity: completeAnim, transform: [{ scale: pulseScale }] }]}>
           <Text style={styles.completeEmoji}>{selectedMood?.emoji ?? '🌸'}</Text>
-          <Text style={styles.completeTitle}>Check-in complete</Text>
+          <Text style={styles.completeTitle}>{localizedText('Check-in complete', 'Check-in completo')}</Text>
           <Text style={styles.completeSubtitle}>You showed up for yourself today</Text>
           {(ritualQuery.data?.streak.currentStreak ?? 0) > 0 && (
             <View style={styles.completeStreakBadge}>
@@ -361,7 +364,7 @@ export default function DailyRitualScreen() {
           )}
           {intention.length > 0 && (
             <View style={styles.completeIntention}>
-              <Text style={styles.completeIntentionLabel}>Today's intention</Text>
+              <Text style={styles.completeIntentionLabel}>{localizedText("Today's intention", 'Intención de hoy')}</Text>
               <Text style={styles.completeIntentionText}>{intention}</Text>
             </View>
           )}
@@ -378,7 +381,7 @@ export default function DailyRitualScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
             <X size={24} color={Colors.textSecondary} />
           </TouchableOpacity>
-          <Text style={styles.topBarTitle}>Today's Check-In</Text>
+          <Text style={styles.topBarTitle}>{localizedText("Today's Check-In", 'Check-in de hoy')}</Text>
           <View style={{ width: 36 }} />
         </View>
         <ScrollView contentContainerStyle={styles.alreadyContent} showsVerticalScrollIndicator={false}>
@@ -406,7 +409,7 @@ export default function DailyRitualScreen() {
               </View>
               {todayEntry.reflection.length > 0 && (
                 <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Reflection</Text>
+                  <Text style={styles.summaryLabel}>{localizedText('Reflection', 'Reflexión')}</Text>
                   <Text style={styles.summaryValueLong}>{todayEntry.reflection}</Text>
                 </View>
               )}
@@ -498,11 +501,11 @@ export default function DailyRitualScreen() {
             {isLastStep ? (
               <>
                 <Check size={20} color={Colors.white} />
-                <Text style={styles.nextButtonText}>Complete</Text>
+                <Text style={styles.nextButtonText}>{localizedText('Complete', 'Completar')}</Text>
               </>
             ) : (
               <>
-                <Text style={styles.nextButtonText}>Next</Text>
+                <Text style={styles.nextButtonText}>{localizedText('Next', 'Siguiente')}</Text>
                 <ChevronRight size={20} color={Colors.white} />
               </>
             )}

@@ -20,6 +20,8 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedField, localizedText } from '@/lib/i18n/staticText';
 import {
   getDraftVault,
   updateVaultEntry,
@@ -27,25 +29,26 @@ import {
 } from '@/services/messages/messageOutcomeService';
 import { DraftVaultEntry } from '@/types/messageOutcome';
 
-function formatDate(ts: number): string {
+function formatDate(ts: number, language: string): string {
   const d = new Date(ts);
   const now = new Date();
   const diff = now.getTime() - d.getTime();
-  if (diff < 3600000) return `${Math.max(1, Math.floor(diff / 60000))}m ago`;
-  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  if (diff < 3600000) return localizedText(`${Math.max(1, Math.floor(diff / 60000))}m ago`, `hace ${Math.max(1, Math.floor(diff / 60000))} min`);
+  if (diff < 86400000) return localizedText(`${Math.floor(diff / 3600000)}h ago`, `hace ${Math.floor(diff / 3600000)} h`);
+  return d.toLocaleDateString(language === 'es' ? 'es' : 'en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 }
 
 const REASON_LABELS: Record<string, { label: string; emoji: string; color: string }> = {
-  saved_for_later: { label: 'Saved for later', emoji: '📌', color: '#3B82F6' },
-  chose_not_to_send: { label: 'Chose not to send', emoji: '🛑', color: Colors.danger },
-  paused: { label: 'Paused', emoji: '⏳', color: Colors.accent },
-  vault_review: { label: 'Under review', emoji: '👁️', color: Colors.primary },
+  saved_for_later: localizedField({ label: 'Saved for later', emoji: '📌', color: '#3B82F6' }, 'label', 'Saved for later', 'Guardado para después'),
+  chose_not_to_send: localizedField({ label: 'Chose not to send', emoji: '🛑', color: Colors.danger }, 'label', 'Chose not to send', 'Elegí no enviarlo'),
+  paused: localizedField({ label: 'Paused', emoji: '⏳', color: Colors.accent }, 'label', 'Paused', 'Pausado'),
+  vault_review: localizedField({ label: 'Under review', emoji: '👁️', color: Colors.primary }, 'label', 'Under review', 'En revisión'),
 };
 
 export default function DraftVaultScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { language } = useLanguage();
   const queryClient = useQueryClient();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -71,12 +74,12 @@ export default function DraftVaultScreen() {
 
   const handleDelete = useCallback((id: string) => {
     Alert.alert(
-      'Delete Draft',
-      'Remove this draft from your vault?',
+      localizedText('Delete Draft', 'Eliminar borrador'),
+      localizedText('Remove this draft from your vault?', '¿Eliminar este borrador de tu bóveda?'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: localizedText('Cancel', 'Cancelar'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: localizedText('Delete', 'Eliminar'),
           style: 'destructive',
           onPress: () => {
             void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -110,8 +113,8 @@ export default function DraftVaultScreen() {
           <ArrowLeft size={20} color={Colors.text} />
         </TouchableOpacity>
         <View style={styles.headerTextWrap}>
-          <Text style={styles.headerTitle}>Draft Vault</Text>
-          <Text style={styles.headerSub}>Messages you chose to hold back</Text>
+          <Text style={styles.headerTitle}>{localizedText('Draft Vault', 'Bóveda de borradores')}</Text>
+          <Text style={styles.headerSub}>{localizedText('Messages you chose to hold back', 'Mensajes que elegiste pausar')}</Text>
         </View>
       </View>
 
@@ -121,24 +124,27 @@ export default function DraftVaultScreen() {
             <View style={styles.emptyIconWrap}>
               <Archive size={32} color={Colors.textMuted} />
             </View>
-            <Text style={styles.emptyTitle}>Your vault is empty</Text>
+            <Text style={styles.emptyTitle}>{localizedText('Your vault is empty', 'Tu bóveda está vacía')}</Text>
             <Text style={styles.emptyDesc}>
-              When you save a message instead of sending it, it appears here. You can revisit with a calmer mind.
+              {localizedText(
+                'When you save a message instead of sending it, it appears here. You can revisit with a calmer mind.',
+                'Cuando guardes un mensaje en vez de enviarlo, aparecerá aquí. Podrás volver a leerlo con más calma.',
+              )}
             </Text>
           </View>
         ) : (
           <>
             {unreviewed.length > 0 && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Needs review ({unreviewed.length})</Text>
-                <Text style={styles.sectionHint}>Did not sending help?</Text>
+                <Text style={styles.sectionTitle}>{localizedText(`Needs review (${unreviewed.length})`, `Para revisar (${unreviewed.length})`)}</Text>
+                <Text style={styles.sectionHint}>{localizedText('Did not sending help?', '¿Ayudó no enviarlo?')}</Text>
                 {unreviewed.map(entry => renderEntry(entry))}
               </View>
             )}
 
             {reviewed.length > 0 && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Reviewed ({reviewed.length})</Text>
+                <Text style={styles.sectionTitle}>{localizedText(`Reviewed (${reviewed.length})`, `Revisados (${reviewed.length})`)}</Text>
                 {reviewed.map(entry => renderEntry(entry))}
               </View>
             )}
@@ -149,9 +155,15 @@ export default function DraftVaultScreen() {
           <View style={styles.insightCard}>
             <Text style={styles.insightEmoji}>💡</Text>
             <Text style={styles.insightText}>
-              You have {entries.length} saved {entries.length === 1 ? 'draft' : 'drafts'}.
+              {localizedText(
+                `You have ${entries.length} saved ${entries.length === 1 ? 'draft' : 'drafts'}.`,
+                `Tienes ${entries.length} ${entries.length === 1 ? 'borrador guardado' : 'borradores guardados'}.`,
+              )}
               {entries.filter(e => e.notSendingHelped === true).length > 0 &&
-                ` Not sending helped ${entries.filter(e => e.notSendingHelped === true).length} time${entries.filter(e => e.notSendingHelped === true).length === 1 ? '' : 's'}.`
+                localizedText(
+                  ` Not sending helped ${entries.filter(e => e.notSendingHelped === true).length} time${entries.filter(e => e.notSendingHelped === true).length === 1 ? '' : 's'}.`,
+                  ` No enviarlo ayudó ${entries.filter(e => e.notSendingHelped === true).length} ${entries.filter(e => e.notSendingHelped === true).length === 1 ? 'vez' : 'veces'}.`,
+                )
               }
             </Text>
           </View>
@@ -177,7 +189,7 @@ export default function DraftVaultScreen() {
         <View style={styles.entryHeader}>
           <View style={styles.entryMeta}>
             <Clock size={11} color={Colors.textMuted} />
-            <Text style={styles.entryTime}>{formatDate(entry.timestamp)}</Text>
+            <Text style={styles.entryTime}>{formatDate(entry.timestamp, language)}</Text>
           </View>
           <View style={[styles.reasonBadge, { backgroundColor: reasonMeta.color + '15' }]}>
             <Text style={styles.reasonEmoji}>{reasonMeta.emoji}</Text>
@@ -191,27 +203,27 @@ export default function DraftVaultScreen() {
 
         {entry.emotionalState && (
           <Text style={styles.entryEmotion}>
-            Feeling: {entry.emotionalState.replace(/_/g, ' ')}
+            {localizedText('Feeling:', 'Emoción:')} {entry.emotionalState.replace(/_/g, ' ')}
           </Text>
         )}
 
         {isExpanded && entry.rewrittenText && (
           <View style={styles.rewriteSection}>
-            <Text style={styles.rewriteLabel}>Rewritten version</Text>
+            <Text style={styles.rewriteLabel}>{localizedText('Rewritten version', 'Versión reescrita')}</Text>
             <Text style={styles.rewriteText}>{entry.rewrittenText}</Text>
           </View>
         )}
 
         {isExpanded && entry.situation && (
           <View style={styles.situationSection}>
-            <Text style={styles.situationLabel}>Situation</Text>
+            <Text style={styles.situationLabel}>{localizedText('Situation', 'Situación')}</Text>
             <Text style={styles.situationText}>{entry.situation}</Text>
           </View>
         )}
 
         {isExpanded && !entry.reviewed && (
           <View style={styles.reviewSection}>
-            <Text style={styles.reviewQuestion}>Did not sending help?</Text>
+            <Text style={styles.reviewQuestion}>{localizedText('Did not sending help?', '¿Ayudó no enviarlo?')}</Text>
             <View style={styles.reviewBtns}>
               <TouchableOpacity
                 style={[styles.reviewBtn, styles.reviewBtnYes]}
@@ -222,7 +234,7 @@ export default function DraftVaultScreen() {
                 activeOpacity={0.7}
               >
                 <Check size={14} color={Colors.success} />
-                <Text style={[styles.reviewBtnText, { color: Colors.success }]}>Yes, it helped</Text>
+                <Text style={[styles.reviewBtnText, { color: Colors.success }]}>{localizedText('Yes, it helped', 'Sí, ayudó')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.reviewBtn, styles.reviewBtnNo]}
@@ -233,7 +245,7 @@ export default function DraftVaultScreen() {
                 activeOpacity={0.7}
               >
                 <X size={14} color={Colors.textMuted} />
-                <Text style={[styles.reviewBtnText, { color: Colors.textMuted }]}>Not sure</Text>
+                <Text style={[styles.reviewBtnText, { color: Colors.textMuted }]}>{localizedText('Not sure', 'No estoy seguro/a')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -245,8 +257,8 @@ export default function DraftVaultScreen() {
           }]}>
             <Text style={styles.reviewResultText}>
               {entry.notSendingHelped
-                ? '✅ Not sending helped — trust that wisdom.'
-                : '🤔 Still uncertain — that\'s okay too.'
+                ? localizedText('✅ Not sending helped — trust that wisdom.', '✅ No enviarlo ayudó; confía en esa sabiduría.')
+                : localizedText("🤔 Still uncertain — that's okay too.", '🤔 Aún hay incertidumbre; eso también está bien.')
               }
             </Text>
           </View>
@@ -262,7 +274,7 @@ export default function DraftVaultScreen() {
             activeOpacity={0.7}
           >
             <Trash2 size={13} color={Colors.danger} />
-            <Text style={styles.deleteBtnText}>Remove from vault</Text>
+            <Text style={styles.deleteBtnText}>{localizedText('Remove from vault', 'Eliminar de la bóveda')}</Text>
           </TouchableOpacity>
         )}
       </TouchableOpacity>

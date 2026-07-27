@@ -4,8 +4,11 @@ import { useRouter } from 'expo-router';
 import { Sparkles, ChevronRight, Compass } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { usePersonalization, PersonalizedRecommendation } from '@/hooks/usePersonalization';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 export default function PersonalizedSuggestionsCard() {
+  useLanguage();
   const { suggestedTools, growthSignals } = usePersonalization();
 
   if (suggestedTools.length === 0 && growthSignals.length === 0) return null;
@@ -16,7 +19,7 @@ export default function PersonalizedSuggestionsCard() {
         <View style={styles.growthSection}>
           <View style={styles.growthHeader}>
             <Sparkles size={13} color={Colors.success} />
-            <Text style={styles.growthTitle}>Growth Signal</Text>
+            <Text style={styles.growthTitle}>{localizedText('Growth Signal', 'Señal de crecimiento')}</Text>
           </View>
           <Text style={styles.growthText}>{growthSignals[0]}</Text>
         </View>
@@ -24,7 +27,7 @@ export default function PersonalizedSuggestionsCard() {
 
       {suggestedTools.length > 0 && (
         <View style={styles.suggestionsSection}>
-          <Text style={styles.suggestionsTitle}>Suggested for you</Text>
+          <Text style={styles.suggestionsTitle}>{localizedText('Suggested for you', 'Sugerido para ti')}</Text>
           {suggestedTools.slice(0, 2).map((tool) => (
             <SuggestionRow key={tool.id} tool={tool} />
           ))}

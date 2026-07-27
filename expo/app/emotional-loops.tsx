@@ -32,6 +32,8 @@ import { useEmotionalLoops } from '@/hooks/useEmotionalLoops';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
 import { useLoopInterruptPlans } from '@/hooks/useLoopInterruptPlans';
 import { EmotionalLoop, InterruptPoint, LoopNodeType } from '@/types/emotionalLoop';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText, localizedArray } from '@/lib/i18n/staticText';
 
 const NODE_COLORS: Record<LoopNodeType, { bg: string; text: string; border: string }> = {
   trigger: { bg: '#FFFFFF', text: '#3B82F6', border: '#D9E2EC' },
@@ -43,12 +45,12 @@ const NODE_COLORS: Record<LoopNodeType, { bg: string; text: string; border: stri
 };
 
 const NODE_LABELS: Record<LoopNodeType, string> = {
-  trigger: 'Trigger',
-  emotion: 'Emotion',
-  urge: 'Urge',
-  behavior: 'Behavior',
-  outcome: 'Outcome',
-  coping: 'Coping',
+  get trigger() { return localizedText('Trigger', 'Desencadenante'); },
+  get emotion() { return localizedText('Emotion', 'Emoción'); },
+  get urge() { return localizedText('Urge', 'Impulso'); },
+  get behavior() { return localizedText('Behavior', 'Conducta'); },
+  get outcome() { return localizedText('Outcome', 'Resultado'); },
+  get coping() { return localizedText('Coping', 'Regulación'); },
 };
 
 const INTERVENTION_ICONS: Record<string, typeof Timer> = {
@@ -65,6 +67,7 @@ export default function EmotionalLoopsScreen() {
   const report = useEmotionalLoops();
   const { plans } = useLoopInterruptPlans();
   const { trackEvent } = useAnalytics();
+  useLanguage();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(24)).current;
 
@@ -119,8 +122,8 @@ export default function EmotionalLoopsScreen() {
             <Repeat size={20} color={Colors.accent} />
           </View>
           <View>
-            <Text style={styles.headerTitle}>Emotional Loops</Text>
-            <Text style={styles.headerSubtitle}>Patterns you can interrupt</Text>
+            <Text style={styles.headerTitle}>{localizedText('Emotional Loops', 'Bucles emocionales')}</Text>
+            <Text style={styles.headerSubtitle}>{localizedText('Patterns you can interrupt', 'Patrones que puedes interrumpir')}</Text>
           </View>
         </View>
         <TouchableOpacity
@@ -149,7 +152,10 @@ export default function EmotionalLoopsScreen() {
             <View style={styles.emptyBanner}>
               <AlertCircle size={20} color={Colors.textMuted} />
               <Text style={styles.emptyText}>
-                As you check in and use the app, emotional patterns will appear here. Keep going — awareness builds over time.
+                {localizedText(
+                  'As you check in and use the app, emotional patterns will appear here. Keep going — awareness builds over time.',
+                  'A medida que hagas check-ins y uses la app, tus patrones emocionales aparecerán aquí. Sigue avanzando: la conciencia se construye con el tiempo.',
+                )}
               </Text>
             </View>
           )}
@@ -167,11 +173,14 @@ export default function EmotionalLoopsScreen() {
                 <Shield size={18} color={Colors.primary} />
               </View>
               <View style={styles.plansTextWrap}>
-                <Text style={styles.plansTitle}>Interrupt Plans</Text>
+                <Text style={styles.plansTitle}>{localizedText('Interrupt Plans', 'Planes de interrupción')}</Text>
                 <Text style={styles.plansSubtitle}>
                   {plans.length > 0
-                    ? `${plans.length} plan${plans.length !== 1 ? 's' : ''} saved${favoritePlans.length > 0 ? ` · ${favoritePlans.length} favorite${favoritePlans.length !== 1 ? 's' : ''}` : ''}`
-                    : 'Create your first interrupt plan'}
+                    ? localizedText(
+                      `${plans.length} plan${plans.length !== 1 ? 's' : ''} saved${favoritePlans.length > 0 ? ` · ${favoritePlans.length} favorite${favoritePlans.length !== 1 ? 's' : ''}` : ''}`,
+                      `${plans.length} plan${plans.length === 1 ? '' : 'es'} guardado${plans.length === 1 ? '' : 's'}${favoritePlans.length > 0 ? ` · ${favoritePlans.length} favorito${favoritePlans.length === 1 ? '' : 's'}` : ''}`,
+                    )
+                    : localizedText('Create your first interrupt plan', 'Crea tu primer plan de interrupción')}
                 </Text>
               </View>
               <ChevronRight size={16} color={Colors.textMuted} />
@@ -181,7 +190,7 @@ export default function EmotionalLoopsScreen() {
 
         {report.triggerChains.length > 0 && (
           <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
-            <SectionHeader icon={<Zap size={16} color="#3B82F6" />} title="Trigger Chains" color="#3B82F6" />
+            <SectionHeader icon={<Zap size={16} color="#3B82F6" />} title={localizedText('Trigger Chains', 'Cadenas de desencadenantes')} color="#3B82F6" />
             {report.triggerChains.map(loop => (
               <LoopCard key={loop.id} loop={loop} onPress={handleLoopPress} />
             ))}
@@ -190,7 +199,7 @@ export default function EmotionalLoopsScreen() {
 
         {report.emotionChains.length > 0 && (
           <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
-            <SectionHeader icon={<Heart size={16} color="#3B82F6" />} title="Emotion Chains" color="#3B82F6" />
+            <SectionHeader icon={<Heart size={16} color="#3B82F6" />} title={localizedText('Emotion Chains', 'Cadenas emocionales')} color="#3B82F6" />
             {report.emotionChains.map(loop => (
               <LoopCard key={loop.id} loop={loop} onPress={handleLoopPress} />
             ))}
@@ -199,7 +208,7 @@ export default function EmotionalLoopsScreen() {
 
         {report.behaviorChains.length > 0 && (
           <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
-            <SectionHeader icon={<Repeat size={16} color="#3B82F6" />} title="Behavior Chains" color="#3B82F6" />
+            <SectionHeader icon={<Repeat size={16} color="#3B82F6" />} title={localizedText('Behavior Chains', 'Cadenas de conducta')} color="#3B82F6" />
             {report.behaviorChains.map(loop => (
               <LoopCard key={loop.id} loop={loop} onPress={handleLoopPress} />
             ))}
@@ -208,7 +217,7 @@ export default function EmotionalLoopsScreen() {
 
         {report.interruptPoints.length > 0 && (
           <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
-            <SectionHeader icon={<Anchor size={16} color={Colors.primary} />} title="Helpful Interrupt Points" color={Colors.primary} />
+            <SectionHeader icon={<Anchor size={16} color={Colors.primary} />} title={localizedText('Helpful Interrupt Points', 'Puntos útiles para interrumpir')} color={Colors.primary} />
             {report.interruptPoints.slice(0, 6).map(point => (
               <InterruptCard key={point.id} point={point} onAction={handleInterrupt} />
             ))}
@@ -218,39 +227,48 @@ export default function EmotionalLoopsScreen() {
         {!hasData && (
           <Animated.View style={[styles.placeholderSection, { opacity: fadeAnim }]}>
             <PlaceholderLoop
-              nodes={['Communication uncertainty', 'Anxiety', 'Urge to text', 'Reassurance seeking']}
+              nodes={localizedArray(
+                ['Communication uncertainty', 'Anxiety', 'Urge to text', 'Reassurance seeking'],
+                ['Incertidumbre en la comunicación', 'Ansiedad', 'Impulso de escribir', 'Búsqueda de tranquilidad'],
+              )}
               types={['trigger', 'emotion', 'urge', 'behavior']}
             />
-            <Text style={styles.placeholderLabel}>Example pattern</Text>
+            <Text style={styles.placeholderLabel}>{localizedText('Example pattern', 'Patrón de ejemplo')}</Text>
             <Text style={styles.placeholderDesc}>
-              When communication feels uncertain, anxiety often rises and the urge to send messages quickly appears.
+              {localizedText(
+                'When communication feels uncertain, anxiety often rises and the urge to send messages quickly appears.',
+                'Cuando la comunicación se siente incierta, la ansiedad suele subir y aparece el impulso de enviar mensajes rápidamente.',
+              )}
             </Text>
 
             <View style={styles.placeholderDivider} />
 
             <PlaceholderLoop
-              nodes={['Conflict', 'Shame', 'Withdrawal']}
+              nodes={localizedArray(['Conflict', 'Shame', 'Withdrawal'], ['Conflicto', 'Vergüenza', 'Retiro'])}
               types={['trigger', 'emotion', 'behavior']}
             />
-            <Text style={styles.placeholderLabel}>Example pattern</Text>
+            <Text style={styles.placeholderLabel}>{localizedText('Example pattern', 'Patrón de ejemplo')}</Text>
             <Text style={styles.placeholderDesc}>
-              Conflict may lead to shame, which often leads to pulling away. A grounding step before withdrawing may help.
+              {localizedText(
+                'Conflict may lead to shame, which often leads to pulling away. A grounding step before withdrawing may help.',
+                'El conflicto puede llevar a la vergüenza, y la vergüenza a alejarte. Un paso de arraigo antes de retirarte puede ayudar.',
+              )}
             </Text>
 
             <View style={styles.placeholderInterrupt}>
-              <Text style={styles.placeholderInterruptTitle}>Interrupt suggestions</Text>
+              <Text style={styles.placeholderInterruptTitle}>{localizedText('Interrupt suggestions', 'Sugerencias para interrumpir')}</Text>
               <View style={styles.interruptChips}>
                 <View style={styles.interruptChip}>
                   <Timer size={14} color={Colors.primary} />
-                  <Text style={styles.interruptChipLabel}>Pause</Text>
+                  <Text style={styles.interruptChipLabel}>{localizedText('Pause', 'Pausa')}</Text>
                 </View>
                 <View style={styles.interruptChip}>
                   <Anchor size={14} color={Colors.primary} />
-                  <Text style={styles.interruptChipLabel}>Grounding</Text>
+                  <Text style={styles.interruptChipLabel}>{localizedText('Grounding', 'Arraigo')}</Text>
                 </View>
                 <View style={styles.interruptChip}>
                   <Sparkles size={14} color={Colors.primary} />
-                  <Text style={styles.interruptChipLabel}>Message rewrite</Text>
+                  <Text style={styles.interruptChipLabel}>{localizedText('Message rewrite', 'Reescribir mensaje')}</Text>
                 </View>
               </View>
             </View>
@@ -304,13 +322,18 @@ const LoopCard = React.memo(function LoopCard({ loop, onPress }: { loop: Emotion
       ) : null}
       <View style={styles.loopFooter}>
         <View style={styles.loopMeta}>
-          <Text style={styles.loopMetaText}>Seen {loop.occurrences} time{loop.occurrences !== 1 ? 's' : ''}</Text>
+          <Text style={styles.loopMetaText}>
+            {localizedText(
+              `Seen ${loop.occurrences} time${loop.occurrences !== 1 ? 's' : ''}`,
+              `Visto ${loop.occurrences} vez${loop.occurrences === 1 ? '' : 'es'}`,
+            )}
+          </Text>
           {loop.averageDistress > 0 && (
-            <Text style={styles.loopMetaText}>Avg. intensity: {loop.averageDistress}/10</Text>
+            <Text style={styles.loopMetaText}>{localizedText('Avg. intensity:', 'Intensidad prom.:')} {loop.averageDistress}/10</Text>
           )}
         </View>
         <View style={styles.detailHint}>
-          <Text style={styles.detailHintText}>Details</Text>
+          <Text style={styles.detailHintText}>{localizedText('Details', 'Detalles')}</Text>
           <ChevronRight size={12} color={Colors.primary} />
         </View>
       </View>

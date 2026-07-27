@@ -12,6 +12,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { X, CheckCircle, XCircle, SkipForward, Filter } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { localizedText } from '@/lib/i18n/staticText';
+import { useLanguage } from '@/hooks/useLanguage';
 import { useMedications } from '@/providers/MedicationProvider';
 import { MOOD_AFTER_OPTIONS, LogStatus } from '@/types/medication';
 
@@ -20,6 +22,7 @@ type FilterStatus = 'all' | LogStatus;
 export default function MedicationHistoryScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { language } = useLanguage();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const medicationContext = useMedications();
   const logs = medicationContext?.logs ?? [];
@@ -30,7 +33,9 @@ export default function MedicationHistoryScreen() {
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
 
   const medication = id ? getMedicationById(id) : null;
-  const title = medication ? `${medication.name} History` : 'Medication History';
+  const title = medication
+    ? localizedText(`${medication.name} History`, `Historial de ${medication.name}`)
+    : localizedText('Medication History', 'Historial de medicamentos');
   const adherence = id ? getAdherenceRate(id, 30) : overallAdherence;
 
   const filteredLogs = useMemo(() => {
@@ -44,7 +49,7 @@ export default function MedicationHistoryScreen() {
   const groupedLogs = useMemo(() => {
     const groups: Record<string, typeof filteredLogs> = {};
     filteredLogs.forEach(log => {
-      const dateKey = new Date(log.timestamp).toLocaleDateString(undefined, {
+      const dateKey = new Date(log.timestamp).toLocaleDateString(language === 'es' ? 'es' : 'en-US', {
         weekday: 'short',
         month: 'short',
         day: 'numeric',
@@ -53,7 +58,7 @@ export default function MedicationHistoryScreen() {
       groups[dateKey].push(log);
     });
     return Object.entries(groups);
-  }, [filteredLogs]);
+  }, [filteredLogs, language]);
 
   const handleFilterChange = useCallback((status: FilterStatus) => {
     if (Platform.OS !== 'web') {
@@ -64,7 +69,7 @@ export default function MedicationHistoryScreen() {
 
   const getMedName = useCallback((medId: string) => {
     const med = getMedicationById(medId);
-    return med?.name ?? 'Unknown';
+    return med?.name ?? localizedText('Unknown', 'Desconocido');
   }, [getMedicationById]);
 
   const takenCount = useMemo(() => filteredLogs.filter(l => l.status === 'taken').length, [filteredLogs]);
@@ -88,19 +93,19 @@ export default function MedicationHistoryScreen() {
           <View style={styles.summaryRow}>
             <View style={styles.summaryItem}>
               <Text style={[styles.summaryValue, { color: Colors.success }]}>{takenCount}</Text>
-              <Text style={styles.summaryLabel}>Taken</Text>
+              <Text style={styles.summaryLabel}>{localizedText('Taken', 'Tomado')}</Text>
             </View>
             <View style={styles.summaryDivider} />
             <View style={styles.summaryItem}>
               <Text style={[styles.summaryValue, { color: Colors.danger }]}>{missedCount}</Text>
-              <Text style={styles.summaryLabel}>Missed</Text>
+              <Text style={styles.summaryLabel}>{localizedText('Missed', 'No tomado')}</Text>
             </View>
             <View style={styles.summaryDivider} />
             <View style={styles.summaryItem}>
               <Text style={[styles.summaryValue, { color: adherence >= 70 ? Colors.success : Colors.accent }]}>
                 {adherence}%
               </Text>
-              <Text style={styles.summaryLabel}>30-day rate</Text>
+              <Text style={styles.summaryLabel}>{localizedText('30-day rate', 'Tasa de 30 días')}</Text>
             </View>
           </View>
         </View>
@@ -114,7 +119,13 @@ export default function MedicationHistoryScreen() {
               onPress={() => handleFilterChange(status)}
             >
               <Text style={[styles.filterChipText, filterStatus === status && styles.filterChipTextActive]}>
-                {status === 'all' ? 'All' : status.charAt(0).toUpperCase() + status.slice(1)}
+                {status === 'all'
+                  ? localizedText('All', 'Todo')
+                  : status === 'taken'
+                    ? localizedText('Taken', 'Tomado')
+                    : status === 'missed'
+                      ? localizedText('Missed', 'No tomado')
+                      : localizedText('Skipped', 'Omitido')}
               </Text>
             </TouchableOpacity>
           ))}
@@ -122,11 +133,14 @@ export default function MedicationHistoryScreen() {
 
         {groupedLogs.length === 0 && (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyTitle}>No logs yet</Text>
+            <Text style={styles.emptyTitle}>{localizedText('No logs yet', 'Aún no hay registros')}</Text>
             <Text style={styles.emptyDesc}>
               {filterStatus !== 'all'
-                ? `No ${filterStatus} logs found. Try a different filter.`
-                : 'Medication logs will appear here as you track.'}
+                ? localizedText(
+                  `No ${filterStatus} logs found. Try a different filter.`,
+                  `No se encontraron registros de ${filterStatus === 'taken' ? 'tomados' : filterStatus === 'missed' ? 'no tomados' : 'omitidos'}. Prueba otro filtro.`,
+                )
+                : localizedText('Medication logs will appear here as you track.', 'Los registros de medicamentos aparecerán aquí cuando los lleves.')}
             </Text>
           </View>
         )}
@@ -155,23 +169,27 @@ export default function MedicationHistoryScreen() {
                         <Text style={styles.logMedName}>{getMedName(log.medicationId)}</Text>
                       )}
                       <Text style={[styles.logStatusText, { color: statusColor }]}>
-                        {log.status.charAt(0).toUpperCase() + log.status.slice(1)}
+                        {log.status === 'taken'
+                          ? localizedText('Taken', 'Tomado')
+                          : log.status === 'missed'
+                            ? localizedText('Missed', 'No tomado')
+                            : localizedText('Skipped', 'Omitido')}
                       </Text>
                     </View>
                     <Text style={styles.logTime}>
-                      {time.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
-                      {log.scheduledTime ? ` (scheduled ${log.scheduledTime.label})` : ''}
+                      {time.toLocaleTimeString(language === 'es' ? 'es' : 'en-US', { hour: 'numeric', minute: '2-digit', hour12: language !== 'es' })}
+                      {log.scheduledTime ? localizedText(` (scheduled ${log.scheduledTime.label})`, ` (programado: ${log.scheduledTime.label})`) : ''}
                     </Text>
                     {moodOpt && (
                       <Text style={styles.logMood}>{moodOpt.emoji} {moodOpt.label}</Text>
                     )}
                     {log.didItHelp !== null && (
                       <Text style={styles.logHelp}>
-                        {log.didItHelp ? 'Felt helpful' : 'Didn\'t feel helpful'}
+                        {log.didItHelp ? localizedText('Felt helpful', 'Se sintió útil') : localizedText('Didn\'t feel helpful', 'No se sintió útil')}
                       </Text>
                     )}
                     {log.sideEffects ? (
-                      <Text style={styles.logSideEffect}>Side effects: {log.sideEffects}</Text>
+                      <Text style={styles.logSideEffect}>{localizedText('Side effects:', 'Efectos secundarios:')} {log.sideEffects}</Text>
                     ) : null}
                     {log.notes ? (
                       <Text style={styles.logNote}>{log.notes}</Text>

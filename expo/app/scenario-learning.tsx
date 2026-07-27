@@ -29,6 +29,8 @@ import { getScenarioById, getPatternById } from '@/services/learn/learningPathSe
 import { getLessonById } from '@/services/learn/learnService';
 import { ScenarioInterpretation } from '@/types/learningPath';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 export default function ScenarioLearningScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -36,6 +38,7 @@ export default function ScenarioLearningScreen() {
   const insets = useSafeAreaInsets();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const { trackEvent } = useAnalytics();
+  useLanguage();
 
   const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set());
   const [showInsight, setShowInsight] = useState<boolean>(false);
@@ -103,12 +106,12 @@ export default function ScenarioLearningScreen() {
           <TouchableOpacity onPress={handleClose} style={styles.backButton}>
             <ArrowLeft size={22} color={Colors.text} />
           </TouchableOpacity>
-          <Text style={styles.topBarTitle}>Scenario</Text>
+          <Text style={styles.topBarTitle}>{localizedText('Scenario', 'Escenario')}</Text>
           <View style={styles.topBarSpacer} />
         </View>
         <View style={styles.emptyState}>
           <BookOpen size={40} color={Colors.textMuted} />
-          <Text style={styles.emptyTitle}>Scenario not found</Text>
+          <Text style={styles.emptyTitle}>{localizedText('Scenario not found', 'Escenario no encontrado')}</Text>
         </View>
       </View>
     );
@@ -138,26 +141,26 @@ export default function ScenarioLearningScreen() {
             </Text>
           </View>
           {!isRevealed && (
-            <Text style={styles.interpTapHint}>Tap to explore</Text>
+            <Text style={styles.interpTapHint}>{localizedText('Tap to explore', 'Toca para explorar')}</Text>
           )}
         </TouchableOpacity>
 
         {isRevealed && (
           <Animated.View style={[styles.interpBody, { borderLeftColor: borderColor }]}>
             <View style={styles.interpSection}>
-              <Text style={styles.interpSectionLabel}>Thought</Text>
+              <Text style={styles.interpSectionLabel}>{localizedText('Thought', 'Pensamiento')}</Text>
               <Text style={styles.interpSectionText}>{interp.thought}</Text>
             </View>
             <View style={styles.interpSection}>
-              <Text style={styles.interpSectionLabel}>Emotion</Text>
+              <Text style={styles.interpSectionLabel}>{localizedText('Emotion', 'Emoción')}</Text>
               <Text style={styles.interpSectionText}>{interp.emotion}</Text>
             </View>
             <View style={styles.interpSection}>
-              <Text style={styles.interpSectionLabel}>Urge</Text>
+              <Text style={styles.interpSectionLabel}>{localizedText('Urge', 'Impulso')}</Text>
               <Text style={styles.interpSectionText}>{interp.urge}</Text>
             </View>
             <View style={[styles.interpSection, styles.interpOutcome]}>
-              <Text style={styles.interpSectionLabel}>Likely Outcome</Text>
+              <Text style={styles.interpSectionLabel}>{localizedText('Likely Outcome', 'Resultado probable')}</Text>
               <Text style={styles.interpSectionText}>{interp.outcome}</Text>
             </View>
           </Animated.View>
@@ -172,7 +175,7 @@ export default function ScenarioLearningScreen() {
         <TouchableOpacity onPress={handleClose} style={styles.backButton} testID="scenario-back">
           <ArrowLeft size={22} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.topBarTitle} numberOfLines={1}>Scenario</Text>
+        <Text style={styles.topBarTitle} numberOfLines={1}>{localizedText('Scenario', 'Escenario')}</Text>
         <View style={styles.topBarSpacer} />
       </View>
 
@@ -193,14 +196,14 @@ export default function ScenarioLearningScreen() {
           <View style={[styles.situationCard, { borderLeftColor: scenario.color }]}>
             <View style={styles.situationHeader}>
               <Eye size={16} color={scenario.color} />
-              <Text style={[styles.situationLabel, { color: scenario.color }]}>The Situation</Text>
+              <Text style={[styles.situationLabel, { color: scenario.color }]}>{localizedText('The Situation', 'La situación')}</Text>
             </View>
             <Text style={styles.situationText}>{scenario.situation}</Text>
           </View>
 
           <View style={styles.interpretationsSection}>
-            <Text style={styles.sectionTitle}>How might you interpret this?</Text>
-            <Text style={styles.sectionSubtitle}>Tap each perspective to explore different reactions and outcomes</Text>
+            <Text style={styles.sectionTitle}>{localizedText('How might you interpret this?', '¿Cómo podrías interpretar esto?')}</Text>
+            <Text style={styles.sectionSubtitle}>{localizedText('Tap each perspective to explore different reactions and outcomes', 'Toca cada perspectiva para explorar distintas reacciones y resultados')}</Text>
             {scenario.interpretations.map((interp, index) => renderInterpretation(interp, index))}
           </View>
 
@@ -208,7 +211,7 @@ export default function ScenarioLearningScreen() {
             <View style={[styles.insightCard, { borderLeftColor: scenario.color }]}>
               <View style={styles.insightHeader}>
                 <Lightbulb size={18} color={scenario.color} />
-                <Text style={[styles.insightLabel, { color: scenario.color }]}>Key Insight</Text>
+                <Text style={[styles.insightLabel, { color: scenario.color }]}>{localizedText('Key Insight', 'Insight clave')}</Text>
               </View>
               <Text style={styles.insightText}>{scenario.keyInsight}</Text>
             </View>
@@ -218,7 +221,7 @@ export default function ScenarioLearningScreen() {
             <View style={styles.reflectionCard}>
               <View style={styles.reflectionHeader}>
                 <MessageSquareHeart size={18} color={Colors.accent} />
-                <Text style={styles.reflectionLabel}>Reflect</Text>
+                <Text style={styles.reflectionLabel}>{localizedText('Reflect', 'Reflexiona')}</Text>
               </View>
               <Text style={styles.reflectionText}>{scenario.reflectionPrompt}</Text>
             </View>
@@ -226,7 +229,7 @@ export default function ScenarioLearningScreen() {
 
           {showInsight && relatedPattern && (
             <View style={styles.relatedSection}>
-              <Text style={styles.relatedSectionTitle}>Learn More</Text>
+              <Text style={styles.relatedSectionTitle}>{localizedText('Learn More', 'Aprender más')}</Text>
               <TouchableOpacity
                 style={styles.patternLink}
                 onPress={handlePatternPress}
@@ -235,7 +238,7 @@ export default function ScenarioLearningScreen() {
                 <Brain size={18} color={relatedPattern.color} />
                 <View style={styles.patternLinkContent}>
                   <Text style={styles.patternLinkTitle}>{relatedPattern.title}</Text>
-                  <Text style={styles.patternLinkSubtitle}>Understand the pattern behind this</Text>
+                  <Text style={styles.patternLinkSubtitle}>{localizedText('Understand the pattern behind this', 'Entiende el patrón detrás de esto')}</Text>
                 </View>
                 <ChevronRight size={16} color={Colors.textMuted} />
               </TouchableOpacity>
@@ -253,7 +256,7 @@ export default function ScenarioLearningScreen() {
                     <BookOpen size={16} color={Colors.primary} />
                     <View style={styles.relatedLessonContent}>
                       <Text style={styles.relatedLessonTitle}>{lesson.title}</Text>
-                      <Text style={styles.relatedLessonTime}>{lesson.readingTime} min read</Text>
+                      <Text style={styles.relatedLessonTime}>{lesson.readingTime} {localizedText('min read', 'min de lectura')}</Text>
                     </View>
                     <ChevronRight size={16} color={Colors.textMuted} />
                   </TouchableOpacity>
@@ -267,8 +270,8 @@ export default function ScenarioLearningScreen() {
               >
                 <Wrench size={18} color={Colors.primary} />
                 <View style={styles.toolsButtonContent}>
-                  <Text style={styles.toolsButtonTitle}>Practice a Related Skill</Text>
-                  <Text style={styles.toolsButtonDesc}>Open the Tools tab</Text>
+                  <Text style={styles.toolsButtonTitle}>{localizedText('Practice a Related Skill', 'Practicar una habilidad relacionada')}</Text>
+                  <Text style={styles.toolsButtonDesc}>{localizedText('Open the Tools tab', 'Abrir la pestaña Herramientas')}</Text>
                 </View>
                 <ArrowRight size={16} color={Colors.primary} />
               </TouchableOpacity>

@@ -30,6 +30,8 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { useSupportCircles } from '@/hooks/useCommunityFeed';
 import { useCirclePosts } from '@/hooks/useSupportCircles';
 import { CIRCLE_POST_TYPES, SUPPORT_REACTION_LABELS } from '@/constants/community';
@@ -39,13 +41,13 @@ function timeAgo(timestamp: number): string {
   const now = Date.now();
   const diff = now - timestamp;
   const minutes = Math.floor(diff / 60000);
-  if (minutes < 1) return 'just now';
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 1) return localizedText('just now', 'ahora');
+  if (minutes < 60) return localizedText(`${minutes}m ago`, `hace ${minutes} min`);
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return localizedText(`${hours}h ago`, `hace ${hours} h`);
   const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
-  return `${Math.floor(days / 7)}w ago`;
+  if (days < 7) return localizedText(`${days}d ago`, `hace ${days} d`);
+  return localizedText(`${Math.floor(days / 7)}w ago`, `hace ${Math.floor(days / 7)} sem`);
 }
 
 const CirclePostCard = React.memo(function CirclePostCard({ post, onPress }: { post: CirclePost; onPress: () => void }) {
@@ -130,6 +132,7 @@ const CirclePostCard = React.memo(function CirclePostCard({ post, onPress }: { p
 });
 
 export default function CircleDetailScreen() {
+  useLanguage();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { circles, isLoading, joinCircle, leaveCircle, isJoining, isLeaving } = useSupportCircles();
@@ -178,7 +181,7 @@ export default function CircleDetailScreen() {
             <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
               <ArrowLeft size={20} color={Colors.text} />
             </TouchableOpacity>
-            <Text style={styles.navTitle}>Circle</Text>
+            <Text style={styles.navTitle}>{localizedText('Circle', 'Círculo')}</Text>
             <View style={styles.backBtn} />
           </View>
         </SafeAreaView>
@@ -270,7 +273,7 @@ export default function CircleDetailScreen() {
           <>
             <View style={styles.sectionHeader}>
               <Sparkles size={16} color={circle.color} />
-              <Text style={styles.sectionTitle}>Circle discussions</Text>
+              <Text style={styles.sectionTitle}>{localizedText('Circle discussions', 'Conversaciones del círculo')}</Text>
             </View>
 
             {postsLoading ? (
@@ -284,7 +287,7 @@ export default function CircleDetailScreen() {
             ) : (
               <View style={styles.emptyDiscussions}>
                 <Text style={styles.emptyEmoji}>💬</Text>
-                <Text style={styles.emptyTitle}>Start the conversation</Text>
+                <Text style={styles.emptyTitle}>{localizedText('Start the conversation', 'Inicia la conversación')}</Text>
                 <Text style={styles.emptyText}>
                   Share an update, ask a question, or celebrate progress with your circle.
                 </Text>
@@ -299,7 +302,7 @@ export default function CircleDetailScreen() {
             )}
 
             <View style={styles.aboutSection}>
-              <Text style={styles.aboutTitle}>About this circle</Text>
+              <Text style={styles.aboutTitle}>{localizedText('About this circle', 'Sobre este círculo')}</Text>
               <View style={styles.aboutCard}>
                 <Text style={styles.aboutItem}>🤝 A safe space for peer support</Text>
                 <Text style={styles.aboutItem}>🔒 Respectful and confidential</Text>
@@ -311,7 +314,7 @@ export default function CircleDetailScreen() {
         ) : (
           <View style={styles.notJoinedSection}>
             <View style={styles.benefitsCard}>
-              <Text style={styles.benefitsTitle}>Why join this circle?</Text>
+              <Text style={styles.benefitsTitle}>{localizedText('Why join this circle?', '¿Por qué unirte a este círculo?')}</Text>
               <View style={styles.benefitRow}>
                 <Text style={styles.benefitEmoji}>🫂</Text>
                 <View style={styles.benefitTextWrap}>
@@ -355,7 +358,7 @@ export default function CircleDetailScreen() {
               <TouchableOpacity onPress={() => setShowComposer(false)} testID="close-composer">
                 <X size={22} color={Colors.text} />
               </TouchableOpacity>
-              <Text style={styles.composerTitle}>New post</Text>
+              <Text style={styles.composerTitle}>{localizedText('New post', 'Nueva publicación')}</Text>
               <TouchableOpacity
                 style={[
                   styles.sendBtn,
@@ -374,7 +377,7 @@ export default function CircleDetailScreen() {
             </View>
 
             <ScrollView style={styles.composerBody} keyboardShouldPersistTaps="handled">
-              <Text style={styles.composerLabel}>Post type</Text>
+              <Text style={styles.composerLabel}>{localizedText('Post type', 'Tipo de publicación')}</Text>
               <View style={styles.typeRow}>
                 {CIRCLE_POST_TYPES.map((type) => (
                   <TouchableOpacity
@@ -393,10 +396,10 @@ export default function CircleDetailScreen() {
                 ))}
               </View>
 
-              <Text style={styles.composerLabel}>Title</Text>
+              <Text style={styles.composerLabel}>{localizedText('Title', 'Título')}</Text>
               <TextInput
                 style={styles.titleInput}
-                placeholder="What's on your mind?"
+                placeholder={localizedText("What's on your mind?", '¿Qué tienes en mente?')}
                 placeholderTextColor={Colors.textMuted}
                 value={newTitle}
                 onChangeText={setNewTitle}
@@ -404,10 +407,10 @@ export default function CircleDetailScreen() {
                 testID="post-title-input"
               />
 
-              <Text style={styles.composerLabel}>Details</Text>
+              <Text style={styles.composerLabel}>{localizedText('Details', 'Detalles')}</Text>
               <TextInput
                 style={styles.bodyInput}
-                placeholder="Share your thoughts..."
+                placeholder={localizedText('Share your thoughts...', 'Comparte lo que piensas...')}
                 placeholderTextColor={Colors.textMuted}
                 value={newBody}
                 onChangeText={setNewBody}

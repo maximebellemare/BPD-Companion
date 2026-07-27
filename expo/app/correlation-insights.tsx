@@ -32,6 +32,8 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useCorrelationInsights } from '@/hooks/useCorrelationInsights';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import {
   CorrelationInsight,
   CorrelationCategory,
@@ -49,55 +51,55 @@ const CATEGORY_CONFIG: Record<CorrelationCategory, {
     icon: <Pill size={16} color="#2E2A72" />,
     color: '#2E2A72',
     bgColor: '#D9E2EC',
-    label: 'Medication & Mood',
+    get label() { return localizedText('Medication & Mood', 'Medicación y ánimo'); },
   },
   appointment_intensity: {
     icon: <Calendar size={16} color="#3B82F6" />,
     color: '#3B82F6',
     bgColor: '#FFFFFF',
-    label: 'Appointments & Intensity',
+    get label() { return localizedText('Appointments & Intensity', 'Citas e intensidad'); },
   },
   checkin_routine: {
     icon: <CheckSquare size={16} color="#14B8A6" />,
     color: '#14B8A6',
     bgColor: '#D9E2EC',
-    label: 'Check-in Routine',
+    get label() { return localizedText('Check-in Routine', 'Rutina de registros'); },
   },
   coping_distress: {
     icon: <Shield size={16} color="#14B8A6" />,
     color: '#14B8A6',
     bgColor: '#FFFFFF',
-    label: 'Coping & Distress',
+    get label() { return localizedText('Coping & Distress', 'Afrontamiento y malestar'); },
   },
   pause_regret: {
     icon: <MessageCircle size={16} color="#67E8F9" />,
     color: '#67E8F9',
     bgColor: '#D9E2EC',
-    label: 'Pausing & Regret',
+    get label() { return localizedText('Pausing & Regret', 'Pausa y arrepentimiento'); },
   },
   movement_mood: {
     icon: <TrendingUp size={16} color="#14B8A6" />,
     color: '#14B8A6',
     bgColor: '#FFFFFF',
-    label: 'Movement & Mood',
+    get label() { return localizedText('Movement & Mood', 'Movimiento y ánimo'); },
   },
   relationship_outcome: {
     icon: <MessageCircle size={16} color="#3B82F6" />,
     color: '#3B82F6',
     bgColor: '#FFFFFF',
-    label: 'Relationship Outcomes',
+    get label() { return localizedText('Relationship Outcomes', 'Resultados relacionales'); },
   },
   time_pattern: {
     icon: <Clock size={16} color="#3B82F6" />,
     color: '#3B82F6',
     bgColor: '#D9E2EC',
-    label: 'Time Patterns',
+    get label() { return localizedText('Time Patterns', 'Patrones de horario'); },
   },
   routine_stability: {
     icon: <Sprout size={16} color="#14B8A6" />,
     color: '#14B8A6',
     bgColor: '#D9E2EC',
-    label: 'Routine & Stability',
+    get label() { return localizedText('Routine & Stability', 'Rutina y estabilidad'); },
   },
 };
 
@@ -106,9 +108,9 @@ const STRENGTH_CONFIG: Record<CorrelationStrength, {
   color: string;
   bgColor: string;
 }> = {
-  strong: { label: 'Strong', color: '#14B8A6', bgColor: '#FFFFFF' },
-  moderate: { label: 'Moderate', color: '#67E8F9', bgColor: '#D9E2EC' },
-  weak: { label: 'Emerging', color: '#3B82F6', bgColor: '#F7FAFC' },
+  strong: { get label() { return localizedText('Strong', 'Fuerte'); }, color: '#14B8A6', bgColor: '#FFFFFF' },
+  moderate: { get label() { return localizedText('Moderate', 'Moderada'); }, color: '#67E8F9', bgColor: '#D9E2EC' },
+  weak: { get label() { return localizedText('Emerging', 'Emergente'); }, color: '#3B82F6', bgColor: '#F7FAFC' },
 };
 
 function CorrelationCard({
@@ -184,7 +186,7 @@ function CorrelationCard({
           <Text style={styles.sourceText}>{insight.sourceA}</Text>
           <Link2 size={10} color={Colors.textMuted} />
           <Text style={styles.sourceText}>{insight.sourceB}</Text>
-          <Text style={styles.dataPointsText}>{insight.dataPoints} data points</Text>
+          <Text style={styles.dataPointsText}>{insight.dataPoints} {localizedText('data points', 'datos')}</Text>
         </View>
       </TouchableOpacity>
     </Animated.View>
@@ -224,7 +226,7 @@ function CorrelationDetailSheet({
             <Text style={styles.detailCategoryLabel}>{config.label}</Text>
             <View style={[styles.strengthBadge, { backgroundColor: strengthConfig.bgColor }]}>
               <Text style={[styles.strengthText, { color: strengthConfig.color }]}>
-                {strengthConfig.label} correlation
+                {strengthConfig.label} {localizedText('correlation', 'correlación')}
               </Text>
             </View>
           </View>
@@ -236,7 +238,7 @@ function CorrelationDetailSheet({
         <View style={styles.detailSection}>
           <View style={styles.detailSectionHeader}>
             <Sparkles size={14} color={Colors.primary} />
-            <Text style={styles.detailSectionLabel}>What this means</Text>
+            <Text style={styles.detailSectionLabel}>{localizedText('What this means', 'Qué significa')}</Text>
           </View>
           <Text style={styles.detailSectionText}>{insight.supportiveNote}</Text>
         </View>
@@ -244,22 +246,22 @@ function CorrelationDetailSheet({
         <View style={styles.detailMetaRow}>
           <View style={styles.detailMetaItem}>
             <Text style={styles.detailMetaValue}>{insight.dataPoints}</Text>
-            <Text style={styles.detailMetaLabel}>Data points</Text>
+            <Text style={styles.detailMetaLabel}>{localizedText('Data points', 'Datos')}</Text>
           </View>
           <View style={styles.detailMetaDivider} />
           <View style={styles.detailMetaItem}>
             <Text style={styles.detailMetaValue}>{Math.round(insight.confidence * 100)}%</Text>
-            <Text style={styles.detailMetaLabel}>Confidence</Text>
+            <Text style={styles.detailMetaLabel}>{localizedText('Confidence', 'Confianza')}</Text>
           </View>
           <View style={styles.detailMetaDivider} />
           <View style={styles.detailMetaItem}>
             <Text style={[styles.detailMetaValue, { color: config.color }]}>{strengthConfig.label}</Text>
-            <Text style={styles.detailMetaLabel}>Strength</Text>
+            <Text style={styles.detailMetaLabel}>{localizedText('Strength', 'Fuerza')}</Text>
           </View>
         </View>
 
         <View style={styles.detailSourcesSection}>
-          <Text style={styles.detailSourcesLabel}>Connected data</Text>
+          <Text style={styles.detailSourcesLabel}>{localizedText('Connected data', 'Datos conectados')}</Text>
           <View style={styles.detailSourcesRow}>
             <View style={styles.detailSourceChip}>
               <Text style={styles.detailSourceChipText}>{insight.sourceA}</Text>
@@ -272,7 +274,7 @@ function CorrelationDetailSheet({
         </View>
 
         <TouchableOpacity style={styles.detailCloseBtn} onPress={onClose} activeOpacity={0.8}>
-          <Text style={styles.detailCloseBtnText}>Got it</Text>
+          <Text style={styles.detailCloseBtnText}>{localizedText('Got it', 'Entendido')}</Text>
         </TouchableOpacity>
       </View>
     </Animated.View>
@@ -299,7 +301,7 @@ function WhatHelpsSection({ items }: { items: WhatHelpsItem[] }) {
         <View style={styles.whatHelpsIconWrap}>
           <Sprout size={18} color="#14B8A6" />
         </View>
-        <Text style={styles.whatHelpsTitle}>What seems to help</Text>
+        <Text style={styles.whatHelpsTitle}>{localizedText('What seems to help', 'Lo que parece ayudar')}</Text>
       </View>
       {items.slice(0, 5).map((item, i) => {
         const strengthConfig = STRENGTH_CONFIG[item.strength];
@@ -336,20 +338,21 @@ function SummaryCards({ total, strong }: { total: number; strong: number }) {
           <Link2 size={16} color="#3B82F6" />
         </View>
         <Text style={styles.summaryValue}>{total}</Text>
-        <Text style={styles.summaryLabel}>Correlations</Text>
+        <Text style={styles.summaryLabel}>{localizedText('Correlations', 'Correlaciones')}</Text>
       </View>
       <View style={styles.summaryItem}>
         <View style={[styles.summaryIconWrap, { backgroundColor: '#FFFFFF' }]}>
           <Eye size={16} color="#14B8A6" />
         </View>
         <Text style={styles.summaryValue}>{strong}</Text>
-        <Text style={styles.summaryLabel}>Strong</Text>
+        <Text style={styles.summaryLabel}>{localizedText('Strong', 'Fuertes')}</Text>
       </View>
     </Animated.View>
   );
 }
 
 export default function CorrelationInsightsScreen() {
+  useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const {
@@ -417,7 +420,7 @@ export default function CorrelationInsightsScreen() {
         >
           <ArrowLeft size={22} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Correlations</Text>
+        <Text style={styles.headerTitle}>{localizedText('Correlations', 'Correlaciones')}</Text>
         <TouchableOpacity
           onPress={handleRefresh}
           style={styles.refreshButton}
@@ -445,22 +448,28 @@ export default function CorrelationInsightsScreen() {
             <View style={styles.emptyIconWrap}>
               <Link2 size={40} color={Colors.primary} />
             </View>
-            <Text style={styles.emptyTitle}>Correlations are building</Text>
+            <Text style={styles.emptyTitle}>{localizedText('Correlations are building', 'Las correlaciones se están formando')}</Text>
             <Text style={styles.emptySubtitle}>
-              As you use the app, patterns will emerge between your daily actions and emotional outcomes. Keep checking in, logging medications, and using your tools.
+              {localizedText(
+                'As you use the app, patterns will emerge between your daily actions and emotional outcomes. Keep checking in, logging medications, and using your tools.',
+                'A medida que uses la app, aparecerán patrones entre tus acciones diarias y tus resultados emocionales. Sigue registrándote, anotando medicación y usando tus herramientas.',
+              )}
             </Text>
             <TouchableOpacity
               style={styles.emptyButton}
               onPress={() => router.push('/check-in')}
               activeOpacity={0.8}
             >
-              <Text style={styles.emptyButtonText}>Start a Check-in</Text>
+              <Text style={styles.emptyButtonText}>{localizedText('Start a Check-in', 'Iniciar registro')}</Text>
             </TouchableOpacity>
           </View>
         ) : hasInsights ? (
           <>
             <Text style={styles.sectionIntro}>
-              Connections between your daily habits and emotional patterns
+              {localizedText(
+                'Connections between your daily habits and emotional patterns',
+                'Conexiones entre tus hábitos diarios y tus patrones emocionales',
+              )}
             </Text>
 
             <SummaryCards total={summary.totalCorrelations} strong={summary.strongCorrelations} />
@@ -468,7 +477,7 @@ export default function CorrelationInsightsScreen() {
             <WhatHelpsSection items={whatHelps} />
 
             <View style={styles.insightsSection}>
-              <Text style={styles.insightsSectionTitle}>All correlations</Text>
+              <Text style={styles.insightsSectionTitle}>{localizedText('All correlations', 'Todas las correlaciones')}</Text>
               {insights.map((insight, i) => (
                 <CorrelationCard
                   key={insight.id}
@@ -481,7 +490,10 @@ export default function CorrelationInsightsScreen() {
 
             <View style={styles.disclaimer}>
               <Text style={styles.disclaimerText}>
-                These patterns are observations, not diagnoses. Words like "seems" and "tends to" reflect that correlation does not mean causation.
+                {localizedText(
+                  'These patterns are observations, not diagnoses. Words like "seems" and "tends to" reflect that correlation does not mean causation.',
+                  'Estos patrones son observaciones, no diagnósticos. Palabras como “parece” y “tiende a” reflejan que correlación no significa causalidad.',
+                )}
               </Text>
             </View>
           </>
@@ -490,9 +502,12 @@ export default function CorrelationInsightsScreen() {
             <View style={styles.emptyIconWrap}>
               <Link2 size={40} color={Colors.primary} />
             </View>
-            <Text style={styles.emptyTitle}>No strong patterns yet</Text>
+            <Text style={styles.emptyTitle}>{localizedText('No strong patterns yet', 'Aún no hay patrones fuertes')}</Text>
             <Text style={styles.emptySubtitle}>
-              Keep using the app — checking in, logging medications, and tracking appointments. Correlations will emerge as data accumulates.
+              {localizedText(
+                'Keep using the app — checking in, logging medications, and tracking appointments. Correlations will emerge as data accumulates.',
+                'Sigue usando la app: registrándote, anotando medicación y dando seguimiento a citas. Las correlaciones aparecerán a medida que se acumulen datos.',
+              )}
             </Text>
           </View>
         )}

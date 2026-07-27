@@ -14,9 +14,12 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useAICompanion } from '@/providers/AICompanionProvider';
 import { AIConversation } from '@/types/ai';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 export default function SavedConversationsScreen() {
   const router = useRouter();
+  useLanguage();
   const {
     savedConversations,
     setActiveConversationId,
@@ -39,12 +42,12 @@ export default function SavedConversationsScreen() {
 
   const handleDelete = useCallback((conversationId: string) => {
     Alert.alert(
-      'Delete conversation?',
-      'This will permanently remove this conversation.',
+      localizedText('Delete conversation?', '¿Eliminar conversación?'),
+      localizedText('This will permanently remove this conversation.', 'Esto eliminará la conversación de forma permanente.'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: localizedText('Cancel', 'Cancelar'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: localizedText('Delete', 'Eliminar'),
           style: 'destructive',
           onPress: () => deleteConversation(conversationId),
         },
@@ -57,9 +60,9 @@ export default function SavedConversationsScreen() {
     const now = new Date();
     const diffDays = Math.floor((now.getTime() - date.getTime()) / 86400000);
 
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays === 0) return localizedText('Today', 'Hoy');
+    if (diffDays === 1) return localizedText('Yesterday', 'Ayer');
+    if (diffDays < 7) return localizedText(`${diffDays} days ago`, `Hace ${diffDays} días`);
     return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
   }, []);
 
@@ -77,7 +80,10 @@ export default function SavedConversationsScreen() {
         <View style={styles.cardContent}>
           <Text style={styles.cardTitle} numberOfLines={1}>{item.title}</Text>
           <Text style={styles.cardMeta}>
-            {messageCount} message{messageCount !== 1 ? 's' : ''} · {formatDate(item.updatedAt)}
+            {localizedText(
+              `${messageCount} message${messageCount !== 1 ? 's' : ''}`,
+              `${messageCount} mensaje${messageCount === 1 ? '' : 's'}`,
+            )} · {formatDate(item.updatedAt)}
           </Text>
           {item.preview ? (
             <Text style={styles.cardPreview} numberOfLines={2}>{item.preview}</Text>
@@ -128,9 +134,12 @@ export default function SavedConversationsScreen() {
         <View style={styles.emptyIconWrap}>
           <Sparkles size={32} color={Colors.primary} />
         </View>
-        <Text style={styles.emptyTitle}>No saved conversations yet</Text>
+        <Text style={styles.emptyTitle}>{localizedText('No saved conversations yet', 'Aún no hay conversaciones guardadas')}</Text>
         <Text style={styles.emptySubtitle}>
-          Your conversations will show up here as you use AI Companion. Tap the bookmark icon during a chat to save it.
+          {localizedText(
+            'Your conversations will show up here as you use AI Companion. Tap the bookmark icon during a chat to save it.',
+            'Tus conversaciones aparecerán aquí mientras uses AI Companion. Toca el ícono de marcador durante un chat para guardarla.',
+          )}
         </Text>
         <TouchableOpacity
           style={styles.emptyButton}
@@ -139,7 +148,7 @@ export default function SavedConversationsScreen() {
           testID="saved-empty-start-btn"
         >
           <Plus size={16} color={Colors.white} />
-          <Text style={styles.emptyButtonText}>Start a conversation</Text>
+          <Text style={styles.emptyButtonText}>{localizedText('Start a conversation', 'Iniciar conversación')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -147,7 +156,7 @@ export default function SavedConversationsScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: 'Saved Conversations' }} />
+      <Stack.Screen options={{ title: localizedText('Saved Conversations', 'Conversaciones guardadas') }} />
       <FlatList
         data={savedConversations}
         renderItem={renderItem}

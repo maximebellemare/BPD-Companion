@@ -33,6 +33,8 @@ import Colors from '@/constants/colors';
 import { useBreakthroughs } from '@/hooks/useBreakthroughs';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
 import type { BreakthroughMoment, BreakthroughType } from '@/types/breakthrough';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 const TYPE_META: Record<BreakthroughType, { label: string; color: string; bg: string; Icon: React.ElementType }> = {
   distress_reduction: { label: 'Distress Reduced', color: '#14B8A6', bg: '#FFFFFF', Icon: TrendingDown },
@@ -49,12 +51,12 @@ function formatTimestamp(ts: number): string {
   const now = Date.now();
   const diff = now - ts;
   const hours = Math.floor(diff / (60 * 60 * 1000));
-  if (hours < 1) return 'Just now';
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 1) return localizedText('Just now', 'Ahora mismo');
+  if (hours < 24) return localizedText(`${hours}h ago`, `Hace ${hours} h`);
   const days = Math.floor(hours / 24);
-  if (days === 1) return 'Yesterday';
-  if (days < 7) return `${days} days ago`;
-  return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  if (days === 1) return localizedText('Yesterday', 'Ayer');
+  if (days < 7) return localizedText(`${days} days ago`, `Hace ${days} días`);
+  return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
 function MomentCard({
@@ -119,7 +121,7 @@ function MomentCard({
         {moment.sourceData && (moment.sourceData.distressBefore != null && moment.sourceData.distressAfter != null) && (
           <View style={styles.dataRow}>
             <View style={styles.dataPill}>
-              <Text style={styles.dataLabel}>Before</Text>
+              <Text style={styles.dataLabel}>{localizedText('Before', 'Antes')}</Text>
               <Text style={[styles.dataValue, { color: Colors.danger }]}>{moment.sourceData.distressBefore}</Text>
             </View>
             <View style={styles.dataArrow}>
@@ -146,7 +148,7 @@ function MomentCard({
           >
             <Bookmark size={14} color={moment.saved ? Colors.accent : Colors.textMuted} fill={moment.saved ? Colors.accent : 'transparent'} />
             <Text style={[styles.actionBtnText, moment.saved && { color: Colors.accent }]}>
-              {moment.saved ? 'Saved' : 'Save'}
+              {moment.saved ? localizedText('Saved', 'Guardado') : localizedText('Save', 'Guardar')}
             </Text>
           </TouchableOpacity>
 
@@ -156,7 +158,7 @@ function MomentCard({
             activeOpacity={0.7}
           >
             <Share2 size={14} color={Colors.textMuted} />
-            <Text style={styles.actionBtnText}>Share</Text>
+            <Text style={styles.actionBtnText}>{localizedText('Share', 'Compartir')}</Text>
           </TouchableOpacity>
 
           {moment.actionRoute && moment.actionSuggestion && (
@@ -182,6 +184,7 @@ export default function BreakthroughMomentsScreen() {
   const insets = useSafeAreaInsets();
   const { moments, summary, save, markShared } = useBreakthroughs();
   const { trackEvent, trackScreen } = useAnalytics();
+  useLanguage();
   const [filter, setFilter] = useState<BreakthroughType | 'all'>('all');
 
   const headerFade = useRef(new Animated.Value(0)).current;
@@ -217,19 +220,22 @@ export default function BreakthroughMomentsScreen() {
     const shareText = `${moment.title}\n\n${moment.description}\n\n${moment.supportiveNote}`;
 
     Alert.alert(
-      'Share This Moment',
-      'How would you like to share?',
+      localizedText('Share This Moment', 'Compartir este momento'),
+      localizedText('How would you like to share?', '¿Cómo te gustaría compartirlo?'),
       [
         {
-          text: 'Share with Therapist',
+          text: localizedText('Share with Therapist', 'Compartir con terapeuta'),
           onPress: () => {
             markShared(moment.id);
             trackEvent('breakthrough_shared', { type: moment.type, method: 'therapist' });
-            Alert.alert('Saved', 'This moment has been marked for your therapist.');
+            Alert.alert(
+              localizedText('Saved', 'Guardado'),
+              localizedText('This moment has been marked for your therapist.', 'Este momento se marcó para tu terapeuta.'),
+            );
           },
         },
         {
-          text: 'Share as Text',
+          text: localizedText('Share as Text', 'Compartir como texto'),
           onPress: () => {
             void Share.share({ message: shareText });
             markShared(moment.id);
@@ -237,14 +243,17 @@ export default function BreakthroughMomentsScreen() {
           },
         },
         {
-          text: 'Save to Journal',
+          text: localizedText('Save to Journal', 'Guardar en diario'),
           onPress: () => {
             save(moment);
             trackEvent('breakthrough_saved_to_journal', { type: moment.type });
-            Alert.alert('Saved', 'This breakthrough has been saved to your collection.');
+            Alert.alert(
+              localizedText('Saved', 'Guardado'),
+              localizedText('This breakthrough has been saved to your collection.', 'Este avance se guardó en tu colección.'),
+            );
           },
         },
-        { text: 'Cancel', style: 'cancel' },
+        { text: localizedText('Cancel', 'Cancelar'), style: 'cancel' },
       ],
     );
   }, [markShared, save, trackEvent]);
@@ -274,7 +283,7 @@ export default function BreakthroughMomentsScreen() {
         >
           <X size={22} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Breakthrough Moments</Text>
+        <Text style={styles.headerTitle}>{localizedText('Breakthrough Moments', 'Momentos de avance')}</Text>
         <View style={styles.closeBtn} />
       </View>
 
@@ -286,9 +295,9 @@ export default function BreakthroughMomentsScreen() {
           <View style={styles.heroIcon}>
             <Sparkles size={32} color="#67E8F9" />
           </View>
-          <Text style={styles.heroTitle}>Your Growth Story</Text>
+          <Text style={styles.heroTitle}>{localizedText('Your Growth Story', 'Tu historia de crecimiento')}</Text>
           <Text style={styles.heroSubtitle}>
-            Every moment of awareness is a step forward.
+            {localizedText('Every moment of awareness is a step forward.', 'Cada momento de conciencia es un paso hacia adelante.')}
           </Text>
 
           <View style={styles.statsRow}>

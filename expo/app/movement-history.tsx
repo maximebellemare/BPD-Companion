@@ -26,8 +26,11 @@ import {
   MOVEMENT_TYPES,
 } from '@/types/movement';
 import { movementService } from '@/services/movement/movementService';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 function WeekSummary({ entries }: { entries: MovementEntry[] }) {
+  useLanguage();
   const weekEntries = useMemo(() => movementService.getWeekEntries(entries), [entries]);
   const totalMinutes = useMemo(() => weekEntries.reduce((s, e) => s + e.duration, 0), [weekEntries]);
   const avgShift = useMemo(() => movementService.getAverageMoodShift(weekEntries), [weekEntries]);
@@ -43,23 +46,23 @@ function WeekSummary({ entries }: { entries: MovementEntry[] }) {
 
   return (
     <View style={styles.summaryCard}>
-      <Text style={styles.summaryTitle}>This Week</Text>
+      <Text style={styles.summaryTitle}>{localizedText('This Week', 'Esta semana')}</Text>
       <View style={styles.summaryStats}>
         <View style={styles.summaryStat}>
           <Text style={styles.summaryStatValue}>{weekEntries.length}</Text>
-          <Text style={styles.summaryStatLabel}>sessions</Text>
+          <Text style={styles.summaryStatLabel}>{localizedText('sessions', 'sesiones')}</Text>
         </View>
         <View style={styles.summaryDivider} />
         <View style={styles.summaryStat}>
           <Text style={styles.summaryStatValue}>{formatDuration(totalMinutes)}</Text>
-          <Text style={styles.summaryStatLabel}>total</Text>
+          <Text style={styles.summaryStatLabel}>{localizedText('total', 'total')}</Text>
         </View>
         <View style={styles.summaryDivider} />
         <View style={styles.summaryStat}>
           <Text style={[styles.summaryStatValue, { color: avgShift >= 0 ? Colors.success : Colors.danger }]}>
             {avgShift > 0 ? '+' : ''}{avgShift}
           </Text>
-          <Text style={styles.summaryStatLabel}>mood shift</Text>
+          <Text style={styles.summaryStatLabel}>{localizedText('mood shift', 'cambio de ánimo')}</Text>
         </View>
       </View>
       {topTypes.length > 0 && (
@@ -69,7 +72,7 @@ function WeekSummary({ entries }: { entries: MovementEntry[] }) {
             return (
               <View key={type} style={styles.topTypeChip}>
                 <Text style={styles.topTypeEmoji}>{info?.icon ?? '✨'}</Text>
-                <Text style={styles.topTypeText}>{info?.label ?? type} ({count})</Text>
+                <Text style={styles.topTypeText}>{getMovementTypeLabel(type as MovementEntry['type'])} ({count})</Text>
               </View>
             );
           })}
@@ -85,6 +88,7 @@ export default function MovementHistoryScreen() {
   const { highlight } = useLocalSearchParams<{ highlight?: string }>();
   const { trackEvent } = useAnalytics();
   const { entries, deleteEntry } = useMovement();
+  useLanguage();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -111,12 +115,15 @@ export default function MovementHistoryScreen() {
 
   const handleDelete = useCallback((entry: MovementEntry) => {
     Alert.alert(
-      'Remove Entry',
-      `Remove this ${getMovementTypeLabel(entry.type)} entry?`,
+      localizedText('Remove Entry', 'Eliminar entrada'),
+      localizedText(
+        `Remove this ${getMovementTypeLabel(entry.type)} entry?`,
+        `¿Eliminar esta entrada de ${getMovementTypeLabel(entry.type)}?`,
+      ),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: localizedText('Cancel', 'Cancelar'), style: 'cancel' },
         {
-          text: 'Remove',
+          text: localizedText('Remove', 'Eliminar'),
           style: 'destructive',
           onPress: async () => {
             if (Platform.OS !== 'web') {
@@ -152,7 +159,7 @@ export default function MovementHistoryScreen() {
             <Text style={styles.entryEmoji}>{getMovementTypeIcon(entry.type)}</Text>
             <View>
               <Text style={styles.entryType}>{getMovementTypeLabel(entry.type)}</Text>
-              <Text style={styles.entryDate}>{dateStr} at {timeStr}</Text>
+              <Text style={styles.entryDate}>{dateStr} {localizedText('at', 'a las')} {timeStr}</Text>
             </View>
           </View>
           <TouchableOpacity
@@ -177,14 +184,14 @@ export default function MovementHistoryScreen() {
         <View style={styles.moodSection}>
           <View style={styles.moodBeforeAfter}>
             <View style={styles.moodItem}>
-              <Text style={styles.moodLabel}>Before</Text>
+              <Text style={styles.moodLabel}>{localizedText('Before', 'Antes')}</Text>
               <Text style={styles.moodBigEmoji}>{getMoodEmoji(entry.moodBefore)}</Text>
             </View>
             <View style={styles.moodArrowWrap}>
               <TrendingUp size={18} color={moodDiff > 0 ? Colors.success : moodDiff < 0 ? Colors.danger : Colors.textMuted} />
             </View>
             <View style={styles.moodItem}>
-              <Text style={styles.moodLabel}>After</Text>
+              <Text style={styles.moodLabel}>{localizedText('After', 'Después')}</Text>
               <Text style={styles.moodBigEmoji}>{getMoodEmoji(entry.moodAfter)}</Text>
             </View>
           </View>
@@ -195,7 +202,9 @@ export default function MovementHistoryScreen() {
               <Text style={[styles.moodShiftText, {
                 color: moodDiff > 0 ? Colors.success : Colors.danger,
               }]}>
-                {moodDiff > 0 ? 'Mood improved' : 'Mood shifted down'} ({moodDiff > 0 ? '+' : ''}{moodDiff})
+                {moodDiff > 0
+                  ? localizedText('Mood improved', 'El ánimo mejoró')
+                  : localizedText('Mood shifted down', 'El ánimo bajó')} ({moodDiff > 0 ? '+' : ''}{moodDiff})
               </Text>
             </View>
           )}
@@ -216,7 +225,7 @@ export default function MovementHistoryScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.closeBtn} testID="movement-history-close">
           <X size={22} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Movement History</Text>
+        <Text style={styles.headerTitle}>{localizedText('Movement History', 'Historial de movimiento')}</Text>
         <View style={styles.headerRight}>
           <BarChart3 size={20} color={Colors.primary} />
         </View>
@@ -240,9 +249,12 @@ export default function MovementHistoryScreen() {
           ) : (
             <View style={styles.emptyState}>
               <Text style={styles.emptyEmoji}>🌿</Text>
-              <Text style={styles.emptyTitle}>No movement history yet</Text>
+              <Text style={styles.emptyTitle}>{localizedText('No movement history yet', 'Aún no hay historial de movimiento')}</Text>
               <Text style={styles.emptySubtitle}>
-                Log your first movement to start tracking how it helps
+                {localizedText(
+                  'Log your first movement to start tracking how it helps',
+                  'Registra tu primer movimiento para empezar a ver cómo te ayuda',
+                )}
               </Text>
             </View>
           )}

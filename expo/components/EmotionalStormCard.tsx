@@ -23,6 +23,8 @@ import {
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import {
   EmotionalStormResult,
   StormIntensity,
@@ -49,13 +51,14 @@ const INTENSITY_THEME: Record<StormIntensity, { bg: string; border: string; acce
 };
 
 const INTENSITY_LABEL: Record<StormIntensity, string> = {
-  calm: 'All clear',
-  building: 'Something building',
-  approaching: 'Storm approaching',
-  active: 'High intensity',
+  get calm() { return localizedText('All clear', 'Todo despejado'); },
+  get building() { return localizedText('Something building', 'Algo se está acumulando'); },
+  get approaching() { return localizedText('Storm approaching', 'Tormenta acercándose'); },
+  get active() { return localizedText('High intensity', 'Alta intensidad'); },
 };
 
 export default React.memo(function EmotionalStormCard({ storm }: Props) {
+  useLanguage();
   const router = useRouter();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
@@ -148,7 +151,7 @@ export default React.memo(function EmotionalStormCard({ storm }: Props) {
             </View>
             <View style={styles.headerText}>
               <View style={styles.titleRow}>
-                <Text style={[styles.title, { color: theme.accent }]}>Early Support</Text>
+                <Text style={[styles.title, { color: theme.accent }]}>{localizedText('Early Support', 'Apoyo temprano')}</Text>
                 <View style={[styles.intensityBadge, { backgroundColor: theme.accent + '18' }]}>
                   <Text style={[styles.intensityLabel, { color: theme.accent }]}>
                     {INTENSITY_LABEL[intensity]}
@@ -213,7 +216,7 @@ export default React.memo(function EmotionalStormCard({ storm }: Props) {
                 <CloudSun size={32} color={theme.accent} />
               )}
             </View>
-            <Text style={styles.modalTitle}>Early Support</Text>
+            <Text style={styles.modalTitle}>{localizedText('Early Support', 'Apoyo temprano')}</Text>
             <View style={[styles.modalBadge, { backgroundColor: theme.accent + '14' }]}>
               <Text style={[styles.modalBadgeText, { color: theme.accent }]}>
                 {INTENSITY_LABEL[intensity]}
@@ -223,7 +226,7 @@ export default React.memo(function EmotionalStormCard({ storm }: Props) {
 
             {patterns.length > 0 && (
               <View style={styles.patternsSection}>
-                <Text style={styles.sectionTitle}>What we're noticing</Text>
+                <Text style={styles.sectionTitle}>{localizedText("What we're noticing", 'Lo que estamos notando')}</Text>
                 {patterns.map((pattern: StormPattern) => (
                   <View key={pattern.id} style={[styles.patternCard, { borderLeftColor: theme.accent }]}>
                     <Text style={styles.patternLabel}>{pattern.label}</Text>
@@ -248,7 +251,7 @@ export default React.memo(function EmotionalStormCard({ storm }: Props) {
 
             {suggestions.length > 0 && (
               <View style={styles.suggestionsSection}>
-                <Text style={styles.sectionTitle}>Things that might help</Text>
+                <Text style={styles.sectionTitle}>{localizedText('Things that might help', 'Cosas que podrían ayudar')}</Text>
                 {suggestions.map((suggestion) => {
                   const IconComp = ICON_MAP[suggestion.icon] ?? Wind;
                   return (
@@ -275,7 +278,10 @@ export default React.memo(function EmotionalStormCard({ storm }: Props) {
             <View style={styles.reassurance}>
               <Info size={14} color={Colors.textMuted} />
               <Text style={styles.reassuranceText}>
-                This is based on your recent patterns — a gentle suggestion, never a diagnosis. You're doing well by paying attention.
+                {localizedText(
+                  "This is based on your recent patterns — a gentle suggestion, never a diagnosis. You're doing well by paying attention.",
+                  'Esto se basa en tus patrones recientes: una sugerencia amable, nunca un diagnóstico. Estás haciendo algo importante al prestar atención.',
+                )}
               </Text>
             </View>
           </ScrollView>

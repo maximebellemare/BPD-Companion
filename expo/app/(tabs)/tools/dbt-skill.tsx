@@ -34,11 +34,14 @@ import {
   toggleFavoriteSkill,
 } from '@/services/dbt/dbtCoachService';
 import { savePracticeLog, getSkillInsight } from '@/services/dbt/dbtPracticeService';
+import { localizedText } from '@/lib/i18n/staticText';
+import { useLanguage } from '@/hooks/useLanguage';
 
 type PracticeMode = 'full' | 'quick';
 type ScreenState = 'detail' | 'practicing' | 'distress-before' | 'distress-after' | 'feedback' | 'completed';
 
 export default function DBTSkillScreen() {
+  useLanguage();
   const { skillId } = useLocalSearchParams<{ skillId: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -185,7 +188,7 @@ export default function DBTSkillScreen() {
   if (!skill || !module) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
-        <Text style={styles.errorText}>Skill not found</Text>
+        <Text style={styles.errorText}>{localizedText('Skill not found', 'Habilidad no encontrada')}</Text>
       </View>
     );
   }
@@ -197,11 +200,11 @@ export default function DBTSkillScreen() {
           <TouchableOpacity onPress={handleFinish} style={styles.backBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
             <ChevronLeft size={24} color={Colors.text} />
           </TouchableOpacity>
-          <Text style={styles.distressHeaderTitle}>Before Practice</Text>
+          <Text style={styles.distressHeaderTitle}>{localizedText('Before Practice', 'Antes de practicar')}</Text>
           <View style={{ width: 36 }} />
         </View>
         <View style={styles.distressContent}>
-          <Text style={styles.distressQuestion}>How intense is your distress right now?</Text>
+          <Text style={styles.distressQuestion}>{localizedText('How intense is your distress right now?', '¿Que tan intenso es tu malestar ahora?')}</Text>
           <Text style={styles.distressValue}>{distressBefore}</Text>
           <View style={styles.distressScale}>
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(val => (
@@ -220,8 +223,8 @@ export default function DBTSkillScreen() {
             ))}
           </View>
           <View style={styles.distressLabels}>
-            <Text style={styles.distressLabel}>Low</Text>
-            <Text style={styles.distressLabel}>High</Text>
+            <Text style={styles.distressLabel}>{localizedText('Low', 'Bajo')}</Text>
+            <Text style={styles.distressLabel}>{localizedText('High', 'Alto')}</Text>
           </View>
           <TouchableOpacity
             style={[styles.distressContinueBtn, { backgroundColor: module.color }]}
@@ -229,7 +232,7 @@ export default function DBTSkillScreen() {
             activeOpacity={0.7}
             testID="distress-before-continue"
           >
-            <Text style={styles.distressContinueText}>Start {practiceMode === 'quick' ? 'Quick' : 'Full'} Practice</Text>
+            <Text style={styles.distressContinueText}>{localizedText(`Start ${practiceMode === 'quick' ? 'Quick' : 'Full'} Practice`, `Iniciar practica ${practiceMode === 'quick' ? 'rapida' : 'completa'}`)}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -241,11 +244,11 @@ export default function DBTSkillScreen() {
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.distressHeader}>
           <View style={{ width: 36 }} />
-          <Text style={styles.distressHeaderTitle}>After Practice</Text>
+          <Text style={styles.distressHeaderTitle}>{localizedText('After Practice', 'Despues de practicar')}</Text>
           <View style={{ width: 36 }} />
         </View>
         <View style={styles.distressContent}>
-          <Text style={styles.distressQuestion}>How intense is your distress now?</Text>
+          <Text style={styles.distressQuestion}>{localizedText('How intense is your distress now?', '¿Que tan intenso es tu malestar ahora?')}</Text>
           <Text style={styles.distressValue}>{distressAfter}</Text>
           <View style={styles.distressScale}>
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(val => (
@@ -264,14 +267,14 @@ export default function DBTSkillScreen() {
             ))}
           </View>
           <View style={styles.distressLabels}>
-            <Text style={styles.distressLabel}>Low</Text>
-            <Text style={styles.distressLabel}>High</Text>
+            <Text style={styles.distressLabel}>{localizedText('Low', 'Bajo')}</Text>
+            <Text style={styles.distressLabel}>{localizedText('High', 'Alto')}</Text>
           </View>
           {distressBefore > distressAfter && (
             <View style={styles.distressReductionCard}>
               <TrendingDown size={16} color={Colors.success} />
               <Text style={styles.distressReductionText}>
-                Distress reduced by {distressBefore - distressAfter} point{distressBefore - distressAfter > 1 ? 's' : ''}
+                {localizedText(`Distress reduced by ${distressBefore - distressAfter} point${distressBefore - distressAfter > 1 ? 's' : ''}`, `El malestar bajo ${distressBefore - distressAfter} punto${distressBefore - distressAfter > 1 ? 's' : ''}`)}
               </Text>
             </View>
           )}
@@ -281,7 +284,7 @@ export default function DBTSkillScreen() {
             activeOpacity={0.7}
             testID="distress-after-continue"
           >
-            <Text style={styles.distressContinueText}>Continue</Text>
+            <Text style={styles.distressContinueText}>{localizedText('Continue', 'Continuar')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -295,8 +298,8 @@ export default function DBTSkillScreen() {
           <View style={[styles.feedbackIconCircle, { backgroundColor: module.bgColor }]}>
             <CheckCircle size={40} color={module.color} />
           </View>
-          <Text style={styles.feedbackTitle}>Did this help?</Text>
-          <Text style={styles.feedbackSubtitle}>Your feedback helps the app learn what works best for you</Text>
+          <Text style={styles.feedbackTitle}>{localizedText('Did this help?', '¿Esto ayudo?')}</Text>
+          <Text style={styles.feedbackSubtitle}>{localizedText('Your feedback helps the app learn what works best for you', 'Tu respuesta ayuda a la app a aprender que funciona mejor para ti')}</Text>
           <View style={styles.feedbackButtons}>
             <TouchableOpacity
               style={[styles.feedbackBtn, styles.feedbackBtnYes]}
@@ -305,7 +308,7 @@ export default function DBTSkillScreen() {
               testID="feedback-yes"
             >
               <ThumbsUp size={22} color={Colors.success} />
-              <Text style={[styles.feedbackBtnText, { color: Colors.success }]}>Yes, it helped</Text>
+              <Text style={[styles.feedbackBtnText, { color: Colors.success }]}>{localizedText('Yes, it helped', 'Si, ayudo')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.feedbackBtn, styles.feedbackBtnNo]}
@@ -314,7 +317,7 @@ export default function DBTSkillScreen() {
               testID="feedback-no"
             >
               <ThumbsDown size={22} color={Colors.textMuted} />
-              <Text style={[styles.feedbackBtnText, { color: Colors.textMuted }]}>Not this time</Text>
+              <Text style={[styles.feedbackBtnText, { color: Colors.textMuted }]}>{localizedText('Not this time', 'No esta vez')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -330,22 +333,22 @@ export default function DBTSkillScreen() {
           <View style={[styles.completedIcon, { backgroundColor: module.bgColor }]}>
             <CheckCircle size={48} color={module.color} />
           </View>
-          <Text style={styles.completedTitle}>Well Done</Text>
+          <Text style={styles.completedTitle}>{localizedText('Well Done', 'Bien hecho')}</Text>
           <Text style={styles.completedMessage}>
-            You completed {skill.title}. Every practice strengthens this skill.
+            {localizedText(`You completed ${skill.title}. Every practice strengthens this skill.`, `Completaste ${skill.title}. Cada practica fortalece esta habilidad.`)}
           </Text>
 
           {reduction > 0 && (
             <View style={styles.completedStatCard}>
               <TrendingDown size={18} color={Colors.success} />
               <Text style={styles.completedStatText}>
-                Distress went from {distressBefore} → {distressAfter} ({reduction > 0 ? '-' : ''}{reduction})
+                {localizedText(`Distress went from ${distressBefore} to ${distressAfter} (${reduction > 0 ? '-' : ''}${reduction})`, `El malestar paso de ${distressBefore} a ${distressAfter} (${reduction > 0 ? '-' : ''}${reduction})`)}
               </Text>
             </View>
           )}
 
           <Text style={styles.completedCount}>
-            Practiced {practiceCount + 1} time{practiceCount !== 0 ? 's' : ''} total
+            {localizedText(`Practiced ${practiceCount + 1} time${practiceCount !== 0 ? 's' : ''} total`, `Practicado ${practiceCount + 1} vez${practiceCount !== 0 ? 'ces' : ''} en total`)}
           </Text>
 
           <View style={styles.completedActions}>
@@ -355,14 +358,14 @@ export default function DBTSkillScreen() {
               activeOpacity={0.7}
             >
               <RotateCcw size={18} color={module.color} />
-              <Text style={[styles.completedBtnText, { color: module.color }]}>Practice Again</Text>
+              <Text style={[styles.completedBtnText, { color: module.color }]}>{localizedText('Practice Again', 'Practicar otra vez')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.completedBtn, { backgroundColor: module.color }]}
               onPress={handleFinish}
               activeOpacity={0.7}
             >
-              <Text style={[styles.completedBtnText, { color: Colors.white }]}>Done</Text>
+              <Text style={[styles.completedBtnText, { color: Colors.white }]}>{localizedText('Done', 'Listo')}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -389,7 +392,7 @@ export default function DBTSkillScreen() {
             {practiceMode === 'quick' && (
               <View style={styles.quickBadge}>
                 <Zap size={10} color={Colors.white} />
-                <Text style={styles.quickBadgeText}>Quick</Text>
+                <Text style={styles.quickBadgeText}>{localizedText('Quick', 'Rapida')}</Text>
               </View>
             )}
           </View>
@@ -435,7 +438,7 @@ export default function DBTSkillScreen() {
                 onPress={handlePrevStep}
                 activeOpacity={0.7}
               >
-                <Text style={styles.prevBtnText}>Back</Text>
+                <Text style={styles.prevBtnText}>{localizedText('Back', 'Atras')}</Text>
               </TouchableOpacity>
             ) : (
               <View style={styles.prevBtnPlaceholder} />
@@ -447,7 +450,7 @@ export default function DBTSkillScreen() {
               testID="next-step-btn"
             >
               <Text style={styles.nextBtnText}>
-                {currentStep < activeSteps.length - 1 ? 'Next' : 'Complete'}
+                {currentStep < activeSteps.length - 1 ? localizedText('Next', 'Siguiente') : localizedText('Complete', 'Completar')}
               </Text>
               <ChevronRight size={18} color={Colors.white} />
             </TouchableOpacity>
@@ -505,7 +508,7 @@ export default function DBTSkillScreen() {
             {practiceCount > 0 && (
               <View style={styles.metaItem}>
                 <CheckCircle size={14} color={Colors.success} />
-                <Text style={styles.metaText}>{practiceCount}x practiced</Text>
+                <Text style={styles.metaText}>{localizedText(`${practiceCount}x practiced`, `${practiceCount}x practicado`)}</Text>
               </View>
             )}
           </View>
@@ -514,10 +517,10 @@ export default function DBTSkillScreen() {
             <View style={styles.insightCard}>
               <View style={styles.insightHeader}>
                 <TrendingDown size={14} color={Colors.success} />
-                <Text style={styles.insightTitle}>Your Stats</Text>
+                <Text style={styles.insightTitle}>{localizedText('Your Stats', 'Tus estadisticas')}</Text>
               </View>
               <Text style={styles.insightText}>
-                Avg distress reduction: {insightData.avgDistressReduction > 0 ? '-' : ''}{insightData.avgDistressReduction} points across {insightData.totalUses} practices
+                {localizedText(`Avg distress reduction: ${insightData.avgDistressReduction > 0 ? '-' : ''}${insightData.avgDistressReduction} points across ${insightData.totalUses} practices`, `Reduccion promedio de malestar: ${insightData.avgDistressReduction > 0 ? '-' : ''}${insightData.avgDistressReduction} puntos en ${insightData.totalUses} practicas`)}
               </Text>
             </View>
           )}
@@ -525,7 +528,7 @@ export default function DBTSkillScreen() {
           <Text style={styles.detailDesc}>{skill.description}</Text>
 
           <View style={styles.detailSection}>
-            <Text style={styles.detailSectionTitle}>Steps</Text>
+            <Text style={styles.detailSectionTitle}>{localizedText('Steps', 'Pasos')}</Text>
             {skill.steps.map((step, i) => (
               <View key={i} style={styles.stepPreview}>
                 <View style={[styles.stepPreviewNum, { backgroundColor: module.bgColor }]}>
@@ -540,7 +543,7 @@ export default function DBTSkillScreen() {
           </View>
 
           <View style={styles.detailSection}>
-            <Text style={styles.detailSectionTitle}>When to Use</Text>
+            <Text style={styles.detailSectionTitle}>{localizedText('When to Use', 'Cuando usarla')}</Text>
             {skill.whenToUse.map((item, i) => (
               <View key={i} style={styles.whenItem}>
                 <View style={styles.whenDot} />
@@ -559,7 +562,7 @@ export default function DBTSkillScreen() {
               testID="start-practice-btn"
             >
               <BookOpen size={18} color={Colors.white} />
-              <Text style={styles.startBtnText}>Full Practice</Text>
+              <Text style={styles.startBtnText}>{localizedText('Full Practice', 'Practica completa')}</Text>
             </TouchableOpacity>
             {hasQuickMode && (
               <TouchableOpacity
@@ -569,7 +572,7 @@ export default function DBTSkillScreen() {
                 testID="start-quick-btn"
               >
                 <Zap size={18} color={module.color} />
-                <Text style={[styles.quickStartBtnText, { color: module.color }]}>Quick</Text>
+                <Text style={[styles.quickStartBtnText, { color: module.color }]}>{localizedText('Quick', 'Rapida')}</Text>
               </TouchableOpacity>
             )}
           </View>

@@ -25,6 +25,8 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { getCoachModuleById, generateSessionInsight, getSkillForModule } from '@/services/coach/coachService';
 import {
   startModule,
@@ -38,6 +40,7 @@ export default function LearningCoachScreen() {
   const { moduleId } = useLocalSearchParams<{ moduleId: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  useLanguage();
   const { trackEvent } = useAnalytics();
   const scrollRef = useRef<ScrollView>(null);
 
@@ -224,20 +227,20 @@ export default function LearningCoachScreen() {
             <View style={[styles.completionIconWrap, { backgroundColor: (categoryMeta?.color ?? Colors.primary) + '20' }]}>
               <CheckCircle2 size={40} color={categoryMeta?.color ?? Colors.primary} />
             </View>
-            <Text style={styles.completionTitle}>Session Complete</Text>
+            <Text style={styles.completionTitle}>{localizedText('Session Complete', 'Sesión completada')}</Text>
             <Text style={styles.completionModuleTitle}>{coachModule.title}</Text>
 
             <View style={[styles.insightCard, { borderLeftColor: categoryMeta?.color ?? Colors.primary }]}>
               <View style={styles.insightHeader}>
                 <Sparkles size={16} color={categoryMeta?.color ?? Colors.primary} />
-                <Text style={[styles.insightLabel, { color: categoryMeta?.color ?? Colors.primary }]}>Your Insight</Text>
+                <Text style={[styles.insightLabel, { color: categoryMeta?.color ?? Colors.primary }]}>{localizedText('Your Insight', 'Tu insight')}</Text>
               </View>
               <Text style={styles.insightText}>{insightText}</Text>
             </View>
 
             {getSkillForModule(coachModule.id) && (
               <View style={styles.skillBadge}>
-                <Text style={styles.skillBadgeLabel}>Skill Practiced</Text>
+                <Text style={styles.skillBadgeLabel}>{localizedText('Skill Practiced', 'Habilidad practicada')}</Text>
                 <Text style={[styles.skillBadgeValue, { color: categoryMeta?.color ?? Colors.primary }]}>
                   {getSkillForModule(coachModule.id)}
                 </Text>
@@ -246,7 +249,7 @@ export default function LearningCoachScreen() {
 
             {Object.keys(responses).length > 0 && (
               <View style={styles.reflectionSummary}>
-                <Text style={styles.reflectionSummaryTitle}>Your Reflections</Text>
+                <Text style={styles.reflectionSummaryTitle}>{localizedText('Your Reflections', 'Tus reflexiones')}</Text>
                 {Object.entries(responses).map(([stepId, response]) => {
                   const step = coachModule.steps.find(s => s.id === stepId);
                   return (
@@ -264,11 +267,11 @@ export default function LearningCoachScreen() {
               onPress={handleViewProgress}
               testID="coach-view-progress"
             >
-              <Text style={styles.primaryButtonText}>View Learning Progress</Text>
+              <Text style={styles.primaryButtonText}>{localizedText('View Learning Progress', 'Ver progreso de aprendizaje')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.secondaryButton} onPress={handleClose} testID="coach-done">
-              <Text style={styles.secondaryButtonText}>Done</Text>
+              <Text style={styles.secondaryButtonText}>{localizedText('Done', 'Listo')}</Text>
             </TouchableOpacity>
           </Animated.View>
         </ScrollView>
@@ -327,7 +330,7 @@ export default function LearningCoachScreen() {
             <View style={[styles.exerciseCard, { borderLeftColor: categoryMeta?.color ?? Colors.primary }]}>
               <View style={styles.exerciseHeader}>
                 <Sparkles size={14} color={categoryMeta?.color ?? Colors.primary} />
-                <Text style={[styles.exerciseLabel, { color: categoryMeta?.color ?? Colors.primary }]}>Try This</Text>
+                <Text style={[styles.exerciseLabel, { color: categoryMeta?.color ?? Colors.primary }]}>{localizedText('Try This', 'Prueba esto')}</Text>
               </View>
               <Text style={styles.exerciseText}>{currentStep.optionalExercise}</Text>
             </View>
@@ -344,7 +347,7 @@ export default function LearningCoachScreen() {
               <Text style={styles.reflectionQuestionText}>{currentStep.reflectionQuestion}</Text>
               <TextInput
                 style={styles.reflectionInput}
-                placeholder="Take a moment to reflect..."
+                placeholder={localizedText('Take a moment to reflect...', 'Tómate un momento para reflexionar...')}
                 placeholderTextColor={Colors.textMuted}
                 value={currentResponse}
                 onChangeText={setCurrentResponse}

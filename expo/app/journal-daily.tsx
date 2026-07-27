@@ -15,6 +15,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { X, Sun, Moon, ChevronRight, Check } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { useJournal } from '@/providers/JournalProvider';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
 import { JOURNAL_EMOTIONS } from '@/types/journalEntry';
@@ -31,6 +33,7 @@ const ACTIVATION_LABELS = ['Very calm', '', 'Calm', '', 'Moderate', '', 'Activat
 export default function JournalDailyScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  useLanguage();
   const params = useLocalSearchParams<{ type?: string }>();
   const { addDailyReflection } = useJournal();
   const { trackEvent } = useAnalytics();
@@ -139,7 +142,7 @@ export default function JournalDailyScreen() {
               : 'Reflecting on your day builds emotional awareness over time.'}
           </Text>
           <TouchableOpacity style={styles.doneBtn} onPress={() => router.back()}>
-            <Text style={styles.doneBtnText}>Done</Text>
+            <Text style={styles.doneBtnText}>{localizedText('Done', 'Listo')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -259,7 +262,7 @@ export default function JournalDailyScreen() {
                   style={styles.textInput}
                   value={text}
                   onChangeText={setText}
-                  placeholder="Write whatever comes to mind..."
+                  placeholder={localizedText('Write whatever comes to mind...', 'Escribe lo que venga a tu mente...')}
                   placeholderTextColor={Colors.textMuted}
                   multiline
                   textAlignVertical="top"
@@ -296,7 +299,7 @@ export default function JournalDailyScreen() {
                   style={styles.intentionInput}
                   value={intention}
                   onChangeText={setIntention}
-                  placeholder="Or type your own..."
+                  placeholder={localizedText('Or type your own...', 'O escribe el tuyo...')}
                   placeholderTextColor={Colors.textMuted}
                 />
               </View>
@@ -304,13 +307,13 @@ export default function JournalDailyScreen() {
 
             {step === 3 && !isMorning && (
               <View style={styles.stepContent}>
-                <Text style={styles.promptText}>Was there a moment you're proud of?</Text>
+                <Text style={styles.promptText}>{localizedText("Was there a moment you're proud of?", '¿Hubo un momento del que te sientas orgulloso/a?')}</Text>
                 <Text style={styles.promptSub}>Even small moments count</Text>
                 <TextInput
                   style={styles.textInput}
                   value={proudMoment}
                   onChangeText={setProudMoment}
-                  placeholder="I'm proud that I..."
+                  placeholder={localizedText("I'm proud that I...", 'Me siento orgullosa/o de que...')}
                   placeholderTextColor={Colors.textMuted}
                   multiline
                   textAlignVertical="top"
@@ -335,14 +338,14 @@ export default function JournalDailyScreen() {
               onPress={handleSave}
             >
               <Check size={18} color={Colors.white} />
-              <Text style={styles.saveBtnText}>Save</Text>
+              <Text style={styles.saveBtnText}>{localizedText('Save', 'Guardar')}</Text>
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
               style={[styles.nextBtn, { backgroundColor: isMorning ? '#67E8F9' : '#2E2A72' }]}
               onPress={goNext}
             >
-              <Text style={styles.nextBtnText}>Next</Text>
+              <Text style={styles.nextBtnText}>{localizedText('Next', 'Siguiente')}</Text>
               <ChevronRight size={18} color={Colors.white} />
             </TouchableOpacity>
           )}

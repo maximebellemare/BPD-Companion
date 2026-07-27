@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { RefreshCw, AlertTriangle } from 'lucide-react-native';
 import Colors from '@/constants/colors';
+import { localizedText } from '@/lib/i18n/staticText';
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -62,14 +63,17 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
               <AlertTriangle size={36} color={Colors.accent} />
             </View>
 
-            <Text style={styles.title}>Something went wrong</Text>
+            <Text style={styles.title}>{localizedText('Something went wrong', 'Algo salió mal')}</Text>
             <Text style={styles.description}>
-              An unexpected error occurred. This has been noted and we'll look into it.
+              {localizedText(
+                "An unexpected error occurred. This has been noted and we'll look into it.",
+                'Ocurrió un error inesperado. Lo registramos y lo revisaremos.',
+              )}
             </Text>
 
             {this.state.error && (
               <View style={styles.errorBox}>
-                <Text style={styles.errorLabel}>Error Details</Text>
+                <Text style={styles.errorLabel}>{localizedText('Error Details', 'Detalles del error')}</Text>
                 <Text style={styles.errorText} numberOfLines={4}>
                   {this.state.error.message}
                 </Text>
@@ -83,11 +87,14 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
               testID="error-retry-btn"
             >
               <RefreshCw size={18} color={Colors.white} />
-              <Text style={styles.retryBtnText}>Try Again</Text>
+              <Text style={styles.retryBtnText}>{localizedText('Try Again', 'Intentar de nuevo')}</Text>
             </TouchableOpacity>
 
             <Text style={styles.helpText}>
-              If this keeps happening, try restarting the app or contact support.
+              {localizedText(
+                'If this keeps happening, try restarting the app or contact support.',
+                'Si esto sigue ocurriendo, intenta reiniciar la app o contacta a soporte.',
+              )}
             </Text>
           </ScrollView>
         </View>

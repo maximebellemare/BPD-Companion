@@ -11,12 +11,15 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Heart, Shield } from 'lucide-react-native';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { COMMUNITY_GUIDELINES } from '@/constants/community';
 
 const GUIDE_ICONS = ['💛', '🫧', '🩺', '⚠️', '🚫', '🛡', '🚩', '🙅'];
 
 export default function GuidelinesScreen() {
   const router = useRouter();
+  useLanguage();
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -38,7 +41,7 @@ export default function GuidelinesScreen() {
           >
             <ArrowLeft size={20} color={Colors.text} />
           </TouchableOpacity>
-          <Text style={styles.navTitle}>Community Guidelines</Text>
+          <Text style={styles.navTitle}>{localizedText('Community Guidelines', 'Normas de la comunidad')}</Text>
           <View style={styles.backBtn} />
         </View>
       </SafeAreaView>
@@ -54,11 +57,12 @@ export default function GuidelinesScreen() {
               <Heart size={22} color={Colors.primary} fill={Colors.primary} />
               <Shield size={22} color={Colors.primary} />
             </View>
-            <Text style={styles.heroTitle}>Our shared agreement</Text>
+            <Text style={styles.heroTitle}>{localizedText('Our shared agreement', 'Nuestro acuerdo compartido')}</Text>
             <Text style={styles.heroText}>
-              This community exists because people with BPD deserve a space where they
-              feel safe, understood, and never judged. These guidelines help us protect
-              that space together.
+              {localizedText(
+                'This community exists because people with BPD deserve a space where they feel safe, understood, and never judged. These guidelines help us protect that space together.',
+                'Esta comunidad existe porque las personas con TLP merecen un espacio donde se sientan seguras, comprendidas y sin juicio. Estas normas nos ayudan a cuidar ese espacio juntas.',
+              )}
             </Text>
           </View>
 
@@ -76,8 +80,10 @@ export default function GuidelinesScreen() {
           <View style={styles.footerCard}>
             <Text style={styles.footerEmoji}>🌿</Text>
             <Text style={styles.footerText}>
-              By participating in this community, you agree to uphold these guidelines
-              and help create a space where everyone can heal and grow together.
+              {localizedText(
+                'By participating in this community, you agree to uphold these guidelines and help create a space where everyone can heal and grow together.',
+                'Al participar en esta comunidad, aceptas respetar estas normas y ayudar a crear un espacio donde todas las personas puedan sanar y crecer juntas.',
+              )}
             </Text>
           </View>
 

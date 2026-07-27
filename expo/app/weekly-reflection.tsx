@@ -45,6 +45,8 @@ import {
   getWeeklyDiscoveryItems,
   WeeklyDiscoveryItem,
 } from '@/services/insights/weeklyDiscoveriesService';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 function getConfidenceColor(confidence: WeeklyDiscoveryItem['confidence']) {
   if (confidence === 'high') return Colors.success;
@@ -53,6 +55,7 @@ function getConfidenceColor(confidence: WeeklyDiscoveryItem['confidence']) {
 }
 
 function WeeklyDiscoveryCard({ item }: { item: WeeklyDiscoveryItem }) {
+  useLanguage();
   const confidenceColor = getConfidenceColor(item.confidence);
   return (
     <View style={styles.discoveryCard}>
@@ -60,7 +63,7 @@ function WeeklyDiscoveryCard({ item }: { item: WeeklyDiscoveryItem }) {
         <Text style={styles.discoveryLabel}>{item.label}</Text>
         <View style={[styles.confidencePill, { borderColor: confidenceColor }]}>
           <Text style={[styles.confidenceText, { color: confidenceColor }]}>
-            {item.confidence} confidence
+            {localizedText(`${item.confidence} confidence`, `${item.confidence === 'high' ? 'alta' : item.confidence === 'medium' ? 'media' : 'baja'} confianza`)}
           </Text>
         </View>
       </View>
@@ -77,6 +80,7 @@ function WeeklyDiscoveryCard({ item }: { item: WeeklyDiscoveryItem }) {
 export default function WeeklyReflectionScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { language } = useLanguage();
   const { journalEntries, messageDrafts } = useApp();
   const { trackEvent } = useAnalytics();
   const [selectedFeedback, setSelectedFeedback] = useState<ReflectionFeedback | null>(null);
@@ -151,7 +155,10 @@ export default function WeeklyReflectionScreen() {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     const discoverySummary = weeklyDiscoveryItems
-      .map(item => `${item.label}: ${item.title}. ${item.body} Why it was generated: ${item.why}`)
+      .map(item => localizedText(
+        `${item.label}: ${item.title}. ${item.body} Why it was generated: ${item.why}`,
+        `${item.label}: ${item.title}. ${item.body} Por qué se generó: ${item.why}`,
+      ))
       .join('\n\n');
     trackEvent('weekly_discovery_discuss_tapped', {
       entry_count: weeklyDiscoveries.weekEntryCount,
@@ -159,10 +166,12 @@ export default function WeeklyReflectionScreen() {
     router.push({
       pathname: '/(tabs)/companion/chat',
       params: {
-        initialMessage: `I want to discuss my Weekly Discovery. Please help me understand it gently and choose one useful next step.\n\n${discoverySummary}`,
+        initialMessage: language === 'es'
+          ? `Quiero hablar sobre mi descubrimiento semanal. Ayúdame a entenderlo con cuidado y a elegir un siguiente paso útil.\n\n${discoverySummary}`
+          : `I want to discuss my Weekly Discovery. Please help me understand it gently and choose one useful next step.\n\n${discoverySummary}`,
       },
     } as never);
-  }, [router, trackEvent, weeklyDiscoveries.weekEntryCount, weeklyDiscoveryItems]);
+  }, [language, router, trackEvent, weeklyDiscoveries.weekEntryCount, weeklyDiscoveryItems]);
 
   const handleClose = useCallback(() => {
     if (Platform.OS !== 'web') {
@@ -196,16 +205,19 @@ export default function WeeklyReflectionScreen() {
           <View style={styles.emptyIconWrap}>
             <BookOpen size={40} color={Colors.primary} />
           </View>
-          <Text style={styles.emptyTitle}>Your Reflection Is Building</Text>
+          <Text style={styles.emptyTitle}>{localizedText('Your Reflection Is Building', 'Tu reflexión se está formando')}</Text>
           <Text style={styles.emptyText}>
-            As you check in more throughout the week, your reflection will become richer and more personalized. Even small check-ins count.
+            {localizedText(
+              'As you check in more throughout the week, your reflection will become richer and more personalized. Even small check-ins count.',
+              'Mientras hagas más check-ins durante la semana, tu reflexión será más rica y personalizada. Incluso los check-ins pequeños cuentan.',
+            )}
           </Text>
           <TouchableOpacity
             style={styles.emptyAction}
             onPress={() => router.push('/check-in')}
             activeOpacity={0.7}
           >
-            <Text style={styles.emptyActionText}>Start a Check-In</Text>
+            <Text style={styles.emptyActionText}>{localizedText('Start a Check-In', 'Iniciar check-in')}</Text>
             <ArrowRight size={16} color={Colors.white} />
           </TouchableOpacity>
         </View>
@@ -236,11 +248,14 @@ export default function WeeklyReflectionScreen() {
             <Calendar size={14} color={Colors.primary} />
             <Text style={styles.headerBadgeText}>{reflection.weekLabel}</Text>
           </View>
-          <Text style={styles.headerTitle}>Weekly Reflection</Text>
+          <Text style={styles.headerTitle}>{localizedText('Weekly Reflection', 'Reflexión semanal')}</Text>
           <Text style={styles.openingNarrative}>{reflection.openingNarrative}</Text>
           <PremiumInlinePrompt
             feature="weekly_reflection"
-            message="Start membership for full weekly reflections and personalized growth insights."
+            message={localizedText(
+              'Start membership for full weekly reflections and personalized growth insights.',
+              'Inicia tu membresía para acceder a reflexiones semanales completas e insights personalizados de crecimiento.',
+            )}
           />
         </Animated.View>
 
@@ -250,9 +265,12 @@ export default function WeeklyReflectionScreen() {
               <Lightbulb size={18} color={Colors.primary} />
             </View>
             <View style={styles.discoveryHeaderText}>
-              <Text style={styles.sectionTitle}>Weekly Discoveries</Text>
+              <Text style={styles.sectionTitle}>{localizedText('Weekly Discoveries', 'Descubrimientos semanales')}</Text>
               <Text style={styles.discoverySubtitle}>
-                Generated from {weeklyDiscoveries.weekEntryCount} check-in{weeklyDiscoveries.weekEntryCount === 1 ? '' : 's'} and {weeklyDiscoveries.weekDraftCount} message moment{weeklyDiscoveries.weekDraftCount === 1 ? '' : 's'} this week.
+                {localizedText(
+                  `Generated from ${weeklyDiscoveries.weekEntryCount} check-in${weeklyDiscoveries.weekEntryCount === 1 ? '' : 's'} and ${weeklyDiscoveries.weekDraftCount} message moment${weeklyDiscoveries.weekDraftCount === 1 ? '' : 's'} this week.`,
+                  `Generado a partir de ${weeklyDiscoveries.weekEntryCount} check-in${weeklyDiscoveries.weekEntryCount === 1 ? '' : 's'} y ${weeklyDiscoveries.weekDraftCount} momento${weeklyDiscoveries.weekDraftCount === 1 ? '' : 's'} de mensajes esta semana.`,
+                )}
               </Text>
             </View>
           </View>
@@ -271,7 +289,7 @@ export default function WeeklyReflectionScreen() {
               testID="discuss-weekly-discovery"
             >
               <MessageCircle size={16} color={Colors.primary} />
-              <Text style={styles.discoveryActionText}>Discuss</Text>
+              <Text style={styles.discoveryActionText}>{localizedText('Discuss', 'Conversar')}</Text>
             </TouchableOpacity>
           </View>
         </Animated.View>
@@ -282,7 +300,7 @@ export default function WeeklyReflectionScreen() {
             <View style={[styles.sectionIconWrap, { backgroundColor: '#FFFFFF' }]}>
               <Heart size={18} color="#3B82F6" />
             </View>
-            <Text style={styles.sectionTitle}>This Week's Emotional Landscape</Text>
+            <Text style={styles.sectionTitle}>{localizedText("This Week's Emotional Landscape", 'Paisaje emocional de esta semana')}</Text>
           </View>
 
           <Text style={styles.narrativeText}>{reflection.emotionalLandscape.narrative}</Text>
@@ -306,7 +324,7 @@ export default function WeeklyReflectionScreen() {
 
           {reflection.emotionalLandscape.keyTriggers.length > 0 && (
             <View style={styles.triggersSection}>
-              <Text style={styles.subLabel}>Key Triggers</Text>
+              <Text style={styles.subLabel}>{localizedText('Key Triggers', 'Detonantes clave')}</Text>
               <View style={styles.triggersList}>
                 {reflection.emotionalLandscape.keyTriggers.map((trigger, i) => (
                   <View key={i} style={styles.triggerTag}>
@@ -319,19 +337,22 @@ export default function WeeklyReflectionScreen() {
           )}
 
           <View style={styles.intensityRow}>
-            <Text style={styles.intensityLabel}>Intensity trend</Text>
+            <Text style={styles.intensityLabel}>{localizedText('Intensity trend', 'Tendencia de intensidad')}</Text>
             <View style={styles.intensityValue}>
               {getIntensityTrendIcon(reflection.emotionalLandscape.intensityTrend)}
               <Text style={styles.intensityText}>
-                {reflection.emotionalLandscape.intensityTrend === 'decreasing' ? 'Softening' :
-                  reflection.emotionalLandscape.intensityTrend === 'increasing' ? 'Rising' : 'Steady'}
+                {reflection.emotionalLandscape.intensityTrend === 'decreasing'
+                  ? localizedText('Softening', 'Se suaviza')
+                  : reflection.emotionalLandscape.intensityTrend === 'increasing'
+                    ? localizedText('Rising', 'En aumento')
+                    : localizedText('Steady', 'Estable')}
               </Text>
             </View>
           </View>
 
           {reflection.emotionalLandscape.peakDay && (
             <View style={styles.peakDayRow}>
-              <Text style={styles.peakDayLabel}>Peak day</Text>
+              <Text style={styles.peakDayLabel}>{localizedText('Peak day', 'Día más intenso')}</Text>
               <Text style={styles.peakDayValue}>{reflection.emotionalLandscape.peakDay}</Text>
             </View>
           )}
@@ -343,14 +364,14 @@ export default function WeeklyReflectionScreen() {
             <View style={[styles.sectionIconWrap, { backgroundColor: '#FFFFFF' }]}>
               <MessageCircle size={18} color="#3B82F6" />
             </View>
-            <Text style={styles.sectionTitle}>Relationship Patterns</Text>
+            <Text style={styles.sectionTitle}>{localizedText('Relationship Patterns', 'Patrones relacionales')}</Text>
           </View>
 
           <Text style={styles.narrativeText}>{reflection.relationshipReflection.narrative}</Text>
 
           {reflection.relationshipReflection.communicationThemes.length > 0 && (
             <View style={styles.themesList}>
-              <Text style={styles.subLabel}>Communication Themes</Text>
+              <Text style={styles.subLabel}>{localizedText('Communication Themes', 'Temas de comunicación')}</Text>
               {reflection.relationshipReflection.communicationThemes.map((theme, i) => (
                 <View key={i} style={styles.themeItem}>
                   <View style={styles.themeDot} />
@@ -372,11 +393,13 @@ export default function WeeklyReflectionScreen() {
           )}
 
           <View style={styles.pauseGrowthCard}>
-            <Text style={styles.pauseGrowthLabel}>Message pauses</Text>
+            <Text style={styles.pauseGrowthLabel}>{localizedText('Message pauses', 'Pausas antes de enviar')}</Text>
             <View style={styles.pauseGrowthValues}>
               <Text style={styles.pauseGrowthThis}>{reflection.relationshipReflection.pauseGrowth.thisWeek}</Text>
-              <Text style={styles.pauseGrowthVs}>vs</Text>
-              <Text style={styles.pauseGrowthLast}>{reflection.relationshipReflection.pauseGrowth.lastWeek} last week</Text>
+              <Text style={styles.pauseGrowthVs}>{localizedText('vs', 'vs')}</Text>
+              <Text style={styles.pauseGrowthLast}>
+                {localizedText(`${reflection.relationshipReflection.pauseGrowth.lastWeek} last week`, `${reflection.relationshipReflection.pauseGrowth.lastWeek} la semana pasada`)}
+              </Text>
             </View>
           </View>
         </Animated.View>
@@ -387,7 +410,7 @@ export default function WeeklyReflectionScreen() {
             <View style={[styles.sectionIconWrap, { backgroundColor: Colors.successLight }]}>
               <Shield size={18} color={Colors.success} />
             </View>
-            <Text style={styles.sectionTitle}>What Helped</Text>
+            <Text style={styles.sectionTitle}>{localizedText('What Helped', 'Lo que ayudó')}</Text>
           </View>
 
           <Text style={styles.narrativeText}>{reflection.whatHelped.narrative}</Text>
@@ -410,7 +433,7 @@ export default function WeeklyReflectionScreen() {
 
           {reflection.whatHelped.helpfulPractices.length > 0 && (
             <View style={styles.practicesList}>
-              <Text style={styles.subLabel}>Helpful Practices</Text>
+              <Text style={styles.subLabel}>{localizedText('Helpful Practices', 'Prácticas útiles')}</Text>
               {reflection.whatHelped.helpfulPractices.map((practice, i) => (
                 <View key={i} style={styles.practiceItem}>
                   <View style={styles.practiceCheck}>
@@ -430,7 +453,7 @@ export default function WeeklyReflectionScreen() {
               <View style={[styles.sectionIconWrap, { backgroundColor: '#FFFFFF' }]}>
                 <AlertTriangle size={18} color="#3B82F6" />
               </View>
-              <Text style={styles.sectionTitle}>What Made Things Harder</Text>
+              <Text style={styles.sectionTitle}>{localizedText('What Made Things Harder', 'Lo que hizo todo más difícil')}</Text>
             </View>
 
             <Text style={styles.narrativeText}>{reflection.whatEscalated.narrative}</Text>
@@ -447,13 +470,13 @@ export default function WeeklyReflectionScreen() {
                 {reflection.whatEscalated.highDistressMoments > 0 && (
                   <View style={styles.escalationStat}>
                     <Text style={styles.escalationStatValue}>{reflection.whatEscalated.highDistressMoments}</Text>
-                    <Text style={styles.escalationStatLabel}>high distress{"\n"}moments</Text>
+                    <Text style={styles.escalationStatLabel}>{localizedText('high distress\nmoments', 'momentos de\nmalestar alto')}</Text>
                   </View>
                 )}
                 {reflection.whatEscalated.missedPauses > 0 && (
                   <View style={styles.escalationStat}>
                     <Text style={styles.escalationStatValue}>{reflection.whatEscalated.missedPauses}</Text>
-                    <Text style={styles.escalationStatLabel}>sent without{"\n"}pausing</Text>
+                    <Text style={styles.escalationStatLabel}>{localizedText('sent without\npausing', 'enviado sin\npausar')}</Text>
                   </View>
                 )}
               </View>
@@ -467,7 +490,7 @@ export default function WeeklyReflectionScreen() {
             <View style={[styles.sectionIconWrap, { backgroundColor: '#FFFFFF' }]}>
               <Sparkles size={18} color="#67E8F9" />
             </View>
-            <Text style={styles.sectionTitle}>Growth Signals</Text>
+            <Text style={styles.sectionTitle}>{localizedText('Growth Signals', 'Señales de crecimiento')}</Text>
           </View>
 
           <Text style={styles.narrativeText}>{reflection.growthSignals.narrative}</Text>
@@ -488,7 +511,7 @@ export default function WeeklyReflectionScreen() {
 
           {reflection.growthSignals.awarenessGains.length > 0 && (
             <View style={styles.gainsList}>
-              <Text style={styles.subLabel}>Awareness</Text>
+              <Text style={styles.subLabel}>{localizedText('Awareness', 'Conciencia')}</Text>
               {reflection.growthSignals.awarenessGains.map((gain, i) => (
                 <Text key={i} style={styles.gainText}>• {gain}</Text>
               ))}
@@ -497,7 +520,7 @@ export default function WeeklyReflectionScreen() {
 
           {reflection.growthSignals.communicationWins.length > 0 && (
             <View style={styles.gainsList}>
-              <Text style={styles.subLabel}>Communication</Text>
+              <Text style={styles.subLabel}>{localizedText('Communication', 'Comunicación')}</Text>
               {reflection.growthSignals.communicationWins.map((win, i) => (
                 <Text key={i} style={styles.gainText}>• {win}</Text>
               ))}
@@ -511,11 +534,11 @@ export default function WeeklyReflectionScreen() {
             <View style={[styles.sectionIconWrap, { backgroundColor: Colors.primaryLight }]}>
               <Target size={18} color={Colors.primary} />
             </View>
-            <Text style={styles.sectionTitle}>Next Week's Gentle Focus</Text>
+            <Text style={styles.sectionTitle}>{localizedText("Next Week's Gentle Focus", 'Enfoque amable para la próxima semana')}</Text>
           </View>
 
           <View style={styles.focusTheme}>
-            <Text style={styles.focusThemeLabel}>Theme</Text>
+            <Text style={styles.focusThemeLabel}>{localizedText('Theme', 'Tema')}</Text>
             <Text style={styles.focusThemeValue}>{reflection.nextWeekFocus.suggestedTheme}</Text>
             <Text style={styles.focusThemeReason}>{reflection.nextWeekFocus.themeReason}</Text>
           </View>
@@ -564,8 +587,8 @@ export default function WeeklyReflectionScreen() {
               <FileText size={18} color={Colors.primaryDark} />
             </View>
             <View style={styles.reportLinkContent}>
-              <Text style={styles.reportLinkTitle}>Therapist Report</Text>
-              <Text style={styles.reportLinkDesc}>View structured summary for your therapist</Text>
+              <Text style={styles.reportLinkTitle}>{localizedText('Therapist Report', 'Informe para terapeuta')}</Text>
+              <Text style={styles.reportLinkDesc}>{localizedText('View structured summary for your therapist', 'Ver resumen estructurado para tu terapeuta')}</Text>
             </View>
             <ChevronRight size={16} color={Colors.textMuted} />
           </TouchableOpacity>
@@ -573,7 +596,7 @@ export default function WeeklyReflectionScreen() {
 
         {/* Feedback */}
         <Animated.View style={[styles.feedbackSection, { opacity: slideOpacities[7], transform: [{ translateY: slideAnims[7] }] }]}>
-          <Text style={styles.feedbackTitle}>How does this feel?</Text>
+          <Text style={styles.feedbackTitle}>{localizedText('How does this feel?', '¿Cómo se siente esto?')}</Text>
           <View style={styles.feedbackRow}>
             <TouchableOpacity
               style={[
@@ -592,7 +615,7 @@ export default function WeeklyReflectionScreen() {
                 styles.feedbackButtonText,
                 selectedFeedback === 'accurate' && styles.feedbackButtonTextActive,
               ]}>
-                Feels accurate
+                {localizedText('Feels accurate', 'Se siente acertado')}
               </Text>
             </TouchableOpacity>
 
@@ -613,7 +636,7 @@ export default function WeeklyReflectionScreen() {
                 styles.feedbackButtonText,
                 selectedFeedback === 'saved' && styles.feedbackButtonTextActive,
               ]}>
-                Save this
+                {localizedText('Save this', 'Guardar esto')}
               </Text>
             </TouchableOpacity>
 
@@ -634,7 +657,7 @@ export default function WeeklyReflectionScreen() {
                 styles.feedbackButtonText,
                 selectedFeedback === 'discuss' && styles.feedbackButtonTextActive,
               ]}>
-                Discuss with AI
+                {localizedText('Discuss with AI', 'Conversar con IA')}
               </Text>
             </TouchableOpacity>
           </View>

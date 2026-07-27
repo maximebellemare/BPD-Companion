@@ -58,6 +58,8 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useTherapyPlan } from '@/hooks/useTherapyPlan';
 import { FOCUS_AREA_META, TherapyPlanItem } from '@/types/therapy';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 const ICON_MAP: Record<string, React.ComponentType<{ size: number; color: string }>> = {
   Heart, Shield, Users, Eye, Sparkles, HeartHandshake, BookOpen, Anchor, Wind,
@@ -97,6 +99,7 @@ function TypeBadge({ type }: { type: TherapyPlanItem['type'] }) {
 
 export default function TherapyPlanScreen() {
   const router = useRouter();
+  useLanguage();
   const { plan, isLoading, isGenerating, progress, regeneratePlan, toggleItemCompleted } = useTherapyPlan();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -154,10 +157,10 @@ export default function TherapyPlanScreen() {
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <Stack.Screen options={{ title: 'Therapy Plan', headerStyle: { backgroundColor: Colors.background }, headerTintColor: Colors.text }} />
+        <Stack.Screen options={{ title: localizedText('Therapy Plan', 'Plan terapéutico'), headerStyle: { backgroundColor: Colors.background }, headerTintColor: Colors.text }} />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary} />
-          <Text style={styles.loadingText}>Loading your plan...</Text>
+          <Text style={styles.loadingText}>{localizedText('Loading your plan...', 'Cargando tu plan...')}</Text>
         </View>
       </View>
     );
@@ -166,14 +169,17 @@ export default function TherapyPlanScreen() {
   if (!plan) {
     return (
       <View style={styles.container}>
-        <Stack.Screen options={{ title: 'Therapy Plan', headerStyle: { backgroundColor: Colors.background }, headerTintColor: Colors.text }} />
+        <Stack.Screen options={{ title: localizedText('Therapy Plan', 'Plan terapéutico'), headerStyle: { backgroundColor: Colors.background }, headerTintColor: Colors.text }} />
         <Animated.View style={[styles.emptyState, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
           <View style={styles.emptyIcon}>
             <Calendar size={40} color={Colors.primary} />
           </View>
-          <Text style={styles.emptyTitle}>Your Adaptive Therapy Plan</Text>
+          <Text style={styles.emptyTitle}>{localizedText('Your Adaptive Therapy Plan', 'Tu plan terapéutico adaptable')}</Text>
           <Text style={styles.emptyDesc}>
-            Complete a few check-ins and your personalized weekly plan will appear here — tailored to your emotional patterns and needs.
+            {localizedText(
+              'Complete a few check-ins and your personalized weekly plan will appear here — tailored to your emotional patterns and needs.',
+              'Completa algunos check-ins y tu plan semanal personalizado aparecerá aquí, adaptado a tus patrones emocionales y necesidades.',
+            )}
           </Text>
           <TouchableOpacity
             style={styles.generateButton}
@@ -186,7 +192,7 @@ export default function TherapyPlanScreen() {
             ) : (
               <>
                 <Sparkles size={18} color={Colors.white} />
-                <Text style={styles.generateButtonText}>Generate Plan</Text>
+                <Text style={styles.generateButtonText}>{localizedText('Generate Plan', 'Generar plan')}</Text>
               </>
             )}
           </TouchableOpacity>
@@ -207,7 +213,7 @@ export default function TherapyPlanScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: 'Therapy Plan', headerStyle: { backgroundColor: Colors.background }, headerTintColor: Colors.text }} />
+      <Stack.Screen options={{ title: localizedText('Therapy Plan', 'Plan terapéutico'), headerStyle: { backgroundColor: Colors.background }, headerTintColor: Colors.text }} />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -220,7 +226,7 @@ export default function TherapyPlanScreen() {
                 <FocusIcon size={24} color={Colors.white} />
               </View>
               <View style={styles.focusBannerMeta}>
-                <Text style={styles.focusWeekLabel}>This Week's Focus</Text>
+                <Text style={styles.focusWeekLabel}>{localizedText("This Week's Focus", 'Enfoque de esta semana')}</Text>
                 <Text style={styles.focusTitle}>{plan.focusLabel}</Text>
               </View>
               <TouchableOpacity
@@ -240,7 +246,7 @@ export default function TherapyPlanScreen() {
 
             <View style={styles.progressSection}>
               <View style={styles.progressHeader}>
-                <Text style={styles.progressLabel}>Weekly Progress</Text>
+                <Text style={styles.progressLabel}>{localizedText('Weekly Progress', 'Progreso semanal')}</Text>
                 <Text style={styles.progressValue}>{progress.completed}/{progress.total}</Text>
               </View>
               <View style={styles.progressBarBg}>
@@ -274,13 +280,13 @@ export default function TherapyPlanScreen() {
                 <Lightbulb size={18} color={Colors.accent} />
               </View>
               <View style={styles.insightContent}>
-                <Text style={styles.insightTitle}>Personal Insight</Text>
+                <Text style={styles.insightTitle}>{localizedText('Personal Insight', 'Insight personal')}</Text>
                 <Text style={styles.insightText}>{plan.personalInsight}</Text>
               </View>
             </View>
           ) : null}
 
-          <Text style={styles.sectionTitle}>Your Daily Plan</Text>
+          <Text style={styles.sectionTitle}>{localizedText('Your Daily Plan', 'Tu plan diario')}</Text>
 
           {plan.items.map((item) => {
             const Icon = getIconComponent(item.icon);

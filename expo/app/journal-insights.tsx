@@ -23,8 +23,11 @@ import {
 import Colors from '@/constants/colors';
 import { useJournal } from '@/providers/JournalProvider';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
+import { localizedText } from '@/lib/i18n/staticText';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export default function JournalInsightsScreen() {
+  useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { smartEntries, stats, patterns, weeklyReport } = useJournal();
@@ -58,7 +61,7 @@ export default function JournalInsightsScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.closeBtn}>
           <X size={22} color={Colors.textSecondary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Journal Insights</Text>
+        <Text style={styles.headerTitle}>{localizedText('Journal Insights', 'Insights del diario')}</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -130,7 +133,7 @@ export default function JournalInsightsScreen() {
                 <View style={styles.sectionCard}>
                   <View style={styles.sectionHeader}>
                     <AlertTriangle size={18} color={Colors.accent} />
-                    <Text style={styles.sectionTitle}>Top Triggers</Text>
+                    <Text style={styles.sectionTitle}>{localizedText('Top Triggers', 'Disparadores principales')}</Text>
                   </View>
                   {patterns.commonTriggers.slice(0, 5).map((t) => (
                     <View key={t.label} style={styles.barRow}>
@@ -182,7 +185,7 @@ export default function JournalInsightsScreen() {
                 <View style={styles.sectionCard}>
                   <View style={styles.sectionHeader}>
                     <Zap size={18} color={Colors.brandTeal} />
-                    <Text style={styles.sectionTitle}>Emotional Patterns</Text>
+                    <Text style={styles.sectionTitle}>{localizedText('Emotional Patterns', 'Patrones emocionales')}</Text>
                   </View>
                   {patterns.emotionalCycles.map((cycle, i) => (
                     <Text key={i} style={styles.cycleText}>{cycle}</Text>
@@ -194,7 +197,7 @@ export default function JournalInsightsScreen() {
                 <View style={styles.sectionCard}>
                   <View style={styles.sectionHeader}>
                     <Lightbulb size={18} color={Colors.brandAmber} />
-                    <Text style={styles.sectionTitle}>Key Insights</Text>
+                    <Text style={styles.sectionTitle}>{localizedText('Key Insights', 'Insights clave')}</Text>
                   </View>
                   {patterns.insights.map((insight, i) => (
                     <Text key={i} style={styles.insightText}>{insight}</Text>
@@ -207,7 +210,7 @@ export default function JournalInsightsScreen() {
                   style={styles.weeklyCard}
                   onPress={() => router.push('/journal-weekly-report' as never)}
                 >
-                  <Text style={styles.weeklyTitle}>Weekly Reflection</Text>
+                  <Text style={styles.weeklyTitle}>{localizedText('Weekly Reflection', 'Reflexion semanal')}</Text>
                   <Text style={styles.weeklyDesc}>
                     {weeklyReport.reflectionLetter.slice(0, 100)}...
                   </Text>

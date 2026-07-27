@@ -13,10 +13,13 @@ import { ChevronLeft, ChevronRight, Clock, Search } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { MENTALIZATION_TOOLS } from '@/data/mentalizationTools';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 export default function MentalizationScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  useLanguage();
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -44,8 +47,8 @@ export default function MentalizationScreen() {
             <ChevronLeft size={24} color={Colors.text} />
           </TouchableOpacity>
           <View style={styles.headerText}>
-            <Text style={styles.title}>Perspective Tools</Text>
-            <Text style={styles.subtitle}>Understand what's really happening</Text>
+            <Text style={styles.title}>{localizedText('Perspective Tools', 'Herramientas de perspectiva')}</Text>
+            <Text style={styles.subtitle}>{localizedText("Understand what's really happening", 'Entiende qué está pasando realmente')}</Text>
           </View>
         </View>
 
@@ -57,9 +60,12 @@ export default function MentalizationScreen() {
             <View style={styles.introIcon}>
               <Search size={24} color="#3B82F6" />
             </View>
-            <Text style={styles.introTitle}>MBT-Inspired Perspective Taking</Text>
+            <Text style={styles.introTitle}>{localizedText('MBT-Inspired Perspective Taking', 'Toma de perspectiva inspirada en MBT')}</Text>
             <Text style={styles.introDesc}>
-              These tools help you step back from emotional certainty and consider other viewpoints — including your own blind spots.
+              {localizedText(
+                'These tools help you step back from emotional certainty and consider other viewpoints — including your own blind spots.',
+                'Estas herramientas te ayudan a tomar distancia de la certeza emocional y considerar otros puntos de vista, incluidos tus propios puntos ciegos.',
+              )}
             </Text>
           </View>
 

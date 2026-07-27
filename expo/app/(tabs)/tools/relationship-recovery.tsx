@@ -13,10 +13,13 @@ import { ChevronLeft, ChevronRight, Clock, HeartCrack } from 'lucide-react-nativ
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { RELATIONSHIP_RECOVERY_TOOLS } from '@/data/relationshipRecoveryTools';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 export default function RelationshipRecoveryScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  useLanguage();
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -44,8 +47,8 @@ export default function RelationshipRecoveryScreen() {
             <ChevronLeft size={24} color={Colors.text} />
           </TouchableOpacity>
           <View style={styles.headerText}>
-            <Text style={styles.title}>Relationship Recovery</Text>
-            <Text style={styles.subtitle}>Support after conflict and emotional damage</Text>
+            <Text style={styles.title}>{localizedText('Relationship Recovery', 'Recuperación relacional')}</Text>
+            <Text style={styles.subtitle}>{localizedText('Support after conflict and emotional damage', 'Apoyo después del conflicto y el daño emocional')}</Text>
           </View>
         </View>
 
@@ -57,9 +60,12 @@ export default function RelationshipRecoveryScreen() {
             <View style={styles.introIcon}>
               <HeartCrack size={24} color="#3B82F6" />
             </View>
-            <Text style={styles.introTitle}>After the Storm</Text>
+            <Text style={styles.introTitle}>{localizedText('After the Storm', 'Después de la tormenta')}</Text>
             <Text style={styles.introDesc}>
-              These tools help you process what happened, manage shame, and repair relationships without losing yourself.
+              {localizedText(
+                'These tools help you process what happened, manage shame, and repair relationships without losing yourself.',
+                'Estas herramientas te ayudan a procesar lo que pasó, manejar la vergüenza y reparar relaciones sin perderte a ti mismo/a.',
+              )}
             </Text>
           </View>
 

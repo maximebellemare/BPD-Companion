@@ -24,12 +24,15 @@ import {
 import Colors from '@/constants/colors';
 import { useJournal } from '@/providers/JournalProvider';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
+import { localizedText } from '@/lib/i18n/staticText';
+import { useLanguage } from '@/hooks/useLanguage';
 
 function formatDate(ts: number): string {
   return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 export default function JournalWeeklyReportScreen() {
+  useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { weeklyReport } = useJournal();
@@ -49,12 +52,12 @@ export default function JournalWeeklyReportScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.closeBtn}>
             <X size={22} color={Colors.textSecondary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Weekly Report</Text>
+          <Text style={styles.headerTitle}>{localizedText('Weekly Report', 'Reporte semanal')}</Text>
           <View style={{ width: 40 }} />
         </View>
         <View style={styles.emptyState}>
           <Calendar size={48} color={Colors.border} />
-          <Text style={styles.emptyTitle}>No report yet</Text>
+          <Text style={styles.emptyTitle}>{localizedText('No report yet', 'Aun no hay reporte')}</Text>
           <Text style={styles.emptyDesc}>
             Write journal entries during the week and your reflection report will appear here.
           </Text>
@@ -77,7 +80,7 @@ export default function JournalWeeklyReportScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.closeBtn}>
           <X size={22} color={Colors.textSecondary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Weekly Report</Text>
+        <Text style={styles.headerTitle}>{localizedText('Weekly Report', 'Reporte semanal')}</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -88,7 +91,7 @@ export default function JournalWeeklyReportScreen() {
         <Animated.View style={{ opacity: fadeAnim }}>
           <View style={styles.heroCard}>
             <BookOpen size={28} color={Colors.brandTeal} />
-            <Text style={styles.heroTitle}>Your week in reflection</Text>
+            <Text style={styles.heroTitle}>{localizedText('Your week in reflection', 'Tu semana en reflexion')}</Text>
             <Text style={styles.heroDates}>
               {formatDate(weeklyReport.weekStart)} — {formatDate(weeklyReport.weekEnd)}
             </Text>
@@ -124,7 +127,7 @@ export default function JournalWeeklyReportScreen() {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <AlertTriangle size={16} color={Colors.accent} />
-                <Text style={styles.sectionTitle}>Main Triggers</Text>
+                <Text style={styles.sectionTitle}>{localizedText('Main Triggers', 'Disparadores principales')}</Text>
               </View>
               <View style={styles.chipRow}>
                 {weeklyReport.mainTriggers.map(t => (
@@ -156,7 +159,7 @@ export default function JournalWeeklyReportScreen() {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Shield size={16} color={Colors.success} />
-                <Text style={styles.sectionTitle}>What Helped</Text>
+                <Text style={styles.sectionTitle}>{localizedText('What Helped', 'Que ayudo')}</Text>
               </View>
               {weeklyReport.skillsThatHelped.map((s, i) => (
                 <Text key={i} style={styles.skillText}>• {s}</Text>
@@ -168,7 +171,7 @@ export default function JournalWeeklyReportScreen() {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Lightbulb size={16} color={Colors.brandAmber} />
-                <Text style={styles.sectionTitle}>Key Insights</Text>
+                <Text style={styles.sectionTitle}>{localizedText('Key Insights', 'Insights clave')}</Text>
               </View>
               {weeklyReport.keyInsights.map((insight, i) => (
                 <View key={i} style={styles.insightRow}>

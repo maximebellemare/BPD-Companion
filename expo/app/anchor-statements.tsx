@@ -15,12 +15,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { X, Plus, Pin, Heart, Trash2, Anchor, Sparkles } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { useAnchorStatements } from '@/hooks/useIdentity';
 import { EXAMPLE_ANCHOR_STATEMENTS } from '@/services/identity/valuesService';
 
 export default function AnchorStatementsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  useLanguage();
   const { anchors, pinnedAnchors, save, isSaving, togglePin, toggleFavorite, remove } = useAnchorStatements();
   const [isAdding, setIsAdding] = useState(false);
   const [newText, setNewText] = useState('');
@@ -114,7 +117,7 @@ export default function AnchorStatementsScreen() {
                 style={styles.addInput}
                 value={newText}
                 onChangeText={setNewText}
-                placeholder="I can pause and still care..."
+                placeholder={localizedText('I can pause and still care...', 'Puedo pausar y seguir cuidando...')}
                 placeholderTextColor={Colors.textMuted}
                 multiline
                 autoFocus
@@ -125,7 +128,7 @@ export default function AnchorStatementsScreen() {
                   style={styles.addCancel}
                   onPress={() => { setIsAdding(false); setNewText(''); }}
                 >
-                  <Text style={styles.addCancelText}>Cancel</Text>
+                  <Text style={styles.addCancelText}>{localizedText('Cancel', 'Cancelar')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.addSave, !newText.trim() && styles.addSaveDisabled]}
@@ -133,7 +136,7 @@ export default function AnchorStatementsScreen() {
                   disabled={!newText.trim() || isSaving}
                   testID="save-anchor"
                 >
-                  <Text style={styles.addSaveText}>Save</Text>
+                  <Text style={styles.addSaveText}>{localizedText('Save', 'Guardar')}</Text>
                 </TouchableOpacity>
               </View>
             </Animated.View>

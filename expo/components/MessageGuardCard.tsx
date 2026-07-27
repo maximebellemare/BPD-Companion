@@ -4,12 +4,15 @@ import { useRouter } from 'expo-router';
 import { Shield, ChevronRight } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 interface MessageGuardCardProps {
   recentDraftCount: number;
 }
 
 export default function MessageGuardCard({ recentDraftCount }: MessageGuardCardProps) {
+  useLanguage();
   const router = useRouter();
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -38,9 +41,12 @@ export default function MessageGuardCard({ recentDraftCount }: MessageGuardCardP
           <Shield size={20} color={Colors.primary} />
         </View>
         <View style={styles.textContainer}>
-          <Text style={styles.title}>Before you send</Text>
+          <Text style={styles.title}>{localizedText('Before you send', 'Antes de enviar')}</Text>
           <Text style={styles.description}>
-            You've been composing messages lately. Want to check how your next one may land?
+            {localizedText(
+              "You've been composing messages lately. Want to check how your next one may land?",
+              'Has estado redactando mensajes últimamente. ¿Quieres revisar cómo podría sentirse el próximo?',
+            )}
           </Text>
         </View>
         <ChevronRight size={16} color={Colors.textMuted} />

@@ -22,6 +22,8 @@ import {
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import {
   CrisisPredictionResult,
   CrisisRiskLevel,
@@ -47,6 +49,7 @@ const RISK_THEME: Record<CrisisRiskLevel, { bg: string; border: string; accent: 
 };
 
 export default React.memo(function EarlySupportCard({ prediction }: Props) {
+  useLanguage();
   const router = useRouter();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -124,7 +127,7 @@ export default React.memo(function EarlySupportCard({ prediction }: Props) {
               <HeartHandshake size={20} color={theme.accent} />
             </View>
             <View style={styles.headerText}>
-              <Text style={[styles.title, { color: theme.accent }]}>Early Support</Text>
+              <Text style={[styles.title, { color: theme.accent }]}>{localizedText('Early Support', 'Apoyo temprano')}</Text>
               {message && (
                 <Text style={styles.message} numberOfLines={2}>{message}</Text>
               )}
@@ -179,12 +182,12 @@ export default React.memo(function EarlySupportCard({ prediction }: Props) {
             <View style={[styles.modalIconCircle, { backgroundColor: theme.accent + '12' }]}>
               <HeartHandshake size={32} color={theme.accent} />
             </View>
-            <Text style={styles.modalTitle}>Early Support</Text>
+            <Text style={styles.modalTitle}>{localizedText('Early Support', 'Apoyo temprano')}</Text>
             {message && <Text style={styles.modalMessage}>{message}</Text>}
 
             {indicators.length > 0 && (
               <View style={styles.indicatorsSection}>
-                <Text style={styles.sectionTitle}>What we're noticing</Text>
+                <Text style={styles.sectionTitle}>{localizedText("What we're noticing", 'Lo que estamos notando')}</Text>
                 {indicators.map((indicator: CrisisIndicator) => (
                   <View key={indicator.id} style={[styles.indicatorCard, { borderLeftColor: theme.accent }]}>
                     <Text style={styles.indicatorLabel}>{indicator.label}</Text>
@@ -196,7 +199,7 @@ export default React.memo(function EarlySupportCard({ prediction }: Props) {
 
             {actions.length > 0 && (
               <View style={styles.actionsSection}>
-                <Text style={styles.sectionTitle}>Things that might help</Text>
+                <Text style={styles.sectionTitle}>{localizedText('Things that might help', 'Cosas que podrían ayudar')}</Text>
                 {actions.map((action) => {
                   const IconComp = ICON_MAP[action.icon] ?? Wind;
                   return (
@@ -226,7 +229,10 @@ export default React.memo(function EarlySupportCard({ prediction }: Props) {
             <View style={styles.reassurance}>
               <Info size={14} color={Colors.textMuted} />
               <Text style={styles.reassuranceText}>
-                This is based on your recent patterns. It's a gentle suggestion, never a diagnosis. You're doing well by paying attention.
+                {localizedText(
+                  "This is based on your recent patterns. It's a gentle suggestion, never a diagnosis. You're doing well by paying attention.",
+                  'Esto se basa en tus patrones recientes. Es una sugerencia amable, nunca un diagnóstico. Estás haciendo algo importante al prestar atención.',
+                )}
               </Text>
             </View>
           </ScrollView>

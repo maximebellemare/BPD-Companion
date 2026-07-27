@@ -28,6 +28,8 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { useRelationshipDetail } from '@/hooks/useRelationships';
 import {
   RELATIONSHIP_TYPE_META,
@@ -146,6 +148,7 @@ function EventItem({ event }: { event: RelationshipEvent }) {
 }
 
 export default function RelationshipDetailScreen() {
+  useLanguage();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { profile, analysis, isLoading, updateProfile, deleteProfile } = useRelationshipDetail(id ?? '');
@@ -277,8 +280,8 @@ export default function RelationshipDetailScreen() {
                 <Sparkles size={16} color="#3B82F6" />
               </View>
               <View>
-                <Text style={styles.sectionTitle}>Emotional Patterns</Text>
-                <Text style={styles.sectionSubtitle}>What your data suggests</Text>
+                <Text style={styles.sectionTitle}>{localizedText('Emotional Patterns', 'Patrones emocionales')}</Text>
+                <Text style={styles.sectionSubtitle}>{localizedText('What your data suggests', 'Lo que sugieren tus datos')}</Text>
               </View>
             </View>
             {insights.map((insight, i) => (
@@ -294,7 +297,7 @@ export default function RelationshipDetailScreen() {
                 <Shield size={16} color={Colors.primary} />
               </View>
               <View>
-                <Text style={styles.sectionTitle}>Support Suggestions</Text>
+                <Text style={styles.sectionTitle}>{localizedText('Support Suggestions', 'Sugerencias de apoyo')}</Text>
                 <Text style={styles.sectionSubtitle}>Calming steps that may help</Text>
               </View>
             </View>
@@ -339,7 +342,7 @@ export default function RelationshipDetailScreen() {
               <View style={styles.addPositiveRow}>
                 <TextInput
                   style={styles.positiveInput}
-                  placeholder="Something positive about this relationship..."
+                  placeholder={localizedText('Something positive about this relationship...', 'Algo positivo sobre esta relación...')}
                   placeholderTextColor={Colors.textMuted}
                   value={positiveText}
                   onChangeText={setPositiveText}
@@ -352,7 +355,7 @@ export default function RelationshipDetailScreen() {
                   disabled={!positiveText.trim()}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.savePositiveBtnText}>Save</Text>
+                  <Text style={styles.savePositiveBtnText}>{localizedText('Save', 'Guardar')}</Text>
                 </TouchableOpacity>
               </View>
             </AnimatedSection>

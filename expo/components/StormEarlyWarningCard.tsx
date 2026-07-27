@@ -26,6 +26,8 @@ import {
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import {
   StormEarlyWarningResult,
   StormPhase,
@@ -54,10 +56,10 @@ const PHASE_THEME: Record<StormPhase, { bg: string; border: string; accent: stri
 };
 
 const PHASE_LABEL: Record<StormPhase, string> = {
-  clear: 'All clear',
-  early_signs: 'Early signs',
-  building: 'Something building',
-  escalating: 'Needs attention',
+  get clear() { return localizedText('All clear', 'Todo despejado'); },
+  get early_signs() { return localizedText('Early signs', 'Señales tempranas'); },
+  get building() { return localizedText('Something building', 'Algo se está acumulando'); },
+  get escalating() { return localizedText('Needs attention', 'Necesita atención'); },
 };
 
 const SIGNAL_ICONS: Record<string, React.ComponentType<{ size: number; color: string }>> = {
@@ -71,6 +73,7 @@ const SIGNAL_ICONS: Record<string, React.ComponentType<{ size: number; color: st
 };
 
 export default React.memo(function StormEarlyWarningCard({ warning }: Props) {
+  useLanguage();
   const router = useRouter();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const shimmerAnim = useRef(new Animated.Value(0)).current;
@@ -173,7 +176,7 @@ export default React.memo(function StormEarlyWarningCard({ warning }: Props) {
             <View style={styles.headerText}>
               <View style={styles.titleRow}>
                 <Text style={[styles.title, { color: theme.accent }]}>
-                  Emotional Weather
+                  {localizedText('Emotional Weather', 'Clima emocional')}
                 </Text>
                 <View style={[styles.phaseBadge, { backgroundColor: theme.accent + '16' }]}>
                   <Text style={[styles.phaseLabel, { color: theme.accent }]}>
@@ -252,7 +255,7 @@ export default React.memo(function StormEarlyWarningCard({ warning }: Props) {
               )}
             </View>
 
-            <Text style={styles.modalTitle}>Emotional Weather</Text>
+            <Text style={styles.modalTitle}>{localizedText('Emotional Weather', 'Clima emocional')}</Text>
 
             <View style={[styles.modalPhaseBadge, { backgroundColor: theme.accent + '12' }]}>
               <Text style={[styles.modalPhaseText, { color: theme.accent }]}>
@@ -266,7 +269,7 @@ export default React.memo(function StormEarlyWarningCard({ warning }: Props) {
 
             {signals.length > 0 && (
               <View style={styles.signalsSection}>
-                <Text style={styles.sectionTitle}>What we're noticing</Text>
+                <Text style={styles.sectionTitle}>{localizedText("What we're noticing", 'Lo que estamos notando')}</Text>
                 {signals.map((signal: EarlyWarningSignal) => {
                   const SignalIcon = SIGNAL_ICONS[signal.type] ?? Eye;
                   return (
@@ -304,7 +307,7 @@ export default React.memo(function StormEarlyWarningCard({ warning }: Props) {
 
             {supportOptions.length > 0 && (
               <View style={styles.supportSection}>
-                <Text style={styles.sectionTitle}>Things that might help</Text>
+                <Text style={styles.sectionTitle}>{localizedText('Things that might help', 'Cosas que podrían ayudar')}</Text>
                 {supportOptions.map((option) => {
                   const IconComp = ICON_MAP[option.icon] ?? Wind;
                   return (
@@ -331,7 +334,10 @@ export default React.memo(function StormEarlyWarningCard({ warning }: Props) {
             <View style={styles.reassurance}>
               <Info size={14} color={Colors.textMuted} />
               <Text style={styles.reassuranceText}>
-                This is based on your recent patterns — a gentle observation, never a diagnosis. Noticing what's happening is already a form of self-care.
+                {localizedText(
+                  "This is based on your recent patterns — a gentle observation, never a diagnosis. Noticing what's happening is already a form of self-care.",
+                  'Esto se basa en tus patrones recientes: una observación amable, nunca un diagnóstico. Notar lo que ocurre ya es una forma de cuidarte.',
+                )}
               </Text>
             </View>
           </ScrollView>

@@ -12,8 +12,11 @@ import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
 import { useRelationships } from '@/hooks/useRelationships';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 export default React.memo(function RelationshipHubCard() {
+  useLanguage();
   const router = useRouter();
   const { profiles, analyses } = useRelationships();
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -65,7 +68,7 @@ export default React.memo(function RelationshipHubCard() {
           </View>
           <View style={styles.headerContent}>
             <View style={styles.titleRow}>
-              <Text style={styles.title}>Relationship Support</Text>
+              <Text style={styles.title}>{localizedText('Relationship Support', 'Apoyo relacional')}</Text>
               <View style={styles.proBadge}>
                 <Shield size={9} color={Colors.white} />
                 <Text style={styles.proText}>PRO</Text>
@@ -73,8 +76,14 @@ export default React.memo(function RelationshipHubCard() {
             </View>
             <Text style={styles.subtitle}>
               {hasProfiles
-                ? `${profiles.length} profile${profiles.length !== 1 ? 's' : ''} · ${totalEvents} data points`
-                : 'Track patterns and get support in relationships'}
+                ? localizedText(
+                  `${profiles.length} profile${profiles.length !== 1 ? 's' : ''} · ${totalEvents} data points`,
+                  `${profiles.length} perfil${profiles.length !== 1 ? 'es' : ''} · ${totalEvents} datos`,
+                )
+                : localizedText(
+                  'Track patterns and get support in relationships',
+                  'Registra patrones y recibe apoyo en tus relaciones',
+                )}
             </Text>
           </View>
           <ChevronRight size={16} color="#3B82F6" style={{ opacity: 0.6 }} />
@@ -88,7 +97,7 @@ export default React.memo(function RelationshipHubCard() {
           >
             <Users size={13} color={Colors.primary} />
             <Text style={styles.actionChipText}>
-              {hasProfiles ? 'Profiles' : 'Add profile'}
+              {hasProfiles ? localizedText('Profiles', 'Perfiles') : localizedText('Add profile', 'Agregar perfil')}
             </Text>
           </TouchableOpacity>
 
@@ -98,7 +107,7 @@ export default React.memo(function RelationshipHubCard() {
             activeOpacity={0.7}
           >
             <Sparkles size={13} color="#3B82F6" />
-            <Text style={[styles.actionChipText, styles.actionChipTextAccent]}>Copilot</Text>
+            <Text style={[styles.actionChipText, styles.actionChipTextAccent]}>{localizedText('Copilot', 'Copiloto')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -112,7 +121,7 @@ export default React.memo(function RelationshipHubCard() {
             activeOpacity={0.7}
           >
             <Shield size={13} color={Colors.primary} />
-            <Text style={styles.actionChipText}>Guard</Text>
+            <Text style={styles.actionChipText}>{localizedText('Guard', 'Protección')}</Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>

@@ -16,17 +16,19 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, MessageCircle, Send, Trash2 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { SUPPORT_REACTION_LABELS } from '@/constants/community';
 import { useCircleThread } from '@/hooks/useSupportCircles';
 import { CircleReply, SupportReaction } from '@/types/community';
 
 function timeAgo(timestamp: number): string {
   const minutes = Math.floor((Date.now() - timestamp) / 60000);
-  if (minutes < 1) return 'just now';
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 1) return localizedText('just now', 'ahora');
+  if (minutes < 60) return localizedText(`${minutes}m ago`, `hace ${minutes} min`);
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
+  if (hours < 24) return localizedText(`${hours}h ago`, `hace ${hours} h`);
+  return localizedText(`${Math.floor(hours / 24)}d ago`, `hace ${Math.floor(hours / 24)} d`);
 }
 
 function ReactionBar({
@@ -93,6 +95,7 @@ function ReplyCard({
 }
 
 export default function CircleThreadScreen() {
+  useLanguage();
   const router = useRouter();
   const { circleId = '', postId = '' } = useLocalSearchParams<{ circleId?: string; postId?: string }>();
   const { post, replies, isLoading, isError, addReply, isAddingReply, deleteReply, toggleReaction } = useCircleThread(circleId, postId);
@@ -137,7 +140,7 @@ export default function CircleThreadScreen() {
         </SafeAreaView>
         <View style={styles.centerState}>
           <ActivityIndicator color={Colors.primary} />
-          <Text style={styles.stateText}>Loading discussion...</Text>
+          <Text style={styles.stateText}>{localizedText('Loading discussion...', 'Cargando conversación...')}</Text>
         </View>
       </View>
     );
@@ -213,7 +216,7 @@ export default function CircleThreadScreen() {
           <View style={styles.composer}>
             <TextInput
               style={styles.input}
-              placeholder="Write a supportive reply..."
+              placeholder={localizedText('Write a supportive reply...', 'Escribe una respuesta de apoyo...')}
               placeholderTextColor={Colors.textMuted}
               value={replyText}
               onChangeText={setReplyText}

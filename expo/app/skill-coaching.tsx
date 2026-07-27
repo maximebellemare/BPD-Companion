@@ -30,6 +30,8 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { SkillExercise, SkillExerciseStep } from '@/types/companionMemory';
 import { SkillCoachingSession } from '@/types/skillCoaching';
 import {
@@ -65,6 +67,7 @@ const CATEGORY_ICONS: Record<string, React.ComponentType<{ size: number; color: 
 export default function SkillCoachingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  useLanguage();
   const params = useLocalSearchParams<{ exerciseId?: string; state?: string }>();
 
   const [phase, setPhase] = useState<Phase>('browse');
@@ -295,8 +298,8 @@ export default function SkillCoachingScreen() {
     return (
       <View style={styles.distressContainer}>
         <View style={styles.distressLabels}>
-          <Text style={styles.distressLabelLow}>Calm</Text>
-          <Text style={styles.distressLabelHigh}>Very distressed</Text>
+          <Text style={styles.distressLabelLow}>{localizedText('Calm', 'Calma')}</Text>
+          <Text style={styles.distressLabelHigh}>{localizedText('Very distressed', 'Muy angustiado/a')}</Text>
         </View>
         <View style={styles.distressGrid}>
           {levels.map(level => {
@@ -347,26 +350,26 @@ export default function SkillCoachingScreen() {
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{stats.completedSessions}</Text>
-              <Text style={styles.statLabel}>Sessions</Text>
+              <Text style={styles.statLabel}>{localizedText('Sessions', 'Sesiones')}</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{stats.totalPracticeMinutes}m</Text>
-              <Text style={styles.statLabel}>Practice</Text>
+              <Text style={styles.statLabel}>{localizedText('Practice', 'Práctica')}</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
               <Text style={[styles.statValue, { color: Colors.success }]}>
                 {stats.averageDistressReduction > 0 ? `-${stats.averageDistressReduction}` : '0'}
               </Text>
-              <Text style={styles.statLabel}>Avg. Relief</Text>
+              <Text style={styles.statLabel}>{localizedText('Avg. Relief', 'Alivio prom.')}</Text>
             </View>
           </View>
           {stats.mostEffectiveSkill && (
             <View style={styles.statHighlight}>
               <Sparkles size={14} color={Colors.accent} />
               <Text style={styles.statHighlightText}>
-                Most effective: {stats.mostEffectiveSkill}
+                {localizedText('Most effective:', 'Más efectiva:')} {stats.mostEffectiveSkill}
               </Text>
             </View>
           )}
@@ -389,7 +392,7 @@ export default function SkillCoachingScreen() {
           <Text style={[
             styles.categoryChipText,
             !selectedCategory && styles.categoryChipTextActive,
-          ]}>All</Text>
+          ]}>{localizedText('All', 'Todo')}</Text>
         </TouchableOpacity>
         {SKILL_CATEGORIES.map(cat => {
           const IconComp = CATEGORY_ICONS[cat.iconName] ?? Activity;
@@ -457,9 +460,12 @@ export default function SkillCoachingScreen() {
         <View style={[styles.phaseIconCircle, { backgroundColor: Colors.accentLight }]}>
           <Activity size={28} color={Colors.accent} />
         </View>
-        <Text style={styles.phaseTitle}>How are you feeling right now?</Text>
+        <Text style={styles.phaseTitle}>{localizedText('How are you feeling right now?', '¿Cómo te sientes ahora mismo?')}</Text>
         <Text style={styles.phaseSubtitle}>
-          Rate your current distress level so we can track how this exercise helps.
+          {localizedText(
+            'Rate your current distress level so we can track how this exercise helps.',
+            'Califica tu nivel actual de malestar para registrar cómo te ayuda este ejercicio.',
+          )}
         </Text>
         {renderDistressSlider(distressBefore, setDistressBefore)}
       </View>
@@ -469,7 +475,7 @@ export default function SkillCoachingScreen() {
         onPress={handleStartSession}
         activeOpacity={0.8}
       >
-        <Text style={styles.primaryButtonText}>Begin {selectedExercise?.name}</Text>
+        <Text style={styles.primaryButtonText}>{localizedText('Begin', 'Empezar')} {selectedExercise?.name}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -496,7 +502,7 @@ export default function SkillCoachingScreen() {
           />
         </View>
         <Text style={styles.stepCounter}>
-          Step {session.currentStepIndex + 1} of {selectedExercise.steps.length}
+          {localizedText('Step', 'Paso')} {session.currentStepIndex + 1} {localizedText('of', 'de')} {selectedExercise.steps.length}
         </Text>
 
         <ScrollView
@@ -513,7 +519,7 @@ export default function SkillCoachingScreen() {
                 <TextInput
                   testID="reflection-input"
                   style={styles.reflectionInput}
-                  placeholder="Share your thoughts..."
+                  placeholder={localizedText('Share your thoughts...', 'Comparte lo que piensas...')}
                   placeholderTextColor={Colors.textMuted}
                   value={reflectionText}
                   onChangeText={setReflectionText}
@@ -533,7 +539,7 @@ export default function SkillCoachingScreen() {
               activeOpacity={0.7}
             >
               <ChevronLeft size={18} color={Colors.text} />
-              <Text style={styles.navButtonSecondaryText}>Back</Text>
+              <Text style={styles.navButtonSecondaryText}>{localizedText('Back', 'Atrás')}</Text>
             </TouchableOpacity>
           ) : (
             <View style={styles.navSpacer} />
@@ -546,7 +552,7 @@ export default function SkillCoachingScreen() {
             activeOpacity={0.8}
           >
             <Text style={styles.navButtonPrimaryText}>
-              {isLastStep ? 'Finish' : 'Continue'}
+              {isLastStep ? localizedText('Finish', 'Terminar') : localizedText('Continue', 'Continuar')}
             </Text>
             {!isLastStep && <ChevronRight size={18} color="#FFFFFF" />}
             {isLastStep && <Check size={18} color="#FFFFFF" />}
@@ -562,9 +568,12 @@ export default function SkillCoachingScreen() {
         <View style={[styles.phaseIconCircle, { backgroundColor: Colors.successLight }]}>
           <TrendingDown size={28} color={Colors.success} />
         </View>
-        <Text style={styles.phaseTitle}>How are you feeling now?</Text>
+        <Text style={styles.phaseTitle}>{localizedText('How are you feeling now?', '¿Cómo te sientes ahora?')}</Text>
         <Text style={styles.phaseSubtitle}>
-          Rate your distress level after the exercise. Any shift matters.
+          {localizedText(
+            'Rate your distress level after the exercise. Any shift matters.',
+            'Califica tu malestar después del ejercicio. Cualquier cambio importa.',
+          )}
         </Text>
         {renderDistressSlider(distressAfter, setDistressAfter)}
       </View>
@@ -574,7 +583,7 @@ export default function SkillCoachingScreen() {
         onPress={handleComplete}
         activeOpacity={0.8}
       >
-        <Text style={styles.primaryButtonText}>See Results</Text>
+        <Text style={styles.primaryButtonText}>{localizedText('See Results', 'Ver resultados')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -595,19 +604,19 @@ export default function SkillCoachingScreen() {
           </View>
 
           <Text style={styles.completionTitle}>
-            {improved ? 'Well done' : 'You showed up'}
+            {improved ? localizedText('Well done', 'Bien hecho') : localizedText('You showed up', 'Te presentaste para ti')}
           </Text>
 
           <View style={styles.distressComparison}>
             <View style={styles.distressCompItem}>
-              <Text style={styles.distressCompLabel}>Before</Text>
+              <Text style={styles.distressCompLabel}>{localizedText('Before', 'Antes')}</Text>
               <Text style={[styles.distressCompValue, { color: Colors.danger }]}>{distressBefore}</Text>
             </View>
             <View style={styles.distressCompArrow}>
               <ChevronRight size={20} color={Colors.textMuted} />
             </View>
             <View style={styles.distressCompItem}>
-              <Text style={styles.distressCompLabel}>After</Text>
+              <Text style={styles.distressCompLabel}>{localizedText('After', 'Después')}</Text>
               <Text style={[styles.distressCompValue, { color: improved ? Colors.success : Colors.accent }]}>{distressAfter}</Text>
             </View>
           </View>
@@ -625,7 +634,7 @@ export default function SkillCoachingScreen() {
             onPress={handleReset}
             activeOpacity={0.7}
           >
-            <Text style={styles.secondaryButtonText}>Try Another Skill</Text>
+            <Text style={styles.secondaryButtonText}>{localizedText('Try Another Skill', 'Probar otra habilidad')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             testID="done-button"
@@ -633,7 +642,7 @@ export default function SkillCoachingScreen() {
             onPress={handleClose}
             activeOpacity={0.8}
           >
-            <Text style={styles.primaryButtonText}>Done</Text>
+            <Text style={styles.primaryButtonText}>{localizedText('Done', 'Listo')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -652,7 +661,9 @@ export default function SkillCoachingScreen() {
           <X size={22} color={Colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>
-          {phase === 'browse' ? 'Skill Practice' : selectedExercise?.name ?? 'Skill Practice'}
+          {phase === 'browse'
+            ? localizedText('Skill Practice', 'Práctica de habilidades')
+            : selectedExercise?.name ?? localizedText('Skill Practice', 'Práctica de habilidades')}
         </Text>
         <View style={styles.headerSpacer} />
       </View>

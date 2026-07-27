@@ -23,6 +23,8 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
 import { SpiralPausePromptConfig } from '@/types/spiral';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 const ICON_MAP: Record<string, React.ComponentType<{ size: number; color: string }>> = {
   Anchor,
@@ -41,6 +43,7 @@ interface SpiralPausePromptProps {
 }
 
 function SpiralPausePromptInner({ visible, config, onClose }: SpiralPausePromptProps) {
+  useLanguage();
   const router = useRouter();
   const { trackEvent } = useAnalytics();
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -142,9 +145,12 @@ function SpiralPausePromptInner({ visible, config, onClose }: SpiralPausePromptP
               <View style={styles.countdownCircle}>
                 <Text style={styles.countdownText}>{formatCountdown(pauseCountdown)}</Text>
               </View>
-              <Text style={styles.countdownLabel}>Breathing space</Text>
+              <Text style={styles.countdownLabel}>{localizedText('Breathing space', 'Espacio para respirar')}</Text>
               <Text style={styles.countdownHint}>
-                Let this moment pass. You can respond when you're ready.
+                {localizedText(
+                  "Let this moment pass. You can respond when you're ready.",
+                  'Deja que este momento pase. Puedes responder cuando estés listo/a.',
+                )}
               </Text>
               <TouchableOpacity
                 style={styles.countdownDone}
@@ -158,7 +164,7 @@ function SpiralPausePromptInner({ visible, config, onClose }: SpiralPausePromptP
                 }}
                 activeOpacity={0.7}
               >
-                <Text style={styles.countdownDoneText}>I'm ready</Text>
+                <Text style={styles.countdownDoneText}>{localizedText("I'm ready", 'Estoy listo/a')}</Text>
               </TouchableOpacity>
             </View>
           ) : (

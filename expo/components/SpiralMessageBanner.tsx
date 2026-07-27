@@ -11,6 +11,8 @@ import { HeartCrack, X, ChevronRight } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 interface Props {
   message: string;
@@ -24,6 +26,7 @@ const BANNER_COLORS = {
 };
 
 export default React.memo(function SpiralMessageBanner({ message, riskLevel }: Props) {
+  useLanguage();
   const router = useRouter();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(-10)).current;
@@ -70,7 +73,7 @@ export default React.memo(function SpiralMessageBanner({ message, riskLevel }: P
           <HeartCrack size={15} color={colors.accent} />
         </View>
         <View style={styles.textWrap}>
-          <Text style={[styles.label, { color: colors.accent }]}>Relationship Signal</Text>
+          <Text style={[styles.label, { color: colors.accent }]}>{localizedText('Relationship Signal', 'Señal relacional')}</Text>
           <Text style={styles.message} numberOfLines={2}>{message}</Text>
         </View>
         <ChevronRight size={14} color={colors.accent} style={{ opacity: 0.5 }} />

@@ -33,22 +33,25 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { useGrowth } from '@/hooks/useGrowth';
 import { useIdentityValues } from '@/hooks/useIdentity';
 import type { GrowthSignal } from '@/types/identity';
 
 const SIGNAL_TYPE_META: Record<GrowthSignal['type'], { label: string; color: string; bg: string; icon: string }> = {
-  value_alignment: { label: 'Value Alignment', color: '#14B8A6', bg: '#D9E2EC', icon: 'compass' },
-  regulation_win: { label: 'Regulation Win', color: '#14B8A6', bg: '#FFFFFF', icon: 'shield' },
-  boundary_set: { label: 'Boundary Set', color: '#3B82F6', bg: '#FFFFFF', icon: 'shield' },
-  self_awareness: { label: 'Self-Awareness', color: '#3B82F6', bg: '#FFFFFF', icon: 'eye' },
-  relationship_skill: { label: 'Relationship Skill', color: '#3B82F6', bg: '#FFFFFF', icon: 'heart' },
-  emotional_growth: { label: 'Emotional Growth', color: '#67E8F9', bg: '#FFFFFF', icon: 'trending' },
+  value_alignment: { get label() { return localizedText('Value Alignment', 'Alineación con valores'); }, color: '#14B8A6', bg: '#D9E2EC', icon: 'compass' },
+  regulation_win: { get label() { return localizedText('Regulation Win', 'Logro de regulación'); }, color: '#14B8A6', bg: '#FFFFFF', icon: 'shield' },
+  boundary_set: { get label() { return localizedText('Boundary Set', 'Límite establecido'); }, color: '#3B82F6', bg: '#FFFFFF', icon: 'shield' },
+  self_awareness: { get label() { return localizedText('Self-Awareness', 'Autoconciencia'); }, color: '#3B82F6', bg: '#FFFFFF', icon: 'eye' },
+  relationship_skill: { get label() { return localizedText('Relationship Skill', 'Habilidad relacional'); }, color: '#3B82F6', bg: '#FFFFFF', icon: 'heart' },
+  emotional_growth: { get label() { return localizedText('Emotional Growth', 'Crecimiento emocional'); }, color: '#67E8F9', bg: '#FFFFFF', icon: 'trending' },
 };
 
 export default function MyGrowthScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  useLanguage();
   const {
     snapshot,
     isLoading,
@@ -131,7 +134,7 @@ export default function MyGrowthScreen() {
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary} />
-          <Text style={styles.loadingText}>Loading your growth...</Text>
+          <Text style={styles.loadingText}>{localizedText('Loading your growth...', 'Cargando tu crecimiento...')}</Text>
         </View>
       </View>
     );
@@ -152,7 +155,7 @@ export default function MyGrowthScreen() {
             <X size={22} color={Colors.text} />
           </TouchableOpacity>
           <View style={styles.headerCenter}>
-            <Text style={styles.headerTitle}>Daily Reflection</Text>
+            <Text style={styles.headerTitle}>{localizedText('Daily Reflection', 'Reflexión diaria')}</Text>
           </View>
           <View style={styles.closeBtn} />
         </View>
@@ -170,7 +173,7 @@ export default function MyGrowthScreen() {
             style={styles.answerInput}
             value={responseText}
             onChangeText={setResponseText}
-            placeholder="Write from wherever you are right now..."
+            placeholder={localizedText('Write from wherever you are right now...', 'Escribe desde donde estés ahora mismo...')}
             placeholderTextColor={Colors.textMuted}
             multiline
             textAlignVertical="top"
@@ -187,7 +190,7 @@ export default function MyGrowthScreen() {
           >
             <Send size={18} color={Colors.white} />
             <Text style={styles.saveResponseBtnText}>
-              {isSavingDaily ? 'Saving...' : 'Save Reflection'}
+              {isSavingDaily ? localizedText('Saving...', 'Guardando...') : localizedText('Save Reflection', 'Guardar reflexión')}
             </Text>
           </TouchableOpacity>
         </ScrollView>
@@ -207,8 +210,8 @@ export default function MyGrowthScreen() {
           <X size={22} color={Colors.text} />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>My Growth</Text>
-          <Text style={styles.headerSubtitle}>Building a stronger sense of self</Text>
+          <Text style={styles.headerTitle}>{localizedText('My Growth', 'Mi crecimiento')}</Text>
+          <Text style={styles.headerSubtitle}>{localizedText('Building a stronger sense of self', 'Construyendo un sentido de identidad más fuerte')}</Text>
         </View>
         <View style={styles.closeBtn} />
       </View>
@@ -229,7 +232,7 @@ export default function MyGrowthScreen() {
               <View style={styles.dailyPromptHeader}>
                 <View style={styles.dailyPromptBadge}>
                   <Sparkles size={14} color={Colors.white} />
-                  <Text style={styles.dailyPromptBadgeText}>Today's Prompt</Text>
+                  <Text style={styles.dailyPromptBadgeText}>{localizedText("Today's Prompt", 'Pregunta de hoy')}</Text>
                 </View>
                 {(snapshot?.identityStreakDays ?? 0) > 0 && (
                   <View style={styles.streakBadge}>
@@ -240,7 +243,7 @@ export default function MyGrowthScreen() {
               </View>
               <Text style={styles.dailyPromptText}>{todaysPrompt.text}</Text>
               <View style={styles.dailyPromptAction}>
-                <Text style={styles.dailyPromptActionText}>Tap to reflect</Text>
+                <Text style={styles.dailyPromptActionText}>{localizedText('Tap to reflect', 'Toca para reflexionar')}</Text>
                 <ChevronRight size={16} color={Colors.primary} />
               </View>
             </TouchableOpacity>
@@ -253,10 +256,10 @@ export default function MyGrowthScreen() {
                   <Leaf size={16} color={Colors.white} />
                 </View>
                 <View style={styles.completedPromptInfo}>
-                  <Text style={styles.completedPromptLabel}>Today's reflection complete</Text>
+                  <Text style={styles.completedPromptLabel}>{localizedText("Today's reflection complete", 'Reflexión de hoy completa')}</Text>
                   {(snapshot?.identityStreakDays ?? 0) > 0 && (
                     <Text style={styles.completedStreakText}>
-                      {snapshot?.identityStreakDays} day streak
+                      {snapshot?.identityStreakDays} {localizedText('day streak', 'días de racha')}
                     </Text>
                   )}
                 </View>
@@ -268,12 +271,12 @@ export default function MyGrowthScreen() {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Compass size={18} color={Colors.primary} />
-                <Text style={styles.sectionTitle}>Your Values</Text>
+                <Text style={styles.sectionTitle}>{localizedText('Your Values', 'Tus valores')}</Text>
                 <TouchableOpacity
                   onPress={() => router.push('/values-explorer')}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
-                  <Text style={styles.sectionAction}>Edit</Text>
+                  <Text style={styles.sectionAction}>{localizedText('Edit', 'Editar')}</Text>
                 </TouchableOpacity>
               </View>
               <View style={styles.valuesGrid}>
@@ -285,7 +288,10 @@ export default function MyGrowthScreen() {
                 ))}
               </View>
               <Text style={styles.valuesHint}>
-                Your values guide recommendations in Message Guard, Relationship Copilot, and AI Companion.
+                {localizedText(
+                  'Your values guide recommendations in Message Guard, Relationship Copilot, and AI Companion.',
+                  'Tus valores guían las recomendaciones en Protección de mensajes, Copiloto relacional y el Companion de IA.',
+                )}
               </Text>
             </View>
           )}
@@ -297,12 +303,15 @@ export default function MyGrowthScreen() {
               activeOpacity={0.7}
             >
               <Compass size={24} color={Colors.primary} />
-              <Text style={styles.emptyValuesTitle}>Discover Your Values</Text>
+              <Text style={styles.emptyValuesTitle}>{localizedText('Discover Your Values', 'Descubre tus valores')}</Text>
               <Text style={styles.emptyValuesDesc}>
-                Choosing your core values helps the app support you in ways that feel true to who you are.
+                {localizedText(
+                  'Choosing your core values helps the app support you in ways that feel true to who you are.',
+                  'Elegir tus valores centrales ayuda a que la app te apoye de una forma fiel a quien eres.',
+                )}
               </Text>
               <View style={styles.emptyValuesAction}>
-                <Text style={styles.emptyValuesActionText}>Explore values</Text>
+                <Text style={styles.emptyValuesActionText}>{localizedText('Explore values', 'Explorar valores')}</Text>
                 <ChevronRight size={16} color={Colors.primary} />
               </View>
             </TouchableOpacity>
@@ -312,12 +321,12 @@ export default function MyGrowthScreen() {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Star size={18} color="#67E8F9" />
-                <Text style={styles.sectionTitle}>Personal Strengths</Text>
+                <Text style={styles.sectionTitle}>{localizedText('Personal Strengths', 'Fortalezas personales')}</Text>
                 <TouchableOpacity
                   onPress={() => setShowAddStrength(true)}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
-                  <Text style={styles.sectionAction}>+ Add</Text>
+                  <Text style={styles.sectionAction}>{localizedText('+ Add', '+ Agregar')}</Text>
                 </TouchableOpacity>
               </View>
               {personalStrengths.slice(0, 5).map((strength) => (
@@ -344,9 +353,12 @@ export default function MyGrowthScreen() {
             >
               <Star size={20} color="#67E8F9" />
               <View style={styles.addStrengthPromptContent}>
-                <Text style={styles.addStrengthPromptTitle}>Name a Strength</Text>
+                <Text style={styles.addStrengthPromptTitle}>{localizedText('Name a Strength', 'Nombra una fortaleza')}</Text>
                 <Text style={styles.addStrengthPromptDesc}>
-                  What are you good at, even when things feel hard?
+                  {localizedText(
+                    'What are you good at, even when things feel hard?',
+                    '¿Qué haces bien, incluso cuando las cosas se sienten difíciles?',
+                  )}
                 </Text>
               </View>
               <ChevronRight size={16} color="#67E8F9" />
@@ -355,12 +367,12 @@ export default function MyGrowthScreen() {
 
           {showAddStrength && (
             <View style={styles.addStrengthForm}>
-              <Text style={styles.addStrengthFormTitle}>Add a Personal Strength</Text>
+              <Text style={styles.addStrengthFormTitle}>{localizedText('Add a Personal Strength', 'Agrega una fortaleza personal')}</Text>
               <TextInput
                 style={styles.addStrengthInput}
                 value={strengthLabel}
                 onChangeText={setStrengthLabel}
-                placeholder="e.g. I stay calm under pressure"
+                placeholder={localizedText('e.g. I stay calm under pressure', 'p. ej., mantengo la calma bajo presión')}
                 placeholderTextColor={Colors.textMuted}
                 testID="strength-label-input"
               />
@@ -368,7 +380,7 @@ export default function MyGrowthScreen() {
                 style={[styles.addStrengthInput, styles.addStrengthDescInput]}
                 value={strengthDescription}
                 onChangeText={setStrengthDescription}
-                placeholder="Describe when this shows up (optional)"
+                placeholder={localizedText('Describe when this shows up (optional)', 'Describe cuándo aparece esto (opcional)')}
                 placeholderTextColor={Colors.textMuted}
                 multiline
                 textAlignVertical="top"
@@ -379,7 +391,7 @@ export default function MyGrowthScreen() {
                   style={styles.addStrengthCancel}
                   onPress={() => { setShowAddStrength(false); setStrengthLabel(''); setStrengthDescription(''); }}
                 >
-                  <Text style={styles.addStrengthCancelText}>Cancel</Text>
+                  <Text style={styles.addStrengthCancelText}>{localizedText('Cancel', 'Cancelar')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.addStrengthSave, !strengthLabel.trim() && styles.addStrengthSaveDisabled]}
@@ -387,7 +399,7 @@ export default function MyGrowthScreen() {
                   disabled={!strengthLabel.trim()}
                   testID="save-strength"
                 >
-                  <Text style={styles.addStrengthSaveText}>Save</Text>
+                  <Text style={styles.addStrengthSaveText}>{localizedText('Save', 'Guardar')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -397,7 +409,7 @@ export default function MyGrowthScreen() {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <TrendingUp size={18} color="#14B8A6" />
-                <Text style={styles.sectionTitle}>Growth Signals</Text>
+                <Text style={styles.sectionTitle}>{localizedText('Growth Signals', 'Señales de crecimiento')}</Text>
               </View>
               {recentSignals.map((signal) => {
                 const meta = SIGNAL_TYPE_META[signal.type];
@@ -420,7 +432,7 @@ export default function MyGrowthScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <BookOpen size={18} color="#3B82F6" />
-              <Text style={styles.sectionTitle}>Identity Reflections</Text>
+              <Text style={styles.sectionTitle}>{localizedText('Identity Reflections', 'Reflexiones de identidad')}</Text>
               <TouchableOpacity
                 onPress={() => setShowPastResponses(!showPastResponses)}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -436,7 +448,10 @@ export default function MyGrowthScreen() {
             {recentResponses.length === 0 && (
               <View style={styles.emptyReflections}>
                 <Text style={styles.emptyReflectionsText}>
-                  Your daily reflections will appear here. Start by answering today's prompt above.
+                  {localizedText(
+                    "Your daily reflections will appear here. Start by answering today's prompt above.",
+                    'Tus reflexiones diarias aparecerán aquí. Empieza respondiendo la pregunta de hoy arriba.',
+                  )}
                 </Text>
               </View>
             )}
@@ -457,7 +472,7 @@ export default function MyGrowthScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Target size={18} color={Colors.text} />
-              <Text style={styles.sectionTitle}>Identity Tools</Text>
+              <Text style={styles.sectionTitle}>{localizedText('Identity Tools', 'Herramientas de identidad')}</Text>
             </View>
 
             <View style={styles.toolsGrid}>
@@ -469,7 +484,7 @@ export default function MyGrowthScreen() {
                 <View style={[styles.toolIcon, { backgroundColor: '#D9E2EC' }]}>
                   <Compass size={20} color="#14B8A6" />
                 </View>
-                <Text style={styles.toolLabel}>Values Explorer</Text>
+                <Text style={styles.toolLabel}>{localizedText('Values Explorer', 'Explorador de valores')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -480,7 +495,7 @@ export default function MyGrowthScreen() {
                 <View style={[styles.toolIcon, { backgroundColor: '#FFFFFF' }]}>
                   <BookOpen size={20} color="#3B82F6" />
                 </View>
-                <Text style={styles.toolLabel}>Identity Journal</Text>
+                <Text style={styles.toolLabel}>{localizedText('Identity Journal', 'Diario de identidad')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -491,7 +506,7 @@ export default function MyGrowthScreen() {
                 <View style={[styles.toolIcon, { backgroundColor: '#FFFFFF' }]}>
                   <Shield size={20} color="#14B8A6" />
                 </View>
-                <Text style={styles.toolLabel}>Self-Trust</Text>
+                <Text style={styles.toolLabel}>{localizedText('Self-Trust', 'Autoconfianza')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -502,33 +517,33 @@ export default function MyGrowthScreen() {
                 <View style={[styles.toolIcon, { backgroundColor: '#FFFFFF' }]}>
                   <Anchor size={20} color="#67E8F9" />
                 </View>
-                <Text style={styles.toolLabel}>Anchors</Text>
+                <Text style={styles.toolLabel}>{localizedText('Anchors', 'Anclas')}</Text>
               </TouchableOpacity>
             </View>
           </View>
 
           {snapshot && (
             <View style={styles.statsCard}>
-              <Text style={styles.statsTitle}>Your Identity Work</Text>
+              <Text style={styles.statsTitle}>{localizedText('Your Identity Work', 'Tu trabajo de identidad')}</Text>
               <View style={styles.statsGrid}>
                 <View style={styles.statItem}>
                   <Text style={styles.statValue}>{snapshot.selectedValuesCount}</Text>
-                  <Text style={styles.statLabel}>Values</Text>
+                  <Text style={styles.statLabel}>{localizedText('Values', 'Valores')}</Text>
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
                   <Text style={styles.statValue}>{snapshot.totalJournalEntries}</Text>
-                  <Text style={styles.statLabel}>Journals</Text>
+                  <Text style={styles.statLabel}>{localizedText('Journals', 'Diarios')}</Text>
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
                   <Text style={styles.statValue}>{snapshot.totalSelfTrustResponses}</Text>
-                  <Text style={styles.statLabel}>Self-Trust</Text>
+                  <Text style={styles.statLabel}>{localizedText('Self-Trust', 'Autoconfianza')}</Text>
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
                   <Text style={styles.statValue}>{snapshot.totalAnchorStatements}</Text>
-                  <Text style={styles.statLabel}>Anchors</Text>
+                  <Text style={styles.statLabel}>{localizedText('Anchors', 'Anclas')}</Text>
                 </View>
               </View>
             </View>

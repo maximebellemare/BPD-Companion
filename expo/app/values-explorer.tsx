@@ -15,6 +15,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { X, Check, ChevronRight, Sparkles, Heart } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { useIdentityValues } from '@/hooks/useIdentity';
 import { CORE_VALUES } from '@/services/identity/valuesService';
 import type { PersonalValue, ValueCategory } from '@/types/identity';
@@ -30,6 +32,7 @@ const CATEGORY_META: Record<ValueCategory, { label: string; color: string; bg: s
 export default function ValuesExplorerScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  useLanguage();
   const { state, selectedIds, toggle, updateReflection } = useIdentityValues();
   const [activeCategory, setActiveCategory] = useState<ValueCategory | 'all'>('all');
   const [reflectingValue, setReflectingValue] = useState<PersonalValue | null>(null);
@@ -95,7 +98,7 @@ export default function ValuesExplorerScreen() {
         </TouchableOpacity>
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>Values Explorer</Text>
-          <Text style={styles.headerSubtitle}>What matters most to you</Text>
+          <Text style={styles.headerSubtitle}>{localizedText('What matters most to you', 'Lo que más importa para ti')}</Text>
         </View>
         <View style={styles.closeBtn} />
       </View>
@@ -112,7 +115,7 @@ export default function ValuesExplorerScreen() {
               style={styles.reflectionInput}
               value={reflectionText}
               onChangeText={setReflectionText}
-              placeholder="Write a short reflection..."
+              placeholder={localizedText('Write a short reflection...', 'Escribe una reflexión breve...')}
               placeholderTextColor={Colors.textMuted}
               multiline
               textAlignVertical="top"
@@ -123,7 +126,7 @@ export default function ValuesExplorerScreen() {
                 style={styles.reflectionCancel}
                 onPress={() => { setReflectingValue(null); setReflectionText(''); }}
               >
-                <Text style={styles.reflectionCancelText}>Cancel</Text>
+                <Text style={styles.reflectionCancelText}>{localizedText('Cancel', 'Cancelar')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.reflectionSave}
@@ -131,7 +134,7 @@ export default function ValuesExplorerScreen() {
                 testID="save-reflection"
               >
                 <Check size={18} color={Colors.white} />
-                <Text style={styles.reflectionSaveText}>Save</Text>
+                <Text style={styles.reflectionSaveText}>{localizedText('Save', 'Guardar')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -151,7 +154,7 @@ export default function ValuesExplorerScreen() {
 
             {selectedIds.length > 0 && (
               <View style={styles.selectedSection}>
-                <Text style={styles.selectedTitle}>Your Values ({selectedIds.length}/7)</Text>
+                <Text style={styles.selectedTitle}>{localizedText(`Your Values (${selectedIds.length}/7)`, `Tus valores (${selectedIds.length}/7)`)}</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.selectedRow}>
                   {CORE_VALUES.filter(v => selectedIds.includes(v.id))
                     .sort((a, b) => {

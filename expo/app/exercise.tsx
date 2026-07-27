@@ -13,8 +13,11 @@ import { X, ChevronRight, Check, RotateCcw, Sparkles } from 'lucide-react-native
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { COPING_EXERCISES } from '@/constants/data';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 export default function ExerciseScreen() {
+  useLanguage();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
@@ -132,7 +135,7 @@ export default function ExerciseScreen() {
                 testID="exercise-companion-cta"
               >
                 <Sparkles size={18} color={Colors.primary} />
-                <Text style={styles.companionButtonText}>Reflect with AI Companion</Text>
+                <Text style={styles.companionButtonText}>{localizedText('Reflect with AI Companion', 'Reflexionar con Companion IA')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -140,7 +143,7 @@ export default function ExerciseScreen() {
                 onPress={() => router.back()}
                 activeOpacity={0.8}
               >
-                <Text style={styles.doneText}>I'm done</Text>
+                <Text style={styles.doneText}>{localizedText("I'm done", 'Terminé')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -191,7 +194,7 @@ export default function ExerciseScreen() {
               transform: [{ translateY: stepSlide }],
             }}
           >
-            <Text style={styles.stepNumber}>Step {currentStep + 1}</Text>
+            <Text style={styles.stepNumber}>{localizedText('Step', 'Paso')} {currentStep + 1}</Text>
             <Text style={styles.stepText}>{exercise.steps[currentStep]}</Text>
           </Animated.View>
         </View>
@@ -205,18 +208,18 @@ export default function ExerciseScreen() {
             {currentStep === exercise.steps.length - 1 ? (
               <>
                 <Check size={20} color={Colors.white} />
-                <Text style={styles.nextStepText}>Complete</Text>
+                <Text style={styles.nextStepText}>{localizedText('Complete', 'Completar')}</Text>
               </>
             ) : (
               <>
-                <Text style={styles.nextStepText}>Next</Text>
+                <Text style={styles.nextStepText}>{localizedText('Next', 'Siguiente')}</Text>
                 <ChevronRight size={20} color={Colors.white} />
               </>
             )}
           </TouchableOpacity>
 
           <Text style={styles.paceHint}>
-            Take your time. There's no rush.
+            {localizedText("Take your time. There's no rush.", 'Tómate tu tiempo. No hay prisa.')}
           </Text>
         </View>
       </Animated.View>

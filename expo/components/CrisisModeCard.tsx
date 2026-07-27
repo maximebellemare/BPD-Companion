@@ -12,12 +12,15 @@ import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { CrisisDetectionResult } from '@/types/crisis';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 interface Props {
   detection: CrisisDetectionResult;
 }
 
 export default React.memo(function CrisisModeCard({ detection }: Props) {
+  useLanguage();
   const router = useRouter();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -96,7 +99,9 @@ export default React.memo(function CrisisModeCard({ detection }: Props) {
           </View>
           <View style={styles.headerText}>
             <Text style={[styles.title, { color: accentColor }]}>
-              {isUrgent ? 'Crisis Mode Available' : 'Emotional Intensity Rising'}
+              {isUrgent
+                ? localizedText('Crisis Mode Available', 'Modo crisis disponible')
+                : localizedText('Emotional Intensity Rising', 'La intensidad emocional está subiendo')}
             </Text>
             {message && (
               <Text style={styles.message} numberOfLines={2}>{message}</Text>
@@ -108,19 +113,22 @@ export default React.memo(function CrisisModeCard({ detection }: Props) {
         <View style={styles.actionsRow}>
           <TouchableOpacity style={styles.actionChip} onPress={handlePress} activeOpacity={0.7}>
             <Wind size={14} color={accentColor} />
-            <Text style={[styles.actionChipText, { color: accentColor }]}>Regulate</Text>
+            <Text style={[styles.actionChipText, { color: accentColor }]}>{localizedText('Regulate', 'Regular')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionChip} onPress={handleCrisisMode} activeOpacity={0.7}>
-            <Text style={[styles.actionChipText, { color: accentColor }]}>Crisis Mode</Text>
+            <Text style={[styles.actionChipText, { color: accentColor }]}>{localizedText('Crisis Mode', 'Modo crisis')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionChip} onPress={handlePress} activeOpacity={0.7}>
-            <Text style={[styles.actionChipText, { color: accentColor }]}>Pause</Text>
+            <Text style={[styles.actionChipText, { color: accentColor }]}>{localizedText('Pause', 'Pausar')}</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.signalCount}>
           <Text style={styles.signalCountText}>
-            {signals.length} signal{signals.length !== 1 ? 's' : ''} detected
+            {signals.length} {localizedText(
+              `signal${signals.length !== 1 ? 's' : ''} detected`,
+              `señal${signals.length !== 1 ? 'es' : ''} detectada${signals.length !== 1 ? 's' : ''}`,
+            )}
           </Text>
         </View>
       </TouchableOpacity>

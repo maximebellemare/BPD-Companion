@@ -15,6 +15,8 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useAppTheme } from '@/providers/ThemeProvider';
 import { trackEvent } from '@/services/analytics/analyticsService';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import {
   DETECTIVE_DIFFICULTY_LABELS,
   DETECTIVE_STEP_LABELS,
@@ -39,6 +41,7 @@ export default function EmotionalDetectiveScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
+  useLanguage();
   const [progress, setProgress] = useState<EmotionalDetectiveProgress | null>(null);
   const [loading, setLoading] = useState(true);
   const [difficulty, setDifficulty] = useState<EmotionalDetectiveDifficulty>('beginner');
@@ -143,10 +146,13 @@ export default function EmotionalDetectiveScreen() {
             <ArrowLeft size={20} color={colors.text} />
           </TouchableOpacity>
           <View style={styles.headerTextWrap}>
-            <Text style={[styles.eyebrow, { color: colors.brandTeal }]}>Emotional Detective</Text>
-            <Text style={[styles.title, { color: colors.text }]}>Find the emotional chain</Text>
+            <Text style={[styles.eyebrow, { color: colors.brandTeal }]}>{localizedText('Emotional Detective', 'Detective emocional')}</Text>
+            <Text style={[styles.title, { color: colors.text }]}>{localizedText('Find the emotional chain', 'Encuentra la cadena emocional')}</Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Learn how a moment turns into an emotion, fear, urge, action, and outcome.
+              {localizedText(
+                'Learn how a moment turns into an emotion, fear, urge, action, and outcome.',
+                'Aprende cómo un momento se convierte en emoción, miedo, impulso, acción y resultado.',
+              )}
             </Text>
           </View>
         </View>
@@ -155,17 +161,17 @@ export default function EmotionalDetectiveScreen() {
           <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
             <Target size={16} color={colors.primary} />
             <Text style={[styles.statValue, { color: colors.text }]}>{accuracyLabel(progress)}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Awareness</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{localizedText('Awareness', 'Conciencia')}</Text>
           </View>
           <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
             <Trophy size={16} color={colors.brandTeal} />
             <Text style={[styles.statValue, { color: colors.text }]}>{progress?.completedScenarioIds.length ?? 0}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Completed</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{localizedText('Completed', 'Completados')}</Text>
           </View>
           <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
             <Sparkles size={16} color={colors.accent} />
             <Text style={[styles.statValue, { color: colors.text }]}>{progress?.currentStreak ?? 0}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Streak</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{localizedText('Streak', 'Racha')}</Text>
           </View>
         </View>
 
@@ -198,7 +204,7 @@ export default function EmotionalDetectiveScreen() {
           <View style={[styles.scenarioIcon, { backgroundColor: colors.primaryLight }]}>
             <Search size={22} color={colors.primary} />
           </View>
-          <Text style={[styles.scenarioLabel, { color: colors.brandTeal }]}>Scenario</Text>
+          <Text style={[styles.scenarioLabel, { color: colors.brandTeal }]}>{localizedText('Scenario', 'Escenario')}</Text>
           <Text style={[styles.scenarioText, { color: colors.text }]}>{scenario.scenario}</Text>
           <Text style={[styles.scenarioContext, { color: colors.textSecondary }]}>{scenario.context}</Text>
         </View>
@@ -206,11 +212,16 @@ export default function EmotionalDetectiveScreen() {
         {STEPS.map(step => (
           <View key={step} style={[styles.stepCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
             <Text style={[styles.stepTitle, { color: colors.text }]}>
-              {STEPS.indexOf(step) + 1}. {step === 'emotion' ? 'Choose the emotion that feels most central' : `Identify the ${DETECTIVE_STEP_LABELS[step].toLowerCase()}`}
+              {STEPS.indexOf(step) + 1}. {step === 'emotion'
+                ? localizedText('Choose the emotion that feels most central', 'Elige la emoción que se siente más central')
+                : localizedText(`Identify the ${DETECTIVE_STEP_LABELS[step].toLowerCase()}`, `Identifica: ${DETECTIVE_STEP_LABELS[step].toLowerCase()}`)}
             </Text>
             {step === 'emotion' ? (
               <Text style={[styles.stepHint, { color: colors.textSecondary }]}>
-                More than one emotion can be plausible. The goal is awareness, not guessing a trick answer.
+                {localizedText(
+                  'More than one emotion can be plausible. The goal is awareness, not guessing a trick answer.',
+                  'Más de una emoción puede ser plausible. La meta es tomar conciencia, no adivinar una respuesta tramposa.',
+                )}
               </Text>
             ) : null}
             <View style={styles.choiceList}>
@@ -253,10 +264,10 @@ export default function EmotionalDetectiveScreen() {
                     <View style={styles.choiceCopy}>
                       <Text style={[styles.choiceText, { color: colors.text }]}>{choice.text}</Text>
                       {step === 'emotion' && isPrimary ? (
-                        <Text style={[styles.choiceNote, { color: colors.success }]}>Primary emotion</Text>
+                        <Text style={[styles.choiceNote, { color: colors.success }]}>{localizedText('Primary emotion', 'Emoción principal')}</Text>
                       ) : null}
                       {step === 'emotion' && isAccepted && !isPrimary ? (
-                        <Text style={[styles.choiceNote, { color: colors.primary }]}>Also common here</Text>
+                        <Text style={[styles.choiceNote, { color: colors.primary }]}>{localizedText('Also common here', 'También común aquí')}</Text>
                       ) : null}
                     </View>
                     {isPrimary || isAccepted ? <Check size={17} color={isPrimary ? colors.success : colors.primary} /> : null}
@@ -276,25 +287,25 @@ export default function EmotionalDetectiveScreen() {
             activeOpacity={0.86}
             testID="emotional-detective-submit"
           >
-            <Text style={styles.submitText}>Reveal the chain</Text>
+            <Text style={styles.submitText}>{localizedText('Reveal the chain', 'Revelar la cadena')}</Text>
             <ChevronRight size={18} color={Colors.white} />
           </TouchableOpacity>
         ) : (
           <View style={styles.revealWrap}>
             <View style={[styles.resultCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
-              <Text style={[styles.resultTitle, { color: colors.text }]}>You mapped {accuracy}% of the chain</Text>
+              <Text style={[styles.resultTitle, { color: colors.text }]}>{localizedText(`You mapped ${accuracy}% of the chain`, `Mapeaste el ${accuracy}% de la cadena`)}</Text>
               <Text style={[styles.resultBody, { color: colors.textSecondary }]}>{scenario.lesson}</Text>
             </View>
 
             <View style={[styles.emotionCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
-              <Text style={[styles.chainTitle, { color: colors.text }]}>Emotion awareness</Text>
+              <Text style={[styles.chainTitle, { color: colors.text }]}>{localizedText('Emotion awareness', 'Conciencia emocional')}</Text>
               <View style={[styles.primaryEmotionBox, { backgroundColor: colors.primaryLight, borderColor: colors.primary }]}>
-                <Text style={[styles.chainLabel, { color: colors.primary }]}>Primary emotion</Text>
+                <Text style={[styles.chainLabel, { color: colors.primary }]}>{localizedText('Primary emotion', 'Emoción principal')}</Text>
                 <Text style={[styles.primaryEmotionText, { color: colors.text }]}>
                   {scenario.emotionAwareness.primaryEmotion}
                 </Text>
               </View>
-              <Text style={[styles.otherEmotionTitle, { color: colors.text }]}>Other common emotions</Text>
+              <Text style={[styles.otherEmotionTitle, { color: colors.text }]}>{localizedText('Other common emotions', 'Otras emociones comunes')}</Text>
               <View style={styles.emotionChipRow}>
                 {scenario.emotionAwareness.otherCommonEmotions.map(emotion => (
                   <View
@@ -309,14 +320,14 @@ export default function EmotionalDetectiveScreen() {
             </View>
 
             <View style={[styles.chainCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
-              <Text style={[styles.chainTitle, { color: colors.text }]}>Reveal</Text>
+              <Text style={[styles.chainTitle, { color: colors.text }]}>{localizedText('Reveal', 'Revelación')}</Text>
               {[
-                ['Trigger', scenario.reveal.trigger],
-                ['Emotion', scenario.reveal.emotion],
-                ['Fear', scenario.reveal.fear],
-                ['Urge', scenario.reveal.urge],
-                ['Action', scenario.reveal.action],
-                ['Outcome', scenario.reveal.outcome],
+                [localizedText('Trigger', 'Desencadenante'), scenario.reveal.trigger],
+                [localizedText('Emotion', 'Emoción'), scenario.reveal.emotion],
+                [localizedText('Fear', 'Miedo'), scenario.reveal.fear],
+                [localizedText('Urge', 'Impulso'), scenario.reveal.urge],
+                [localizedText('Action', 'Acción'), scenario.reveal.action],
+                [localizedText('Outcome', 'Resultado'), scenario.reveal.outcome],
               ].map(([label, value], index, arr) => (
                 <View key={label}>
                   <View style={styles.chainRow}>
@@ -337,7 +348,7 @@ export default function EmotionalDetectiveScreen() {
               activeOpacity={0.86}
               testID="emotional-detective-next"
             >
-              <Text style={styles.submitText}>Next case</Text>
+              <Text style={styles.submitText}>{localizedText('Next case', 'Siguiente caso')}</Text>
               <ChevronRight size={18} color={Colors.white} />
             </TouchableOpacity>
           </View>

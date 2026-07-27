@@ -11,8 +11,11 @@ import { TrendingDown, TrendingUp, Minus, ChevronRight } from 'lucide-react-nati
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useAICompanion } from '@/providers/AICompanionProvider';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 export default React.memo(function HomeInsightsPreview() {
+  useLanguage();
   const router = useRouter();
   const { memoryProfile } = useAICompanion();
 
@@ -40,11 +43,11 @@ export default React.memo(function HomeInsightsPreview() {
       : Colors.textMuted;
 
   const trendLabel = memoryProfile.intensityTrend === 'falling'
-    ? 'Decreasing'
+    ? localizedText('Decreasing', 'Disminuyendo')
     : memoryProfile.intensityTrend === 'rising'
-      ? 'Increasing'
+      ? localizedText('Increasing', 'Aumentando')
       : memoryProfile.intensityTrend === 'stable'
-        ? 'Stable'
+        ? localizedText('Stable', 'Estable')
         : '—';
 
   return (
@@ -55,7 +58,7 @@ export default React.memo(function HomeInsightsPreview() {
       testID="home-insights-preview"
     >
       <View style={styles.header}>
-        <Text style={styles.headerLabel}>Your patterns</Text>
+        <Text style={styles.headerLabel}>{localizedText('Your patterns', 'Tus patrones')}</Text>
         <ChevronRight size={14} color={Colors.textMuted} />
       </View>
 
@@ -63,7 +66,7 @@ export default React.memo(function HomeInsightsPreview() {
         {memoryProfile.topTriggers[0] && (
           <View style={styles.item}>
             <Text style={styles.itemEmoji}>⚡</Text>
-            <Text style={styles.itemLabel}>Trigger</Text>
+            <Text style={styles.itemLabel}>{localizedText('Trigger', 'Disparador')}</Text>
             <Text style={styles.itemValue} numberOfLines={1}>
               {memoryProfile.topTriggers[0].label}
             </Text>
@@ -73,7 +76,7 @@ export default React.memo(function HomeInsightsPreview() {
         {memoryProfile.topEmotions[0] && (
           <View style={styles.item}>
             <Text style={styles.itemEmoji}>💙</Text>
-            <Text style={styles.itemLabel}>Emotion</Text>
+            <Text style={styles.itemLabel}>{localizedText('Emotion', 'Emoción')}</Text>
             <Text style={styles.itemValue} numberOfLines={1}>
               {memoryProfile.topEmotions[0].label}
             </Text>
@@ -83,7 +86,7 @@ export default React.memo(function HomeInsightsPreview() {
         {memoryProfile.mostEffectiveCoping && (
           <View style={styles.item}>
             <Text style={styles.itemEmoji}>🛠</Text>
-            <Text style={styles.itemLabel}>Tool</Text>
+            <Text style={styles.itemLabel}>{localizedText('Tool', 'Herramienta')}</Text>
             <Text style={styles.itemValue} numberOfLines={1}>
               {memoryProfile.mostEffectiveCoping.label}
             </Text>
@@ -92,7 +95,7 @@ export default React.memo(function HomeInsightsPreview() {
 
         <View style={styles.item}>
           <View style={styles.trendIconWrap}>{trendIcon}</View>
-          <Text style={styles.itemLabel}>Distress</Text>
+          <Text style={styles.itemLabel}>{localizedText('Distress', 'Malestar')}</Text>
           <Text style={[styles.itemValue, { color: trendColor }]}>{trendLabel}</Text>
         </View>
       </View>

@@ -25,9 +25,11 @@ import { useAnalytics } from '@/providers/AnalyticsProvider';
 import { FORMAT_CONFIG } from '@/types/journalEntry';
 import CrossLoopSuggestions from '@/components/CrossLoopSuggestions';
 import { getJournalConnectionSuggestions } from '@/services/crossLoop/crossLoopBridgeService';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 function formatFullDate(ts: number): string {
-  return new Date(ts).toLocaleDateString('en-US', {
+  return new Date(ts).toLocaleDateString(undefined, {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
@@ -42,6 +44,7 @@ export default function JournalEntryDetailScreen() {
   const params = useLocalSearchParams<{ id: string }>();
   const { smartEntries, toggleImportant, toggleTherapyNote, deleteEntry, analyzeEntry, isAnalyzing } = useJournal();
   const { trackEvent } = useAnalytics();
+  useLanguage();
 
   const entry = smartEntries.find(e => e.id === params.id);
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -56,12 +59,12 @@ export default function JournalEntryDetailScreen() {
   const handleDelete = useCallback(() => {
     if (!entry) return;
     Alert.alert(
-      'Delete entry?',
-      'This cannot be undone.',
+      localizedText('Delete entry?', '¿Eliminar entrada?'),
+      localizedText('This cannot be undone.', 'Esto no se puede deshacer.'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: localizedText('Cancel', 'Cancelar'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: localizedText('Delete', 'Eliminar'),
           style: 'destructive',
           onPress: () => {
             deleteEntry(entry.id);
@@ -93,7 +96,7 @@ export default function JournalEntryDetailScreen() {
           </TouchableOpacity>
         </View>
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>Entry not found</Text>
+          <Text style={styles.emptyText}>{localizedText('Entry not found', 'Entrada no encontrada')}</Text>
         </View>
       </View>
     );
@@ -180,7 +183,7 @@ export default function JournalEntryDetailScreen() {
 
           {entry.emotions.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Emotions</Text>
+              <Text style={styles.sectionLabel}>{localizedText('Emotions', 'Emociones')}</Text>
               <View style={styles.chipRow}>
                 {entry.emotions.map(e => (
                   <View key={e.id} style={styles.emotionChip}>
@@ -194,7 +197,7 @@ export default function JournalEntryDetailScreen() {
 
           {entry.triggers.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Triggers</Text>
+              <Text style={styles.sectionLabel}>{localizedText('Triggers', 'Desencadenantes')}</Text>
               <View style={styles.chipRow}>
                 {entry.triggers.map(t => (
                   <View key={t.id} style={styles.triggerChip}>
@@ -207,7 +210,7 @@ export default function JournalEntryDetailScreen() {
 
           {entry.notes && (
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Notes</Text>
+              <Text style={styles.sectionLabel}>{localizedText('Notes', 'Notas')}</Text>
               <Text style={styles.notesText}>{entry.notes}</Text>
             </View>
           )}
@@ -216,19 +219,19 @@ export default function JournalEntryDetailScreen() {
             <View style={styles.insightCard}>
               <View style={styles.insightHeader}>
                 <Sparkles size={16} color={Colors.brandLilac} />
-                <Text style={styles.insightLabel}>AI Insight</Text>
+                <Text style={styles.insightLabel}>{localizedText('AI Insight', 'Insight de IA')}</Text>
               </View>
               <Text style={styles.insightText}>{entry.aiInsight.summary}</Text>
 
               {entry.aiInsight.primaryEmotion && (
                 <View style={styles.insightRow}>
-                  <Text style={styles.insightRowLabel}>Primary emotion</Text>
+                  <Text style={styles.insightRowLabel}>{localizedText('Primary emotion', 'Emoción principal')}</Text>
                   <Text style={styles.insightRowValue}>{entry.aiInsight.primaryEmotion}</Text>
                 </View>
               )}
               {entry.aiInsight.cognitiveDistortion && (
                 <View style={styles.insightRow}>
-                  <Text style={styles.insightRowLabel}>Possible pattern</Text>
+                  <Text style={styles.insightRowLabel}>{localizedText('Possible pattern', 'Posible patrón')}</Text>
                   <Text style={styles.insightRowValue}>{entry.aiInsight.cognitiveDistortion}</Text>
                 </View>
               )}
@@ -250,7 +253,7 @@ export default function JournalEntryDetailScreen() {
                 <Sparkles size={18} color={Colors.brandTeal} />
               )}
               <Text style={styles.analyzeBtnText}>
-                {isAnalyzing ? 'Analyzing...' : 'Generate AI Insight'}
+                {isAnalyzing ? localizedText('Analyzing...', 'Analizando...') : localizedText('Generate AI Insight', 'Generar insight de IA')}
               </Text>
             </TouchableOpacity>
           )}
@@ -259,13 +262,13 @@ export default function JournalEntryDetailScreen() {
             {entry.isImportant && (
               <View style={styles.flagChip}>
                 <Star size={12} color={Colors.brandAmber} fill={Colors.brandAmber} />
-                <Text style={styles.flagText}>Important</Text>
+                <Text style={styles.flagText}>{localizedText('Important', 'Importante')}</Text>
               </View>
             )}
             {entry.isTherapyNote && (
               <View style={styles.flagChip}>
                 <Stethoscope size={12} color={Colors.brandTeal} />
-                <Text style={styles.flagText}>Therapy note</Text>
+                <Text style={styles.flagText}>{localizedText('Therapy note', 'Nota para terapia')}</Text>
               </View>
             )}
           </View>

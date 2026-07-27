@@ -11,11 +11,14 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Award, Flame, Heart } from 'lucide-react-native';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { DEV_SEEDED_TRUSTED_CONTRIBUTORS } from '@/constants/community';
 import { identifyTrustedContributors } from '@/services/community/supportMatchingService';
 
 export default function TrustedHelpersScreen() {
   const router = useRouter();
+  useLanguage();
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -34,7 +37,7 @@ export default function TrustedHelpersScreen() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} testID="back-btn">
             <ArrowLeft size={20} color={Colors.text} />
           </TouchableOpacity>
-          <Text style={styles.navTitle}>Trusted Helpers</Text>
+          <Text style={styles.navTitle}>{localizedText('Trusted Helpers', 'Personas de confianza')}</Text>
           <View style={{ width: 36 }} />
         </View>
       </SafeAreaView>
@@ -49,25 +52,28 @@ export default function TrustedHelpersScreen() {
             <View style={styles.introIconCircle}>
               <Award size={28} color={Colors.primary} />
             </View>
-            <Text style={styles.introTitle}>Trusted Helpers</Text>
+            <Text style={styles.introTitle}>{localizedText('Trusted Helpers', 'Personas de confianza')}</Text>
             <Text style={styles.introText}>
-              These community members consistently provide supportive, constructive, and helpful responses to others.
+              {localizedText(
+                'These community members consistently provide supportive, constructive, and helpful responses to others.',
+                'Estas personas de la comunidad suelen responder con apoyo, cuidado y comentarios útiles.',
+              )}
             </Text>
           </View>
 
           <View style={styles.criteriaCard}>
-            <Text style={styles.criteriaTitle}>How helpers earn trust</Text>
+            <Text style={styles.criteriaTitle}>{localizedText('How helpers earn trust', 'Cómo se gana la confianza')}</Text>
             <View style={styles.criteriaRow}>
               <Heart size={14} color={Colors.brandAmber} />
-              <Text style={styles.criteriaText}>Replies rated helpful by other members</Text>
+              <Text style={styles.criteriaText}>{localizedText('Replies rated helpful by other members', 'Respuestas marcadas como útiles por otras personas')}</Text>
             </View>
             <View style={styles.criteriaRow}>
               <Award size={14} color={Colors.brandLilac} />
-              <Text style={styles.criteriaText}>Positive feedback from the community</Text>
+              <Text style={styles.criteriaText}>{localizedText('Positive feedback from the community', 'Comentarios positivos de la comunidad')}</Text>
             </View>
             <View style={styles.criteriaRow}>
               <Flame size={14} color={Colors.accent} />
-              <Text style={styles.criteriaText}>Consistent, active participation</Text>
+              <Text style={styles.criteriaText}>{localizedText('Consistent, active participation', 'Participación constante y activa')}</Text>
             </View>
           </View>
 
@@ -86,18 +92,22 @@ export default function TrustedHelpersScreen() {
                   <Text style={styles.helperName}>{contributor.displayName}</Text>
                   <View style={styles.trustedBadge}>
                     <Award size={10} color={Colors.primary} />
-                    <Text style={styles.trustedLabel}>Trusted</Text>
+                    <Text style={styles.trustedLabel}>{localizedText('Trusted', 'Confiable')}</Text>
                   </View>
                 </View>
                 <View style={styles.helperStats}>
                   <View style={styles.helperStatItem}>
                     <Heart size={11} color={Colors.textMuted} />
-                    <Text style={styles.helperStatText}>{contributor.helpfulCount} helpful</Text>
+                    <Text style={styles.helperStatText}>
+                      {localizedText(`${contributor.helpfulCount} helpful`, `${contributor.helpfulCount} útiles`)}
+                    </Text>
                   </View>
                   <View style={styles.statDot} />
                   <View style={styles.helperStatItem}>
                     <Flame size={11} color={Colors.textMuted} />
-                    <Text style={styles.helperStatText}>{contributor.activityStreak}d streak</Text>
+                    <Text style={styles.helperStatText}>
+                      {localizedText(`${contributor.activityStreak}d streak`, `racha de ${contributor.activityStreak} d`)}
+                    </Text>
                   </View>
                 </View>
               </View>

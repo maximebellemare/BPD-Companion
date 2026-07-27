@@ -14,6 +14,8 @@ import { Stack, useRouter } from 'expo-router';
 import { Heart, Check } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 import { useRelationships } from '@/hooks/useRelationships';
 import {
   RelationshipType,
@@ -30,6 +32,7 @@ const RELATIONSHIP_TYPES: RelationshipType[] = [
 
 export default function AddRelationshipScreen() {
   const router = useRouter();
+  useLanguage();
   const { addProfile, isAddingProfile } = useRelationships();
   const [name, setName] = useState<string>('');
   const [selectedType, setSelectedType] = useState<RelationshipType | null>(null);
@@ -69,7 +72,7 @@ export default function AddRelationshipScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: 'Add Relationship',
+          title: localizedText('Add Relationship', 'Agregar relación'),
           headerStyle: { backgroundColor: Colors.background },
           headerTintColor: Colors.text,
           headerShadowVisible: false,
@@ -90,17 +93,20 @@ export default function AddRelationshipScreen() {
             <View style={styles.headerIconWrap}>
               <Heart size={24} color={Colors.white} />
             </View>
-            <Text style={styles.headerTitle}>Track a Relationship</Text>
+            <Text style={styles.headerTitle}>{localizedText('Track a Relationship', 'Registrar una relación')}</Text>
             <Text style={styles.headerDesc}>
-              Add someone you'd like to understand your emotional patterns with. This stays completely private.
+              {localizedText(
+                "Add someone you'd like to understand your emotional patterns with. This stays completely private.",
+                'Agrega a alguien con quien quieras entender tus patrones emocionales. Esto queda completamente privado.',
+              )}
             </Text>
           </Animated.View>
 
           <Animated.View style={[styles.formSection, { opacity: fadeAnim }]}>
-            <Text style={styles.label}>Name or Nickname</Text>
+            <Text style={styles.label}>{localizedText('Name or Nickname', 'Nombre o apodo')}</Text>
             <TextInput
               style={styles.textInput}
-              placeholder="e.g. Alex, Mom, Best Friend"
+              placeholder={localizedText('e.g. Alex, Mom, Best Friend', 'p. ej., Alex, mamá, mejor amiga/o')}
               placeholderTextColor={Colors.textMuted}
               value={name}
               onChangeText={setName}
@@ -110,7 +116,7 @@ export default function AddRelationshipScreen() {
           </Animated.View>
 
           <Animated.View style={[styles.formSection, { opacity: fadeAnim }]}>
-            <Text style={styles.label}>Relationship Type</Text>
+            <Text style={styles.label}>{localizedText('Relationship Type', 'Tipo de relación')}</Text>
             <View style={styles.typeGrid}>
               {RELATIONSHIP_TYPES.map(type => {
                 const meta = RELATIONSHIP_TYPE_META[type];
@@ -145,10 +151,13 @@ export default function AddRelationshipScreen() {
           </Animated.View>
 
           <Animated.View style={[styles.formSection, { opacity: fadeAnim }]}>
-            <Text style={styles.label}>Notes (optional)</Text>
+            <Text style={styles.label}>{localizedText('Notes (optional)', 'Notas (opcional)')}</Text>
             <TextInput
               style={[styles.textInput, styles.textArea]}
-              placeholder="Anything you'd like to remember about this relationship..."
+              placeholder={localizedText(
+                "Anything you'd like to remember about this relationship...",
+                'Cualquier cosa que quieras recordar sobre esta relación...',
+              )}
               placeholderTextColor={Colors.textMuted}
               value={notes}
               onChangeText={setNotes}
@@ -167,13 +176,16 @@ export default function AddRelationshipScreen() {
           >
             <Heart size={18} color={Colors.white} />
             <Text style={styles.saveButtonText}>
-              {isAddingProfile ? 'Saving...' : 'Add Profile'}
+              {isAddingProfile ? localizedText('Saving...', 'Guardando...') : localizedText('Add Profile', 'Agregar perfil')}
             </Text>
           </TouchableOpacity>
 
           <View style={styles.safetyNote}>
             <Text style={styles.safetyNoteText}>
-              All data stays on your device. The app will automatically connect check-ins, journal entries, and messages to this profile to build insights over time.
+              {localizedText(
+                'All data stays on your device. The app will automatically connect check-ins, journal entries, and messages to this profile to build insights over time.',
+                'Todos los datos permanecen en tu dispositivo. La app conectará automáticamente check-ins, diarios y mensajes a este perfil para construir insights con el tiempo.',
+              )}
             </Text>
           </View>
 

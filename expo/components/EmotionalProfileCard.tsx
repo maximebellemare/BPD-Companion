@@ -5,8 +5,11 @@ import { Brain, ChevronRight, TrendingUp, TrendingDown, Minus } from 'lucide-rea
 import Colors from '@/constants/colors';
 import { useApp } from '@/providers/AppProvider';
 import { buildFullEmotionalModelState } from '@/services/emotionalModel/emotionalModelService';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 export default function EmotionalProfileCard() {
+  useLanguage();
   const router = useRouter();
   const { journalEntries, messageDrafts } = useApp();
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -40,12 +43,12 @@ export default function EmotionalProfileCard() {
       : Colors.textMuted;
 
   const trendLabel = model.overallDistressTrend === 'improving'
-    ? 'Improving'
+    ? localizedText('Improving', 'Mejorando')
     : model.overallDistressTrend === 'worsening'
-      ? 'Needs care'
+      ? localizedText('Needs care', 'Necesita cuidado')
       : model.overallDistressTrend === 'stable'
-        ? 'Stable'
-        : 'Building';
+        ? localizedText('Stable', 'Estable')
+        : localizedText('Building', 'En construcción');
 
   return (
     <Animated.View style={[styles.wrapper, { opacity: fadeAnim }]}>
@@ -60,11 +63,11 @@ export default function EmotionalProfileCard() {
             <Brain size={20} color="#2E2A72" />
           </View>
           <View style={styles.headerText}>
-            <Text style={styles.title}>Emotional Profile</Text>
+            <Text style={styles.title}>{localizedText('Emotional Profile', 'Perfil emocional')}</Text>
             <Text style={styles.subtitle}>
               {hasData
-                ? 'Your personal emotional model'
-                : 'Building your emotional understanding'}
+                ? localizedText('Your personal emotional model', 'Tu modelo emocional personal')
+                : localizedText('Building your emotional understanding', 'Construyendo tu comprensión emocional')}
             </Text>
           </View>
           <ChevronRight size={18} color={Colors.textMuted} />
@@ -75,12 +78,12 @@ export default function EmotionalProfileCard() {
             <View style={styles.statsRow}>
               <View style={styles.stat}>
                 <Text style={styles.statValue}>{model.dataPointCount}</Text>
-                <Text style={styles.statLabel}>check-ins</Text>
+                <Text style={styles.statLabel}>{localizedText('check-ins', 'registros')}</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.stat}>
                 <Text style={styles.statValue}>{model.averageDistress}</Text>
-                <Text style={styles.statLabel}>avg distress</Text>
+                <Text style={styles.statLabel}>{localizedText('avg distress', 'malestar prom.')}</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.stat}>
@@ -88,22 +91,22 @@ export default function EmotionalProfileCard() {
                   <TrendIcon size={13} color={trendColor} />
                   <Text style={[styles.statValue, { color: trendColor, fontSize: 13 }]}>{trendLabel}</Text>
                 </View>
-                <Text style={styles.statLabel}>trend</Text>
+                <Text style={styles.statLabel}>{localizedText('trend', 'tendencia')}</Text>
               </View>
             </View>
 
             {model.topTriggers.length > 0 && (
               <View style={styles.topTrigger}>
-                <Text style={styles.topTriggerLabel}>Top trigger:</Text>
+                <Text style={styles.topTriggerLabel}>{localizedText('Top trigger:', 'Disparador principal:')}</Text>
                 <Text style={styles.topTriggerValue}>{model.topTriggers[0].label}</Text>
               </View>
             )}
 
             {model.effectiveCoping.length > 0 && (
               <View style={styles.topCoping}>
-                <Text style={styles.topCopingLabel}>Best coping:</Text>
+                <Text style={styles.topCopingLabel}>{localizedText('Best coping:', 'Mejor recurso:')}</Text>
                 <Text style={styles.topCopingValue}>
-                  {model.effectiveCoping[0].tool} ({model.effectiveCoping[0].helpfulRate}% helpful)
+                  {model.effectiveCoping[0].tool} ({model.effectiveCoping[0].helpfulRate}% {localizedText('helpful', 'útil')})
                 </Text>
               </View>
             )}
@@ -111,7 +114,10 @@ export default function EmotionalProfileCard() {
         ) : (
           <View style={styles.emptyBody}>
             <Text style={styles.emptyText}>
-              Continue checking in to build your personal emotional model. Each entry adds more understanding.
+              {localizedText(
+                'Continue checking in to build your personal emotional model. Each entry adds more understanding.',
+                'Sigue haciendo registros para construir tu modelo emocional personal. Cada entrada suma comprensión.',
+              )}
             </Text>
           </View>
         )}

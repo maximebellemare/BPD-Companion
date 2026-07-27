@@ -24,6 +24,8 @@ import {
   getIntensityColor,
   MovementEntry,
 } from '@/types/movement';
+import { localizedText } from '@/lib/i18n/staticText';
+import { useLanguage } from '@/hooks/useLanguage';
 
 function MoodShiftBadge({ before, after }: { before: number; after: number }) {
   const diff = after - before;
@@ -89,6 +91,7 @@ function EntryCard({ entry, onPress }: { entry: MovementEntry; onPress: () => vo
 }
 
 export default function MovementLogScreen() {
+  useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { trackEvent } = useAnalytics();
@@ -170,7 +173,7 @@ export default function MovementLogScreen() {
             <View style={styles.heroIconWrap}>
               <Footprints size={28} color={Colors.primary} />
             </View>
-            <Text style={styles.heroTitle}>Supportive Movement</Text>
+            <Text style={styles.heroTitle}>{localizedText('Supportive Movement', 'Movimiento de apoyo')}</Text>
             <Text style={styles.heroSubtitle}>
               Movement as regulation — track how it shifts your emotional state
             </Text>
@@ -180,7 +183,7 @@ export default function MovementLogScreen() {
             <View style={styles.statCard}>
               <Clock size={16} color={Colors.primary} />
               <Text style={styles.statValue}>{formatDuration(totalMinutesToday)}</Text>
-              <Text style={styles.statLabel}>Today</Text>
+              <Text style={styles.statLabel}>{localizedText('Today', 'Hoy')}</Text>
             </View>
             <View style={styles.statCard}>
               <Activity size={16} color={Colors.accent} />
@@ -198,7 +201,7 @@ export default function MovementLogScreen() {
 
           {moodImpact.total > 0 && (
             <View style={styles.impactCard}>
-              <Text style={styles.impactTitle}>How movement helps</Text>
+              <Text style={styles.impactTitle}>{localizedText('How movement helps', 'Como ayuda el movimiento')}</Text>
               <View style={styles.impactRow}>
                 <View style={styles.impactItem}>
                   <Text style={styles.impactNumber}>{moodImpact.improved}</Text>
@@ -249,7 +252,7 @@ export default function MovementLogScreen() {
           ) : (
             <View style={styles.emptyState}>
               <Text style={styles.emptyEmoji}>🌱</Text>
-              <Text style={styles.emptyTitle}>No movement logged yet</Text>
+              <Text style={styles.emptyTitle}>{localizedText('No movement logged yet', 'Aun no registraste movimiento')}</Text>
               <Text style={styles.emptySubtitle}>
                 Log a walk, stretch, or any calming movement to see how it affects your mood
               </Text>
@@ -258,7 +261,7 @@ export default function MovementLogScreen() {
 
           {entries.length > 20 && (
             <TouchableOpacity style={styles.viewAllBtn} onPress={handleHistory}>
-              <Text style={styles.viewAllText}>View full history</Text>
+              <Text style={styles.viewAllText}>{localizedText('View full history', 'Ver historial completo')}</Text>
               <ChevronRight size={16} color={Colors.primary} />
             </TouchableOpacity>
           )}

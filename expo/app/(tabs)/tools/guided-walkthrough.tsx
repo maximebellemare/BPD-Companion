@@ -26,6 +26,8 @@ import { BODY_REGULATION_TOOLS } from '@/data/bodyRegulationTools';
 import { DBT_SKILLS } from '@/data/dbtSkills';
 import { saveToolOutcome, addToPlaybook } from '@/services/tools/toolOutcomeService';
 import { ToolOutcome, PlaybookEntry } from '@/types/tools';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 interface StepData {
   title: string;
@@ -124,6 +126,7 @@ export default function GuidedWalkthroughScreen() {
   const { toolId, toolType } = useLocalSearchParams<{ toolId: string; toolType: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  useLanguage();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const stepAnim = useRef(new Animated.Value(0)).current;
 
@@ -262,13 +265,13 @@ export default function GuidedWalkthroughScreen() {
               <View style={[styles.durationPill, { backgroundColor: tool.bgColor }]}>
                 <Text style={[styles.durationPillText, { color: tool.color }]}>{tool.duration}</Text>
               </View>
-              <Text style={styles.stepCount}>{tool.steps.length} steps</Text>
+              <Text style={styles.stepCount}>{tool.steps.length} {localizedText('steps', 'pasos')}</Text>
             </View>
 
             <Text style={styles.detailDesc}>{tool.description}</Text>
 
             <View style={styles.detailSection}>
-              <Text style={styles.detailSectionTitle}>Steps Overview</Text>
+              <Text style={styles.detailSectionTitle}>{localizedText('Steps Overview', 'Resumen de pasos')}</Text>
               {tool.steps.map((step, i) => (
                 <View key={i} style={styles.stepPreview}>
                   <View style={[styles.stepPreviewNum, { backgroundColor: tool.bgColor }]}>
@@ -283,7 +286,7 @@ export default function GuidedWalkthroughScreen() {
             </View>
 
             <View style={styles.detailSection}>
-              <Text style={styles.detailSectionTitle}>When to Use</Text>
+              <Text style={styles.detailSectionTitle}>{localizedText('When to Use', 'Cuándo usarlo')}</Text>
               {tool.whenToUse.map((item, i) => (
                 <View key={i} style={styles.whenItem}>
                   <View style={[styles.whenDot, { backgroundColor: tool.color }]} />
@@ -300,7 +303,7 @@ export default function GuidedWalkthroughScreen() {
               activeOpacity={0.7}
               testID="start-walkthrough-btn"
             >
-              <Text style={styles.startBtnText}>Begin</Text>
+              <Text style={styles.startBtnText}>{localizedText('Begin', 'Empezar')}</Text>
             </TouchableOpacity>
           </View>
         </Animated.View>
@@ -315,15 +318,18 @@ export default function GuidedWalkthroughScreen() {
           <View style={[styles.completedIcon, { backgroundColor: tool.bgColor }]}>
             <CheckCircle size={48} color={tool.color} />
           </View>
-          <Text style={styles.completedTitle}>Well Done</Text>
+          <Text style={styles.completedTitle}>{localizedText('Well Done', 'Bien hecho')}</Text>
           <Text style={styles.completedMessage}>
-            You completed {tool.title}. Every time you practice a skill, it becomes more available when you need it.
+            {localizedText(
+              `You completed ${tool.title}. Every time you practice a skill, it becomes more available when you need it.`,
+              `Completaste ${tool.title}. Cada vez que practicas una habilidad, se vuelve más disponible cuando la necesitas.`,
+            )}
           </Text>
 
           {showFeedback && (
             <View style={styles.feedbackSection}>
-              <Text style={styles.feedbackTitle}>Did this help?</Text>
-              <Text style={styles.feedbackDesc}>Your feedback helps personalize your toolkit</Text>
+              <Text style={styles.feedbackTitle}>{localizedText('Did this help?', '¿Esto ayudó?')}</Text>
+              <Text style={styles.feedbackDesc}>{localizedText('Your feedback helps personalize your toolkit', 'Tu respuesta ayuda a personalizar tu kit de herramientas')}</Text>
               <View style={styles.feedbackRow}>
                 <TouchableOpacity
                   style={[styles.feedbackBtn, styles.feedbackBtnYes]}
@@ -331,7 +337,7 @@ export default function GuidedWalkthroughScreen() {
                   activeOpacity={0.7}
                 >
                   <ThumbsUp size={20} color={Colors.success} />
-                  <Text style={[styles.feedbackBtnText, { color: Colors.success }]}>Yes, helpful</Text>
+                  <Text style={[styles.feedbackBtnText, { color: Colors.success }]}>{localizedText('Yes, helpful', 'Sí, ayudó')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.feedbackBtn, styles.feedbackBtnNo]}
@@ -339,7 +345,7 @@ export default function GuidedWalkthroughScreen() {
                   activeOpacity={0.7}
                 >
                   <ThumbsDown size={20} color={Colors.textMuted} />
-                  <Text style={[styles.feedbackBtnText, { color: Colors.textMuted }]}>Not really</Text>
+                  <Text style={[styles.feedbackBtnText, { color: Colors.textMuted }]}>{localizedText('Not really', 'No mucho')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -352,14 +358,14 @@ export default function GuidedWalkthroughScreen() {
               activeOpacity={0.7}
             >
               <RotateCcw size={18} color={tool.color} />
-              <Text style={[styles.completedBtnText, { color: tool.color }]}>Practice Again</Text>
+              <Text style={[styles.completedBtnText, { color: tool.color }]}>{localizedText('Practice Again', 'Practicar de nuevo')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.completedBtn, { backgroundColor: tool.color }]}
               onPress={handleFinish}
               activeOpacity={0.7}
             >
-              <Text style={[styles.completedBtnText, { color: Colors.white }]}>Done</Text>
+              <Text style={[styles.completedBtnText, { color: Colors.white }]}>{localizedText('Done', 'Listo')}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -413,7 +419,7 @@ export default function GuidedWalkthroughScreen() {
         <View style={styles.practiceNav}>
           {currentStep > 0 ? (
             <TouchableOpacity style={styles.prevBtn} onPress={handlePrev} activeOpacity={0.7}>
-              <Text style={styles.prevBtnText}>Back</Text>
+              <Text style={styles.prevBtnText}>{localizedText('Back', 'Atrás')}</Text>
             </TouchableOpacity>
           ) : (
             <View style={styles.prevBtnPlaceholder} />
@@ -425,12 +431,12 @@ export default function GuidedWalkthroughScreen() {
             testID="walkthrough-next-btn"
           >
             <Text style={styles.nextBtnText}>
-              {currentStep < tool.steps.length - 1 ? 'Next' : 'Complete'}
+              {currentStep < tool.steps.length - 1 ? localizedText('Next', 'Siguiente') : localizedText('Complete', 'Completar')}
             </Text>
             <ChevronRight size={18} color={Colors.white} />
           </TouchableOpacity>
         </View>
-        <Text style={styles.paceHint}>Take your time. There's no rush.</Text>
+        <Text style={styles.paceHint}>{localizedText("Take your time. There's no rush.", 'Tómate tu tiempo. No hay prisa.')}</Text>
       </View>
     </View>
   );

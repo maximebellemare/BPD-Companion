@@ -27,8 +27,11 @@ import { getCoachProgressState } from '@/services/coach/coachProgressService';
 import { getAllCoachModules } from '@/services/coach/coachService';
 import { CoachModule, CoachInsight, COACH_CATEGORY_META } from '@/types/coachModule';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 export default function LearningProgressScreen() {
+  useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -152,29 +155,29 @@ export default function LearningProgressScreen() {
         <TouchableOpacity onPress={handleClose} style={styles.backButton} testID="progress-back">
           <ArrowLeft size={22} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.topBarTitle}>Learning Progress</Text>
+        <Text style={styles.topBarTitle}>{localizedText('Learning Progress', 'Progreso de aprendizaje')}</Text>
         <View style={styles.topBarSpacer} />
       </View>
 
       <Animated.View style={[styles.statsCard, { opacity: fadeAnim }]}>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{completedModules.length}</Text>
-          <Text style={styles.statLabel}>Completed</Text>
+          <Text style={styles.statLabel}>{localizedText('Completed', 'Completados')}</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{progressState?.skillsPracticed.length ?? 0}</Text>
-          <Text style={styles.statLabel}>Skills</Text>
+          <Text style={styles.statLabel}>{localizedText('Skills', 'Habilidades')}</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{progressState?.totalReflections ?? 0}</Text>
-          <Text style={styles.statLabel}>Reflections</Text>
+          <Text style={styles.statLabel}>{localizedText('Reflections', 'Reflexiones')}</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
           <Text style={[styles.statValue, { color: Colors.primary }]}>{completionPercent}%</Text>
-          <Text style={styles.statLabel}>Overall</Text>
+          <Text style={styles.statLabel}>{localizedText('Overall', 'General')}</Text>
         </View>
       </Animated.View>
 
@@ -189,7 +192,11 @@ export default function LearningProgressScreen() {
             {tab === 'insights' && <Sparkles size={15} color={activeTab === tab ? Colors.primary : Colors.textMuted} />}
             {tab === 'skills' && <Award size={15} color={activeTab === tab ? Colors.primary : Colors.textMuted} />}
             <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
-              {tab === 'progress' ? 'Modules' : tab === 'insights' ? 'Insights' : 'Skills'}
+              {tab === 'progress'
+                ? localizedText('Modules', 'Módulos')
+                : tab === 'insights'
+                  ? localizedText('Insights', 'Insights')
+                  : localizedText('Skills', 'Habilidades')}
             </Text>
           </TouchableOpacity>
         ))}
@@ -205,21 +212,21 @@ export default function LearningProgressScreen() {
             <>
               {inProgressModules.length > 0 && (
                 <View style={styles.section}>
-                  <Text style={styles.sectionLabel}>Continue Where You Left Off</Text>
+                  <Text style={styles.sectionLabel}>{localizedText('Continue Where You Left Off', 'Continuar donde lo dejaste')}</Text>
                   {inProgressModules.map(m => renderModuleCard(m, true))}
                 </View>
               )}
 
               {completedModules.length > 0 && (
                 <View style={styles.section}>
-                  <Text style={styles.sectionLabel}>Completed ({completedModules.length})</Text>
+                  <Text style={styles.sectionLabel}>{localizedText('Completed', 'Completados')} ({completedModules.length})</Text>
                   {completedModules.map(m => renderModuleCard(m, true))}
                 </View>
               )}
 
               {suggestedModules.length > 0 && (
                 <View style={styles.section}>
-                  <Text style={styles.sectionLabel}>Recommended Next</Text>
+                  <Text style={styles.sectionLabel}>{localizedText('Recommended Next', 'Recomendado ahora')}</Text>
                   {suggestedModules.map(m => renderModuleCard(m, false))}
                 </View>
               )}
@@ -227,8 +234,8 @@ export default function LearningProgressScreen() {
               {allModules.length === 0 && (
                 <View style={styles.emptyState}>
                   <BookOpen size={40} color={Colors.textMuted} />
-                  <Text style={styles.emptyTitle}>No modules yet</Text>
-                  <Text style={styles.emptyDesc}>Start a guided learning session from the Learn tab</Text>
+                  <Text style={styles.emptyTitle}>{localizedText('No modules yet', 'Aún no hay módulos')}</Text>
+                  <Text style={styles.emptyDesc}>{localizedText('Start a guided learning session from the Learn tab', 'Inicia una sesión guiada desde la pestaña Aprender')}</Text>
                 </View>
               )}
             </>
@@ -238,14 +245,14 @@ export default function LearningProgressScreen() {
             <>
               {(progressState?.insights ?? []).length > 0 ? (
                 <View style={styles.section}>
-                  <Text style={styles.sectionLabel}>Your Learning Insights</Text>
+                  <Text style={styles.sectionLabel}>{localizedText('Your Learning Insights', 'Tus insights de aprendizaje')}</Text>
                   {progressState!.insights.map(renderInsightCard)}
                 </View>
               ) : (
                 <View style={styles.emptyState}>
                   <Sparkles size={40} color={Colors.textMuted} />
-                  <Text style={styles.emptyTitle}>No insights yet</Text>
-                  <Text style={styles.emptyDesc}>Complete a guided session to generate your first insight</Text>
+                  <Text style={styles.emptyTitle}>{localizedText('No insights yet', 'Aún no hay insights')}</Text>
+                  <Text style={styles.emptyDesc}>{localizedText('Complete a guided session to generate your first insight', 'Completa una sesión guiada para generar tu primer insight')}</Text>
                 </View>
               )}
             </>
@@ -255,7 +262,7 @@ export default function LearningProgressScreen() {
             <>
               {(progressState?.skillsPracticed ?? []).length > 0 ? (
                 <View style={styles.section}>
-                  <Text style={styles.sectionLabel}>Skills You Have Practiced</Text>
+                  <Text style={styles.sectionLabel}>{localizedText('Skills You Have Practiced', 'Habilidades que has practicado')}</Text>
                   <View style={styles.skillsGrid}>
                     {progressState!.skillsPracticed.map(skill => (
                       <View key={skill} style={styles.skillCard}>
@@ -270,8 +277,8 @@ export default function LearningProgressScreen() {
               ) : (
                 <View style={styles.emptyState}>
                   <Award size={40} color={Colors.textMuted} />
-                  <Text style={styles.emptyTitle}>No skills practiced yet</Text>
-                  <Text style={styles.emptyDesc}>Each module helps you practice a specific emotional skill</Text>
+                  <Text style={styles.emptyTitle}>{localizedText('No skills practiced yet', 'Aún no has practicado habilidades')}</Text>
+                  <Text style={styles.emptyDesc}>{localizedText('Each module helps you practice a specific emotional skill', 'Cada módulo te ayuda a practicar una habilidad emocional específica')}</Text>
                 </View>
               )}
             </>

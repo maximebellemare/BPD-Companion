@@ -38,21 +38,25 @@ import { CommunityPost, PostCategory, SupportCircle } from '@/types/community';
 import { getRecommendedPosts } from '@/services/community/communityMatchingService';
 import { getDistressLabel, getSupportRequestLabel } from '@/services/community/communityEmotionalContextService';
 import { getPublicAuthorLabel } from '@/services/community/communityProfileService';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 function timeAgo(timestamp: number): string {
   const now = Date.now();
   const diff = now - timestamp;
   const minutes = Math.floor(diff / 60000);
-  if (minutes < 1) return 'just now';
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 1) return localizedText('just now', 'ahora');
+  if (minutes < 60) return localizedText(`${minutes}m ago`, `hace ${minutes} min`);
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return localizedText(`${hours}h ago`, `hace ${hours} h`);
   const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
-  return `${Math.floor(days / 7)}w ago`;
+  if (days < 7) return localizedText(`${days}d ago`, `hace ${days} d`);
+  const weeks = Math.floor(days / 7);
+  return localizedText(`${weeks}w ago`, `hace ${weeks} sem`);
 }
 
 const PostCard = React.memo(function PostCard({ post, onPress, onDelete }: { post: CommunityPost; onPress: () => void; onDelete: (postId: string) => void }) {
+  useLanguage();
   const category = CATEGORIES.find((c) => c.id === post.category);
   const situationTag = SITUATION_TAGS.find((t) => t.id === post.situationTag);
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -84,7 +88,7 @@ const PostCard = React.memo(function PostCard({ post, onPress, onDelete }: { pos
           {post.isPinned && (
             <View style={styles.pinnedBadge}>
               <Pin size={10} color={Colors.primary} />
-              <Text style={styles.pinnedText}>Pinned</Text>
+              <Text style={styles.pinnedText}>{localizedText('Pinned', 'Fijado')}</Text>
             </View>
           )}
           {category && (
@@ -121,7 +125,7 @@ const PostCard = React.memo(function PostCard({ post, onPress, onDelete }: { pos
           <View style={styles.contentWarning}>
             <Shield size={12} color={Colors.accent} />
             <Text style={styles.contentWarningText}>
-              Content warning{post.contentWarningText ? `: ${post.contentWarningText}` : ''}
+              {localizedText('Content warning', 'Advertencia de contenido')}{post.contentWarningText ? `: ${post.contentWarningText}` : ''}
             </Text>
           </View>
         )}
@@ -158,11 +162,11 @@ const PostCard = React.memo(function PostCard({ post, onPress, onDelete }: { pos
         {post.supportType && !post.emotionalContext?.supportRequestType && (
           <View style={styles.supportTypeBadge}>
             <Text style={styles.supportTypeText}>
-              {post.supportType === 'just-listening' ? '👂 Just listening' :
-               post.supportType === 'advice' ? '💡 Looking for advice' :
-               post.supportType === 'shared-experience' ? '🤝 Shared experiences' :
-               post.supportType === 'encouragement' ? '💪 Encouragement' :
-               '🧠 Skill help'}
+              {post.supportType === 'just-listening' ? localizedText('👂 Just listening', '👂 Solo escucha') :
+               post.supportType === 'advice' ? localizedText('💡 Looking for advice', '💡 Busco consejos') :
+               post.supportType === 'shared-experience' ? localizedText('🤝 Shared experiences', '🤝 Experiencias compartidas') :
+               post.supportType === 'encouragement' ? localizedText('💪 Encouragement', '💪 Ánimo') :
+               localizedText('🧠 Skill help', '🧠 Ayuda con una habilidad')}
             </Text>
           </View>
         )}
@@ -220,7 +224,7 @@ const PostCard = React.memo(function PostCard({ post, onPress, onDelete }: { pos
         {post.suggestedToolName && (
           <View style={styles.toolSuggestion}>
             <Sparkles size={12} color={Colors.primary} />
-            <Text style={styles.toolSuggestionText}>Related: {post.suggestedToolName}</Text>
+            <Text style={styles.toolSuggestionText}>{localizedText('Related', 'Relacionado')}: {post.suggestedToolName}</Text>
           </View>
         )}
       </TouchableOpacity>
@@ -229,6 +233,7 @@ const PostCard = React.memo(function PostCard({ post, onPress, onDelete }: { pos
 });
 
 function CircleCard({ circle, onPress }: { circle: SupportCircle; onPress: () => void }) {
+  useLanguage();
   return (
     <TouchableOpacity
       style={[styles.circleCard, { borderColor: circle.color + '40' }]}
@@ -237,10 +242,12 @@ function CircleCard({ circle, onPress }: { circle: SupportCircle; onPress: () =>
     >
       <Text style={styles.circleEmoji}>{circle.emoji}</Text>
       <Text style={styles.circleName} numberOfLines={1}>{circle.name}</Text>
-      <Text style={styles.circleMembers}>{circle.memberCount} members</Text>
+      <Text style={styles.circleMembers}>
+        {localizedText(`${circle.memberCount} members`, `${circle.memberCount} miembros`)}
+      </Text>
       {circle.isJoined && (
         <View style={[styles.joinedBadge, { backgroundColor: circle.color + '20' }]}>
-          <Text style={[styles.joinedText, { color: circle.color }]}>Joined</Text>
+          <Text style={[styles.joinedText, { color: circle.color }]}>{localizedText('Joined', 'Unido/a')}</Text>
         </View>
       )}
     </TouchableOpacity>
@@ -248,6 +255,7 @@ function CircleCard({ circle, onPress }: { circle: SupportCircle; onPress: () =>
 }
 
 export default function CommunityFeedScreen() {
+  useLanguage();
   const router = useRouter();
   const {
     posts,
@@ -301,16 +309,16 @@ export default function CommunityFeedScreen() {
   }, [router]);
 
   const handleDeletePost = useCallback((postId: string) => {
-    Alert.alert('Delete this post?', 'This removes your post and its replies from Community.', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(localizedText('Delete this post?', '¿Eliminar esta publicación?'), localizedText('This removes your post and its replies from Community.', 'Esto elimina tu publicación y sus respuestas de la Comunidad.'), [
+      { text: localizedText('Cancel', 'Cancelar'), style: 'cancel' },
       {
-        text: 'Delete',
+        text: localizedText('Delete', 'Eliminar'),
         style: 'destructive',
         onPress: async () => {
           try {
             await deletePost(postId);
           } catch (error) {
-            Alert.alert('Could not delete post', error instanceof Error ? error.message : 'Please try again.');
+            Alert.alert(localizedText('Could not delete post', 'No se pudo eliminar la publicación'), error instanceof Error ? error.message : localizedText('Please try again.', 'Intenta de nuevo.'));
           }
         },
       },
@@ -333,8 +341,8 @@ export default function CommunityFeedScreen() {
       <SafeAreaView edges={['top']} style={styles.safeTop}>
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Text style={styles.headerTitle}>Community</Text>
-            <Text style={styles.headerSubtitle}>A safe space to connect</Text>
+            <Text style={styles.headerTitle}>{localizedText('Community', 'Comunidad')}</Text>
+            <Text style={styles.headerSubtitle}>{localizedText('A safe space to connect', 'Un espacio seguro para conectar')}</Text>
           </View>
           <View style={styles.headerActions}>
             <TouchableOpacity style={styles.headerBtn} onPress={handleToggleSearch} testID="search-toggle">
@@ -359,7 +367,7 @@ export default function CommunityFeedScreen() {
             <TextInput
               ref={searchInputRef}
               style={styles.searchInput}
-              placeholder="Search posts..."
+              placeholder={localizedText('Search posts...', 'Buscar publicaciones...')}
               placeholderTextColor={Colors.textMuted}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -380,14 +388,14 @@ export default function CommunityFeedScreen() {
             onPress={() => setActiveSection('feed')}
           >
             <MessageCircle size={14} color={activeSection === 'feed' ? Colors.primary : Colors.textMuted} />
-            <Text style={[styles.sectionTabText, activeSection === 'feed' && styles.sectionTabTextActive]}>Feed</Text>
+            <Text style={[styles.sectionTabText, activeSection === 'feed' && styles.sectionTabTextActive]}>{localizedText('Feed', 'Muro')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.sectionTab, activeSection === 'circles' && styles.sectionTabActive]}
             onPress={() => setActiveSection('circles')}
           >
             <Users size={14} color={activeSection === 'circles' ? Colors.primary : Colors.textMuted} />
-            <Text style={[styles.sectionTabText, activeSection === 'circles' && styles.sectionTabTextActive]}>Circles</Text>
+            <Text style={[styles.sectionTabText, activeSection === 'circles' && styles.sectionTabTextActive]}>{localizedText('Circles', 'Círculos')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -410,7 +418,7 @@ export default function CommunityFeedScreen() {
             >
               <View style={styles.guidelinesLeft}>
                 <Heart size={16} color={Colors.primary} />
-                <Text style={styles.guidelinesText}>Community Guidelines</Text>
+                <Text style={styles.guidelinesText}>{localizedText('Community Guidelines', 'Pautas de la comunidad')}</Text>
               </View>
               <ChevronRight size={16} color={Colors.textMuted} />
             </TouchableOpacity>
@@ -418,7 +426,10 @@ export default function CommunityFeedScreen() {
             <View style={styles.safetyNoticeCard}>
               <Shield size={16} color={Colors.primary} />
               <Text style={styles.safetyNoticeText}>
-                Community is peer support, not crisis support or medical advice. Use report and block if something feels unsafe.
+                {localizedText(
+                  'Community is peer support, not crisis support or medical advice. Use report and block if something feels unsafe.',
+                  'La Comunidad es apoyo entre pares, no apoyo de crisis ni consejo médico. Usa reportar o bloquear si algo se siente inseguro.',
+                )}
               </Text>
             </View>
 
@@ -426,7 +437,7 @@ export default function CommunityFeedScreen() {
               <View style={styles.recommendedSection}>
                 <View style={styles.sectionHeader}>
                   <TrendingUp size={16} color={Colors.brandAmber} />
-                  <Text style={styles.sectionTitle}>Recommended for you</Text>
+                  <Text style={styles.sectionTitle}>{localizedText('Recommended for you', 'Recomendado para ti')}</Text>
                 </View>
                 <ScrollView
                   horizontal
@@ -444,10 +455,10 @@ export default function CommunityFeedScreen() {
                       <Text style={styles.recommendedPreview} numberOfLines={2}>{post.body}</Text>
                       <View style={styles.recommendedMeta}>
                         <Text style={styles.recommendedReactions}>
-                          {post.supportReactions.reduce((s, r) => s + r.count, 0)} reactions
+                          {localizedText(`${post.supportReactions.reduce((s, r) => s + r.count, 0)} reactions`, `${post.supportReactions.reduce((s, r) => s + r.count, 0)} reacciones`)}
                         </Text>
                         <Text style={styles.recommendedDot}>·</Text>
-                        <Text style={styles.recommendedReplies}>{post.replyCount} replies</Text>
+                        <Text style={styles.recommendedReplies}>{localizedText(`${post.replyCount} replies`, `${post.replyCount} respuestas`)}</Text>
                       </View>
                     </TouchableOpacity>
                   ))}
@@ -459,7 +470,7 @@ export default function CommunityFeedScreen() {
               <View style={styles.myCirclesSection}>
                 <View style={styles.sectionHeader}>
                   <Users size={16} color={Colors.brandLilac} />
-                  <Text style={styles.sectionTitle}>My circles</Text>
+                  <Text style={styles.sectionTitle}>{localizedText('My circles', 'Mis círculos')}</Text>
                 </View>
                 <ScrollView
                   horizontal
@@ -512,22 +523,22 @@ export default function CommunityFeedScreen() {
 
             {isLoading && (
               <View style={styles.emptyState}>
-                <Text style={styles.emptyStateText}>Loading posts...</Text>
+                <Text style={styles.emptyStateText}>{localizedText('Loading posts...', 'Cargando publicaciones...')}</Text>
               </View>
             )}
 
             {!isLoading && posts.length === 0 && (
               <View style={styles.emptyState}>
                 <Text style={styles.emptyStateEmoji}>🌿</Text>
-                <Text style={styles.emptyStateTitle}>No posts yet</Text>
+                <Text style={styles.emptyStateTitle}>{localizedText('No posts yet', 'Aún no hay publicaciones')}</Text>
                 <Text style={styles.emptyStateText}>
                   {selectedCategory || searchQuery
-                    ? 'Try adjusting your filters or search'
-                    : 'Be the first to start a supportive discussion.'}
+                    ? localizedText('Try adjusting your filters or search', 'Intenta ajustar filtros o búsqueda')
+                    : localizedText('Be the first to start a supportive discussion.', 'Sé la primera persona en iniciar una conversación de apoyo.')}
                 </Text>
                 {!selectedCategory && !searchQuery && (
                   <TouchableOpacity style={styles.emptyStateButton} onPress={handleNewPost} activeOpacity={0.85}>
-                    <Text style={styles.emptyStateButtonText}>Start a discussion</Text>
+                    <Text style={styles.emptyStateButtonText}>{localizedText('Start a discussion', 'Iniciar una conversación')}</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -543,9 +554,12 @@ export default function CommunityFeedScreen() {
           <>
             <View style={styles.circlesIntro}>
               <Text style={styles.circlesIntroEmoji}>🫂</Text>
-              <Text style={styles.circlesIntroTitle}>Support Circles</Text>
+              <Text style={styles.circlesIntroTitle}>{localizedText('Support Circles', 'Círculos de apoyo')}</Text>
               <Text style={styles.circlesIntroText}>
-                Smaller, focused groups where you can connect with others who share similar experiences.
+                {localizedText(
+                  'Smaller, focused groups where you can connect with others who share similar experiences.',
+                  'Grupos más pequeños y enfocados donde puedes conectar con personas con experiencias similares.',
+                )}
               </Text>
             </View>
 
@@ -559,7 +573,7 @@ export default function CommunityFeedScreen() {
                 <View style={[styles.quickLinkIcon, { backgroundColor: Colors.primaryLight }]}>
                   <Settings size={18} color={Colors.primary} />
                 </View>
-                <Text style={styles.quickLinkLabel}>My Preferences</Text>
+                <Text style={styles.quickLinkLabel}>{localizedText('My Preferences', 'Mis preferencias')}</Text>
                 <ChevronRight size={14} color={Colors.textMuted} />
               </TouchableOpacity>
               <TouchableOpacity
@@ -571,7 +585,7 @@ export default function CommunityFeedScreen() {
                 <View style={[styles.quickLinkIcon, { backgroundColor: Colors.warmGlow }]}>
                   <Target size={18} color={Colors.brandAmber} />
                 </View>
-                <Text style={styles.quickLinkLabel}>Challenges</Text>
+                <Text style={styles.quickLinkLabel}>{localizedText('Challenges', 'Retos')}</Text>
                 <ChevronRight size={14} color={Colors.textMuted} />
               </TouchableOpacity>
               <TouchableOpacity
@@ -583,7 +597,7 @@ export default function CommunityFeedScreen() {
                 <View style={[styles.quickLinkIcon, { backgroundColor: Colors.brandLilacSoft }]}>
                   <Trophy size={18} color={Colors.brandLilac} />
                 </View>
-                <Text style={styles.quickLinkLabel}>Trusted Helpers</Text>
+                <Text style={styles.quickLinkLabel}>{localizedText('Trusted Helpers', 'Ayudantes de confianza')}</Text>
                 <ChevronRight size={14} color={Colors.textMuted} />
               </TouchableOpacity>
             </View>
@@ -592,7 +606,7 @@ export default function CommunityFeedScreen() {
               <View style={styles.circlesSectionBlock}>
                 <View style={styles.sectionHeader}>
                   <Heart size={16} color={Colors.primary} />
-                  <Text style={styles.sectionTitle}>My circles</Text>
+                  <Text style={styles.sectionTitle}>{localizedText('My circles', 'Mis círculos')}</Text>
                 </View>
                 {circles.filter(c => c.isJoined).map((circle) => (
                   <CircleCard key={circle.id} circle={circle} onPress={() => handleCirclePress(circle.id)} />
@@ -604,7 +618,7 @@ export default function CommunityFeedScreen() {
               <View style={styles.circlesSectionBlock}>
                 <View style={styles.sectionHeader}>
                   <Sparkles size={16} color={Colors.brandAmber} />
-                  <Text style={styles.sectionTitle}>Discover circles</Text>
+                  <Text style={styles.sectionTitle}>{localizedText('Discover circles', 'Descubrir círculos')}</Text>
                 </View>
                 {circles.filter(c => !c.isJoined).map((circle) => (
                   <CircleCard key={circle.id} circle={circle} onPress={() => handleCirclePress(circle.id)} />

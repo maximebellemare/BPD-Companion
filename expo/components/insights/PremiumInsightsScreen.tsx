@@ -65,6 +65,8 @@ import {
 } from '@/services/calm/calmSessionService';
 import { useRewards } from '@/providers/RewardsProvider';
 import { ConsistencyMetrics, MilestoneDefinition } from '@/types/reward';
+import { localizedText } from '@/lib/i18n/staticText';
+import { useLanguage } from '@/hooks/useLanguage';
 
 type CountItem = {
   label: string;
@@ -175,16 +177,16 @@ function getSuggestedFocus(params: {
   signalCounts: ReturnType<typeof getSignalCounts>;
 }): string {
   const { topEmotion, topTrigger, average, signalCounts } = params;
-  if (signalCounts.positiveAfterSleep >= 2) return 'Protect sleep when you can. Calm or positive check-ins often appear after good sleep.';
-  if (signalCounts.positiveAfterConnection >= 2) return 'Notice supportive connection. It appears to help positive or grounded states show up.';
-  if (signalCounts.positiveAfterExercise >= 2) return 'Movement may be worth keeping close. Exercise appears near positive check-ins.';
-  if (average >= 7) return 'Start with calming tools before deeper reflection for the next few check-ins.';
+  if (signalCounts.positiveAfterSleep >= 2) return localizedText('Protect sleep when you can. Calm or positive check-ins often appear after good sleep.', 'Protege tu descanso cuando puedas. Los check-ins tranquilos o positivos suelen aparecer despues de dormir bien.');
+  if (signalCounts.positiveAfterConnection >= 2) return localizedText('Notice supportive connection. It appears to help positive or grounded states show up.', 'Observa las conexiones que te apoyan. Parecen ayudar a que aparezcan estados mas positivos o estables.');
+  if (signalCounts.positiveAfterExercise >= 2) return localizedText('Movement may be worth keeping close. Exercise appears near positive check-ins.', 'El movimiento puede ser un apoyo importante. El ejercicio aparece cerca de check-ins positivos.');
+  if (average >= 7) return localizedText('Start with calming tools before deeper reflection for the next few check-ins.', 'Empieza con herramientas de calma antes de reflexionar mas a fondo en tus proximos check-ins.');
   if (signalCounts.relationship >= 2 || signalCounts.abandonment >= 2 || signalCounts.conflict >= 2) {
-    return 'Watch relationship moments closely and pause before texting or reacting.';
+    return localizedText('Watch relationship moments closely and pause before texting or reacting.', 'Observa de cerca los momentos de relacion y haz una pausa antes de escribir o reaccionar.');
   }
-  if (topTrigger) return `Track "${topTrigger.label}" closely for the next few days.`;
-  if (topEmotion) return `Notice what tends to happen before "${topEmotion.label}" shows up.`;
-  return 'Keep checking in once a day so your first pattern has enough signal.';
+  if (topTrigger) return localizedText(`Track "${topTrigger.label}" closely for the next few days.`, `Observa de cerca "${topTrigger.label}" durante los proximos dias.`);
+  if (topEmotion) return localizedText(`Notice what tends to happen before "${topEmotion.label}" shows up.`, `Observa que suele pasar antes de que aparezca "${topEmotion.label}".`);
+  return localizedText('Keep checking in once a day so your first pattern has enough signal.', 'Sigue haciendo un check-in al dia para que tu primer patron tenga suficiente informacion.');
 }
 
 function buildPatternSentences(params: {
@@ -199,36 +201,36 @@ function buildPatternSentences(params: {
 
   const patterns: string[] = [];
   if (topEmotion && topTrigger) {
-    patterns.push(`Based on your check-ins, ${topEmotion.label.toLowerCase()} appears most often when ${topTrigger.label.toLowerCase()} is present.`);
+    patterns.push(localizedText(`Based on your check-ins, ${topEmotion.label.toLowerCase()} appears most often when ${topTrigger.label.toLowerCase()} is present.`, `Segun tus check-ins, ${topEmotion.label.toLowerCase()} aparece con mas frecuencia cuando ${topTrigger.label.toLowerCase()} esta presente.`));
   } else if (topEmotion) {
-    patterns.push(`${topEmotion.label} appears most often in your recent entries.`);
+    patterns.push(localizedText(`${topEmotion.label} appears most often in your recent entries.`, `${topEmotion.label} aparece con mas frecuencia en tus entradas recientes.`));
   } else if (topTrigger) {
-    patterns.push(`${topTrigger.label} appears most often as a trigger in your recent entries.`);
+    patterns.push(localizedText(`${topTrigger.label} appears most often as a trigger in your recent entries.`, `${topTrigger.label} aparece con mas frecuencia como disparador en tus entradas recientes.`));
   }
 
   if (signalCounts.rejected > 0) {
-    patterns.push(`Feeling rejected has appeared in ${signalCounts.rejected} recent entr${signalCounts.rejected === 1 ? 'y' : 'ies'}.`);
+    patterns.push(localizedText(`Feeling rejected has appeared in ${signalCounts.rejected} recent entr${signalCounts.rejected === 1 ? 'y' : 'ies'}.`, `Sentirte rechazado/a aparecio en ${signalCounts.rejected} entrada${signalCounts.rejected === 1 ? '' : 's'} reciente${signalCounts.rejected === 1 ? '' : 's'}.`));
   }
   if (signalCounts.relationship >= 2) {
-    patterns.push(`Relationship stress appears in ${signalCounts.relationship} recent check-ins.`);
+    patterns.push(localizedText(`Relationship stress appears in ${signalCounts.relationship} recent check-ins.`, `El estres relacional aparece en ${signalCounts.relationship} check-ins recientes.`));
   }
   if (signalCounts.abandonment >= 2) {
-    patterns.push(`Abandonment-related language appears in ${signalCounts.abandonment} entries.`);
+    patterns.push(localizedText(`Abandonment-related language appears in ${signalCounts.abandonment} entries.`, `El lenguaje relacionado con abandono aparece en ${signalCounts.abandonment} entradas.`));
   }
   if (signalCounts.conflict >= 2) {
-    patterns.push(`Conflict shows up repeatedly enough to watch for the next few days.`);
+    patterns.push(localizedText('Conflict shows up repeatedly enough to watch for the next few days.', 'El conflicto aparece con suficiente frecuencia como para observarlo durante los proximos dias.'));
   }
   if (signalCounts.highIntensityWithSleep >= 1) {
-    patterns.push('High intensity check-ins are more common when sleep or exhaustion is mentioned.');
+    patterns.push(localizedText('High intensity check-ins are more common when sleep or exhaustion is mentioned.', 'Los check-ins de alta intensidad son mas comunes cuando se menciona sueno o agotamiento.'));
   }
   if (signalCounts.positiveAfterSleep >= 2) {
-    patterns.push(`Calm or positive days often appear after good sleep in ${signalCounts.positiveAfterSleep} recent check-ins.`);
+    patterns.push(localizedText(`Calm or positive days often appear after good sleep in ${signalCounts.positiveAfterSleep} recent check-ins.`, `Los dias tranquilos o positivos suelen aparecer despues de dormir bien en ${signalCounts.positiveAfterSleep} check-ins recientes.`));
   }
   if (signalCounts.positiveAfterConnection >= 2) {
-    patterns.push(`You felt more connected or positive after supportive conversations in ${signalCounts.positiveAfterConnection} recent check-ins.`);
+    patterns.push(localizedText(`You felt more connected or positive after supportive conversations in ${signalCounts.positiveAfterConnection} recent check-ins.`, `Te sentiste mas conectado/a o positivo/a despues de conversaciones de apoyo en ${signalCounts.positiveAfterConnection} check-ins recientes.`));
   }
   if (signalCounts.positiveAfterExercise >= 2) {
-    patterns.push(`Exercise appeared on ${signalCounts.positiveAfterExercise} positive check-ins.`);
+    patterns.push(localizedText(`Exercise appeared on ${signalCounts.positiveAfterExercise} positive check-ins.`, `El ejercicio aparecio en ${signalCounts.positiveAfterExercise} check-ins positivos.`));
   }
   const hasPositivePattern =
     signalCounts.positiveAfterSleep >= 2 ||
@@ -236,7 +238,7 @@ function buildPatternSentences(params: {
     signalCounts.positiveAfterExercise >= 2;
 
   if (average >= 7 && !hasPositivePattern) {
-    patterns.push('Your recent intensity average is high, so calming first may help before trying to analyze.');
+    patterns.push(localizedText('Your recent intensity average is high, so calming first may help before trying to analyze.', 'Tu promedio de intensidad reciente es alto, asi que calmarte primero puede ayudar antes de analizar.'));
   }
 
   return patterns.slice(0, stage === 'full' ? 5 : 3);
@@ -252,45 +254,45 @@ function getEmotionEducation(label: string): Pick<EducationalInsight, 'why' | 'w
   const emotion = normalize(label);
   if (includesAny(emotion, ['calm', 'hopeful', 'proud', 'grateful', 'happy', 'connected', 'motivated', 'okay'])) {
     return {
-      why: 'Positive and grounded states matter too. Tracking them helps you learn what supports regulation, connection, and a steadier baseline.',
-      watchFor: ['what happened before this', 'what helped your body settle', 'who or what supported the feeling'],
-      nextStep: 'Notice what influenced this state so you can repeat supportive conditions when possible.',
-      actionLabel: 'Reflect & Learn',
+      why: localizedText('Positive and grounded states matter too. Tracking them helps you learn what supports regulation, connection, and a steadier baseline.', 'Los estados positivos y estables tambien importan. Registrarlos te ayuda a aprender que apoya la regulacion, la conexion y una base mas estable.'),
+      watchFor: localizedText('en', 'es') === 'es' ? ['que paso antes de esto', 'que ayudo a que tu cuerpo se calmara', 'quien o que sostuvo esa sensacion'] : ['what happened before this', 'what helped your body settle', 'who or what supported the feeling'],
+      nextStep: localizedText('Notice what influenced this state so you can repeat supportive conditions when possible.', 'Observa que influyo en este estado para repetir condiciones de apoyo cuando sea posible.'),
+      actionLabel: localizedText('Reflect & Learn', 'Reflexiona y aprende'),
       route: '/reflect-and-learn',
     };
   }
   if (includesAny(emotion, ['anxious', 'anxiety', 'abandoned', 'rejected', 'overwhelmed'])) {
     return {
-      why: 'For many people with BPD traits, anxiety or rejection sensitivity can appear before emotional spirals, impulsive urges, or relationship conflict.',
-      watchFor: ['reassurance seeking', 'repeated texting', 'catastrophizing'],
-      nextStep: 'Talk it through with Companion before reacting.',
-      actionLabel: 'Talk to Companion',
+      why: localizedText('For many people with BPD traits, anxiety or rejection sensitivity can appear before emotional spirals, impulsive urges, or relationship conflict.', 'Para muchas personas con rasgos de TLP, la ansiedad o la sensibilidad al rechazo pueden aparecer antes de espirales emocionales, impulsos o conflictos relacionales.'),
+      watchFor: localizedText('en', 'es') === 'es' ? ['buscar tranquilidad', 'enviar mensajes repetidos', 'anticipar lo peor'] : ['reassurance seeking', 'repeated texting', 'catastrophizing'],
+      nextStep: localizedText('Talk it through with Companion before reacting.', 'Habla de esto con Companion antes de reaccionar.'),
+      actionLabel: localizedText('Talk to Companion', 'Hablar con Companion'),
       route: '/(tabs)/companion',
     };
   }
   if (includesAny(emotion, ['angry', 'anger', 'triggered'])) {
     return {
-      why: 'Anger can sometimes be a signal that hurt, fear, shame, or a crossed boundary is underneath. Noticing it early can create space before reacting.',
-      watchFor: ['typing fast', 'wanting to prove a point', 'all-or-nothing thoughts'],
-      nextStep: 'Use Don’t Send It or pause before replying.',
-      actionLabel: 'Open Don’t Send It',
+      why: localizedText('Anger can sometimes be a signal that hurt, fear, shame, or a crossed boundary is underneath. Noticing it early can create space before reacting.', 'A veces el enojo senala que debajo hay dolor, miedo, verguenza o un limite cruzado. Notarlo temprano puede crear espacio antes de reaccionar.'),
+      watchFor: localizedText('en', 'es') === 'es' ? ['escribir muy rapido', 'querer demostrar un punto', 'pensamientos de todo o nada'] : ['typing fast', 'wanting to prove a point', 'all-or-nothing thoughts'],
+      nextStep: localizedText('Use Don’t Send It or pause before replying.', 'Usa No lo envies o haz una pausa antes de responder.'),
+      actionLabel: localizedText('Open Don’t Send It', 'Abrir No lo envies'),
       route: '/dont-send-it',
     };
   }
   if (includesAny(emotion, ['sad', 'empty', 'numb', 'lonely', 'ashamed', 'shame'])) {
     return {
-      why: 'Low, empty, or shame-heavy emotions can make it harder to remember what is true and supportive. Naming them can reduce how alone they feel.',
-      watchFor: ['withdrawing', 'self-blame', 'assuming people are upset with you'],
-      nextStep: 'Write a short reflection or ask Companion to help name what happened.',
-      actionLabel: 'Reflect with Companion',
+      why: localizedText('Low, empty, or shame-heavy emotions can make it harder to remember what is true and supportive. Naming them can reduce how alone they feel.', 'Las emociones bajas, vacias o cargadas de verguenza pueden hacer mas dificil recordar lo que es cierto y te apoya. Nombrarlas puede hacer que se sientan menos solas.'),
+      watchFor: localizedText('en', 'es') === 'es' ? ['aislarte', 'culparte', 'asumir que otros estan molestos contigo'] : ['withdrawing', 'self-blame', 'assuming people are upset with you'],
+      nextStep: localizedText('Write a short reflection or ask Companion to help name what happened.', 'Escribe una reflexion breve o pide a Companion que te ayude a nombrar lo que paso.'),
+      actionLabel: localizedText('Reflect with Companion', 'Reflexionar con Companion'),
       route: '/(tabs)/companion',
     };
   }
   return {
-    why: 'Repeated emotions are useful signals. They can show what your nervous system keeps responding to, even when the situation changes.',
-    watchFor: ['what happened before it', 'what urge follows it', 'what helps it pass'],
-    nextStep: 'Keep checking in so this pattern becomes clearer.',
-    actionLabel: 'Check in today',
+    why: localizedText('Repeated emotions are useful signals. They can show what your nervous system keeps responding to, even when the situation changes.', 'Las emociones repetidas son senales utiles. Pueden mostrar a que sigue respondiendo tu sistema nervioso, incluso cuando la situacion cambia.'),
+    watchFor: localizedText('en', 'es') === 'es' ? ['que paso antes', 'que impulso aparece despues', 'que ayuda a que pase'] : ['what happened before it', 'what urge follows it', 'what helps it pass'],
+    nextStep: localizedText('Keep checking in so this pattern becomes clearer.', 'Sigue haciendo check-ins para que este patron se vuelva mas claro.'),
+    actionLabel: localizedText('Check in today', 'Hacer check-in hoy'),
     route: '/(tabs)/(home)',
   };
 }
@@ -299,50 +301,51 @@ function getTriggerEducation(label: string): Pick<EducationalInsight, 'why' | 'w
   const trigger = normalize(label);
   if (includesAny(trigger, ['good sleep', 'exercise', 'supportive conversation', 'felt connected', 'completed something', 'time outside', 'self-care', 'work progress', 'proud'])) {
     return {
-      why: 'Positive influences are part of your emotional map. They show what may help you feel more grounded, connected, or capable.',
-      watchFor: ['what you did before the positive shift', 'what felt repeatable', 'what support was present'],
-      nextStep: 'Save the influence and look for it again this week.',
-      actionLabel: 'Check in today',
+      why: localizedText('Positive influences are part of your emotional map. They show what may help you feel more grounded, connected, or capable.', 'Las influencias positivas son parte de tu mapa emocional. Muestran que puede ayudarte a sentirte mas estable, conectado/a o capaz.'),
+      watchFor: localizedText('en', 'es') === 'es' ? ['que hiciste antes del cambio positivo', 'que se sintio repetible', 'que apoyo estuvo presente'] : ['what you did before the positive shift', 'what felt repeatable', 'what support was present'],
+      nextStep: localizedText('Save the influence and look for it again this week.', 'Guarda esta influencia y buscala de nuevo esta semana.'),
+      actionLabel: localizedText('Check in today', 'Hacer check-in hoy'),
       route: '/(tabs)/(home)',
     };
   }
   if (includesAny(trigger, ['abandon', 'relationship', 'conflict', 'reply', 'ignored', 'criticism', 'family'])) {
     return {
-      why: 'Relationship triggers can feel urgent because connection and safety may feel uncertain in the moment. Tracking them helps you notice the pattern before the urge takes over.',
-      watchFor: ['checking your phone repeatedly', 'mind-reading', 'sending one more message'],
-      nextStep: 'Pause and talk through the trigger before choosing what to do.',
-      actionLabel: 'Talk to Companion',
+      why: localizedText('Relationship triggers can feel urgent because connection and safety may feel uncertain in the moment. Tracking them helps you notice the pattern before the urge takes over.', 'Los disparadores relacionales pueden sentirse urgentes porque la conexion y la seguridad pueden sentirse inciertas en el momento. Registrarlos te ayuda a notar el patron antes de que el impulso tome el control.'),
+      watchFor: localizedText('en', 'es') === 'es' ? ['revisar el telefono repetidamente', 'leer la mente', 'enviar un mensaje mas'] : ['checking your phone repeatedly', 'mind-reading', 'sending one more message'],
+      nextStep: localizedText('Pause and talk through the trigger before choosing what to do.', 'Haz una pausa y habla del disparador antes de elegir que hacer.'),
+      actionLabel: localizedText('Talk to Companion', 'Hablar con Companion'),
       route: '/(tabs)/companion',
     };
   }
   if (includesAny(trigger, ['sleep', 'tired', 'exhausted'])) {
     return {
-      why: 'Sleep disruption can make emotions feel sharper and coping feel harder. This does not explain everything, but it is worth watching.',
-      watchFor: ['lower patience', 'stronger assumptions', 'more intense reactions'],
-      nextStep: 'Choose a calming tool before analyzing the situation.',
-      actionLabel: 'Open Calm Me Down',
+      why: localizedText('Sleep disruption can make emotions feel sharper and coping feel harder. This does not explain everything, but it is worth watching.', 'Dormir mal puede hacer que las emociones se sientan mas intensas y que regularte cueste mas. No lo explica todo, pero vale la pena observarlo.'),
+      watchFor: localizedText('en', 'es') === 'es' ? ['menos paciencia', 'suposiciones mas fuertes', 'reacciones mas intensas'] : ['lower patience', 'stronger assumptions', 'more intense reactions'],
+      nextStep: localizedText('Choose a calming tool before analyzing the situation.', 'Elige una herramienta de calma antes de analizar la situacion.'),
+      actionLabel: localizedText('Open Calm Me Down', 'Abrir Calmarme'),
       route: '/grounding-mode',
     };
   }
   if (includesAny(trigger, ['work', 'money'])) {
     return {
-      why: 'Practical stress can raise baseline tension, making emotional moments feel harder to regulate later.',
-      watchFor: ['rumination', 'avoidance', 'snap decisions'],
-      nextStep: 'Use a short grounding reset, then decide on one small next action.',
-      actionLabel: 'Open Tools',
+      why: localizedText('Practical stress can raise baseline tension, making emotional moments feel harder to regulate later.', 'El estres practico puede subir la tension de base y hacer que los momentos emocionales sean mas dificiles de regular despues.'),
+      watchFor: localizedText('en', 'es') === 'es' ? ['rumiacion', 'evitacion', 'decisiones impulsivas'] : ['rumination', 'avoidance', 'snap decisions'],
+      nextStep: localizedText('Use a short grounding reset, then decide on one small next action.', 'Usa un reinicio breve de grounding y luego elige una pequena accion.'),
+      actionLabel: localizedText('Open Tools', 'Abrir herramientas'),
       route: '/(tabs)/tools',
     };
   }
   return {
-    why: 'A repeated trigger is a cue. It can help you prepare earlier instead of only responding after emotions peak.',
-    watchFor: ['body tension', 'urgent thoughts', 'impulsive urges'],
-    nextStep: 'Track this trigger for a few more check-ins.',
-    actionLabel: 'Check in today',
+    why: localizedText('A repeated trigger is a cue. It can help you prepare earlier instead of only responding after emotions peak.', 'Un disparador repetido es una senal. Puede ayudarte a prepararte antes, no solo responder cuando las emociones llegan al maximo.'),
+    watchFor: localizedText('en', 'es') === 'es' ? ['tension corporal', 'pensamientos urgentes', 'impulsos'] : ['body tension', 'urgent thoughts', 'impulsive urges'],
+    nextStep: localizedText('Track this trigger for a few more check-ins.', 'Observa este disparador durante algunos check-ins mas.'),
+    actionLabel: localizedText('Check in today', 'Hacer check-in hoy'),
     route: '/(tabs)/(home)',
   };
 }
 
 function EducationalInsightCard({ insight }: { insight: EducationalInsight }) {
+  useLanguage();
   const { colors } = useAppTheme();
   const router = useRouter();
   return (
@@ -356,11 +359,11 @@ function EducationalInsightCard({ insight }: { insight: EducationalInsight }) {
       </View>
 
       <View style={[styles.whyBox, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
-        <Text style={[styles.whyTitle, { color: colors.text }]}>Why this matters</Text>
+        <Text style={[styles.whyTitle, { color: colors.text }]}>{localizedText('Why this matters', 'Por que importa')}</Text>
         <Text style={[styles.whyText, { color: colors.textSecondary }]}>{insight.why}</Text>
       </View>
 
-      <Text style={[styles.watchTitle, { color: colors.text }]}>What to watch for:</Text>
+      <Text style={[styles.watchTitle, { color: colors.text }]}>{localizedText('What to watch for:', 'Que observar:')}</Text>
       {insight.watchFor.map(item => (
         <View key={item} style={styles.watchRow}>
           <View style={[styles.watchDot, { backgroundColor: colors.brandTeal }]} />
@@ -368,7 +371,7 @@ function EducationalInsightCard({ insight }: { insight: EducationalInsight }) {
         </View>
       ))}
 
-      <Text style={[styles.nextStepText, { color: colors.text }]}>Suggested next step: {insight.nextStep}</Text>
+      <Text style={[styles.nextStepText, { color: colors.text }]}>{localizedText('Suggested next step:', 'Siguiente paso sugerido:')} {insight.nextStep}</Text>
       <TouchableOpacity
         style={[styles.educationButton, { backgroundColor: colors.primary }]}
         onPress={() => router.push(insight.route as never)}
@@ -404,24 +407,25 @@ function HealthyProgressCard({
   metrics: ConsistencyMetrics;
   recentMilestone: MilestoneDefinition | null;
 }) {
+  useLanguage();
   const { colors } = useAppTheme();
   const streaks = [
     {
-      label: 'Emotional Awareness Streak',
+      label: localizedText('Emotional Awareness Streak', 'Racha de conciencia emocional'),
       value: metrics.emotionalAwarenessStreak,
-      body: 'Days in a row with a check-in.',
+      body: localizedText('Days in a row with a check-in.', 'Dias seguidos con check-in.'),
       icon: <Heart size={18} color={colors.brandTeal} />,
     },
     {
-      label: 'Companion Reflection Streak',
+      label: localizedText('Companion Reflection Streak', 'Racha de reflexion con Companion'),
       value: metrics.companionReflectionStreak,
-      body: 'Days in a row talking something through.',
+      body: localizedText('Days in a row talking something through.', 'Dias seguidos hablando de algo.'),
       icon: <MessageCircle size={18} color={colors.primary} />,
     },
     {
-      label: 'Skill Practice Streak',
+      label: localizedText('Skill Practice Streak', 'Racha de practica de habilidades'),
       value: metrics.skillPracticeStreak,
-      body: 'Days in a row practicing DBT Academy.',
+      body: localizedText('Days in a row practicing DBT Academy.', 'Dias seguidos practicando DBT Academy.'),
       icon: <BookOpen size={18} color={colors.accent} />,
     },
   ];
@@ -433,8 +437,8 @@ function HealthyProgressCard({
           <Sparkles size={20} color={colors.primary} />
         </View>
         <View style={styles.healthyHeaderText}>
-          <Text style={[styles.healthyKicker, { color: colors.brandTeal }]}>Healthy progress</Text>
-          <Text style={[styles.healthyTitle, { color: colors.text }]}>Steady practice, not perfection</Text>
+          <Text style={[styles.healthyKicker, { color: colors.brandTeal }]}>{localizedText('Healthy progress', 'Progreso saludable')}</Text>
+          <Text style={[styles.healthyTitle, { color: colors.text }]}>{localizedText('Steady practice, not perfection', 'Practica constante, no perfeccion')}</Text>
         </View>
       </View>
 
@@ -454,12 +458,12 @@ function HealthyProgressCard({
       </View>
 
       <View style={[styles.achievementNote, { backgroundColor: colors.brandTealSoft, borderColor: colors.borderLight }]}>
-        <Text style={[styles.achievementKicker, { color: colors.brandTeal }]}>Meaningful milestone</Text>
+        <Text style={[styles.achievementKicker, { color: colors.brandTeal }]}>{localizedText('Meaningful milestone', 'Hito significativo')}</Text>
         <Text style={[styles.achievementTitle, { color: colors.text }]}>
-          {recentMilestone?.title ?? 'Your next milestone is forming'}
+          {recentMilestone?.title ?? localizedText('Your next milestone is forming', 'Tu proximo hito se esta formando')}
         </Text>
         <Text style={[styles.achievementBody, { color: colors.textSecondary }]}>
-          {recentMilestone?.celebrationMessage ?? 'Check-ins, reflections, skills, and pauses all count as healthy progress.'}
+          {recentMilestone?.celebrationMessage ?? localizedText('Check-ins, reflections, skills, and pauses all count as healthy progress.', 'Los check-ins, reflexiones, habilidades y pausas tambien cuentan como progreso saludable.')}
         </Text>
       </View>
     </View>
@@ -475,6 +479,7 @@ function AhaMomentCard({
   isSaved: boolean;
   onToggleSave: (moment: AhaMoment | FavoriteAhaMoment) => void;
 }) {
+  useLanguage();
   const { colors } = useAppTheme();
   const SaveIcon = isSaved ? BookmarkCheck : Bookmark;
   return (
@@ -484,7 +489,7 @@ function AhaMomentCard({
           <Sparkles size={17} color={colors.primary} />
         </View>
         <View style={styles.ahaHeaderText}>
-          <Text style={[styles.ahaKicker, { color: colors.brandTeal }]}>Aha Moment</Text>
+          <Text style={[styles.ahaKicker, { color: colors.brandTeal }]}>{localizedText('Aha Moment', 'Momento de claridad')}</Text>
           <Text style={[styles.ahaTitle, { color: colors.text }]}>{moment.title}</Text>
         </View>
         <TouchableOpacity
@@ -498,11 +503,11 @@ function AhaMomentCard({
       </View>
       <Text style={[styles.ahaObservation, { color: colors.text }]}>{moment.observation}</Text>
       <Text style={[styles.ahaEvidence, { color: colors.textSecondary }]}>
-        Why this showed up: {moment.evidence}
+        {localizedText('Why this showed up:', 'Por que aparecio:')} {moment.evidence}
       </Text>
       <View style={[styles.ahaConfidencePill, { backgroundColor: colors.brandTealSoft }]}>
         <Text style={[styles.ahaConfidenceText, { color: colors.brandTeal }]}>
-          {isSaved ? 'Saved for review' : 'High confidence'}
+          {isSaved ? localizedText('Saved for review', 'Guardado para revisar') : localizedText('High confidence', 'Alta confianza')}
         </Text>
       </View>
     </View>
@@ -514,10 +519,11 @@ function EmotionalStabilityScoreCard({
 }: {
   report: EmotionalStabilityScoreReport;
 }) {
+  useLanguage();
   const { colors } = useAppTheme();
   const changeLabel = report.weeklyChange === null
-    ? 'Building baseline'
-    : `${report.weeklyChange >= 0 ? '+' : ''}${report.weeklyChange} this week`;
+    ? localizedText('Building baseline', 'Creando base')
+    : localizedText(`${report.weeklyChange >= 0 ? '+' : ''}${report.weeklyChange} this week`, `${report.weeklyChange >= 0 ? '+' : ''}${report.weeklyChange} esta semana`);
   const changeColor = report.trend === 'up'
     ? colors.success
     : report.trend === 'down'
@@ -525,7 +531,7 @@ function EmotionalStabilityScoreCard({
       : colors.textSecondary;
   const reasons = report.changeReasons.length > 0
     ? report.changeReasons
-    : ['your recent data was fairly steady this week'];
+    : [localizedText('your recent data was fairly steady this week', 'tus datos recientes se mantuvieron bastante estables esta semana')];
   const helpfulFactors = report.factors.filter(factor => factor.score >= 65).slice(0, 2);
   const supportFactors = report.factors.filter(factor => factor.score < 65).slice(0, 2);
 
@@ -537,18 +543,18 @@ function EmotionalStabilityScoreCard({
           <Text style={[styles.stabilityScoreScale, { color: colors.textMuted }]}>/100</Text>
         </View>
         <View style={styles.stabilityHeaderText}>
-          <Text style={[styles.stabilityKicker, { color: colors.brandTeal }]}>Reflection score</Text>
-          <Text style={[styles.stabilityTitle, { color: colors.text }]}>Emotional Awareness Score</Text>
+          <Text style={[styles.stabilityKicker, { color: colors.brandTeal }]}>{localizedText('Reflection score', 'Puntaje de reflexion')}</Text>
+          <Text style={[styles.stabilityTitle, { color: colors.text }]}>{localizedText('Emotional Awareness Score', 'Puntaje de conciencia emocional')}</Text>
           <Text style={[styles.stabilityChange, { color: changeColor }]}>{changeLabel}</Text>
         </View>
       </View>
 
       <Text style={[styles.stabilitySummary, { color: colors.textSecondary }]}>
-        This is not a diagnosis or medical score. It reflects how consistently you check in, reflect, use coping tools, and notice patterns.
+        {localizedText('This is not a diagnosis or medical score. It reflects how consistently you check in, reflect, use coping tools, and notice patterns.', 'Esto no es un diagnostico ni un puntaje medico. Refleja que tan consistentemente haces check-ins, reflexionas, usas herramientas de afrontamiento y notas patrones.')}
       </Text>
 
       <View style={[styles.stabilityReasonBox, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
-        <Text style={[styles.stabilityReasonTitle, { color: colors.text }]}>What changed it:</Text>
+        <Text style={[styles.stabilityReasonTitle, { color: colors.text }]}>{localizedText('What changed it:', 'Que lo cambio:')}</Text>
         {reasons.map((reason) => (
           <View key={reason} style={styles.stabilityReasonRow}>
             <CheckCircle2 size={15} color={colors.brandTeal} />
@@ -559,7 +565,7 @@ function EmotionalStabilityScoreCard({
 
       {helpfulFactors.length > 0 ? (
         <View style={[styles.stabilityReasonBox, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
-          <Text style={[styles.stabilityReasonTitle, { color: colors.text }]}>What increased it:</Text>
+          <Text style={[styles.stabilityReasonTitle, { color: colors.text }]}>{localizedText('What increased it:', 'Que lo aumento:')}</Text>
           {helpfulFactors.map((factor) => (
             <View key={factor.id} style={styles.stabilityReasonRow}>
               <CheckCircle2 size={15} color={colors.success} />
@@ -571,7 +577,7 @@ function EmotionalStabilityScoreCard({
 
       {supportFactors.length > 0 ? (
         <View style={[styles.stabilityReasonBox, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
-          <Text style={[styles.stabilityReasonTitle, { color: colors.text }]}>What lowered it:</Text>
+          <Text style={[styles.stabilityReasonTitle, { color: colors.text }]}>{localizedText('What lowered it:', 'Que lo bajo:')}</Text>
           {supportFactors.map((factor) => (
             <View key={factor.id} style={styles.stabilityReasonRow}>
               <Clock size={15} color={colors.accent} />
@@ -582,11 +588,11 @@ function EmotionalStabilityScoreCard({
       ) : null}
 
       <Text style={[styles.stabilitySummary, { color: colors.textSecondary }]}>
-        Why it matters: more awareness makes it easier to notice spirals earlier and choose a skill before reacting.
+        {localizedText('Why it matters: more awareness makes it easier to notice spirals earlier and choose a skill before reacting.', 'Por que importa: mas conciencia hace mas facil notar espirales antes y elegir una habilidad antes de reaccionar.')}
       </Text>
 
       <Text style={[styles.stabilityFootnote, { color: colors.textMuted }]}>
-        Personal reflection metric only. It is not medical advice and does not measure your worth or progress in therapy.
+        {localizedText('Personal reflection metric only. It is not medical advice and does not measure your worth or progress in therapy.', 'Solo es una metrica personal de reflexion. No es consejo medico y no mide tu valor ni tu progreso en terapia.')}
       </Text>
     </View>
   );
@@ -601,6 +607,7 @@ function CalmToolsHelpedCard({
   hasEnoughSessions: boolean;
   onPress: () => void;
 }) {
+  useLanguage();
   const { colors } = useAppTheme();
   return (
     <View style={[styles.calmCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
@@ -609,33 +616,33 @@ function CalmToolsHelpedCard({
           <Wind size={20} color={colors.brandTeal} />
         </View>
         <View style={styles.calmHeaderText}>
-          <Text style={[styles.calmKicker, { color: colors.brandTeal }]}>Regulation tools</Text>
-          <Text style={[styles.calmTitle, { color: colors.text }]}>Calm tools helped</Text>
+          <Text style={[styles.calmKicker, { color: colors.brandTeal }]}>{localizedText('Regulation tools', 'Herramientas de regulacion')}</Text>
+          <Text style={[styles.calmTitle, { color: colors.text }]}>{localizedText('Calm tools helped', 'Las herramientas de calma ayudaron')}</Text>
         </View>
       </View>
 
       {hasEnoughSessions ? (
         <>
           <Text style={[styles.calmSummary, { color: colors.text }]}>
-            Calm Me Down lowered intensity by {summary.averageReduction.toFixed(1)} points on average.
+            {localizedText(`Calm Me Down lowered intensity by ${summary.averageReduction.toFixed(1)} points on average.`, `Calmarme bajo la intensidad en ${summary.averageReduction.toFixed(1)} puntos en promedio.`)}
           </Text>
           <View style={styles.calmStatsRow}>
             <View style={[styles.calmStatPill, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
               <Text style={[styles.calmStatValue, { color: colors.text }]}>{summary.sessionCount}</Text>
-              <Text style={[styles.calmStatLabel, { color: colors.textSecondary }]}>sessions</Text>
+              <Text style={[styles.calmStatLabel, { color: colors.textSecondary }]}>{localizedText('sessions', 'sesiones')}</Text>
             </View>
             <View style={[styles.calmStatPill, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
               <Text style={[styles.calmStatValue, { color: colors.text }]}>{summary.bestReduction.toFixed(1)}</Text>
-              <Text style={[styles.calmStatLabel, { color: colors.textSecondary }]}>best drop</Text>
+              <Text style={[styles.calmStatLabel, { color: colors.textSecondary }]}>{localizedText('best drop', 'mejor bajada')}</Text>
             </View>
           </View>
           <Text style={[styles.calmDetail, { color: colors.textSecondary }]}>
-            Most common trigger before using Calm Me Down: {summary.mostCommonTrigger ?? 'still forming'}.
+            {localizedText('Most common trigger before using Calm Me Down:', 'Disparador mas comun antes de usar Calmarme:')} {summary.mostCommonTrigger ?? localizedText('still forming', 'aun formandose')}.
           </Text>
         </>
       ) : (
         <Text style={[styles.calmSummary, { color: colors.textSecondary }]}>
-          Use Calm Me Down twice to see how it affects your intensity.
+          {localizedText('Use Calm Me Down twice to see how it affects your intensity.', 'Usa Calmarme dos veces para ver como afecta tu intensidad.')}
         </Text>
       )}
 
@@ -645,7 +652,7 @@ function CalmToolsHelpedCard({
         activeOpacity={0.86}
         testID="insights-calm-me-down-btn"
       >
-        <Text style={styles.calmButtonText}>Open Calm Me Down</Text>
+        <Text style={styles.calmButtonText}>{localizedText('Open Calm Me Down', 'Abrir Calmarme')}</Text>
         <ArrowRight size={16} color={Colors.white} />
       </TouchableOpacity>
     </View>
@@ -687,6 +694,7 @@ function CareInsightsCard({
 }
 
 export default function PremiumInsightsScreen() {
+  useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
@@ -745,14 +753,14 @@ export default function PremiumInsightsScreen() {
     if (stage === 'forming') {
       return [
         {
-          title: todaysCheckIn ? 'Today’s check-in complete' : 'Example insight',
-          value: todaysCheckIn ? 'Your entry is saved for today.' : 'Anxiety may show up before urgency',
-          why: 'When enough check-ins are saved, BPD Companion will explain why a repeated emotion may matter and what to watch for.',
-          watchFor: ['reassurance seeking', 'repeated texting', 'catastrophizing'],
+          title: todaysCheckIn ? localizedText('Today’s check-in complete', 'Check-in de hoy completado') : localizedText('Example insight', 'Ejemplo de insight'),
+          value: todaysCheckIn ? localizedText('Your entry is saved for today.', 'Tu entrada de hoy esta guardada.') : localizedText('Anxiety may show up before urgency', 'La ansiedad puede aparecer antes de la urgencia'),
+          why: localizedText('When enough check-ins are saved, BPD Companion will explain why a repeated emotion may matter and what to watch for.', 'Cuando haya suficientes check-ins guardados, BPD Companion explicara por que una emocion repetida puede importar y que observar.'),
+          watchFor: localizedText('en', 'es') === 'es' ? ['buscar tranquilidad', 'enviar mensajes repetidos', 'anticipar lo peor'] : ['reassurance seeking', 'repeated texting', 'catastrophizing'],
           nextStep: todaysCheckIn
-            ? 'Today’s check-in is complete. You can review what is starting to form.'
-            : 'Complete a few more check-ins to unlock your real pattern.',
-          actionLabel: todaysCheckIn ? 'View today’s insights' : 'Check in today',
+            ? localizedText('Today’s check-in is complete. You can review what is starting to form.', 'El check-in de hoy esta completo. Puedes revisar lo que empieza a formarse.')
+            : localizedText('Complete a few more check-ins to unlock your real pattern.', 'Completa algunos check-ins mas para desbloquear tu patron real.'),
+          actionLabel: todaysCheckIn ? localizedText('View today’s insights', 'Ver insights de hoy') : localizedText('Check in today', 'Hacer check-in hoy'),
           route: todaysCheckIn ? '/(tabs)/(home)' : '/(tabs)/(home)',
           icon: <Heart size={19} color={colors.brandTeal} />,
         },
@@ -763,8 +771,8 @@ export default function PremiumInsightsScreen() {
     if (topEmotion) {
       const education = getEmotionEducation(topEmotion.label);
       cards.push({
-        title: 'Most common emotion',
-        value: `${topEmotion.label} appeared in ${topEmotion.count} recent check-in${topEmotion.count === 1 ? '' : 's'}.`,
+        title: localizedText('Most common emotion', 'Emocion mas comun'),
+        value: localizedText(`${topEmotion.label} appeared in ${topEmotion.count} recent check-in${topEmotion.count === 1 ? '' : 's'}.`, `${topEmotion.label} aparecio en ${topEmotion.count} check-in${topEmotion.count === 1 ? '' : 's'} reciente${topEmotion.count === 1 ? '' : 's'}.`),
         icon: <Heart size={19} color={colors.brandTeal} />,
         ...education,
       });
@@ -772,22 +780,22 @@ export default function PremiumInsightsScreen() {
     if (topTrigger) {
       const education = getTriggerEducation(topTrigger.label);
       cards.push({
-        title: hasPositivePattern ? 'Most common influence' : 'Most common trigger',
-        value: `${topTrigger.label} appeared in ${topTrigger.count} recent check-in${topTrigger.count === 1 ? '' : 's'}.`,
+        title: hasPositivePattern ? localizedText('Most common influence', 'Influencia mas comun') : localizedText('Most common trigger', 'Disparador mas comun'),
+        value: localizedText(`${topTrigger.label} appeared in ${topTrigger.count} recent check-in${topTrigger.count === 1 ? '' : 's'}.`, `${topTrigger.label} aparecio en ${topTrigger.count} check-in${topTrigger.count === 1 ? '' : 's'} reciente${topTrigger.count === 1 ? '' : 's'}.`),
         icon: <Target size={19} color={colors.accent} />,
         ...education,
       });
     }
     const shouldSuggestCalming = average >= 7 && !hasPositivePattern;
     cards.push({
-      title: 'What may help next',
+      title: localizedText('What may help next', 'Que puede ayudar ahora'),
       value: suggestedFocus,
-      why: 'A next step matters because insight is most useful when it turns into one small, doable action before emotions peak.',
+      why: localizedText('A next step matters because insight is most useful when it turns into one small, doable action before emotions peak.', 'Un siguiente paso importa porque un insight es mas util cuando se convierte en una accion pequena y posible antes de que las emociones suban.'),
       watchFor: hasPositivePattern
-        ? ['what helped the day start better', 'supportive connection', 'routines worth repeating']
-        : ['trying to solve everything at once', 'skipping calming tools', 'waiting until intensity is already high'],
-      nextStep: shouldSuggestCalming ? 'Use Calm Me Down before deeper reflection.' : 'Talk through the pattern with Companion.',
-      actionLabel: shouldSuggestCalming ? 'Open Calm Me Down' : 'Talk to Companion',
+        ? (localizedText('en', 'es') === 'es' ? ['que ayudo a que el dia empezara mejor', 'conexion de apoyo', 'rutinas que vale la pena repetir'] : ['what helped the day start better', 'supportive connection', 'routines worth repeating'])
+        : (localizedText('en', 'es') === 'es' ? ['intentar resolver todo a la vez', 'saltarte herramientas de calma', 'esperar hasta que la intensidad ya este alta'] : ['trying to solve everything at once', 'skipping calming tools', 'waiting until intensity is already high']),
+      nextStep: shouldSuggestCalming ? localizedText('Use Calm Me Down before deeper reflection.', 'Usa Calmarme antes de una reflexion mas profunda.') : localizedText('Talk through the pattern with Companion.', 'Habla del patron con Companion.'),
+      actionLabel: shouldSuggestCalming ? localizedText('Open Calm Me Down', 'Abrir Calmarme') : localizedText('Talk to Companion', 'Hablar con Companion'),
       route: shouldSuggestCalming ? '/grounding-mode' : '/(tabs)/companion',
       icon: <Brain size={19} color={colors.primary} />,
     });
@@ -841,10 +849,10 @@ export default function PremiumInsightsScreen() {
   const remainingForFirstInsight = Math.max(0, FIRST_INSIGHT_COUNT - checkInCount);
   const remainingForFullReport = Math.max(0, FULL_INSIGHT_COUNT - checkInCount);
   const accessLabel = isEntitlementActive
-    ? 'Membership active'
+    ? localizedText('Membership active', 'Membresia activa')
     : state.isTrialActive
-      ? 'Store trial active'
-      : 'Membership required';
+      ? localizedText('Store trial active', 'Prueba de la tienda activa')
+      : localizedText('Membership required', 'Membresia requerida');
   const handleToggleAhaSave = async (moment: AhaMoment | FavoriteAhaMoment) => {
     try {
       const updated = savedAhaIds.has(moment.id)
@@ -863,9 +871,9 @@ export default function PremiumInsightsScreen() {
           <View style={[styles.lockedIcon, { backgroundColor: colors.primaryLight }]}>
             <Lock size={34} color={colors.primary} />
           </View>
-          <Text style={[styles.lockedTitle, { color: colors.text }]}>Keep your emotional patterns</Text>
+          <Text style={[styles.lockedTitle, { color: colors.text }]}>{localizedText('Keep your emotional patterns', 'Conserva tus patrones emocionales')}</Text>
           <Text style={[styles.lockedBody, { color: colors.textSecondary }]}>
-            Membership keeps your pattern summaries, saved Companion insights, and first-week report available.
+            {localizedText('Membership keeps your pattern summaries, saved Companion insights, and first-week report available.', 'La membresia mantiene disponibles tus resumenes de patrones, insights guardados de Companion y tu reporte de la primera semana.')}
           </Text>
           <TouchableOpacity
             style={[styles.primaryButton, { backgroundColor: colors.primary }]}
@@ -873,7 +881,7 @@ export default function PremiumInsightsScreen() {
             activeOpacity={0.86}
             testID="insights-upgrade-btn"
           >
-            <Text style={styles.primaryButtonText}>Start membership</Text>
+            <Text style={styles.primaryButtonText}>{localizedText('Start membership', 'Iniciar membresia')}</Text>
             <ChevronRight size={18} color={Colors.white} />
           </TouchableOpacity>
         </ScrollView>
@@ -886,9 +894,9 @@ export default function PremiumInsightsScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Text style={[styles.eyebrow, { color: colors.brandTeal }]}>{accessLabel}</Text>
-          <Text style={[styles.title, { color: colors.text }]}>Your emotional patterns</Text>
+          <Text style={[styles.title, { color: colors.text }]}>{localizedText('Your emotional patterns', 'Tus patrones emocionales')}</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            Calm reflections based on your check-ins. No diagnosis, no certainty, just patterns you can notice sooner.
+            {localizedText('Calm reflections based on your check-ins. No diagnosis, no certainty, just patterns you can notice sooner.', 'Reflexiones calmadas basadas en tus check-ins. Sin diagnosticos ni certezas, solo patrones que puedes notar antes.')}
           </Text>
         </View>
 
@@ -898,12 +906,12 @@ export default function PremiumInsightsScreen() {
               <Sparkles size={24} color={colors.primary} />
             </View>
             <Text style={[styles.formingTitle, { color: colors.text }]}>
-              {todaysCheckIn ? 'Today’s check-in complete' : 'Your patterns are starting to form.'}
+              {todaysCheckIn ? localizedText('Today’s check-in complete', 'Check-in de hoy completado') : localizedText('Your patterns are starting to form.', 'Tus patrones estan empezando a formarse.')}
             </Text>
             <Text style={[styles.formingText, { color: colors.textSecondary }]}>
               {todaysCheckIn
-                ? 'Your entry is saved for today. Keep checking in to unlock your first emotional pattern.'
-                : `Complete ${remainingForFirstInsight} more check-in${remainingForFirstInsight === 1 ? '' : 's'} to unlock your first insight.`}
+                ? localizedText('Your entry is saved for today. Keep checking in to unlock your first emotional pattern.', 'Tu entrada de hoy esta guardada. Sigue haciendo check-ins para desbloquear tu primer patron emocional.')
+                : localizedText(`Complete ${remainingForFirstInsight} more check-in${remainingForFirstInsight === 1 ? '' : 's'} to unlock your first insight.`, `Completa ${remainingForFirstInsight} check-in${remainingForFirstInsight === 1 ? '' : 's'} mas para desbloquear tu primer insight.`)}
             </Text>
             <TouchableOpacity
               style={[styles.checkInButton, { backgroundColor: colors.primary }]}
@@ -912,7 +920,7 @@ export default function PremiumInsightsScreen() {
               testID="insights-check-in-btn"
             >
               <Text style={styles.checkInButtonText}>
-                {todaysCheckIn ? 'View today’s insights' : 'Check in today'}
+                {todaysCheckIn ? localizedText('View today’s insights', 'Ver insights de hoy') : localizedText('Check in today', 'Hacer check-in hoy')}
               </Text>
               <ArrowRight size={17} color={Colors.white} />
             </TouchableOpacity>
@@ -929,32 +937,32 @@ export default function PremiumInsightsScreen() {
           onPress={() => router.push('/grounding-mode' as never)}
         />
 
-        <Section title="Care support">
+        <Section title={localizedText('Care support', 'Apoyo de cuidado')}>
           <View style={styles.patternList}>
             <CareInsightsCard
-              title="Upcoming care"
+              title={localizedText('Upcoming care', 'Proxima atencion')}
               body={nextCareAppointment
                 ? `${APPOINTMENT_TYPE_LABELS[nextCareAppointment.appointmentType]}: ${nextCareAppointment.providerName}`
-                : 'No upcoming appointments added yet.'}
+                : localizedText('No upcoming appointments added yet.', 'Aun no agregaste proximas citas.')}
               detail={nextCareAppointment
                 ? `${formatAppointmentDate(nextCareAppointment.dateTime)} at ${formatAppointmentTime(nextCareAppointment.dateTime)}`
-                : 'Add appointments to keep care moments visible.'}
+                : localizedText('Add appointments to keep care moments visible.', 'Agrega citas para mantener visibles tus momentos de cuidado.')}
               icon={<Calendar size={18} color={colors.brandTeal} />}
               onPress={() => router.push('/appointments' as never)}
             />
             <CareInsightsCard
-              title="Medication consistency"
+              title={localizedText('Medication consistency', 'Consistencia con medicamentos')}
               body={medicationConsistency.activeMedicationCount > 0
-                ? `You added ${medicationConsistency.activeMedicationCount} active medication${medicationConsistency.activeMedicationCount === 1 ? '' : 's'}.`
-                : 'No medications added yet.'}
+                ? localizedText(`You added ${medicationConsistency.activeMedicationCount} active medication${medicationConsistency.activeMedicationCount === 1 ? '' : 's'}.`, `Agregaste ${medicationConsistency.activeMedicationCount} medicamento${medicationConsistency.activeMedicationCount === 1 ? '' : 's'} activo${medicationConsistency.activeMedicationCount === 1 ? '' : 's'}.`)
+                : localizedText('No medications added yet.', 'Aun no agregaste medicamentos.')}
               detail={medicationConsistency.total > 0
-                ? `Last 7 days: you marked ${medicationConsistency.taken} as taken and ${medicationConsistency.missed} as missed.`
-                : 'Medication tracking is for organization only and does not replace medical advice.'}
+                ? localizedText(`Last 7 days: you marked ${medicationConsistency.taken} as taken and ${medicationConsistency.missed} as missed.`, `Ultimos 7 dias: marcaste ${medicationConsistency.taken} como tomados y ${medicationConsistency.missed} como omitidos.`)
+                : localizedText('Medication tracking is for organization only and does not replace medical advice.', 'El seguimiento de medicamentos es solo para organizarte y no reemplaza el consejo medico.')}
               icon={<Pill size={18} color={colors.primary} />}
               onPress={() => router.push('/medications' as never)}
             />
             <Text style={[styles.medicalSafetyText, { color: colors.textMuted }]}>
-              Medication tracking is for organization only and does not replace medical advice.
+              {localizedText('Medication tracking is for organization only and does not replace medical advice.', 'El seguimiento de medicamentos es solo para organizarte y no reemplaza el consejo medico.')}
             </Text>
           </View>
         </Section>
@@ -966,12 +974,12 @@ export default function PremiumInsightsScreen() {
         </View>
 
         {stage === 'forming' && (
-          <Section title="Examples of future insights">
+          <Section title={localizedText('Examples of future insights', 'Ejemplos de futuros insights')}>
             <View style={styles.patternList}>
               {[
-                'Example: Anxiety appears most often when relationship stress is present.',
-                'Example: Feeling rejected has appeared in 3 recent entries.',
-                'Example: High intensity check-ins are more common when sleep is mentioned.',
+                localizedText('Example: Anxiety appears most often when relationship stress is present.', 'Ejemplo: la ansiedad aparece con mas frecuencia cuando hay estres relacional.'),
+                localizedText('Example: Feeling rejected has appeared in 3 recent entries.', 'Ejemplo: sentirse rechazado/a aparecio en 3 entradas recientes.'),
+                localizedText('Example: High intensity check-ins are more common when sleep is mentioned.', 'Ejemplo: los check-ins de alta intensidad son mas comunes cuando se menciona el sueno.'),
               ].map((example) => (
                 <View key={example} style={[styles.patternRow, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
                   <Clock size={16} color={colors.textMuted} />
@@ -983,7 +991,7 @@ export default function PremiumInsightsScreen() {
         )}
 
         {stage !== 'forming' && (
-          <Section title="Patterns I’m noticing">
+          <Section title={localizedText('Patterns I’m noticing', 'Patrones que estoy notando')}>
             <View style={styles.patternList}>
               {emotionalGPSLoop ? (
                 <View style={[styles.gpsCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
@@ -991,7 +999,7 @@ export default function PremiumInsightsScreen() {
                     <Brain size={18} color={colors.primary} />
                   </View>
                   <View style={styles.gpsTextWrap}>
-                    <Text style={[styles.gpsTitle, { color: colors.text }]}>We've seen this pattern before.</Text>
+                    <Text style={[styles.gpsTitle, { color: colors.text }]}>{localizedText("We've seen this pattern before.", 'Ya vimos este patron antes.')}</Text>
                     <Text style={[styles.gpsBody, { color: colors.textSecondary }]}>
                       {[
                         emotionalGPSLoop.trigger,
@@ -1003,7 +1011,7 @@ export default function PremiumInsightsScreen() {
                       ].join(' -> ')}
                     </Text>
                     <Text style={[styles.gpsHelp, { color: colors.primary }]}>
-                      Next interruption point: {emotionalGPSLoop.suggestedInterruption}.
+                      {localizedText('Next interruption point:', 'Proximo punto de interrupcion:')} {emotionalGPSLoop.suggestedInterruption}.
                     </Text>
                   </View>
                 </View>
@@ -1018,7 +1026,7 @@ export default function PremiumInsightsScreen() {
           </Section>
         )}
 
-        <Section title="Aha Moments">
+        <Section title={localizedText('Aha Moments', 'Momentos de claridad')}>
           {ahaMoments.length > 0 ? (
             <View style={styles.patternList}>
               {ahaMoments.map((moment) => (
@@ -1034,14 +1042,14 @@ export default function PremiumInsightsScreen() {
             <View style={[styles.emptySectionCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
               <Sparkles size={17} color={colors.textMuted} />
               <Text style={[styles.emptySectionText, { color: colors.textSecondary }]}>
-                Aha Moments appear only when the app has high-confidence evidence. Keep checking in and reflecting to unlock rare observations.
+                {localizedText('Aha Moments appear only when the app has high-confidence evidence. Keep checking in and reflecting to unlock rare observations.', 'Los momentos de claridad aparecen solo cuando la app tiene evidencia de alta confianza. Sigue haciendo check-ins y reflexionando para desbloquear observaciones poco frecuentes.')}
               </Text>
             </View>
           )}
         </Section>
 
         {favoriteAhaMoments.length > 0 ? (
-          <Section title="Saved Aha Moments">
+          <Section title={localizedText('Saved Aha Moments', 'Momentos de claridad guardados')}>
             <View style={styles.patternList}>
               {favoriteAhaMoments.map((moment) => (
                 <AhaMomentCard
@@ -1055,12 +1063,12 @@ export default function PremiumInsightsScreen() {
           </Section>
         ) : null}
 
-        <Section title="Relationship Intelligence">
+        <Section title={localizedText('Relationship Intelligence', 'Inteligencia relacional')}>
           {relationshipProfiles.length === 0 ? (
             <View style={[styles.emptySectionCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
               <Users size={17} color={colors.textMuted} />
               <Text style={[styles.emptySectionText, { color: colors.textSecondary }]}>
-                Add a partner, parent, friend, ex, or other person to start linking check-ins, journals, and Companion conversations.
+                {localizedText('Add a partner, parent, friend, ex, or other person to start linking check-ins, journals, and Companion conversations.', 'Agrega una pareja, madre/padre, amistad, ex u otra persona para empezar a conectar check-ins, diarios y conversaciones con Companion.')}
               </Text>
               <TouchableOpacity
                 style={[styles.smallInlineButton, { backgroundColor: colors.primaryLight }]}
@@ -1068,7 +1076,7 @@ export default function PremiumInsightsScreen() {
                 activeOpacity={0.78}
                 testID="insights-add-relationship"
               >
-                <Text style={[styles.smallInlineButtonText, { color: colors.primary }]}>Add</Text>
+                <Text style={[styles.smallInlineButtonText, { color: colors.primary }]}>{localizedText('Add', 'Agregar')}</Text>
               </TouchableOpacity>
             </View>
           ) : relationshipIntelligence.insights.length > 0 ? (
@@ -1087,7 +1095,7 @@ export default function PremiumInsightsScreen() {
                       <Text style={[styles.relationshipTitle, { color: colors.text }]}>{insight.title}</Text>
                       <Text style={[styles.relationshipBody, { color: colors.textSecondary }]}>{insight.description}</Text>
                       <Text style={[styles.relationshipEvidence, { color: colors.primary }]}>
-                        {insight.confidence ? `${insight.confidence[0].toUpperCase()}${insight.confidence.slice(1)} confidence · ` : ''}Based on {insight.evidence}.
+                        {insight.confidence ? localizedText(`${insight.confidence[0].toUpperCase()}${insight.confidence.slice(1)} confidence · `, `Confianza ${insight.confidence} · `) : ''}{localizedText('Based on', 'Basado en')} {insight.evidence}.
                       </Text>
                     </View>
                   </View>
@@ -1098,13 +1106,13 @@ export default function PremiumInsightsScreen() {
             <View style={[styles.emptySectionCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
               <Users size={17} color={colors.textMuted} />
               <Text style={[styles.emptySectionText, { color: colors.textSecondary }]}>
-                Relationship links are building. Mention a saved person by name in check-ins, journals, or Companion conversations to unlock specific insights.
+                {localizedText('Relationship links are building. Mention a saved person by name in check-ins, journals, or Companion conversations to unlock specific insights.', 'Los vinculos relacionales se estan formando. Menciona a una persona guardada por nombre en check-ins, diarios o conversaciones con Companion para desbloquear insights especificos.')}
               </Text>
             </View>
           )}
         </Section>
 
-        <Section title="Saved insights from Companion">
+        <Section title={localizedText('Saved insights from Companion', 'Insights guardados de Companion')}>
           {savedCompanionInsights.length > 0 ? (
             <View style={styles.patternList}>
               {savedCompanionInsights.slice(0, stage === 'full' ? 4 : 2).map((insight) => (
@@ -1126,23 +1134,23 @@ export default function PremiumInsightsScreen() {
             <View style={[styles.emptySectionCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
               <BookOpen size={17} color={colors.textMuted} />
               <Text style={[styles.emptySectionText, { color: colors.textSecondary }]}>
-                Save a helpful Companion response and it will appear here.
+                {localizedText('Save a helpful Companion response and it will appear here.', 'Guarda una respuesta util de Companion y aparecera aqui.')}
               </Text>
             </View>
           )}
           {selectedSavedInsight ? (
             <View style={[styles.savedInsightDetailCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
               <Text style={[styles.savedInsightDetailKicker, { color: colors.brandTeal }]}>
-                {new Date(selectedSavedInsight.createdAt).toLocaleDateString()} · Saved from Companion
+                {new Date(selectedSavedInsight.createdAt).toLocaleDateString()} · {localizedText('Saved from Companion', 'Guardado desde Companion')}
               </Text>
               {selectedSavedInsight.userMessage ? (
                 <View style={[styles.savedInsightContextBox, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
-                  <Text style={[styles.savedInsightDetailLabel, { color: colors.text }]}>You wrote</Text>
+                  <Text style={[styles.savedInsightDetailLabel, { color: colors.text }]}>{localizedText('You wrote', 'Tu escribiste')}</Text>
                   <Text style={[styles.savedInsightDetailText, { color: colors.textSecondary }]}>{selectedSavedInsight.userMessage}</Text>
                 </View>
               ) : null}
               <View style={[styles.savedInsightContextBox, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
-                <Text style={[styles.savedInsightDetailLabel, { color: colors.text }]}>Saved response</Text>
+                <Text style={[styles.savedInsightDetailLabel, { color: colors.text }]}>{localizedText('Saved response', 'Respuesta guardada')}</Text>
                 <Text style={[styles.savedInsightDetailText, { color: colors.textSecondary }]}>{selectedSavedInsight.content}</Text>
               </View>
               <View style={styles.savedInsightDetailActions}>
@@ -1152,30 +1160,30 @@ export default function PremiumInsightsScreen() {
                   activeOpacity={0.82}
                 >
                   <MessageCircle size={15} color={Colors.white} />
-                  <Text style={styles.savedInsightDetailPrimaryText}>Continue in Companion</Text>
+                  <Text style={styles.savedInsightDetailPrimaryText}>{localizedText('Continue in Companion', 'Continuar en Companion')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.savedInsightDeleteButton, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}
                   onPress={() => handleDeleteSavedInsight(selectedSavedInsight)}
                   activeOpacity={0.82}
                 >
-                  <Text style={[styles.savedInsightDeleteText, { color: colors.danger }]}>Delete saved insight</Text>
+                  <Text style={[styles.savedInsightDeleteText, { color: colors.danger }]}>{localizedText('Delete saved insight', 'Eliminar insight guardado')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
           ) : null}
         </Section>
 
-        <Section title="Your first week report">
+        <Section title={localizedText('Your first week report', 'Reporte de tu primera semana')}>
           {stage === 'full' ? (
             <View style={[styles.reportCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
               <View style={[styles.reportIcon, { backgroundColor: colors.brandTealSoft }]}>
                 <Crown size={20} color={colors.brandTeal} />
               </View>
               <View style={styles.reportTextWrap}>
-                <Text style={[styles.reportTitle, { color: colors.text }]}>Unlocked</Text>
+                <Text style={[styles.reportTitle, { color: colors.text }]}>{localizedText('Unlocked', 'Desbloqueado')}</Text>
                 <Text style={[styles.reportText, { color: colors.textSecondary }]}>
-                  You have enough check-ins to review your first emotional pattern report.
+                  {localizedText('You have enough check-ins to review your first emotional pattern report.', 'Tienes suficientes check-ins para revisar tu primer reporte de patrones emocionales.')}
                 </Text>
               </View>
               <TouchableOpacity
@@ -1184,7 +1192,7 @@ export default function PremiumInsightsScreen() {
                 activeOpacity={0.8}
                 testID="open-first-week-report"
               >
-                <Text style={[styles.reportButtonText, { color: colors.primary }]}>Open</Text>
+                <Text style={[styles.reportButtonText, { color: colors.primary }]}>{localizedText('Open', 'Abrir')}</Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -1193,9 +1201,9 @@ export default function PremiumInsightsScreen() {
                 <Lock size={19} color={colors.textMuted} />
               </View>
               <View style={styles.reportTextWrap}>
-                <Text style={[styles.reportTitle, { color: colors.text }]}>Unlocks after 7 check-ins</Text>
+                <Text style={[styles.reportTitle, { color: colors.text }]}>{localizedText('Unlocks after 7 check-ins', 'Se desbloquea despues de 7 check-ins')}</Text>
                 <Text style={[styles.reportText, { color: colors.textSecondary }]}>
-                  Complete {remainingForFullReport} more check-in{remainingForFullReport === 1 ? '' : 's'} to unlock your first week report.
+                  {localizedText(`Complete ${remainingForFullReport} more check-in${remainingForFullReport === 1 ? '' : 's'} to unlock your first week report.`, `Completa ${remainingForFullReport} check-in${remainingForFullReport === 1 ? '' : 's'} mas para desbloquear el reporte de tu primera semana.`)}
                 </Text>
               </View>
             </View>
@@ -1210,7 +1218,7 @@ export default function PremiumInsightsScreen() {
             testID="insights-bottom-check-in-btn"
           >
             <Text style={styles.checkInButtonText}>
-              {todaysCheckIn ? 'View today’s insights' : 'Check in today'}
+              {todaysCheckIn ? localizedText('View today’s insights', 'Ver insights de hoy') : localizedText('Check in today', 'Hacer check-in hoy')}
             </Text>
             <ArrowRight size={17} color={Colors.white} />
           </TouchableOpacity>

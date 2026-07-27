@@ -16,6 +16,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Ban, Flag, Send, Shield } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useCommunityPrivateConversation } from '@/hooks/useCommunityMessages';
+import { useLanguage } from '@/hooks/useLanguage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 function formatTime(timestamp: number): string {
   return new Date(timestamp).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
@@ -24,6 +26,7 @@ function formatTime(timestamp: number): string {
 export default function PrivateMessageThreadScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
+  useLanguage();
   const conversationId = params.id ?? '';
   const { conversation, isLoading, sendMessage, isSending, reportConversation, blockUser } = useCommunityPrivateConversation(conversationId);
   const [message, setMessage] = useState('');
@@ -34,22 +37,25 @@ export default function PrivateMessageThreadScreen() {
       await sendMessage(message);
       setMessage('');
     } catch (error) {
-      Alert.alert('Could not send', error instanceof Error ? error.message : 'Please try again.');
+      Alert.alert(
+        localizedText('Could not send', 'No se pudo enviar'),
+        error instanceof Error ? error.message : localizedText('Please try again.', 'Inténtalo de nuevo.'),
+      );
     }
   }, [message, sendMessage]);
 
   const handleReport = useCallback(() => {
-    Alert.alert('Report user?', 'We will save this report for moderation review.', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(localizedText('Report user?', '¿Reportar usuario?'), localizedText('We will save this report for moderation review.', 'Guardaremos este reporte para revisión de moderación.'), [
+      { text: localizedText('Cancel', 'Cancelar'), style: 'cancel' },
       {
-        text: 'Report',
+        text: localizedText('Report', 'Reportar'),
         style: 'destructive',
         onPress: async () => {
           try {
             await reportConversation('private_message');
-            Alert.alert('Report received', 'Thank you. You can also block this user.');
+            Alert.alert(localizedText('Report received', 'Reporte recibido'), localizedText('Thank you. You can also block this user.', 'Gracias. También puedes bloquear a este usuario.'));
           } catch (error) {
-            Alert.alert('Could not report', error instanceof Error ? error.message : 'Please try again.');
+            Alert.alert(localizedText('Could not report', 'No se pudo reportar'), error instanceof Error ? error.message : localizedText('Please try again.', 'Inténtalo de nuevo.'));
           }
         },
       },
@@ -57,17 +63,17 @@ export default function PrivateMessageThreadScreen() {
   }, [reportConversation]);
 
   const handleBlock = useCallback(() => {
-    Alert.alert('Block this user?', 'Blocked users cannot message or interact with you.', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(localizedText('Block this user?', '¿Bloquear a este usuario?'), localizedText('Blocked users cannot message or interact with you.', 'Los usuarios bloqueados no pueden enviarte mensajes ni interactuar contigo.'), [
+      { text: localizedText('Cancel', 'Cancelar'), style: 'cancel' },
       {
-        text: 'Block',
+        text: localizedText('Block', 'Bloquear'),
         style: 'destructive',
         onPress: async () => {
           try {
             await blockUser();
-            Alert.alert('User blocked', 'This conversation is now blocked.');
+            Alert.alert(localizedText('User blocked', 'Usuario bloqueado'), localizedText('This conversation is now blocked.', 'Esta conversación ahora está bloqueada.'));
           } catch (error) {
-            Alert.alert('Could not block', error instanceof Error ? error.message : 'Please try again.');
+            Alert.alert(localizedText('Could not block', 'No se pudo bloquear'), error instanceof Error ? error.message : localizedText('Please try again.', 'Inténtalo de nuevo.'));
           }
         },
       },
@@ -83,13 +89,15 @@ export default function PrivateMessageThreadScreen() {
             <TouchableOpacity style={styles.iconButton} onPress={() => router.back()}>
               <ArrowLeft size={20} color={Colors.text} />
             </TouchableOpacity>
-            <Text style={styles.navTitle}>Message</Text>
+            <Text style={styles.navTitle}>{localizedText('Message', 'Mensaje')}</Text>
             <View style={styles.iconButton} />
           </View>
         </SafeAreaView>
         <View style={styles.loading}>
           <ActivityIndicator color={Colors.primary} />
-          <Text style={styles.loadingText}>{isLoading ? 'Loading conversation...' : 'Conversation not found.'}</Text>
+          <Text style={styles.loadingText}>
+            {isLoading ? localizedText('Loading conversation...', 'Cargando conversación...') : localizedText('Conversation not found.', 'Conversación no encontrada.')}
+          </Text>
         </View>
       </View>
     );
@@ -105,7 +113,7 @@ export default function PrivateMessageThreadScreen() {
           </TouchableOpacity>
           <View style={styles.navCenter}>
             <Text style={styles.navTitle}>{conversation.participant.displayName}</Text>
-            <Text style={styles.navSubtitle}>Peer support</Text>
+            <Text style={styles.navSubtitle}>{localizedText('Peer support', 'Apoyo entre pares')}</Text>
           </View>
           <TouchableOpacity style={styles.iconButton} onPress={handleReport}>
             <Flag size={19} color={Colors.primary} />

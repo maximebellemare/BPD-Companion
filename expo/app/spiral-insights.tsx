@@ -34,23 +34,26 @@ import { useAnalytics } from '@/providers/AnalyticsProvider';
 import { useSpiralPrevention } from '@/providers/SpiralPreventionProvider';
 import { SpiralSignal, SpiralSignalType } from '@/types/spiral';
 import { SpiralTrend } from '@/services/emotions/spiralHistoryService';
+import { localizedText } from '@/lib/i18n/staticText';
+import { useLanguage } from '@/hooks/useLanguage';
 
 const SIGNAL_CONFIG: Record<SpiralSignalType, { label: string; color: string; icon: React.ComponentType<{ size: number; color: string }> }> = {
-  rapid_distress_escalation: { label: 'Distress escalation', color: '#3B82F6', icon: TrendingUp },
-  repeated_rejection_language: { label: 'Rejection themes', color: '#67E8F9', icon: Heart },
-  relationship_conflict_loop: { label: 'Conflict cycle', color: '#3B82F6', icon: Activity },
-  late_night_spike: { label: 'Late-night intensity', color: '#2E2A72', icon: Clock },
-  emotional_volatility: { label: 'Emotional shifts', color: '#3B82F6', icon: Zap },
-  shame_cascade: { label: 'Shame pattern', color: '#67E8F9', icon: Shield },
-  urge_intensification: { label: 'Strong urges', color: '#3B82F6', icon: AlertTriangle },
-  coping_abandonment: { label: 'Coping dropped off', color: '#2E2A72', icon: TrendingDown },
-  isolation_pattern: { label: 'Withdrawal', color: '#3B82F6', icon: Heart },
-  poor_sleep_vulnerability: { label: 'Sleep vulnerability', color: '#2E2A72', icon: Moon },
-  conversation_spiral_language: { label: 'Conversation loop language', color: '#3B82F6', icon: MessageCircle },
-  familiar_spiral_pattern: { label: 'Familiar pattern', color: '#14B8A6', icon: Repeat2 },
+  rapid_distress_escalation: { get label() { return localizedText('Distress escalation', 'Escalada de malestar'); }, color: '#3B82F6', icon: TrendingUp },
+  repeated_rejection_language: { get label() { return localizedText('Rejection themes', 'Temas de rechazo'); }, color: '#67E8F9', icon: Heart },
+  relationship_conflict_loop: { get label() { return localizedText('Conflict cycle', 'Ciclo de conflicto'); }, color: '#3B82F6', icon: Activity },
+  late_night_spike: { get label() { return localizedText('Late-night intensity', 'Intensidad nocturna'); }, color: '#2E2A72', icon: Clock },
+  emotional_volatility: { get label() { return localizedText('Emotional shifts', 'Cambios emocionales'); }, color: '#3B82F6', icon: Zap },
+  shame_cascade: { get label() { return localizedText('Shame pattern', 'Patron de verguenza'); }, color: '#67E8F9', icon: Shield },
+  urge_intensification: { get label() { return localizedText('Strong urges', 'Impulsos fuertes'); }, color: '#3B82F6', icon: AlertTriangle },
+  coping_abandonment: { get label() { return localizedText('Coping dropped off', 'Afrontamiento disminuido'); }, color: '#2E2A72', icon: TrendingDown },
+  isolation_pattern: { get label() { return localizedText('Withdrawal', 'Aislamiento'); }, color: '#3B82F6', icon: Heart },
+  poor_sleep_vulnerability: { get label() { return localizedText('Sleep vulnerability', 'Vulnerabilidad por sueno'); }, color: '#2E2A72', icon: Moon },
+  conversation_spiral_language: { get label() { return localizedText('Conversation loop language', 'Lenguaje de bucle conversacional'); }, color: '#3B82F6', icon: MessageCircle },
+  familiar_spiral_pattern: { get label() { return localizedText('Familiar pattern', 'Patron familiar'); }, color: '#14B8A6', icon: Repeat2 },
 };
 
 export default function SpiralInsightsScreen() {
+  useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { trackEvent } = useAnalytics();
@@ -81,9 +84,9 @@ export default function SpiralInsightsScreen() {
 
   const riskLabel = useMemo(() => {
     switch (detection.riskLevel) {
-      case 'high': return 'High';
-      case 'moderate': return 'Moderate';
-      default: return 'Low';
+      case 'high': return localizedText('High', 'Alto');
+      case 'moderate': return localizedText('Moderate', 'Moderado');
+      default: return localizedText('Low', 'Bajo');
     }
   }, [detection.riskLevel]);
 
@@ -111,9 +114,9 @@ export default function SpiralInsightsScreen() {
     const trendColor = trend.riskTrend === 'improving' ? Colors.success
       : trend.riskTrend === 'worsening' ? Colors.danger
       : Colors.textMuted;
-    const trendLabel = trend.riskTrend === 'improving' ? 'Improving'
-      : trend.riskTrend === 'worsening' ? 'Needs attention'
-      : 'Stable';
+    const trendLabel = trend.riskTrend === 'improving' ? localizedText('Improving', 'Mejorando')
+      : trend.riskTrend === 'worsening' ? localizedText('Needs attention', 'Necesita atencion')
+      : localizedText('Stable', 'Estable');
 
     return (
       <View style={styles.trendCard}>
@@ -128,17 +131,17 @@ export default function SpiralInsightsScreen() {
         <View style={styles.trendStats}>
           <View style={styles.trendStat}>
             <Text style={styles.trendStatValue}>{trend.totalDetections}</Text>
-            <Text style={styles.trendStatLabel}>Detections</Text>
+            <Text style={styles.trendStatLabel}>{localizedText('Detections', 'Detecciones')}</Text>
           </View>
           <View style={styles.trendStatDivider} />
           <View style={styles.trendStat}>
             <Text style={[styles.trendStatValue, { color: Colors.danger }]}>{trend.highRiskCount}</Text>
-            <Text style={styles.trendStatLabel}>High risk</Text>
+            <Text style={styles.trendStatLabel}>{localizedText('High risk', 'Riesgo alto')}</Text>
           </View>
           <View style={styles.trendStatDivider} />
           <View style={styles.trendStat}>
             <Text style={[styles.trendStatValue, { color: Colors.success }]}>{trend.interventionsUsed}</Text>
-            <Text style={styles.trendStatLabel}>Tools used</Text>
+            <Text style={styles.trendStatLabel}>{localizedText('Tools used', 'Herramientas usadas')}</Text>
           </View>
         </View>
 
@@ -146,14 +149,14 @@ export default function SpiralInsightsScreen() {
           <View style={styles.distressReductionRow}>
             <CheckCircle size={14} color={Colors.success} />
             <Text style={styles.distressReductionText}>
-              Average distress reduced by {trend.averageDistressReduction.toFixed(1)} points when tools were used
+              {localizedText(`Average distress reduced by ${trend.averageDistressReduction.toFixed(1)} points when tools were used`, `El malestar promedio bajo ${trend.averageDistressReduction.toFixed(1)} puntos cuando se usaron herramientas`)}
             </Text>
           </View>
         )}
 
         {trend.mostCommonSignals.length > 0 && (
           <View style={styles.trendSignals}>
-            <Text style={styles.trendSignalsLabel}>Most common patterns</Text>
+            <Text style={styles.trendSignalsLabel}>{localizedText('Most common patterns', 'Patrones mas comunes')}</Text>
             <View style={styles.chipRow}>
               {trend.mostCommonSignals.slice(0, 3).map((s) => {
                 const config = SIGNAL_CONFIG[s.type];
@@ -171,7 +174,7 @@ export default function SpiralInsightsScreen() {
 
         {trend.detectionsByDay.length > 0 && (
           <View style={styles.miniTimeline}>
-            <Text style={styles.trendSignalsLabel}>Recent activity</Text>
+            <Text style={styles.trendSignalsLabel}>{localizedText('Recent activity', 'Actividad reciente')}</Text>
             <View style={styles.dayRow}>
               {trend.detectionsByDay.slice(-7).map((day) => {
                 const dayColor = day.peakRisk === 'high' ? Colors.danger
@@ -205,8 +208,8 @@ export default function SpiralInsightsScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerTitle}>Spiral Prevention</Text>
-          <Text style={styles.headerSubtitle}>Your emotional early warning system</Text>
+          <Text style={styles.headerTitle}>{localizedText('Spiral Prevention', 'Prevencion de espirales')}</Text>
+          <Text style={styles.headerSubtitle}>{localizedText('Your emotional early warning system', 'Tu sistema de alerta emocional temprana')}</Text>
         </View>
         <TouchableOpacity
           style={styles.closeButton}
@@ -226,7 +229,7 @@ export default function SpiralInsightsScreen() {
           <View style={[styles.riskCard, { borderColor: riskColor + '30' }]}>
             <View style={styles.riskHeader}>
               <View style={[styles.riskIndicator, { backgroundColor: riskColor }]} />
-              <Text style={styles.riskTitle}>Current Risk Level</Text>
+              <Text style={styles.riskTitle}>{localizedText('Current Risk Level', 'Nivel de riesgo actual')}</Text>
             </View>
             <Text style={[styles.riskValue, { color: riskColor }]}>{riskLabel}</Text>
             {detection.narrative && (
@@ -234,14 +237,14 @@ export default function SpiralInsightsScreen() {
             )}
             {detection.riskLevel === 'low' && (
               <Text style={styles.riskNarrative}>
-                No concerning patterns detected right now. Keep tracking — awareness is your best tool.
+                {localizedText('No concerning patterns detected right now. Keep tracking - awareness is your best tool.', 'No se detectan patrones preocupantes en este momento. Sigue registrando: la conciencia es tu mejor herramienta.')}
               </Text>
             )}
             {interventionSuccessRate !== null && (
               <View style={styles.successRateRow}>
                 <BarChart3 size={14} color={Colors.success} />
                 <Text style={styles.successRateText}>
-                  Tools helped in {Math.round(interventionSuccessRate * 100)}% of past interventions
+                  {localizedText(`Tools helped in ${Math.round(interventionSuccessRate * 100)}% of past interventions`, `Las herramientas ayudaron en el ${Math.round(interventionSuccessRate * 100)}% de intervenciones anteriores`)}
                 </Text>
               </View>
             )}
@@ -250,8 +253,8 @@ export default function SpiralInsightsScreen() {
 
         {detection.signals.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Active Signals</Text>
-            <Text style={styles.sectionSubtitle}>Patterns the system is tracking</Text>
+            <Text style={styles.sectionTitle}>{localizedText('Active Signals', 'Senales activas')}</Text>
+            <Text style={styles.sectionSubtitle}>{localizedText('Patterns the system is tracking', 'Patrones que el sistema esta siguiendo')}</Text>
             <View style={styles.signalList}>
               {detection.signals.map(renderSignalCard)}
             </View>
@@ -260,8 +263,8 @@ export default function SpiralInsightsScreen() {
 
         {detection.shouldIntervene && detection.interventions.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Suggested Support</Text>
-            <Text style={styles.sectionSubtitle}>Tools that may help right now</Text>
+            <Text style={styles.sectionTitle}>{localizedText('Suggested Support', 'Apoyo sugerido')}</Text>
+            <Text style={styles.sectionSubtitle}>{localizedText('Tools that may help right now', 'Herramientas que pueden ayudar ahora')}</Text>
             {detection.interventions.slice(0, 4).map((intervention) => (
               <TouchableOpacity
                 key={intervention.id}
@@ -285,12 +288,12 @@ export default function SpiralInsightsScreen() {
 
         {(weekTrend.totalDetections > 0 || monthTrend.totalDetections > 0) && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Pattern Trends</Text>
-            <Text style={styles.sectionSubtitle}>How things are changing over time</Text>
-            {weekTrend.totalDetections > 0 && renderTrendCard(weekTrend, 'Past 7 days')}
+            <Text style={styles.sectionTitle}>{localizedText('Pattern Trends', 'Tendencias de patrones')}</Text>
+            <Text style={styles.sectionSubtitle}>{localizedText('How things are changing over time', 'Como cambian las cosas con el tiempo')}</Text>
+            {weekTrend.totalDetections > 0 && renderTrendCard(weekTrend, localizedText('Past 7 days', 'Ultimos 7 dias'))}
             {monthTrend.totalDetections > 0 && (
               <View style={{ marginTop: 12 }}>
-                {renderTrendCard(monthTrend, 'Past 30 days')}
+                {renderTrendCard(monthTrend, localizedText('Past 30 days', 'Ultimos 30 dias'))}
               </View>
             )}
           </View>
@@ -298,15 +301,15 @@ export default function SpiralInsightsScreen() {
 
         {weeklyInsight && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Weekly Summary</Text>
-            <Text style={styles.sectionSubtitle}>What the past 7 days show</Text>
+            <Text style={styles.sectionTitle}>{localizedText('Weekly Summary', 'Resumen semanal')}</Text>
+            <Text style={styles.sectionSubtitle}>{localizedText('What the past 7 days show', 'Que muestran los ultimos 7 dias')}</Text>
 
             <View style={styles.weeklyCard}>
               <Text style={styles.weeklyNarrative}>{weeklyInsight.narrative}</Text>
 
               {weeklyInsight.mostCommonSignals.length > 0 && (
                 <View style={styles.weeklyRow}>
-                  <Text style={styles.weeklyLabel}>Most common patterns</Text>
+                  <Text style={styles.weeklyLabel}>{localizedText('Most common patterns', 'Patrones mas comunes')}</Text>
                   <View style={styles.chipRow}>
                     {weeklyInsight.mostCommonSignals.map((s) => {
                       const config = SIGNAL_CONFIG[s.type];
@@ -324,7 +327,7 @@ export default function SpiralInsightsScreen() {
 
               {weeklyInsight.spikeTimeOfDay && (
                 <View style={styles.weeklyRow}>
-                  <Text style={styles.weeklyLabel}>Peak intensity time</Text>
+                  <Text style={styles.weeklyLabel}>{localizedText('Peak intensity time', 'Hora de mayor intensidad')}</Text>
                   <View style={styles.weeklyValueRow}>
                     <Clock size={14} color={Colors.textSecondary} />
                     <Text style={styles.weeklyValue}>{weeklyInsight.spikeTimeOfDay}</Text>
@@ -334,7 +337,7 @@ export default function SpiralInsightsScreen() {
 
               {weeklyInsight.commonTriggers.length > 0 && (
                 <View style={styles.weeklyRow}>
-                  <Text style={styles.weeklyLabel}>Common triggers</Text>
+                  <Text style={styles.weeklyLabel}>{localizedText('Common triggers', 'Disparadores comunes')}</Text>
                   <View style={styles.chipRow}>
                     {weeklyInsight.commonTriggers.map((t) => (
                       <View key={t} style={[styles.chip, { backgroundColor: Colors.accentLight }]}>
@@ -347,14 +350,14 @@ export default function SpiralInsightsScreen() {
 
               {weeklyInsight.relationshipTriggerCount > 0 && (
                 <View style={styles.weeklyRow}>
-                  <Text style={styles.weeklyLabel}>Relationship-related entries</Text>
+                  <Text style={styles.weeklyLabel}>{localizedText('Relationship-related entries', 'Entradas relacionadas con relaciones')}</Text>
                   <Text style={styles.weeklyValue}>{weeklyInsight.relationshipTriggerCount}</Text>
                 </View>
               )}
 
               {weeklyInsight.toolsThatHelped.length > 0 && (
                 <View style={styles.weeklyRow}>
-                  <Text style={styles.weeklyLabel}>What helped</Text>
+                  <Text style={styles.weeklyLabel}>{localizedText('What helped', 'Que ayudo')}</Text>
                   <View style={styles.chipRow}>
                     {weeklyInsight.toolsThatHelped.map((t) => (
                       <View key={t} style={[styles.chip, { backgroundColor: Colors.successLight }]}>
@@ -369,14 +372,14 @@ export default function SpiralInsightsScreen() {
         )}
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>How This Works</Text>
+          <Text style={styles.sectionTitle}>{localizedText('How This Works', 'Como funciona')}</Text>
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
               <View style={[styles.infoIcon, { backgroundColor: Colors.primaryLight }]}>
                 <Activity size={16} color={Colors.primary} />
               </View>
               <Text style={styles.infoText}>
-                Analyzes your check-ins, journal entries, and messaging patterns
+                {localizedText('Analyzes your check-ins, journal entries, and messaging patterns', 'Analiza tus check-ins, entradas de diario y patrones de mensajes')}
               </Text>
             </View>
             <View style={styles.infoRow}>
@@ -384,7 +387,7 @@ export default function SpiralInsightsScreen() {
                 <AlertTriangle size={16} color={Colors.accent} />
               </View>
               <Text style={styles.infoText}>
-                Detects when familiar emotional spirals may be building
+                {localizedText('Detects when familiar emotional spirals may be building', 'Detecta cuando pueden estar formandose espirales emocionales familiares')}
               </Text>
             </View>
             <View style={styles.infoRow}>
@@ -392,7 +395,7 @@ export default function SpiralInsightsScreen() {
                 <Shield size={16} color={Colors.success} />
               </View>
               <Text style={styles.infoText}>
-                Suggests supportive actions before things escalate
+                {localizedText('Suggests supportive actions before things escalate', 'Sugiere acciones de apoyo antes de que las cosas escalen')}
               </Text>
             </View>
             <View style={styles.infoRow}>
@@ -400,12 +403,12 @@ export default function SpiralInsightsScreen() {
                 <BarChart3 size={16} color={Colors.brandLilac} />
               </View>
               <Text style={styles.infoText}>
-                Tracks which tools help you most and learns from your patterns over time
+                {localizedText('Tracks which tools help you most and learns from your patterns over time', 'Registra que herramientas te ayudan mas y aprende de tus patrones con el tiempo')}
               </Text>
             </View>
           </View>
           <Text style={styles.disclaimer}>
-            This system learns from your patterns over time. The more you track, the more personalized and helpful it becomes.
+            {localizedText('This system learns from your patterns over time. The more you track, the more personalized and helpful it becomes.', 'Este sistema aprende de tus patrones con el tiempo. Mientras mas registres, mas personalizado y util se vuelve.')}
           </Text>
         </View>
       </ScrollView>

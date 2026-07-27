@@ -1,6 +1,7 @@
 import { DBTSkill, DBTModuleInfo, DBTSituationalEntry } from '@/types/dbt';
+import { localizedArrayProxy, localizedFields } from '@/lib/i18n/staticText';
 
-export const DBT_MODULES: DBTModuleInfo[] = [
+const ENGLISH_DBT_MODULES: DBTModuleInfo[] = [
   {
     id: 'mindfulness',
     title: 'Mindfulness',
@@ -39,7 +40,329 @@ export const DBT_MODULES: DBTModuleInfo[] = [
   },
 ];
 
-export const DBT_SITUATIONAL_ENTRIES: DBTSituationalEntry[] = [
+const DBT_MODULE_SPANISH: Record<string, Pick<DBTModuleInfo, 'title' | 'description'>> = {
+  mindfulness: {
+    title: 'Atención plena',
+    description: 'Mantente presente y observa sin juzgar',
+  },
+  'distress-tolerance': {
+    title: 'Tolerancia al malestar',
+    description: 'Sobrevive momentos de crisis sin empeorarlos',
+  },
+  'emotional-regulation': {
+    title: 'Regulación emocional',
+    description: 'Entiende y maneja emociones intensas',
+  },
+  'interpersonal-effectiveness': {
+    title: 'Efectividad interpersonal',
+    description: 'Comunica necesidades mientras cuidas tus relaciones',
+  },
+};
+
+const DBT_SITUATIONAL_SPANISH: Record<string, Pick<DBTSituationalEntry, 'label' | 'sublabel'>> = {
+  'sit-before-texting': { label: 'Antes de escribir', sublabel: 'Pausa y piensa primero' },
+  'sit-after-conflict': { label: 'Después de un conflicto', sublabel: 'Recupérate y repara' },
+  'sit-feel-rejected': { label: 'Me siento rechazado/a', sublabel: 'Revisa la historia que cuenta tu mente' },
+  'sit-feel-ashamed': { label: 'Siento vergüenza', sublabel: 'Separa la conducta de la identidad' },
+  'sit-overwhelmed': { label: 'Estoy abrumado/a', sublabel: 'Baja la intensidad rápido' },
+  'sit-angry': { label: 'Siento enojo', sublabel: 'Enfría antes de reaccionar' },
+  'sit-anxious': { label: 'Siento ansiedad', sublabel: 'Ancla y calma' },
+  'sit-lonely': { label: 'Me siento solo/a', sublabel: 'Consuélate y conecta' },
+};
+
+type DBTSkillSpanishCopy = Pick<DBTSkill, 'title' | 'subtitle' | 'description'>;
+
+const DBT_SKILL_SPANISH: Record<string, DBTSkillSpanishCopy> = {
+  'mf-wise-mind': {
+    title: 'Mente sabia',
+    subtitle: 'Encuentra el equilibrio entre emoción y razón',
+    description: 'La mente sabia es el punto de encuentro entre la mente emocional y la mente racional. Es tu sabiduría interna: el lugar donde sabes qué es cierto y qué hacer.',
+  },
+  'mf-observe': {
+    title: 'Observar y describir',
+    subtitle: 'Nota tu experiencia sin quedar atrapado/a en ella',
+    description: 'Practica notar pensamientos, emociones y sensaciones sin reaccionar. Luego descríbelos con palabras para crear distancia entre tú y la experiencia.',
+  },
+  'mf-one-mindfully': {
+    title: 'Una cosa a la vez',
+    subtitle: 'Haz una sola cosa con atención completa',
+    description: 'Enfócate por completo en una actividad. Cuando tu mente se vaya, vuelve con suavidad. Esta práctica fortalece la concentración y reduce ansiedad.',
+  },
+  'mf-non-judgmental': {
+    title: 'Postura sin juicio',
+    subtitle: 'Suelta etiquetas de bueno o malo y observa',
+    description: 'Practica ver las cosas como son sin etiquetarlas como buenas o malas. El juicio agrega sufrimiento; la observación trae claridad.',
+  },
+  'mf-participate': {
+    title: 'Participar',
+    subtitle: 'Entra por completo en el momento presente',
+    description: 'Métete de lleno en la actividad o experiencia actual. Suelta la autoconciencia excesiva y permite estar en lo que haces.',
+  },
+  'mf-effectiveness': {
+    title: 'Efectividad',
+    subtitle: 'Enfócate en lo que funciona, no en tener razón',
+    description: 'Haz lo que sea efectivo en la situación, en vez de lo que se siente justo en el momento. Suelta la necesidad de tener razón y vuelve al objetivo.',
+  },
+  'mf-beginner-mind': {
+    title: 'Mente de principiante',
+    subtitle: 'Mira las cosas como si fuera la primera vez',
+    description: 'Acércate a situaciones, personas y emociones con curiosidad fresca en lugar de suposiciones antiguas.',
+  },
+  'dt-tip': {
+    title: 'Habilidades TIP',
+    subtitle: 'Temperatura, ejercicio intenso, respiración pausada y relajación muscular',
+    description: 'Cambia rápido la química del cuerpo para reducir activación emocional extrema. Estas técnicas fisiológicas ayudan cuando la emoción abruma.',
+  },
+  'dt-stop': {
+    title: 'Habilidad STOP',
+    subtitle: 'Detente, toma distancia, observa y procede con atención',
+    description: 'Una intervención rápida para prevenir reacciones impulsivas durante momentos emocionales. Crea espacio entre disparador y respuesta.',
+  },
+  'dt-self-soothe': {
+    title: 'Autoconsuelo con los sentidos',
+    subtitle: 'Consuélate usando tus cinco sentidos',
+    description: 'Usa los sentidos para crear una experiencia calmante. Esta habilidad te ancla en el presente y ofrece alivio durante dolor emocional.',
+  },
+  'dt-pros-cons': {
+    title: 'Pros y contras',
+    subtitle: 'Piensa en las consecuencias antes de actuar',
+    description: 'Examina ventajas y desventajas de actuar sobre un impulso o resistirlo. Ayuda a activar la mente racional durante momentos emocionales.',
+  },
+  'dt-radical-acceptance': {
+    title: 'Aceptación radical',
+    subtitle: 'Aceptar la realidad como es, no como quisieras que fuera',
+    description: 'Soltar la pelea con la realidad reduce sufrimiento. El dolor puede ser inevitable; el sufrimiento de negar el dolor puede disminuir.',
+  },
+  'dt-urge-surfing': {
+    title: 'Surfear impulsos',
+    subtitle: 'Atraviesa el impulso sin actuarlo',
+    description: 'Observa el impulso como una ola que sube, llega a un pico y baja. No tienes que obedecerlo para que pase.',
+  },
+  'dt-improve': {
+    title: 'IMPROVE el momento',
+    subtitle: 'Pequeñas formas de hacer el momento más tolerable',
+    description: 'Usa imagen, significado, oración o pausa, relajación, una cosa a la vez, vacaciones breves y ánimo para atravesar malestar.',
+  },
+  'dt-ten-minute-pause': {
+    title: 'Pausa de 10 minutos',
+    subtitle: 'Dale tiempo a la ola antes de decidir',
+    description: 'Retrasa una acción impulsiva durante diez minutos para permitir que baje la intensidad y vuelva más claridad.',
+  },
+  'dt-temperature-reset': {
+    title: 'Reinicio con temperatura',
+    subtitle: 'Usa frío para calmar el sistema nervioso',
+    description: 'El frío puede activar una respuesta corporal que baja la activación. Es una herramienta rápida para momentos de intensidad alta.',
+  },
+  'er-opposite-action': {
+    title: 'Acción opuesta',
+    subtitle: 'Actúa contra el impulso cuando la emoción no encaja con los hechos',
+    description: 'Cuando una emoción te empuja a una acción que empeoraría la situación, elegir la acción opuesta puede cambiar la intensidad.',
+  },
+  'er-check-facts': {
+    title: 'Comprobar los hechos',
+    subtitle: 'Separa lo que sabes de lo que temes',
+    description: 'Revisa si la emoción coincide con los hechos disponibles. Esto ayuda a bajar interpretaciones que nacen del miedo.',
+  },
+  'er-abc-please': {
+    title: 'ABC PLEASE para estabilidad',
+    subtitle: 'Construye estabilidad emocional desde lo básico',
+    description: 'Reduce vulnerabilidad emocional acumulando experiencias positivas, construyendo dominio, preparándote y cuidando sueño, comida, salud y sustancias.',
+  },
+  'er-wave': {
+    title: 'Atravesar la ola',
+    subtitle: 'Deja que la emoción suba y baje sin pelear',
+    description: 'Las emociones tienen forma de ola. Observar la subida, el pico y la bajada te ayuda a no actuar desde el punto más intenso.',
+  },
+  'er-name-emotion': {
+    title: 'Nombrar la emoción',
+    subtitle: 'Poner palabras a lo que sientes',
+    description: 'Nombrar la emoción reduce confusión e intensidad. La etiqueta correcta ayuda a elegir una respuesta más útil.',
+  },
+  'er-cope-ahead': {
+    title: 'Prepararte de antemano',
+    subtitle: 'Ensaya una situación difícil antes de vivirla',
+    description: 'Anticipa disparadores probables y practica cómo quieres responder. La preparación hace que la habilidad esté disponible bajo presión.',
+  },
+  'er-emotional-exposure': {
+    title: 'Exposición emocional',
+    subtitle: 'Practica sentir sin evitar',
+    description: 'Acercarte gradualmente a emociones evitadas puede enseñarle al sistema nervioso que puedes tolerarlas sin escapar ni empeorar.',
+  },
+  'er-build-positives': {
+    title: 'Construir experiencias positivas',
+    subtitle: 'Agrega momentos que alimenten estabilidad',
+    description: 'Las experiencias positivas no borran el dolor, pero fortalecen resiliencia y le dan al cerebro más evidencia de seguridad y sentido.',
+  },
+  'ie-dear-man': {
+    title: 'DEAR MAN para pedir con claridad',
+    subtitle: 'Pide lo que necesitas con claridad',
+    description: 'DEAR MAN ayuda a describir, expresar, pedir, reforzar, mantener atención, parecer seguro/a y negociar sin atacar.',
+  },
+  'ie-give': {
+    title: 'GIVE para cuidar la relación',
+    subtitle: 'Cuida la relación mientras hablas',
+    description: 'GIVE ayuda a mantener amabilidad, interés, validación y trato tranquilo durante conversaciones difíciles.',
+  },
+  'ie-fast': {
+    title: 'FAST para autorrespeto',
+    subtitle: 'Protege tu autorrespeto',
+    description: 'FAST te ayuda a ser justo/a, evitar disculparte de más, sostener tus valores y ser honesto/a contigo y con la otra persona.',
+  },
+  'ie-validation': {
+    title: 'Habilidades de validación',
+    subtitle: 'Reconoce la experiencia antes de responder',
+    description: 'Validar no significa estar de acuerdo. Significa mostrar que entiendes algo de la emoción o la lógica de la otra persona.',
+  },
+  'ie-boundary-clarity': {
+    title: 'Claridad de límites',
+    subtitle: 'Di qué está bien y qué no está bien',
+    description: 'Los límites claros protegen la relación y tu bienestar. Nombran necesidades y consecuencias sin amenazas ni castigo.',
+  },
+  'ie-repair-after-conflict': {
+    title: 'Reparar después del conflicto',
+    subtitle: 'Vuelve con responsabilidad y cuidado',
+    description: 'La reparación ayuda a reconocer tu parte, validar el impacto y acordar un camino más seguro para la próxima vez.',
+  },
+  'ie-ask-reassurance': {
+    title: 'Pedir seguridad con claridad',
+    subtitle: 'Expresa tu necesidad sin alejar a la otra persona',
+    description: 'Necesitar seguridad es humano. La clave es pedirla de una forma directa que invite apoyo en vez de poner a prueba.',
+  },
+  'ie-validate-before-respond': {
+    title: 'Validar antes de responder',
+    subtitle: 'Reconoce primero y luego comparte tu punto de vista',
+    description: 'Muchos conflictos escalan porque alguien se siente no escuchado. Validar antes de responder cambia el tono de la conversación.',
+  },
+};
+
+const DBT_WHEN_TO_USE_ES: Record<string, string[]> = {
+  mindfulness: [
+    'Cuando necesitas volver al presente',
+    'Cuando los pensamientos se aceleran',
+    'Antes de responder desde intensidad',
+    'Como práctica diaria de atención plena',
+  ],
+  'distress-tolerance': [
+    'Cuando el malestar está alto',
+    'Antes de actuar sobre un impulso',
+    'Durante una crisis emocional',
+    'Cuando necesitas atravesar el momento sin empeorarlo',
+  ],
+  'emotional-regulation': [
+    'Cuando quieres entender una emoción',
+    'Cuando necesitas bajar intensidad',
+    'Después de identificar un disparador',
+    'Para construir más estabilidad diaria',
+  ],
+  'interpersonal-effectiveness': [
+    'Durante conversaciones difíciles',
+    'Cuando necesitas pedir algo',
+    'Cuando quieres cuidar una relación',
+    'Después de conflicto o distancia',
+  ],
+};
+
+function localizeDBTModules(modules: DBTModuleInfo[]): DBTModuleInfo[] {
+  return modules.map((module) => {
+    const spanish = DBT_MODULE_SPANISH[module.id];
+    if (!spanish) return module;
+    return localizedFields(module, {
+      title: { en: module.title, es: spanish.title },
+      description: { en: module.description, es: spanish.description },
+    }) as DBTModuleInfo;
+  });
+}
+
+function localizeDBTSituationalEntries(entries: DBTSituationalEntry[]): DBTSituationalEntry[] {
+  return entries.map((entry) => {
+    const spanish = DBT_SITUATIONAL_SPANISH[entry.id];
+    if (!spanish) return entry;
+    return localizedFields(entry, {
+      label: { en: entry.label, es: spanish.label },
+      sublabel: { en: entry.sublabel, es: spanish.sublabel },
+    }) as DBTSituationalEntry;
+  });
+}
+
+function spanishDBTStepTitle(index: number): string {
+  return ['Nota', 'Nombra', 'Pausa', 'Elige', 'Practica', 'Revisa'][index] ?? 'Siguiente paso';
+}
+
+function spanishDBTStepInstruction(skill: DBTSkill, spanish: DBTSkillSpanishCopy, index: number): string {
+  if (index === 0) {
+    return `Empieza por notar qué está pasando en tu cuerpo, tus pensamientos y tus impulsos. En ${spanish.title}, observar primero te ayuda a responder con más intención.`;
+  }
+  if (index === 1) {
+    return `Ponle nombre a la emoción o necesidad principal. No tienes que justificarla; solo reconocerla con honestidad y sin juicio.`;
+  }
+  if (index === 2) {
+    return `Crea una pausa breve. Respira, baja la velocidad y pregunta qué acción protegería mejor tu seguridad, tus valores y tus relaciones.`;
+  }
+  if (skill.moduleId === 'interpersonal-effectiveness') {
+    return `Comunica una petición, límite o validación de forma clara. Usa palabras directas, respetuosas y específicas, sin amenazas ni lectura de mente.`;
+  }
+  if (skill.moduleId === 'distress-tolerance') {
+    return `Elige una acción que te ayude a atravesar este momento sin empeorarlo. La meta es sobrevivir la ola, no resolver toda tu vida ahora.`;
+  }
+  if (skill.moduleId === 'emotional-regulation') {
+    return `Comprueba los hechos, baja la intensidad y elige una conducta que tu yo de mañana pueda respetar.`;
+  }
+  return `Vuelve al presente con curiosidad. Si la mente se va, regresa suavemente a esta habilidad una vez más.`;
+}
+
+function localizeDBTSkill(skill: DBTSkill): DBTSkill {
+  const spanish = DBT_SKILL_SPANISH[skill.id];
+  if (!spanish) return skill;
+
+  localizedFields(skill, {
+    title: { en: skill.title, es: spanish.title },
+    subtitle: { en: skill.subtitle, es: spanish.subtitle },
+    description: { en: skill.description, es: spanish.description },
+  });
+
+  skill.steps = skill.steps.map((step, index) => {
+    const spanishTip = step.tip
+      ? 'Recuerda: practicar con suavidad funciona mejor que exigirte hacerlo perfecto.'
+      : undefined;
+
+    const localizedStep = localizedFields(step, {
+      title: { en: step.title, es: spanishDBTStepTitle(index) },
+      instruction: { en: step.instruction, es: spanishDBTStepInstruction(skill, spanish, index) },
+    }) as DBTSkill['steps'][number];
+
+    if (step.tip && spanishTip) {
+      localizedFields(localizedStep, {
+        tip: { en: step.tip, es: spanishTip },
+      });
+    }
+
+    return localizedStep;
+  });
+
+  skill.quickSteps = skill.quickSteps?.map((step, index) =>
+    localizedFields(step, {
+      title: { en: step.title, es: spanishDBTStepTitle(index) },
+      instruction: {
+        en: step.instruction,
+        es: index === 0
+          ? 'Detente y respira una vez.'
+          : index === 1
+            ? 'Nombra la emoción, necesidad o impulso.'
+            : 'Elige el paso más seguro y efectivo.',
+      },
+    }) as NonNullable<DBTSkill['quickSteps']>[number]
+  );
+
+  const englishWhenToUse = skill.whenToUse;
+  const spanishWhenToUse = DBT_WHEN_TO_USE_ES[skill.moduleId];
+  return Object.defineProperty(skill, 'whenToUse', {
+    enumerable: true,
+    configurable: true,
+    get: () => localizedArrayProxy(englishWhenToUse, spanishWhenToUse),
+  });
+}
+
+const ENGLISH_DBT_SITUATIONAL_ENTRIES: DBTSituationalEntry[] = [
   {
     id: 'sit-before-texting',
     label: 'Before I text',
@@ -114,7 +437,7 @@ export const DBT_SITUATIONAL_ENTRIES: DBTSituationalEntry[] = [
   },
 ];
 
-export const DBT_SKILLS: DBTSkill[] = [
+const ENGLISH_DBT_SKILLS: DBTSkill[] = [
   // ═══════════════════════════════════════════
   // MINDFULNESS
   // ═══════════════════════════════════════════
@@ -1547,3 +1870,8 @@ export const DBT_SKILLS: DBTSkill[] = [
     situationalTags: ['conflict', 'de-escalation', 'relationships'],
   },
 ];
+
+export const DBT_MODULES: DBTModuleInfo[] = localizeDBTModules(ENGLISH_DBT_MODULES);
+export const DBT_SITUATIONAL_ENTRIES: DBTSituationalEntry[] =
+  localizeDBTSituationalEntries(ENGLISH_DBT_SITUATIONAL_ENTRIES);
+export const DBT_SKILLS: DBTSkill[] = ENGLISH_DBT_SKILLS.map(localizeDBTSkill);

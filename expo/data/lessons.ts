@@ -1,7 +1,8 @@
 import { Lesson } from '@/types/learn';
+import { localizedFields } from '@/lib/i18n/staticText';
 export { LEARN_CATEGORIES } from '@/data/lessonCategories';
 
-export const LESSONS: Lesson[] = [
+const ENGLISH_LESSONS: Lesson[] = [
   // ==========================================
   // UNDERSTANDING BPD (10 articles)
   // ==========================================
@@ -2198,3 +2199,320 @@ export const LESSONS: Lesson[] = [
     tags: ['self-compassion', 'recovery', 'healing'],
   },
 ];
+
+type LessonSpanishCopy = Pick<Lesson, 'title' | 'description'>;
+
+const LESSON_SPANISH: Record<string, LessonSpanishCopy> = {
+  'ubpd-1': {
+    title: 'Qué es realmente el TLP',
+    description: 'Una mirada compasiva a lo que significa el trastorno límite de la personalidad y lo que no significa.',
+  },
+  'ubpd-2': {
+    title: 'Por qué las emociones se sienten tan intensas',
+    description: 'Entender la intensidad emocional y por qué no es tu culpa.',
+  },
+  'ubpd-3': {
+    title: 'El modelo de sensibilidad emocional',
+    description: 'Cómo la biología y el ambiente se combinan para moldear la sensibilidad emocional.',
+  },
+  'ubpd-4': {
+    title: 'Por qué suele desarrollarse el TLP',
+    description: 'Las raíces del TLP, entendidas sin culpa.',
+  },
+  'ubpd-5': {
+    title: 'Mitos comunes sobre el TLP',
+    description: 'Desmontar estereotipos dañinos con hechos y compasión.',
+  },
+  'ubpd-6': {
+    title: 'Por qué las personas con TLP temen el abandono',
+    description: 'Las raíces profundas del miedo al abandono y cómo puede moldearlo todo.',
+  },
+  'ubpd-7': {
+    title: 'La desregulación emocional explicada',
+    description: 'Por qué tus emociones pueden parecer tener vida propia.',
+  },
+  'ubpd-8': {
+    title: 'La diferencia entre sentir y actuar',
+    description: 'Tus emociones son válidas; tus acciones siguen siendo una elección.',
+  },
+  'ubpd-9': {
+    title: 'Por qué las relaciones se sienten tan importantes',
+    description: 'La necesidad profunda de conexión y por qué puede sentirse abrumadora.',
+  },
+  'ubpd-10': {
+    title: 'Por qué la memoria emocional puede ser más fuerte',
+    description: 'Cómo emociones del pasado pueden sentirse vivas en el presente.',
+  },
+  'er-1': {
+    title: 'Qué hacer cuando las emociones suben de golpe',
+    description: 'Primeras estrategias prácticas para oleadas emocionales.',
+  },
+  'er-2': {
+    title: 'La regla emocional de 90 segundos',
+    description: 'La ciencia sorprendente de cuánto dura realmente una emoción.',
+  },
+  'er-3': {
+    title: 'Por qué ayuda pausar antes de actuar',
+    description: 'El poder de crear espacio entre impulso y acción.',
+  },
+  'er-4': {
+    title: 'Técnicas de anclaje que sí ayudan',
+    description: 'Formas basadas en evidencia para volver al momento presente.',
+  },
+  'er-5': {
+    title: 'La diferencia entre evitar y regular',
+    description: 'Por qué reprimir emociones puede hacerlas más fuertes.',
+  },
+  'er-6': {
+    title: 'Cuando las emociones se sienten demasiado grandes',
+    description: 'Qué hacer cuando todo se siente abrumador.',
+  },
+  'er-7': {
+    title: 'Cómo bajar la intensidad emocional',
+    description: 'Bajar el volumen de emociones abrumadoras.',
+  },
+  'er-8': {
+    title: 'Entender los disparadores emocionales',
+    description: 'Aprender a reconocer qué activa tus respuestas emocionales.',
+  },
+  'er-9': {
+    title: 'Aprender a quedarte con lo que sientes',
+    description: 'La habilidad contraintuitiva de no huir de la incomodidad.',
+  },
+  'er-10': {
+    title: 'Cómo las olas emocionales terminan pasando',
+    description: 'La ciencia y el consuelo de saber que nada dura para siempre.',
+  },
+  'rel-1': {
+    title: 'Por qué las relaciones pueden sentirse tan intensas',
+    description: 'Entender la fuerza emocional que aparece en los vínculos cercanos.',
+  },
+  'rel-2': {
+    title: 'La dinámica de acercar y alejar',
+    description: 'Por qué puedes querer cercanía y temerla al mismo tiempo.',
+  },
+  'rel-3': {
+    title: 'Miedo al abandono en las relaciones',
+    description: 'Cómo la alarma de abandono puede activarse en momentos cotidianos.',
+  },
+  'rel-4': {
+    title: 'Cómo pausar antes de enviar mensajes emocionales',
+    description: 'Proteger la conexión cuando el impulso quiere responder ya.',
+  },
+  'rel-5': {
+    title: 'Comunicación saludable durante el conflicto',
+    description: 'Expresarte con claridad sin atacar ni desaparecer.',
+  },
+  'rel-6': {
+    title: 'Reconocer disparadores relacionales',
+    description: 'Detectar los momentos que activan historias de rechazo o peligro.',
+  },
+  'rel-7': {
+    title: 'Pedir seguridad y cómo manejarlo',
+    description: 'Buscar calma sin poner toda la relación bajo presión.',
+  },
+  'rel-8': {
+    title: 'Cómo pedir apoyo de forma segura',
+    description: 'Comunicar lo que necesitas sin perder tu centro.',
+  },
+  'rel-9': {
+    title: 'Entender los patrones de apego',
+    description: 'Cómo los vínculos tempranos pueden influir en el presente.',
+  },
+  'rel-10': {
+    title: 'Reparar después de un conflicto emocional',
+    description: 'Volver a la conexión con responsabilidad y cuidado.',
+  },
+  'ta-1': {
+    title: 'Por qué cosas pequeñas pueden sentirse como abandono',
+    description: 'Comprender por qué señales sutiles pueden activar una alarma intensa.',
+  },
+  'ta-2': {
+    title: 'Cómo reconocer patrones de disparadores',
+    description: 'Encontrar señales repetidas antes de que la emoción se intensifique.',
+  },
+  'ta-3': {
+    title: 'Flashbacks emocionales explicados',
+    description: 'Cuando una emoción antigua aparece como si estuviera pasando ahora.',
+  },
+  'ta-4': {
+    title: 'Por qué el silencio puede doler tanto',
+    description: 'Entender el peso emocional de no recibir respuesta.',
+  },
+  'ta-5': {
+    title: 'Cómo reencuadrar pensamientos de abandono',
+    description: 'Encontrar explicaciones más estables sin negar el dolor.',
+  },
+  'ta-6': {
+    title: 'Bajar la velocidad en momentos de disparador',
+    description: 'Crear una pausa cuando tu sistema quiere actuar de inmediato.',
+  },
+  'id-1': {
+    title: 'Por qué la identidad puede sentirse inestable',
+    description: 'Entender los cambios en el sentido de quién eres.',
+  },
+  'id-2': {
+    title: 'Descubrir valores personales',
+    description: 'Usar tus valores como ancla cuando las emociones cambian.',
+  },
+  'id-3': {
+    title: 'Construir un sentido de identidad más fuerte',
+    description: 'Pequeñas formas de conocerte y confiar más en ti.',
+  },
+  'id-4': {
+    title: 'Autocompasión cuando cometes errores',
+    description: 'Responder al error sin convertirlo en identidad.',
+  },
+  'id-5': {
+    title: 'Reconstruir la autoestima después del conflicto',
+    description: 'Volver a tu dignidad después de un momento difícil.',
+  },
+  'id-6': {
+    title: 'Aprender a confiar en ti',
+    description: 'Recuperar seguridad interna paso a paso.',
+  },
+  'comm-1': {
+    title: 'Cómo expresar emociones sin escalar',
+    description: 'Decir lo que sientes sin aumentar el conflicto.',
+  },
+  'comm-2': {
+    title: 'Bajar la velocidad en conversaciones emocionales',
+    description: 'Crear espacio antes de responder desde intensidad.',
+  },
+  'comm-3': {
+    title: 'Comunicar necesidades con claridad',
+    description: 'Pedir lo que necesitas de una forma directa y cuidada.',
+  },
+  'comm-4': {
+    title: 'Escuchar sin reaccionar',
+    description: 'Mantenerte presente cuando escuchar se siente amenazante.',
+  },
+  'comm-5': {
+    title: 'Reparar conversaciones',
+    description: 'Volver después de una ruptura con honestidad y cuidado.',
+  },
+  'cs-1': {
+    title: 'Qué hacer durante el desborde emocional',
+    description: 'Pasos seguros para atravesar un momento de mucha intensidad.',
+  },
+  'cs-2': {
+    title: 'Atravesar tormentas emocionales',
+    description: 'Mantenerte a salvo mientras la ola baja.',
+  },
+  'cs-3': {
+    title: 'Formas seguras de liberar intensidad emocional',
+    description: 'Descargar energía sin hacerte daño ni dañar la relación.',
+  },
+  'ds-1': {
+    title: 'Cómo las rutinas crean estabilidad emocional',
+    description: 'Por qué las pequeñas estructuras ayudan al sistema nervioso.',
+  },
+  'ds-2': {
+    title: 'Sueño, comida y regulación emocional',
+    description: 'Cómo las necesidades básicas influyen en la intensidad emocional.',
+  },
+  'ds-3': {
+    title: 'Construir un ritual de mañana',
+    description: 'Empezar el día con una base más estable.',
+  },
+  'th-1': {
+    title: '¿Qué es DBT?',
+    description: 'Una introducción a la terapia dialéctico-conductual y sus habilidades.',
+  },
+  'th-2': {
+    title: 'Atención plena: la base',
+    description: 'Aprender a notar lo que ocurre antes de reaccionar.',
+  },
+  'th-3': {
+    title: 'Mente sabia',
+    description: 'Unir emoción y razón para responder con más claridad.',
+  },
+  'th-4': {
+    title: 'Acción opuesta',
+    description: 'Elegir una acción que te acerque a lo que necesitas, no solo a lo que urge.',
+  },
+  'th-5': {
+    title: 'La recuperación es real',
+    description: 'Evidencia y esperanza para el cambio con TLP.',
+  },
+  'th-6': {
+    title: 'Construir una vida que valga la pena vivir',
+    description: 'La visión de Marsha Linehan y cómo hacerla tuya.',
+  },
+  'th-7': {
+    title: 'La autocompasión como medicina',
+    description: 'Una de las habilidades más poderosas: tratarte con amabilidad.',
+  },
+};
+
+const CATEGORY_SPANISH_LABELS: Record<Lesson['categoryId'], string> = {
+  'understanding-bpd': 'entender el TLP',
+  'emotional-regulation': 'regulación emocional',
+  relationships: 'relaciones',
+  'triggers-abandonment': 'disparadores y abandono',
+  'identity-selfworth': 'identidad y autoestima',
+  communication: 'comunicación',
+  'crisis-storms': 'crisis y tormentas emocionales',
+  'daily-stability': 'estabilidad diaria',
+  'therapy-healing': 'terapia y recuperación',
+};
+
+function spanishSectionTitle(section: Lesson['sections'][number], index: number): string {
+  if (section.type === 'callout') return 'Para recordar';
+  if (section.type === 'exercise') return 'Práctica breve';
+  if (section.type === 'takeaway') return 'Llévalo contigo';
+  return index === 0 ? 'Idea central' : 'Cómo se aplica';
+}
+
+function spanishSectionContent(
+  lesson: Lesson,
+  spanishLesson: LessonSpanishCopy,
+  section: Lesson['sections'][number],
+  index: number,
+): string {
+  const category = CATEGORY_SPANISH_LABELS[lesson.categoryId];
+
+  if (section.type === 'callout') {
+    return `En ${spanishLesson.title}, la idea importante es tratar tu experiencia con validación y precisión. Lo que sientes puede tener sentido sin que tengas que obedecer cada impulso. Esta parte de ${category} te ayuda a mirar el patrón con menos culpa y más claridad.`;
+  }
+
+  if (section.type === 'exercise') {
+    return `Practica esto durante uno o dos minutos: nombra lo que está pasando, identifica la emoción principal y elige una acción pequeña que no empeore la situación. Para ${spanishLesson.title}, la meta no es hacerlo perfecto; es crear una pausa suficientemente segura para elegir el siguiente paso.`;
+  }
+
+  if (section.type === 'takeaway') {
+    return `Recuerda esto: ${spanishLesson.description} Puedes avanzar con pasos pequeños, apoyo y práctica repetida. La recuperación no exige que dejes de sentir profundamente; te ayuda a responder a lo que sientes con más cuidado y menos sufrimiento.`;
+  }
+
+  if (index === 0) {
+    return `${spanishLesson.title} se enfoca en ${category}. Esta lección te invita a entender el patrón sin juzgarte: la emoción puede sentirse intensa, urgente o confusa, pero sigue siendo información que puedes aprender a leer con más calma.`;
+  }
+
+  return `Cuando este patrón aparezca, intenta separar los hechos, la interpretación y el impulso. Pregunta qué está pidiendo la emoción y qué respuesta cuidaría mejor tu seguridad, tu dignidad y tus relaciones.`;
+}
+
+function localizeLesson(lesson: Lesson): Lesson {
+  const spanishLesson = LESSON_SPANISH[lesson.id];
+  if (!spanishLesson) {
+    return lesson;
+  }
+
+  localizedFields(lesson, {
+    title: { en: lesson.title, es: spanishLesson.title },
+    description: { en: lesson.description, es: spanishLesson.description },
+  });
+
+  lesson.sections = lesson.sections.map((section, index) => {
+    const spanishTitle = spanishSectionTitle(section, index);
+    const spanishContent = spanishSectionContent(lesson, spanishLesson, section, index);
+
+    return localizedFields(section, {
+      title: { en: section.title, es: spanishTitle },
+      content: { en: section.content, es: spanishContent },
+    }) as Lesson['sections'][number];
+  });
+
+  return lesson;
+}
+
+export const LESSONS: Lesson[] = ENGLISH_LESSONS.map(localizeLesson);

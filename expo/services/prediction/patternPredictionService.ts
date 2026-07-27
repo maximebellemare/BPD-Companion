@@ -1,4 +1,5 @@
 import { JournalEntry, MessageDraft } from '@/types';
+import { localizedText } from '@/lib/i18n/staticText';
 import {
   EarlyWarningResult,
   DetectedPattern,
@@ -34,8 +35,11 @@ function detectAbandonmentPattern(entries: JournalEntry[]): DetectedPattern | nu
     return {
       id: 'abandonment_repeated',
       type: 'abandonment_trigger',
-      label: 'Repeated abandonment triggers',
-      description: `You've experienced abandonment-related triggers ${abandonmentCount} times this week. This is a pattern worth being gentle about.`,
+      label: localizedText('Repeated abandonment triggers', 'Detonantes repetidos de abandono'),
+      description: localizedText(
+        `You've experienced abandonment-related triggers ${abandonmentCount} times this week. This is a pattern worth being gentle about.`,
+        `Has experimentado detonantes relacionados con abandono ${abandonmentCount} veces esta semana. Es un patrón para mirar con suavidad.`,
+      ),
       severity: abandonmentCount >= 5 ? 'elevated' : 'moderate',
       dataPoints: abandonmentCount,
     };
@@ -64,8 +68,11 @@ function detectDistressRising(entries: JournalEntry[]): DetectedPattern | null {
     return {
       id: 'distress_escalating',
       type: 'distress_rising',
-      label: 'Distress levels increasing',
-      description: `Your recent distress levels have been climbing. A grounding exercise or journaling might help.`,
+      label: localizedText('Distress levels increasing', 'El malestar está aumentando'),
+      description: localizedText(
+        `Your recent distress levels have been climbing. A grounding exercise or journaling might help.`,
+        'Tus niveles recientes de malestar han subido. Un ejercicio de anclaje o escribir puede ayudar.',
+      ),
       severity: increase > 2 ? 'elevated' : 'moderate',
       dataPoints: recentThree.length,
     };
@@ -81,8 +88,11 @@ function detectEmotionalMessages(drafts: MessageDraft[]): DetectedPattern | null
     return {
       id: 'emotional_messages_frequent',
       type: 'emotional_messages',
-      label: 'Frequent emotional messaging',
-      description: `You've drafted ${emotionalCount} emotional messages this week. Consider pausing before sending.`,
+      label: localizedText('Frequent emotional messaging', 'Mensajes emocionales frecuentes'),
+      description: localizedText(
+        `You've drafted ${emotionalCount} emotional messages this week. Consider pausing before sending.`,
+        `Has escrito ${emotionalCount} mensajes emocionales esta semana. Considera pausar antes de enviar.`,
+      ),
       severity: emotionalCount >= 5 ? 'elevated' : 'moderate',
       dataPoints: emotionalCount,
     };
@@ -107,8 +117,11 @@ function detectRelationshipConflict(entries: JournalEntry[]): DetectedPattern | 
     return {
       id: 'relationship_conflict_pattern',
       type: 'relationship_conflict',
-      label: 'Relationship stress pattern',
-      description: `You've had ${conflictCount} high-intensity relationship moments this week. Your AI Companion can help process this.`,
+      label: localizedText('Relationship stress pattern', 'Patrón de estrés relacional'),
+      description: localizedText(
+        `You've had ${conflictCount} high-intensity relationship moments this week. Your AI Companion can help process this.`,
+        `Has tenido ${conflictCount} momentos relacionales de alta intensidad esta semana. AI Companion puede ayudarte a procesarlo.`,
+      ),
       severity: conflictCount >= 3 ? 'elevated' : 'moderate',
       dataPoints: conflictCount,
     };
@@ -132,8 +145,11 @@ function detectUrgeFrequency(entries: JournalEntry[]): DetectedPattern | null {
     return {
       id: 'urge_frequency_high',
       type: 'urge_frequency',
-      label: 'Frequent strong urges',
-      description: `You've experienced ${highRiskUrges.length} strong urges this week. You're doing well to track them.`,
+      label: localizedText('Frequent strong urges', 'Impulsos fuertes frecuentes'),
+      description: localizedText(
+        `You've experienced ${highRiskUrges.length} strong urges this week. You're doing well to track them.`,
+        `Has experimentado ${highRiskUrges.length} impulsos fuertes esta semana. Estás haciendo un buen trabajo al registrarlos.`,
+      ),
       severity: highRiskUrges.length >= 5 ? 'elevated' : 'moderate',
       dataPoints: highRiskUrges.length,
     };
@@ -208,8 +224,11 @@ function generateSuggestions(patterns: DetectedPattern[]): EarlyWarningSuggestio
         suggestions.push({
           id: 'suggest_grounding',
           type: 'grounding',
-          title: 'Grounding Exercise',
-          description: 'A short grounding exercise can help bring your body back to the present.',
+          title: localizedText('Grounding Exercise', 'Ejercicio de anclaje'),
+          description: localizedText(
+            'A short grounding exercise can help bring your body back to the present.',
+            'Un ejercicio breve de anclaje puede ayudar a traer tu cuerpo de vuelta al presente.',
+          ),
           route: '/exercise?id=c1',
           icon: 'Wind',
         });
@@ -222,8 +241,11 @@ function generateSuggestions(patterns: DetectedPattern[]): EarlyWarningSuggestio
         suggestions.push({
           id: 'suggest_journaling',
           type: 'journaling',
-          title: 'Journaling Reflection',
-          description: 'Writing about what you\'re feeling can help you process and find clarity.',
+          title: localizedText('Journaling Reflection', 'Reflexión escrita'),
+          description: localizedText(
+            'Writing about what you\'re feeling can help you process and find clarity.',
+            'Escribir sobre lo que sientes puede ayudarte a procesar y encontrar claridad.',
+          ),
           route: '/check-in',
           icon: 'BookOpen',
         });
@@ -236,8 +258,11 @@ function generateSuggestions(patterns: DetectedPattern[]): EarlyWarningSuggestio
         suggestions.push({
           id: 'suggest_pause',
           type: 'message_pause',
-          title: 'Message Pause',
-          description: 'Taking a moment before responding can protect your relationships and peace.',
+          title: localizedText('Message Pause', 'Pausa antes del mensaje'),
+          description: localizedText(
+            'Taking a moment before responding can protect your relationships and peace.',
+            'Tomarte un momento antes de responder puede proteger tus vínculos y tu paz.',
+          ),
           route: '/(tabs)/messages',
           icon: 'Pause',
         });
@@ -250,8 +275,11 @@ function generateSuggestions(patterns: DetectedPattern[]): EarlyWarningSuggestio
         suggestions.push({
           id: 'suggest_ai_companion',
           type: 'ai_companion',
-          title: 'Talk to AI Companion',
-          description: 'Your AI Companion can help you work through what you\'re feeling right now.',
+          title: localizedText('Talk to AI Companion', 'Hablar con AI Companion'),
+          description: localizedText(
+            'Your AI Companion can help you work through what you\'re feeling right now.',
+            'AI Companion puede ayudarte a procesar lo que estás sintiendo ahora.',
+          ),
           route: '/(tabs)/companion',
           icon: 'MessageCircle',
         });
@@ -264,8 +292,11 @@ function generateSuggestions(patterns: DetectedPattern[]): EarlyWarningSuggestio
     suggestions.push({
       id: 'suggest_grounding_default',
       type: 'grounding',
-      title: 'Grounding Exercise',
-      description: 'A short grounding exercise might help you feel more centered.',
+      title: localizedText('Grounding Exercise', 'Ejercicio de anclaje'),
+      description: localizedText(
+        'A short grounding exercise might help you feel more centered.',
+        'Un ejercicio breve de anclaje podría ayudarte a sentirte más centrado/a.',
+      ),
       route: '/exercise?id=c1',
       icon: 'Wind',
     });
@@ -279,22 +310,37 @@ function generateWarningMessage(patterns: DetectedPattern[], trend: EmotionalTre
 
   const elevated = patterns.filter(p => p.severity === 'elevated');
   if (elevated.length > 0) {
-    return "Your stress levels have been rising this week. You're doing a great job tracking — a short grounding exercise might help right now.";
+    return localizedText(
+      "Your stress levels have been rising this week. You're doing a great job tracking — a short grounding exercise might help right now.",
+      'Tus niveles de estrés han subido esta semana. Estás haciendo un gran trabajo al registrarlo; un ejercicio breve de anclaje podría ayudar ahora.',
+    );
   }
 
   if (trend.distressTrend === 'rising') {
-    return "Your emotional intensity has been climbing lately. This is a good time to be gentle with yourself.";
+    return localizedText(
+      "Your emotional intensity has been climbing lately. This is a good time to be gentle with yourself.",
+      'Tu intensidad emocional ha estado subiendo últimamente. Es un buen momento para tratarte con suavidad.',
+    );
   }
 
   if (patterns.some(p => p.type === 'emotional_messages')) {
-    return "You've been drafting a lot of emotional messages. Remember, it's okay to pause before sending.";
+    return localizedText(
+      "You've been drafting a lot of emotional messages. Remember, it's okay to pause before sending.",
+      'Has estado escribiendo muchos mensajes emocionales. Recuerda: está bien pausar antes de enviar.',
+    );
   }
 
   if (patterns.some(p => p.type === 'abandonment_trigger')) {
-    return "Abandonment feelings have been showing up more often. You're not alone in this — your patterns tell a story of strength.";
+    return localizedText(
+      "Abandonment feelings have been showing up more often. You're not alone in this — your patterns tell a story of strength.",
+      'Los sentimientos de abandono han aparecido más seguido. No estás solo/a en esto; tus patrones también cuentan una historia de fuerza.',
+    );
   }
 
-  return "Some patterns are emerging in your recent data. Taking a moment for yourself could make a difference.";
+  return localizedText(
+    "Some patterns are emerging in your recent data. Taking a moment for yourself could make a difference.",
+    'Están apareciendo algunos patrones en tus datos recientes. Tomarte un momento para ti podría marcar diferencia.',
+  );
 }
 
 export function analyzePatterns(

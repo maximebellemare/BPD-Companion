@@ -7,8 +7,16 @@ import {
   PathImpactScore,
 } from '@/types/messageSimulation';
 import { classifyMessageSafety, extractCoreEmotion, extractCoreSituation } from '@/services/messages/messageSafetyClassifier';
+import { localizedText } from '@/lib/i18n/staticText';
+
+function isSpanishOutput(): boolean {
+  return localizedText('en', 'es') === 'es';
+}
 
 function generateUrgentVersion(draft: string, isSafe: boolean): string {
+  if (isSpanishOutput()) {
+    return 'Necesito que escuches esto ahora mismo. Estoy muy activado/a y quiero responder ya, pero esta versión probablemente aumentaría la presión.';
+  }
   if (!isSafe) {
     const situation = extractCoreSituation(draft);
     return `I need you to hear this right now. I'm really upset about ${situation}. Why aren't you responding?!`;
@@ -20,6 +28,9 @@ function generateUrgentVersion(draft: string, isSafe: boolean): string {
 }
 
 function generateAvoidantVersion(draft: string, isSafe: boolean): string {
+  if (isSpanishOutput()) {
+    return 'Está bien. Olvida lo que dije. Voy a hacer como si no me importara.';
+  }
   if (!isSafe) {
     return "Whatever. It's fine. Forget I said anything.";
   }
@@ -28,6 +39,14 @@ function generateAvoidantVersion(draft: string, isSafe: boolean): string {
 }
 
 function generateSoftVersion(draft: string, context: SimulationContext, isSafe: boolean): string {
+  if (isSpanishOutput()) {
+    const emotion = extractCoreEmotion(draft);
+    const situation = extractCoreSituation(draft);
+    const opener = context.desiredOutcome === 'reconnect'
+      ? 'Me importamos y quiero compartir esto con cuidado.'
+      : 'Me cuesta decir esto, y espero que puedas escucharme.';
+    return `${opener} Me siento ${emotion} por ${situation}. Quiero que podamos estar bien.`;
+  }
   if (!isSafe) {
     const emotion = extractCoreEmotion(draft);
     const situation = extractCoreSituation(draft);
@@ -47,6 +66,13 @@ function generateSoftVersion(draft: string, context: SimulationContext, isSafe: 
 }
 
 function generateBoundaryVersion(draft: string, context: SimulationContext, isSafe: boolean): string {
+  if (isSpanishOutput()) {
+    const situation = extractCoreSituation(draft);
+    const emotion = extractCoreEmotion(draft);
+    return context.desiredOutcome === 'protect_dignity'
+      ? `Me siento ${emotion} por ${situation}. Esto no me hace bien y necesito tomar distancia.`
+      : `Necesito ser honesto/a. Me siento ${emotion} por ${situation}, y esto no me hace bien. Voy a tomar distancia para cuidar mi bienestar.`;
+  }
   if (!isSafe) {
     const situation = extractCoreSituation(draft);
     const emotion = extractCoreEmotion(draft);
@@ -66,6 +92,20 @@ function generateBoundaryVersion(draft: string, context: SimulationContext, isSa
 }
 
 function generateSecureVersion(draft: string, context: SimulationContext, isSafe: boolean): string {
+  if (isSpanishOutput()) {
+    const emotion = extractCoreEmotion(draft);
+    const situation = extractCoreSituation(draft);
+    if (context.desiredOutcome === 'get_clarity') {
+      return `Me siento ${emotion} por ${situation}. Prefiero hablarlo cuando haya más claridad entre nosotros.`;
+    }
+    if (context.desiredOutcome === 'reconnect') {
+      return `Tomé un momento para pensar qué quiero decir. Me siento ${emotion} por ${situation}, y quiero hablarlo honestamente en vez de reaccionar.`;
+    }
+    if (context.emotionalState === 'rejected') {
+      return `Me siento vulnerable ahora. Estoy ${emotion} por ${situation}. No voy a perseguir esta conversación desde la ansiedad.`;
+    }
+    return `Tomé un momento para pensar qué quiero decir. Me siento ${emotion} por ${situation}. Quiero hablarlo con claridad y respeto.`;
+  }
   if (!isSafe) {
     const emotion = extractCoreEmotion(draft);
     const situation = extractCoreSituation(draft);
@@ -148,6 +188,20 @@ function selectRecommendedPath(context: SimulationContext, riskLevel: string): R
 }
 
 function buildRecommendationReason(recommendedPath: ResponsePath, riskLevel: string, context: SimulationContext): string {
+  if (isSpanishOutput()) {
+    if (recommendedPath === 'do_not_send') {
+      if (riskLevel === 'severe') return 'Este borrador tiene un riesgo muy alto de escalar. No enviarlo ahora es la opción más protectora.';
+      if (riskLevel === 'high') return 'Hay emociones fuertes presentes. Pausar protege tanto tu bienestar como el vínculo.';
+      return 'Con esta intensidad emocional, esperar puede darte el mejor resultado.';
+    }
+    if (recommendedPath === 'boundary') return 'Un límite claro protege tu dignidad y aporta claridad.';
+    if (recommendedPath === 'secure') {
+      if (context.desiredOutcome === 'reconnect') return 'La opción segura equilibra honestidad emocional y autorrespeto; es la mejor para reconectar.';
+      if (context.desiredOutcome === 'get_clarity') return 'La opción segura pide claridad sin crear presión.';
+      return 'La opción segura ofrece claridad y autorrespeto con menor riesgo de arrepentimiento.';
+    }
+    return 'Esta opción equilibra tus necesidades con la seguridad del vínculo.';
+  }
   if (recommendedPath === 'do_not_send') {
     if (riskLevel === 'severe') return 'This draft has very high escalation risk. Not sending right now is the strongest move you can make.';
     if (riskLevel === 'high') return 'Strong emotions are present. Pausing now protects both you and the relationship.';
@@ -213,6 +267,20 @@ function buildPathImpact(path: ResponsePath, riskLevel: string): PathImpactScore
 }
 
 function buildSelfEffect(path: ResponsePath, context: SimulationContext): string {
+  if (isSpanishOutput()) {
+    const effects: Record<ResponsePath, string> = {
+      urgent: 'Puede sentirse como descarga en el momento, pero suele venir seguida de vergüenza o arrepentimiento.',
+      avoidant: 'Puede protegerte del conflicto, pero tus sentimientos reales quedan sin expresar.',
+      soft: 'Puede sentirse vulnerable y cuidadosa. Abre espacio para entenderse.',
+      boundary: 'Puede sentirse fortalecedora. Proteges tu espacio sin dejar de ser honesto/a.',
+      secure: 'Puede sentirse más calmada y centrada. Se alinea con tu versión más saludable.',
+      do_not_send: 'Le da tiempo a tu sistema nervioso para asentarse. Aumenta la posibilidad de pensar con claridad.',
+    };
+    if (path === 'do_not_send' && (context.emotionalState === 'angry' || context.emotionalState === 'overwhelmed')) {
+      return 'Cuando las emociones están tan altas, pausar es la elección con más autorrespeto. La claridad llega después de regularte.';
+    }
+    return effects[path];
+  }
   const effects: Record<ResponsePath, string> = {
     urgent: 'May feel like release in the moment, but often followed by shame or regret.',
     avoidant: 'May protect you from conflict, but your real feelings stay unexpressed.',
@@ -230,6 +298,17 @@ function buildSelfEffect(path: ResponsePath, context: SimulationContext): string
 }
 
 function buildShortTermEffect(path: ResponsePath, isSafe: boolean): string {
+  if (isSpanishOutput()) {
+    if (path === 'urgent') return !isSafe
+      ? 'Esta versión casi seguro escalaría la situación y dejaría mucho arrepentimiento.'
+      : 'Puede aliviar la ansiedad por un momento, pero suele aumentar tensión y arrepentimiento.';
+    if (path === 'avoidant') return 'Se siente autoprotector al inicio, pero deja sentimientos importantes sin expresar.';
+    if (path === 'soft') return 'Se siente vulnerable pero cuidadosa. Puede bajar la carga emocional de la conversación.';
+    if (path === 'boundary') return 'Puede sentirse incómoda pero fortalecedora. Protege tu espacio emocional.';
+    if (path === 'secure') return 'Puede sentirse más lenta, pero crea más claridad y autorrespeto.';
+    if (path === 'do_not_send') return 'No resuelve de inmediato, pero tiene la mayor probabilidad de evitar arrepentimiento.';
+    return '';
+  }
   if (path === 'urgent') {
     return !isSafe
       ? 'This version would almost certainly escalate the situation and lead to significant regret.'
@@ -244,6 +323,17 @@ function buildShortTermEffect(path: ResponsePath, isSafe: boolean): string {
 }
 
 function buildRelationshipEffect(path: ResponsePath, isSafe: boolean): string {
+  if (isSpanishOutput()) {
+    if (path === 'urgent') return !isSafe
+      ? 'Es muy probable que cause daño duradero y cierre la posibilidad de resolver.'
+      : 'Probablemente cree presión, defensividad o más distancia.';
+    if (path === 'avoidant') return 'Puede parecer indiferencia cuando en realidad te importa mucho. Crea distancia emocional.';
+    if (path === 'soft') return 'Invita a entender en vez de defenderse. Muestra madurez emocional.';
+    if (path === 'boundary') return 'Los límites sanos fortalecen vínculos a largo plazo, aunque incomoden al inicio.';
+    if (path === 'secure') return 'Invita a una conexión genuina. Muestra autoconciencia sin exigir que la otra persona regule tus emociones.';
+    if (path === 'do_not_send') return 'Evita daño potencial. Siempre puedes enviar algo después; no puedes des-enviar.';
+    return '';
+  }
   if (path === 'urgent') {
     return !isSafe
       ? 'Very likely to cause lasting damage and shut down any possibility of resolution.'
@@ -258,6 +348,23 @@ function buildRelationshipEffect(path: ResponsePath, isSafe: boolean): string {
 }
 
 function buildRecommendationNote(path: ResponsePath, isRecommended: boolean, riskLevel: string): string {
+  if (isSpanishOutput()) {
+    if (!isRecommended) {
+      if (path === 'urgent') return 'Esta opción tiene el mayor riesgo de arrepentimiento y escalada.';
+      if (path === 'avoidant') return 'Evita el conflicto, pero también evita la resolución.';
+      if (path === 'soft') return 'Un acercamiento suave; funciona bien cuando la conexión es prioridad.';
+      if (path === 'boundary') return 'Buena opción cuando necesitas distancia con dignidad.';
+      if (path === 'secure') return 'Equilibrada y con autorrespeto; funciona en la mayoría de situaciones.';
+      if (path === 'do_not_send') return 'La opción más segura cuando las emociones están altas.';
+    }
+    if (path === 'do_not_send') {
+      if (riskLevel === 'severe') return 'Mejor opción ahora. Este borrador probablemente causaría arrepentimiento.';
+      return 'Recomendado: pausar ahora te da la mejor oportunidad de un buen resultado.';
+    }
+    if (path === 'secure') return 'Opción más equilibrada: clara, con autorrespeto y bajo riesgo de escalada.';
+    if (path === 'boundary') return 'Opción con más autorrespeto: protege dignidad con claridad.';
+    return 'Recomendado según tu situación y tus objetivos.';
+  }
   if (!isRecommended) {
     if (path === 'urgent') return 'This path has the highest regret and escalation risk.';
     if (path === 'avoidant') return 'This path avoids conflict but also avoids resolution.';
@@ -277,6 +384,13 @@ function buildRecommendationNote(path: ResponsePath, isRecommended: boolean, ris
 }
 
 function buildActionLabel(path: ResponsePath): string {
+  if (isSpanishOutput()) {
+    if (path === 'urgent') return 'No recomendada';
+    if (path === 'boundary') return 'Reescribir como límite';
+    if (path === 'secure') return 'Abrir reescritura segura';
+    if (path === 'do_not_send') return 'Guardar y pausar';
+    return 'Usar esta versión';
+  }
   if (path === 'urgent') return 'Not recommended';
   if (path === 'avoidant') return 'Use this version';
   if (path === 'soft') return 'Use this version';
@@ -323,7 +437,14 @@ export function simulateResponsePaths(
 
     return {
       path: pathType,
-      label: meta.label,
+      label: localizedText(meta.label, {
+        urgent: 'Urgente',
+        avoidant: 'Evitativa',
+        soft: 'Suave',
+        boundary: 'Con límite',
+        secure: 'Segura',
+        do_not_send: 'No enviar',
+      }[pathType]),
       emoji: meta.emoji,
       color: meta.color,
       exampleMessage: message,

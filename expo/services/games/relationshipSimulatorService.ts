@@ -1,4 +1,5 @@
 import { storageService } from '@/services/storage/storageService';
+import { localizedFields, localizedText } from '@/lib/i18n/staticText';
 
 export type RelationshipSimulatorDifficulty = 'beginner' | 'intermediate' | 'advanced';
 export type RelationshipSimulatorTopic = 'delayed_replies' | 'jealousy' | 'conflict' | 'abandonment' | 'criticism' | 'boundaries';
@@ -64,24 +65,24 @@ export interface RelationshipSimulatorProgress {
 const STORAGE_KEY = 'bpd_companion_relationship_simulator_progress';
 
 export const RELATIONSHIP_SIMULATOR_DIFFICULTY_LABELS: Record<RelationshipSimulatorDifficulty, string> = {
-  beginner: 'Beginner',
-  intermediate: 'Intermediate',
-  advanced: 'Advanced',
+  beginner: localizedText('Beginner', 'Principiante'),
+  intermediate: localizedText('Intermediate', 'Intermedio'),
+  advanced: localizedText('Advanced', 'Avanzado'),
 };
 
 export const RELATIONSHIP_SIMULATOR_TOPIC_LABELS: Record<RelationshipSimulatorTopic, string> = {
-  delayed_replies: 'Delayed replies',
-  jealousy: 'Jealousy',
-  conflict: 'Conflict',
-  abandonment: 'Abandonment fears',
-  criticism: 'Criticism',
-  boundaries: 'Boundaries',
+  delayed_replies: localizedText('Delayed replies', 'Respuestas tardías'),
+  jealousy: localizedText('Jealousy', 'Celos'),
+  conflict: localizedText('Conflict', 'Conflicto'),
+  abandonment: localizedText('Abandonment fears', 'Miedo al abandono'),
+  criticism: localizedText('Criticism', 'Crítica'),
+  boundaries: localizedText('Boundaries', 'Límites'),
 };
 
 export const OUTCOME_LABELS: Record<RelationshipOutcome, string> = {
-  escalation: 'Escalation',
-  de_escalation: 'De-escalation',
-  healthy_communication: 'Healthy communication',
+  escalation: localizedText('Escalation', 'Escalada'),
+  de_escalation: localizedText('De-escalation', 'Desescalada'),
+  healthy_communication: localizedText('Healthy communication', 'Comunicación sana'),
 };
 
 export const DEFAULT_RELATIONSHIP_SIMULATOR_PROGRESS: RelationshipSimulatorProgress = {
@@ -105,7 +106,7 @@ export const DEFAULT_RELATIONSHIP_SIMULATOR_PROGRESS: RelationshipSimulatorProgr
   lastCompletedDate: null,
 };
 
-export const RELATIONSHIP_SIMULATOR_SCENARIOS: RelationshipSimulatorScenario[] = [
+const ENGLISH_RELATIONSHIP_SIMULATOR_SCENARIOS: RelationshipSimulatorScenario[] = [
   {
     id: 'beginner_space_tonight',
     difficulty: 'beginner',
@@ -440,6 +441,103 @@ export const RELATIONSHIP_SIMULATOR_SCENARIOS: RelationshipSimulatorScenario[] =
     ],
   },
 ];
+
+const RELATIONSHIP_SCENARIO_ES: Record<string, { title: string; setup: string }> = {
+  beginner_space_tonight: {
+    title: 'Espacio esta noche',
+    setup: 'Tu pareja parece cansada después de un día tenso. Ya estás sensible a la distancia.',
+  },
+  beginner_delayed_reply: {
+    title: 'Respuesta tardía',
+    setup: 'Enviaste un mensaje hace horas. Por fin responde: “Perdón, día ocupado.”',
+  },
+  intermediate_jealousy_photo: {
+    title: 'El like en la foto',
+    setup: 'Tu pareja le dio like a una foto de alguien. Te sientes reemplazable y quieres certeza inmediata.',
+  },
+  intermediate_criticism: {
+    title: 'Demasiado sensible',
+    setup: 'Alguien dice que eres demasiado sensible durante un desacuerdo.',
+  },
+  advanced_boundary_family: {
+    title: 'Presión familiar',
+    setup: 'Un familiar sigue insistiendo después de que dijiste que no. Sientes culpa y enojo.',
+  },
+  advanced_conflict_repair: {
+    title: 'Reparar después del conflicto',
+    setup: 'Ambos dijeron cosas hirientes. Ahora quieren hablar y tú te sientes a la defensiva.',
+  },
+};
+
+function spanishPartnerLine(turnId: string): string {
+  if (turnId.includes('space_1')) return 'Necesito un poco de espacio esta noche.';
+  if (turnId.includes('space_2')) return 'No me estoy yendo. Solo estoy agotado/a.';
+  if (turnId.includes('reply_1')) return 'Perdón, fue un día ocupado.';
+  if (turnId.includes('jealousy_1')) return 'Fue solo un like. No pensé que significara algo.';
+  if (turnId.includes('jealousy_2')) return '¿Quieres tranquilidad o quieres hablar de lo que te activó?';
+  if (turnId.includes('criticism_1')) return 'Estás siendo demasiado sensible.';
+  if (turnId.includes('boundary_1')) return 'No puedo creer que digas que no después de todo lo que he hecho por ti.';
+  if (turnId.includes('boundary_2')) return '¿Entonces simplemente estás abandonando a la familia?';
+  if (turnId.includes('repair_1')) return 'Quiero hablar de lo que pasó anoche.';
+  return 'La otra persona dice algo que te activa emocionalmente.';
+}
+
+function spanishPrompt(turnId: string): string {
+  if (turnId.includes('space_1')) return '¿Cómo respondes primero?';
+  if (turnId.includes('space_2')) return '¿Qué mantiene estable la conversación?';
+  if (turnId.includes('reply_1')) return '¿Qué respuesta protege la conexión?';
+  if (turnId.includes('jealousy_2')) return 'Elige la respuesta que profundiza la comprensión.';
+  if (turnId.includes('boundary_1')) return '¿Cómo sostienes el límite sin atacar?';
+  if (turnId.includes('boundary_2')) return 'Elige una respuesta que se mantenga anclada.';
+  if (turnId.includes('repair_1')) return '¿Cómo abres la reparación?';
+  return '¿Cómo respondes?';
+}
+
+function spanishOptionText(option: RelationshipResponseOption): Pick<RelationshipResponseOption, 'text' | 'partnerReply' | 'coachingNote'> {
+  if (option.outcomeSignal === 'healthy_communication') {
+    return {
+      text: 'Puedo nombrar lo que siento sin atacar. Quiero responder con claridad y respeto.',
+      partnerReply: 'Gracias por decirlo así. Puedo escucharte mejor.',
+      coachingNote: 'Esta respuesta nombra la emoción, cuida el vínculo y mantiene autorrespeto.',
+    };
+  }
+  if (option.outcomeSignal === 'de_escalation') {
+    return {
+      text: 'No sé cómo decirlo ahora. Necesito un momento para no empeorarlo.',
+      partnerReply: 'Está bien. Podemos tomar un poco de espacio y volver después.',
+      coachingNote: 'Reduce la escalada, pero todavía necesita una petición más clara para resolver.',
+    };
+  }
+  return {
+    text: 'Esto me duele y quiero reaccionar fuerte ahora mismo.',
+    partnerReply: 'Me siento atacado/a y esto se está poniendo más difícil.',
+    coachingNote: 'La emoción es comprensible, pero esta respuesta convierte el miedo en ataque y puede escalar.',
+  };
+}
+
+export const RELATIONSHIP_SIMULATOR_SCENARIOS: RelationshipSimulatorScenario[] = ENGLISH_RELATIONSHIP_SIMULATOR_SCENARIOS.map(scenario => {
+  const scenarioCopy = RELATIONSHIP_SCENARIO_ES[scenario.id];
+  return localizedFields({
+    ...scenario,
+    turns: scenario.turns.map(turn => localizedFields({
+      ...turn,
+      options: turn.options.map(option => {
+        const optionCopy = spanishOptionText(option);
+        return localizedFields({ ...option }, {
+          text: { en: option.text, es: optionCopy.text },
+          partnerReply: { en: option.partnerReply, es: optionCopy.partnerReply },
+          coachingNote: { en: option.coachingNote, es: optionCopy.coachingNote },
+        });
+      }),
+    }, {
+      partnerLine: { en: turn.partnerLine, es: spanishPartnerLine(turn.id) },
+      prompt: { en: turn.prompt, es: spanishPrompt(turn.id) },
+    })),
+  }, {
+    title: { en: scenario.title, es: scenarioCopy?.title ?? scenario.title },
+    setup: { en: scenario.setup, es: scenarioCopy?.setup ?? scenario.setup },
+  });
+});
 
 function todayKey(now = Date.now()): string {
   const date = new Date(now);

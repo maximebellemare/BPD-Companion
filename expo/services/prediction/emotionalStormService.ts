@@ -1,4 +1,5 @@
 import { JournalEntry, MessageDraft } from '@/types';
+import { localizedText } from '@/lib/i18n/staticText';
 
 export type StormIntensity = 'calm' | 'building' | 'approaching' | 'active';
 
@@ -54,8 +55,11 @@ function detectDistressClimbing(entries: JournalEntry[]): StormPattern | null {
     return {
       id: 'storm_distress_climbing',
       type: 'distress_climbing',
-      label: 'Stress levels have been increasing',
-      description: 'Your recent check-ins show rising intensity. Slowing down may help.',
+      label: localizedText('Stress levels have been increasing', 'Los niveles de estrés han ido subiendo'),
+      description: localizedText(
+        'Your recent check-ins show rising intensity. Slowing down may help.',
+        'Tus check-ins recientes muestran más intensidad. Bajar el ritmo puede ayudar.',
+      ),
       strength,
     };
   }
@@ -95,8 +99,11 @@ function detectAbandonmentRepeated(entries: JournalEntry[]): StormPattern | null
     return {
       id: 'storm_abandonment_repeated',
       type: 'abandonment_repeated',
-      label: 'Communication uncertainty showing up',
-      description: `You've had ${hits} triggers related to communication uncertainty recently.`,
+      label: localizedText('Communication uncertainty showing up', 'Aparece incertidumbre en la comunicación'),
+      description: localizedText(
+        `You've had ${hits} triggers related to communication uncertainty recently.`,
+        `Has tenido ${hits} detonantes relacionados con incertidumbre en la comunicación recientemente.`,
+      ),
       strength: Math.min(hits, 5),
     };
   }
@@ -114,8 +121,11 @@ function detectRewriteSurge(drafts: MessageDraft[]): StormPattern | null {
     return {
       id: 'storm_rewrite_surge',
       type: 'rewrite_surge',
-      label: 'Message drafting has increased',
-      description: `You've worked on ${count} messages recently. Pausing before sending can protect your peace.`,
+      label: localizedText('Message drafting has increased', 'Ha aumentado la escritura de mensajes'),
+      description: localizedText(
+        `You've worked on ${count} messages recently. Pausing before sending can protect your peace.`,
+        `Has trabajado en ${count} mensajes recientemente. Pausar antes de enviar puede proteger tu calma.`,
+      ),
       strength: Math.min(count, 5),
     };
   }
@@ -149,8 +159,11 @@ function detectReassuranceSeeking(entries: JournalEntry[]): StormPattern | null 
     return {
       id: 'storm_reassurance_seeking',
       type: 'reassurance_seeking',
-      label: 'Reassurance-seeking urges appearing',
-      description: 'You may benefit from grounding before reaching out right now.',
+      label: localizedText('Reassurance-seeking urges appearing', 'Aparecen impulsos de buscar tranquilidad'),
+      description: localizedText(
+        'You may benefit from grounding before reaching out right now.',
+        'Puede ayudarte anclarte antes de contactar a alguien ahora mismo.',
+      ),
       strength: Math.min(reassuranceHits, 5),
     };
   }
@@ -175,8 +188,11 @@ function detectEmotionalVolatility(entries: JournalEntry[]): StormPattern | null
     return {
       id: 'storm_emotional_volatility',
       type: 'emotional_volatility',
-      label: 'Emotions have been shifting quickly',
-      description: 'Your intensity levels have been swinging. Extra self-care may help stabilize.',
+      label: localizedText('Emotions have been shifting quickly', 'Las emociones han cambiado rápido'),
+      description: localizedText(
+        'Your intensity levels have been swinging. Extra self-care may help stabilize.',
+        'Tus niveles de intensidad han estado oscilando. Un poco más de autocuidado puede ayudar a estabilizar.',
+      ),
       strength: Math.min(swingCount + 1, 5),
     };
   }
@@ -209,8 +225,8 @@ function generateStormSuggestions(patterns: StormPattern[]): StormSuggestion[] {
     suggestions.push({
       id: 'storm_grounding',
       type: 'grounding',
-      title: 'Try a grounding exercise',
-      description: 'Reconnect with the present through your senses.',
+      title: localizedText('Try a grounding exercise', 'Prueba un ejercicio de anclaje'),
+      description: localizedText('Reconnect with the present through your senses.', 'Vuelve al presente a través de tus sentidos.'),
       route: '/exercise?id=c2',
       icon: 'Anchor',
     });
@@ -221,8 +237,8 @@ function generateStormSuggestions(patterns: StormPattern[]): StormSuggestion[] {
     suggestions.push({
       id: 'storm_breathing',
       type: 'breathing',
-      title: 'Take a 2-minute breathing pause',
-      description: 'Slow breathing calms your nervous system quickly.',
+      title: localizedText('Take a 2-minute breathing pause', 'Haz una pausa de respiración de 2 minutos'),
+      description: localizedText('Slow breathing calms your nervous system quickly.', 'Respirar lento calma tu sistema nervioso con rapidez.'),
       route: '/exercise?id=c1',
       icon: 'Wind',
     });
@@ -233,8 +249,8 @@ function generateStormSuggestions(patterns: StormPattern[]): StormSuggestion[] {
     suggestions.push({
       id: 'storm_companion',
       type: 'ai_companion',
-      title: 'Talk to AI Companion',
-      description: 'Process what you\'re feeling in a calm space.',
+      title: localizedText('Talk to AI Companion', 'Hablar con AI Companion'),
+      description: localizedText('Process what you\'re feeling in a calm space.', 'Procesa lo que sientes en un espacio calmado.'),
       route: '/(tabs)/companion',
       icon: 'Sparkles',
     });
@@ -245,8 +261,8 @@ function generateStormSuggestions(patterns: StormPattern[]): StormSuggestion[] {
     suggestions.push({
       id: 'storm_delay',
       type: 'delay_message',
-      title: 'Delay sending a message',
-      description: 'Give yourself space before pressing send.',
+      title: localizedText('Delay sending a message', 'Retrasa el envío de un mensaje'),
+      description: localizedText('Give yourself space before pressing send.', 'Date espacio antes de tocar enviar.'),
       route: '/(tabs)/messages',
       icon: 'Clock',
     });
@@ -257,8 +273,8 @@ function generateStormSuggestions(patterns: StormPattern[]): StormSuggestion[] {
     suggestions.push({
       id: 'storm_breathing_default',
       type: 'breathing',
-      title: 'Take a 2-minute breathing pause',
-      description: 'A few slow breaths can help you feel more centered.',
+      title: localizedText('Take a 2-minute breathing pause', 'Haz una pausa de respiración de 2 minutos'),
+      description: localizedText('A few slow breaths can help you feel more centered.', 'Unas respiraciones lentas pueden ayudarte a sentirte más centrado/a.'),
       route: '/exercise?id=c1',
       icon: 'Wind',
     });
@@ -271,28 +287,49 @@ function generateStormMessage(intensity: StormIntensity, patterns: StormPattern[
   if (patterns.length === 0) return null;
 
   if (intensity === 'active') {
-    return 'You may benefit from slowing things down right now. A grounding exercise could help.';
+    return localizedText(
+      'You may benefit from slowing things down right now. A grounding exercise could help.',
+      'Puede ayudarte bajar el ritmo ahora mismo. Un ejercicio de anclaje podría ayudar.',
+    );
   }
 
   if (intensity === 'approaching') {
     if (patterns.some(p => p.type === 'abandonment_repeated')) {
-      return 'You\'ve had several triggers related to communication uncertainty. Being gentle with yourself matters.';
+      return localizedText(
+        'You\'ve had several triggers related to communication uncertainty. Being gentle with yourself matters.',
+        'Has tenido varios detonantes relacionados con incertidumbre en la comunicación. Tratarte con suavidad importa.',
+      );
     }
     if (patterns.some(p => p.type === 'rewrite_surge')) {
-      return 'You\'ve been working through a lot of messages lately. A pause might bring more clarity.';
+      return localizedText(
+        'You\'ve been working through a lot of messages lately. A pause might bring more clarity.',
+        'Has estado procesando muchos mensajes últimamente. Una pausa podría traer más claridad.',
+      );
     }
-    return 'Your stress levels have been increasing this week. A small act of self-care can make a difference.';
+    return localizedText(
+      'Your stress levels have been increasing this week. A small act of self-care can make a difference.',
+      'Tus niveles de estrés han subido esta semana. Un acto pequeño de autocuidado puede marcar diferencia.',
+    );
   }
 
   if (patterns.some(p => p.type === 'emotional_volatility')) {
-    return 'Your emotions have been shifting quickly. Extra gentleness with yourself may help.';
+    return localizedText(
+      'Your emotions have been shifting quickly. Extra gentleness with yourself may help.',
+      'Tus emociones han cambiado rápido. Un poco más de amabilidad contigo puede ayudar.',
+    );
   }
 
   if (patterns.some(p => p.type === 'reassurance_seeking')) {
-    return 'Reassurance-seeking urges have been showing up. Grounding first can bring more clarity.';
+    return localizedText(
+      'Reassurance-seeking urges have been showing up. Grounding first can bring more clarity.',
+      'Han aparecido impulsos de buscar tranquilidad. Anclarte primero puede traer más claridad.',
+    );
   }
 
-  return 'Some patterns suggest things are building up. Taking a moment for yourself could help.';
+  return localizedText(
+    'Some patterns suggest things are building up. Taking a moment for yourself could help.',
+    'Algunos patrones sugieren que la intensidad se está acumulando. Tomarte un momento puede ayudar.',
+  );
 }
 
 export function detectEmotionalStorm(

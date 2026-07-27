@@ -1,4 +1,5 @@
 import { storageService } from '@/services/storage/storageService';
+import { localizedFields, localizedText } from '@/lib/i18n/staticText';
 
 export type RewriteMessageCategory = 'abandonment' | 'rejection' | 'conflict' | 'family' | 'friendship';
 
@@ -44,11 +45,11 @@ export interface RewriteMessageProgress {
 const STORAGE_KEY = 'bpd_companion_rewrite_message_progress';
 
 export const REWRITE_CATEGORY_LABELS: Record<RewriteMessageCategory, string> = {
-  abandonment: 'Abandonment',
-  rejection: 'Rejection',
-  conflict: 'Conflict',
-  family: 'Family',
-  friendship: 'Friendship',
+  abandonment: localizedText('Abandonment', 'Abandono'),
+  rejection: localizedText('Rejection', 'Rechazo'),
+  conflict: localizedText('Conflict', 'Conflicto'),
+  family: localizedText('Family', 'Familia'),
+  friendship: localizedText('Friendship', 'Amistad'),
 };
 
 export const DEFAULT_REWRITE_MESSAGE_PROGRESS: RewriteMessageProgress = {
@@ -73,7 +74,7 @@ export const DEFAULT_REWRITE_MESSAGE_PROGRESS: RewriteMessageProgress = {
   lastCompletedDate: null,
 };
 
-export const REWRITE_MESSAGE_SCENARIOS: RewriteMessageScenario[] = [
+const ENGLISH_REWRITE_MESSAGE_SCENARIOS: RewriteMessageScenario[] = [
   {
     id: 'abandonment_ignored_text',
     category: 'abandonment',
@@ -186,6 +187,112 @@ export const REWRITE_MESSAGE_SCENARIOS: RewriteMessageScenario[] = [
   },
 ];
 
+const REWRITE_MESSAGE_SCENARIO_ES: Record<string, Omit<RewriteMessageScenario, 'id' | 'category'>> = {
+  abandonment_ignored_text: {
+    title: 'Sin respuesta',
+    context: 'Tu pareja no ha respondido en 6 horas y sientes el pecho apretado.',
+    original: 'No puedo creer que me estés ignorando. Claramente no te importo.',
+    goal: 'Pedir conexión sin acusar.',
+    strongerVersion: 'Me siento ansioso/a porque no he sabido de ti. Cuando puedas, ¿podrías decirme si estamos bien?',
+    dbtVersion: 'Noté que no he sabido de ti en un rato. Me siento ansioso/a y me ayudaría un check-in breve cuando estés disponible.',
+    assertiveVersion: 'Me siento inquieto/a cuando los planes o mensajes quedan en silencio. Por favor envíame una actualización breve cuando puedas.',
+  },
+  abandonment_space_request: {
+    title: 'Necesitan espacio',
+    context: 'Alguien que amas dice que necesita espacio después de una conversación tensa.',
+    original: 'Bien. Toma tu espacio. Supongo que no significo nada para ti.',
+    goal: 'Respetar la pausa mientras nombras tu necesidad.',
+    strongerVersion: 'Puedo respetar el espacio. Ahora me siento asustado/a, así que me ayudaría saber cuándo podemos reconectar.',
+    dbtVersion: 'Escucho que necesitas espacio. Yo también voy a pausar, y agradecería acordar un momento para hablar después.',
+    assertiveVersion: 'Puedo darte espacio esta noche. Por favor avísame cuando estés listo/a para continuar la conversación.',
+  },
+  rejection_cancelled_plans: {
+    title: 'Planes cancelados',
+    context: 'Una amistad cancela planes a último minuto y dice que está agotada.',
+    original: 'Como sea. Claramente nunca querías salir conmigo.',
+    goal: 'Nombrar la decepción sin sacar una conclusión final.',
+    strongerVersion: 'Me decepcioné porque tenía ganas de verte. ¿Podemos elegir otro momento?',
+    dbtVersion: 'Entiendo que estés cansado/a. Me siento decepcionado/a y aun así me gustaría reagendar si estás abierto/a.',
+    assertiveVersion: 'Entiendo que surgen cosas. Agradecería más aviso la próxima vez si es posible.',
+  },
+  rejection_left_out: {
+    title: 'Me dejaron fuera',
+    context: 'Ves que tus amistades publicaron una foto de una salida a la que no te invitaron.',
+    original: 'Gracias por excluirme. Ya veo dónde estoy parado/a.',
+    goal: 'Preguntar por el dolor sin atacar.',
+    strongerVersion: 'Vi la foto y me sentí excluido/a. ¿Era algo de lo que no se suponía que formara parte?',
+    dbtVersion: 'Estoy tratando de no asumir, pero me dolió ver la salida. ¿Puedes ayudarme a entender qué pasó?',
+    assertiveVersion: 'Me sentí excluido/a al ver la publicación. Prefiero hablarlo directamente en vez de adivinar.',
+  },
+  conflict_cold_tone: {
+    title: 'Tono frío',
+    context: 'Alguien responde “ok” después de que compartes algo vulnerable.',
+    original: 'Wow. Qué gran respuesta. Ni te molestes en fingir que te importa.',
+    goal: 'Revisar el significado antes de escalar.',
+    strongerVersion: 'Esa respuesta me sonó fría. ¿Lo dijiste así o lo estoy interpretando mal?',
+    dbtVersion: 'Cuando vi “ok”, me sentí dolido/a e inseguro/a. ¿Puedes aclararme qué quisiste decir?',
+    assertiveVersion: 'Necesito algo más que “ok” cuando comparto algo vulnerable. ¿Podemos hablarlo?',
+  },
+  conflict_unfair_comment: {
+    title: 'Comentario injusto',
+    context: 'Durante una discusión, alguien dice que eres “demasiado sensible”.',
+    original: 'Tú eres el problema. Siempre me haces sentir loco/a.',
+    goal: 'Proteger el autorrespeto sin contraatacar.',
+    strongerVersion: 'Que me llamen demasiado sensible duele. Quiero hablar del tema sin etiquetas.',
+    dbtVersion: 'Cuando escucho “demasiado sensible”, me siento invalidado/a. Por favor dime la conducta específica que quieres hablar.',
+    assertiveVersion: 'Estoy dispuesto/a a hablar, pero no acepto que me etiqueten. Enfoquémonos en lo que pasó.',
+  },
+  family_boundary_push: {
+    title: 'Presión sobre un límite',
+    context: 'Un familiar sigue presionando después de que ya dijiste que no.',
+    original: '¿Por qué nunca puedes respetarme? Ya terminé con esta familia.',
+    goal: 'Repetir el límite con claridad.',
+    strongerVersion: 'Sé que esto te importa, pero mi respuesta sigue siendo no. Necesito que lo respetes.',
+    dbtVersion: 'Entiendo que estés decepcionado/a. No puedo hacer esto, y voy a mantener ese límite.',
+    assertiveVersion: 'Ya dije que no, y no voy a seguir hablando de esto esta noche.',
+  },
+  family_criticism: {
+    title: 'Crítica',
+    context: 'Un padre o madre critica tus decisiones y sientes que sube la vergüenza.',
+    original: 'Siempre me haces sentir inútil. Nunca debería contarte nada.',
+    goal: 'Nombrar el impacto y pedir otro tono.',
+    strongerVersion: 'Cuando criticas mis decisiones así, me cierro. Necesito un tono más calmado si vamos a hablar.',
+    dbtVersion: 'Escucho que te preocupa. Me duele la crítica y me gustaría recibir feedback sin insultos.',
+    assertiveVersion: 'Estoy abierto/a a escuchar tu preocupación, pero no voy a quedarme en una conversación con críticas duras.',
+  },
+  friendship_short_reply: {
+    title: 'Respuesta corta',
+    context: 'Una amistad cercana responde con mensajes cortos todo el día y te sientes no querido/a.',
+    original: 'Si ya no quieres ser mi amigo/a, solo dilo.',
+    goal: 'Hacer check-in sin forzar tranquilidad.',
+    strongerVersion: 'Te noto más callado/a hoy y me doy cuenta de que me siento inseguro/a. ¿Estamos bien?',
+    dbtVersion: 'Quizá estoy interpretando de más, pero las respuestas cortas me dieron ansiedad. ¿Puedes decirme si pasa algo?',
+    assertiveVersion: 'Prefiero preguntar directamente en vez de adivinar: ¿estamos bien?',
+  },
+  friendship_forgotten: {
+    title: 'Plan olvidado',
+    context: 'Una amistad olvida algo importante que le contaste.',
+    original: 'Claro que lo olvidaste. Nadie me escucha de verdad.',
+    goal: 'Expresar dolor sin generalizar.',
+    strongerVersion: 'Me dolió que eso se olvidara porque era importante para mí.',
+    dbtVersion: 'Sé que las personas olvidan cosas, y aun así me sentí triste porque esto era importante para mí.',
+    assertiveVersion: 'Necesito que tomes esto en serio. ¿Podemos hablar de cómo recordarlo la próxima vez?',
+  },
+};
+
+export const REWRITE_MESSAGE_SCENARIOS: RewriteMessageScenario[] = ENGLISH_REWRITE_MESSAGE_SCENARIOS.map(scenario => {
+  const copy = REWRITE_MESSAGE_SCENARIO_ES[scenario.id];
+  return localizedFields({ ...scenario }, {
+    title: { en: scenario.title, es: copy?.title ?? scenario.title },
+    context: { en: scenario.context, es: copy?.context ?? scenario.context },
+    original: { en: scenario.original, es: copy?.original ?? scenario.original },
+    goal: { en: scenario.goal, es: copy?.goal ?? scenario.goal },
+    strongerVersion: { en: scenario.strongerVersion, es: copy?.strongerVersion ?? scenario.strongerVersion },
+    dbtVersion: { en: scenario.dbtVersion, es: copy?.dbtVersion ?? scenario.dbtVersion },
+    assertiveVersion: { en: scenario.assertiveVersion, es: copy?.assertiveVersion ?? scenario.assertiveVersion },
+  });
+});
+
 function todayKey(now = Date.now()): string {
   const date = new Date(now);
   return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
@@ -266,14 +373,32 @@ export function scoreRewrite(text: string): RewriteMessageScore {
   effectiveness = clampScore(effectiveness);
   const overall = clampScore((emotionalRegulation + validation + effectiveness) / 3);
 
-  if (emotionalRegulation >= 75) feedback.push('You lowered the emotional heat and avoided attacking language.');
-  else feedback.push('Try naming the feeling without words like always, never, obviously, or whatever.');
+  if (emotionalRegulation >= 75) feedback.push(localizedText(
+    'You lowered the emotional heat and avoided attacking language.',
+    'Bajaste la carga emocional y evitaste lenguaje de ataque.',
+  ));
+  else feedback.push(localizedText(
+    'Try naming the feeling without words like always, never, obviously, or whatever.',
+    'Intenta nombrar el sentimiento sin palabras como siempre, nunca, obviamente o como sea.',
+  ));
 
-  if (validation >= 70) feedback.push('You made room for the other person’s side, which helps the message land.');
-  else feedback.push('Add one sentence that shows you understand there may be another side.');
+  if (validation >= 70) feedback.push(localizedText(
+    'You made room for the other person’s side, which helps the message land.',
+    'Dejaste espacio para la perspectiva de la otra persona, lo que ayuda a que el mensaje llegue mejor.',
+  ));
+  else feedback.push(localizedText(
+    'Add one sentence that shows you understand there may be another side.',
+    'Agrega una frase que muestre que entiendes que puede haber otra perspectiva.',
+  ));
 
-  if (effectiveness >= 70) feedback.push('You made a clear ask or next step.');
-  else feedback.push('Add one specific request: clarify, reschedule, check in, or talk later.');
+  if (effectiveness >= 70) feedback.push(localizedText(
+    'You made a clear ask or next step.',
+    'Hiciste una petición o siguiente paso claro.',
+  ));
+  else feedback.push(localizedText(
+    'Add one specific request: clarify, reschedule, check in, or talk later.',
+    'Agrega una petición específica: aclarar, reagendar, hacer check-in o hablar después.',
+  ));
 
   return {
     emotionalRegulation,

@@ -5,8 +5,9 @@ import {
   SimulationScenario,
   QuickAction,
 } from '@/types/simulator';
+import { localizedFields, localizedText } from '@/lib/i18n/staticText';
 
-export const EXAMPLE_SCENARIOS: SimulationScenario[] = [
+const ENGLISH_EXAMPLE_SCENARIOS: SimulationScenario[] = [
   {
     id: 'sc1',
     label: 'No reply for hours',
@@ -79,6 +80,26 @@ export const EXAMPLE_SCENARIOS: SimulationScenario[] = [
   },
 ];
 
+const EXAMPLE_SCENARIO_SPANISH: Record<string, { label: string; situation: string }> = {
+  sc1: { label: 'Horas sin responder', situation: 'Mi pareja no me ha respondido en horas.' },
+  sc2: { label: 'Planes cancelados', situation: 'Mi amistad canceló nuestros planes a último minuto.' },
+  sc3: { label: 'Crítica en el trabajo', situation: 'Mi jefe criticó mi trabajo frente a otras personas.' },
+  sc4: { label: 'Sentirme excluido/a', situation: 'Vi a mis amistades saliendo sin mí en redes sociales.' },
+  sc5: { label: 'Mi ex escribió', situation: 'Mi ex me escribió de la nada.' },
+  sc6: { label: 'Discusión familiar', situation: 'Mi mamá o papá dijo algo hiriente durante una llamada.' },
+  sc7: { label: 'Cambió el tono', situation: 'El tono de alguien cambió y me siento rechazado/a.' },
+  sc8: { label: 'Quiero enviar un mensaje largo', situation: 'Quiero enviar un mensaje emocional largo ahora mismo.' },
+  sc9: { label: 'Vergüenza después de discutir', situation: 'Siento vergüenza después de una discusión y no dejo de repetirla en mi mente.' },
+  sc10: { label: 'Necesito tranquilidad', situation: 'Quiero pedir seguridad sin escalar la situación.' },
+};
+
+export const EXAMPLE_SCENARIOS: SimulationScenario[] = ENGLISH_EXAMPLE_SCENARIOS.map(scenario =>
+  localizedFields({ ...scenario }, {
+    label: { en: scenario.label, es: EXAMPLE_SCENARIO_SPANISH[scenario.id]?.label ?? scenario.label },
+    situation: { en: scenario.situation, es: EXAMPLE_SCENARIO_SPANISH[scenario.id]?.situation ?? scenario.situation },
+  }),
+);
+
 interface ResponseTemplate {
   style: ResponseStyle;
   label: string;
@@ -94,6 +115,15 @@ const RESPONSE_TEMPLATES: ResponseTemplate[] = [
   { style: 'boundary', label: 'Boundaried', emoji: '🛡️', color: '#67E8F9' },
   { style: 'secure', label: 'Secure / Self-Respecting', emoji: '💎', color: '#3B82F6' },
 ];
+
+const RESPONSE_STYLE_LABEL_ES: Record<ResponseStyle, string> = {
+  anxious: 'Ansiosa / urgente',
+  reassurance: 'Búsqueda de tranquilidad',
+  avoidance: 'Evitativa / cerrada',
+  calm: 'Calmada / regulada',
+  boundary: 'Con límites',
+  secure: 'Segura / con autorrespeto',
+};
 
 type Theme = 'abandonment' | 'rejection' | 'conflict' | 'criticism' | 'shame' | 'general';
 
@@ -672,6 +702,119 @@ function generateSummary(theme: Theme): string {
   return summaries[theme] ?? summaries.general;
 }
 
+function generateSpanishSummary(theme: Theme): string {
+  const summaries: Record<Theme, string> = {
+    abandonment: 'El miedo al abandono puede activar una urgencia muy fuerte. Tus emociones son reales, pero no siempre describen toda la realidad. Las respuestas calmadas, con límites y seguras cuidan tu necesidad de conexión sin dañar el vínculo.',
+    rejection: 'La sensibilidad al rechazo puede hacer que una situación social se sienta amenazante. La clave es notar el pico emocional sin actuar de inmediato. Tu valor no depende de una sola interacción.',
+    conflict: 'El conflicto puede sentirse como el fin de una relación, aunque muchas veces es parte normal de la conexión. Pausar antes de reaccionar protege tanto tu bienestar como el vínculo.',
+    criticism: 'Cuando la crítica se siente personal, suele tocar una herida más profunda. Separar el feedback de tu identidad es una habilidad poderosa que se fortalece con práctica.',
+    shame: 'La vergüenza dice que tú eres el error, no que cometiste uno. Pasar de la vergüenza a la autocompasión puede transformar cómo reparas y sigues adelante.',
+    general: 'Cada situación emocional ofrece un punto de elección. Mientras más practicas pausar entre el detonante y la respuesta, más libertad ganas sobre tus reacciones.',
+  };
+  return summaries[theme] ?? summaries.general;
+}
+
+function generateSpanishResponseData(style: ResponseStyle, theme: Theme): ResponseData {
+  const themeText: Record<Theme, string> = {
+    abandonment: 'el silencio o la demora',
+    rejection: 'sentirte excluido/a o rechazado/a',
+    conflict: 'el conflicto',
+    criticism: 'la crítica',
+    shame: 'la vergüenza',
+    general: 'esta situación',
+  };
+  const focus = themeText[theme] ?? themeText.general;
+
+  const data: Record<ResponseStyle, ResponseData> = {
+    anxious: {
+      exampleResponse: `Actuar desde la urgencia: buscar señales, escribir de inmediato o asumir que ${focus} confirma lo peor.`,
+      emotionalOutcome: {
+        emotion: 'Ansiedad intensa',
+        intensity: 'high',
+        description: 'La emoción sube rápido y cada minuto puede sentirse como prueba de tus peores miedos.',
+      },
+      relationshipImpact: {
+        direction: 'negative',
+        description: 'Responder desde la activación puede presionar a la otra persona y dejarte con más vergüenza después.',
+      },
+      healthierAlternative: 'Nombra el miedo sin actuarlo todavía. Respira, vuelve al cuerpo y espera a que la ola baje antes de responder.',
+      isRecommended: false,
+    },
+    reassurance: {
+      exampleResponse: `Pedir confirmación repetida para calmar ${focus}, aunque el alivio dure poco.`,
+      emotionalOutcome: {
+        emotion: 'Alivio breve y duda renovada',
+        intensity: 'high',
+        description: 'La respuesta puede tranquilizar por un momento, pero la inseguridad vuelve si la regulación depende solo de afuera.',
+      },
+      relationshipImpact: {
+        direction: 'negative',
+        description: 'La búsqueda repetida de tranquilidad puede crear dependencia y cansar al vínculo.',
+      },
+      healthierAlternative: 'Antes de pedir seguridad, pregúntate si podrías creer la respuesta ahora. Si no, primero necesitas regularte internamente.',
+      isRecommended: false,
+    },
+    avoidance: {
+      exampleResponse: `Cerrar la puerta emocionalmente, fingir que no importa o alejarte para no sentir ${focus}.`,
+      emotionalOutcome: {
+        emotion: 'Adormecimiento que tapa dolor',
+        intensity: 'moderate',
+        description: 'Evitar puede aliviar al inicio, pero lo no procesado suele volver con más fuerza.',
+      },
+      relationshipImpact: {
+        direction: 'negative',
+        description: 'El retiro emocional crea distancia y dificulta reparar o aclarar lo que pasó.',
+      },
+      healthierAlternative: 'Tomar espacio está bien; intenta comunicarlo y ponerte un momento concreto para volver a procesar.',
+      isRecommended: false,
+    },
+    calm: {
+      exampleResponse: `Notar la emoción, reconocer que ${focus} te activó y elegir una respuesta que no aumente el daño.`,
+      emotionalOutcome: {
+        emotion: 'Incomodidad manejable',
+        intensity: 'moderate',
+        description: 'La emoción sigue presente, pero no dirige tus acciones. Puedes atravesar la ola.',
+      },
+      relationshipImpact: {
+        direction: 'positive',
+        description: 'Responder con calma abre más espacio para una conversación honesta y conectada.',
+      },
+      healthierAlternative: 'Esta ya es una respuesta saludable. Puedes reforzarla escribiendo qué detonó la emoción.',
+      isRecommended: true,
+    },
+    boundary: {
+      exampleResponse: `Nombrar lo que necesitas de forma simple, sin atacar: “Esto me activó. Necesito hablarlo con respeto y calma.”`,
+      emotionalOutcome: {
+        emotion: 'Vulnerabilidad con firmeza',
+        intensity: 'moderate',
+        description: 'Honras tu necesidad sin entregar el control a la emoción.',
+      },
+      relationshipImpact: {
+        direction: 'positive',
+        description: 'Los límites claros protegen el vínculo porque reducen reacciones impulsivas y resentimiento.',
+      },
+      healthierAlternative: 'Es una respuesta fuerte. Practícala cuando estés en calma para que sea más accesible en momentos intensos.',
+      isRecommended: true,
+    },
+    secure: {
+      exampleResponse: `Reconocer el malestar, recordar que una situación no define tu valor y elegir desde tus valores, no desde el impulso.`,
+      emotionalOutcome: {
+        emotion: 'Estabilidad interna',
+        intensity: 'low',
+        description: 'Sientes la emoción sin fusionarte con ella. Tu identidad no depende de este momento.',
+      },
+      relationshipImpact: {
+        direction: 'positive',
+        description: 'Una respuesta segura y consciente construye confianza y autorrespeto.',
+      },
+      healthierAlternative: 'Esta es una de las respuestas más sanas. Cada vez que la practicas, fortaleces resiliencia emocional.',
+      isRecommended: true,
+    },
+  };
+
+  return data[style];
+}
+
 function generateQuickActions(theme: Theme): QuickAction[] {
   const base: QuickAction[] = [
     {
@@ -727,13 +870,33 @@ function generateQuickActions(theme: Theme): QuickAction[] {
   return base;
 }
 
+function generateSpanishQuickActions(theme: Theme): QuickAction[] {
+  const base: QuickAction[] = [
+    { id: 'ground', label: 'Primero ayúdame a anclarme', icon: '🌿', route: '/exercise?id=grounding-1', type: 'navigate' },
+    { id: 'journal', label: 'Escribir sobre esto', icon: '📝', route: '/journal', type: 'navigate' },
+    { id: 'companion', label: 'Hablar con AI Companion', icon: '✨', route: '/companion', type: 'navigate' },
+  ];
+
+  if (theme === 'abandonment' || theme === 'conflict' || theme === 'rejection') {
+    base.unshift({ id: 'rewrite', label: 'Reescribir un mensaje', icon: '💬', route: '/messages', type: 'navigate' });
+  }
+
+  base.push({ id: 'pause', label: 'Pausar 2 minutos', icon: '⏸️', type: 'inline' });
+
+  if (theme === 'shame' || theme === 'criticism') {
+    base.push({ id: 'coping', label: 'Ver herramientas de afrontamiento', icon: '🧰', route: '/tools', type: 'navigate' });
+  }
+
+  return base;
+}
+
 export function simulateResponses(situation: string): SimulationResult {
   console.log('[EmotionalSimulator] Simulating responses for:', situation);
 
   const theme = detectTheme(situation);
   console.log('[EmotionalSimulator] Detected theme:', theme);
 
-  const generators: Array<{ gen: (theme: Theme) => ResponseData; template: ResponseTemplate }> = [
+  const generators: { gen: (theme: Theme) => ResponseData; template: ResponseTemplate }[] = [
     { gen: generateAnxiousResponse, template: RESPONSE_TEMPLATES[0] },
     { gen: generateReassuranceResponse, template: RESPONSE_TEMPLATES[1] },
     { gen: generateAvoidanceResponse, template: RESPONSE_TEMPLATES[2] },
@@ -742,22 +905,25 @@ export function simulateResponses(situation: string): SimulationResult {
     { gen: generateSecureResponse, template: RESPONSE_TEMPLATES[5] },
   ];
 
+  const useSpanish = localizedText('en', 'es') === 'es';
   const responses: SimulatedResponse[] = generators.map(({ gen, template }) => {
     const data = gen(theme);
+    const localizedData = useSpanish ? generateSpanishResponseData(template.style, theme) : data;
     return {
       ...template,
-      ...data,
+      label: useSpanish ? RESPONSE_STYLE_LABEL_ES[template.style] : template.label,
+      ...localizedData,
     };
   });
 
-  const quickActions = generateQuickActions(theme);
+  const quickActions = useSpanish ? generateSpanishQuickActions(theme) : generateQuickActions(theme);
 
   const result: SimulationResult = {
     id: `sim_${Date.now()}`,
     situation,
     timestamp: Date.now(),
     responses,
-    summary: generateSummary(theme),
+    summary: useSpanish ? generateSpanishSummary(theme) : generateSummary(theme),
     quickActions,
   };
 

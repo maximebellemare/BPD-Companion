@@ -7,6 +7,7 @@ import {
   FOCUS_AREA_META,
 } from '@/types/therapy';
 import { therapyPlanRepository } from '@/services/repositories';
+import { localizedText } from '@/lib/i18n/staticText';
 
 function isWithinDays(timestamp: number, days: number): boolean {
   return Date.now() - timestamp < days * 24 * 60 * 60 * 1000;
@@ -157,49 +158,318 @@ function determineFocusArea(analysis: ReturnType<typeof analyzePatterns>): Thera
 
 function generateInsight(analysis: ReturnType<typeof analyzePatterns>, focus: TherapyFocusArea): string {
   if (analysis.entryCount < 2) {
-    return 'Keep checking in regularly — your plan will become more personalized as you share more about your emotional world.';
+    return localizedText(
+      'Keep checking in regularly — your plan will become more personalized as you share more about your emotional world.',
+      'Sigue haciendo check-ins con regularidad; tu plan se volverá más personalizado mientras compartes más sobre tu mundo emocional.',
+    );
   }
 
   const insights: string[] = [];
 
   if (analysis.topTrigger) {
-    insights.push(`"${analysis.topTrigger}" has been your most frequent trigger recently.`);
+    insights.push(localizedText(
+      `"${analysis.topTrigger}" has been your most frequent trigger recently.`,
+      `"${analysis.topTrigger}" ha sido tu detonante más frecuente recientemente.`,
+    ));
   }
   if (analysis.topEmotion) {
-    insights.push(`You've been feeling "${analysis.topEmotion}" more than other emotions.`);
+    insights.push(localizedText(
+      `You've been feeling "${analysis.topEmotion}" more than other emotions.`,
+      `Has sentido "${analysis.topEmotion}" más que otras emociones.`,
+    ));
   }
   if (analysis.hasHighDistress) {
-    insights.push(`Your average distress level has been elevated at ${analysis.avgDistress.toFixed(1)}/10.`);
+    insights.push(localizedText(
+      `Your average distress level has been elevated at ${analysis.avgDistress.toFixed(1)}/10.`,
+      `Tu nivel promedio de malestar ha estado elevado: ${analysis.avgDistress.toFixed(1)}/10.`,
+    ));
   }
   if (analysis.hasRelationshipIssues) {
-    insights.push('Relationship-related triggers have been prominent in your recent check-ins.');
+    insights.push(localizedText(
+      'Relationship-related triggers have been prominent in your recent check-ins.',
+      'Los detonantes relacionados con vínculos han aparecido con fuerza en tus check-ins recientes.',
+    ));
   }
   if (analysis.pausedMessages > 0) {
-    insights.push(`You've paused ${analysis.pausedMessages} message${analysis.pausedMessages > 1 ? 's' : ''} recently — that takes real strength.`);
+    insights.push(localizedText(
+      `You've paused ${analysis.pausedMessages} message${analysis.pausedMessages > 1 ? 's' : ''} recently — that takes real strength.`,
+      `Has pausado ${analysis.pausedMessages} mensaje${analysis.pausedMessages > 1 ? 's' : ''} recientemente; eso requiere mucha fuerza.`,
+    ));
   }
 
   return insights.length > 0
     ? insights.slice(0, 2).join(' ')
-    : `This week's focus on ${FOCUS_AREA_META[focus].label.toLowerCase()} is based on your recent patterns.`;
+    : localizedText(
+      `This week's focus on ${FOCUS_AREA_META[focus].label.toLowerCase()} is based on your recent patterns.`,
+      `El enfoque de esta semana se basa en tus patrones recientes.`,
+    );
 }
 
 function generateEncouragement(analysis: ReturnType<typeof analyzePatterns>): string {
-  const messages = [
-    'Every small step you take is a step toward healing.',
-    'You are building skills that will serve you for a lifetime.',
-    'Progress isn\'t always visible — but showing up matters.',
-    'Be patient with yourself. Recovery is not a straight line.',
-    'You deserve the care you give to others.',
-  ];
+  const messages = localizedText('en', 'es') === 'es'
+    ? [
+      'Cada paso pequeño que das también cuenta como avance.',
+      'Estás construyendo habilidades que pueden acompañarte por mucho tiempo.',
+      'El progreso no siempre se ve de inmediato, pero presentarte por ti importa.',
+      'Ten paciencia contigo. Recuperarse no es una línea recta.',
+      'Mereces el cuidado que tantas veces das a otras personas.',
+    ]
+    : [
+      'Every small step you take is a step toward healing.',
+      'You are building skills that will serve you for a lifetime.',
+      'Progress isn\'t always visible — but showing up matters.',
+      'Be patient with yourself. Recovery is not a straight line.',
+      'You deserve the care you give to others.',
+    ];
 
   if (analysis.pausedMessages > 0) {
-    return 'Choosing to pause before reacting is a powerful skill. You\'re growing.';
+    return localizedText(
+      'Choosing to pause before reacting is a powerful skill. You\'re growing.',
+      'Elegir pausar antes de reaccionar es una habilidad poderosa. Estás creciendo.',
+    );
   }
   if (analysis.entryCount >= 5) {
-    return 'Your consistency in checking in shows real commitment to your wellbeing.';
+    return localizedText(
+      'Your consistency in checking in shows real commitment to your wellbeing.',
+      'Tu constancia con los check-ins muestra un compromiso real con tu bienestar.',
+    );
   }
 
   return messages[Math.floor(Date.now() / 86400000) % messages.length];
+}
+
+const THERAPY_ITEM_SPANISH: Record<string, { title: string; description: string; reason: string }> = {
+  'TIP Skills Practice': {
+    title: 'Práctica de habilidades TIP',
+    description: 'Usa temperatura, ejercicio intenso o respiración pausada para bajar el malestar rápidamente.',
+    reason: 'Las habilidades TIP ayudan a atravesar momentos intensos sin empeorarlos.',
+  },
+  'Distress Diary': {
+    title: 'Diario de malestar',
+    description: 'Escribe sobre un momento difícil de esta semana: qué pasó, qué sentiste y qué hiciste.',
+    reason: 'Registrar patrones de malestar te ayuda a prepararte para futuros momentos.',
+  },
+  'Grounding: 5-4-3-2-1': {
+    title: 'Anclaje 5-4-3-2-1',
+    description: 'Practica la técnica de los cinco sentidos incluso cuando estás en calma para que salga más natural.',
+    reason: 'Practicar el anclaje en calma facilita usarlo durante una crisis.',
+  },
+  'STOP Skill': {
+    title: 'Habilidad STOP',
+    description: 'Detente, toma distancia, observa y procede con atención.',
+    reason: 'STOP crea espacio entre el impulso y la acción.',
+  },
+  'Self-Soothing Kit': {
+    title: 'Kit de autoconsuelo',
+    description: 'Usa cada uno de tus cinco sentidos con algo que hoy se sienta reconfortante.',
+    reason: 'Autoconsolarte fortalece tu caja de herramientas de seguridad emocional.',
+  },
+  'Pros and Cons': {
+    title: 'Pros y contras',
+    description: 'Piensa en un impulso frecuente. Escribe los pros y contras de actuarlo y de resistirlo.',
+    reason: 'Activar la mente racional cuando estás en calma construye resiliencia.',
+  },
+  'Weekly Reflection': {
+    title: 'Reflexión semanal',
+    description: 'Revisa cómo manejaste el malestar esta semana. ¿Qué funcionó? ¿Qué probarías distinto?',
+    reason: 'Reflexionar sobre tu avance consolida habilidades nuevas.',
+  },
+  'Check the Facts': {
+    title: 'Revisa los hechos',
+    description: 'Cuando aparezca una emoción fuerte, pausa y pregunta: ¿cuáles son los hechos reales?',
+    reason: 'Los hechos pueden traer claridad cuando una emoción se siente enorme.',
+  },
+  'Opposite Action': {
+    title: 'Acción opuesta',
+    description: 'Identifica el impulso de acción de tu emoción más fuerte y practica hacer lo opuesto.',
+    reason: 'Cambiar tu acción puede cambiar la intensidad de la emoción.',
+  },
+  'Emotion Log': {
+    title: 'Registro de emociones',
+    description: 'Registra tus emociones tres veces hoy. Nómbralas con precisión, no solo como “mal” o “molesto/a”.',
+    reason: 'Nombrar emociones con precisión puede reducir su intensidad.',
+  },
+  'ABC PLEASE': {
+    title: 'ABC PLEASE',
+    description: 'Acumula positivos, construye dominio y afronta por adelantado; cuida sueño, comida, salud y ejercicio.',
+    reason: 'Reducir vulnerabilidad emocional es una base de la regulación.',
+  },
+  'Build Mastery': {
+    title: 'Construye dominio',
+    description: 'Haz hoy una cosa que te dé sensación de logro, aunque sea pequeña.',
+    reason: 'Los logros pequeños construyen confianza y reducen vulnerabilidad emocional.',
+  },
+  'Emotion-Action Chain': {
+    title: 'Cadena emoción-acción',
+    description: 'Traza una reacción reciente: detonante → pensamiento → emoción → impulso → acción → consecuencia.',
+    reason: 'Entender tus patrones es el primer paso para cambiarlos.',
+  },
+  'Week in Review': {
+    title: 'Revisión de la semana',
+    description: '¿Qué emociones fueron más fuertes esta semana? ¿Qué habilidades ayudaron más?',
+    reason: 'Revisar con regularidad profundiza tu autoconciencia y dominio de habilidades.',
+  },
+  'DEAR MAN Practice': {
+    title: 'Práctica DEAR MAN',
+    description: 'Describe, expresa, afirma y refuerza; mantente atento/a, seguro/a y dispuesto/a a negociar.',
+    reason: 'La comunicación clara ayuda a pedir lo que necesitas.',
+  },
+  'Boundary Reflection': {
+    title: 'Reflexión de límites',
+    description: 'Piensa en un límite que quieres poner. Escríbelo de forma clara y específica.',
+    reason: 'Los límites claros protegen tu bienestar emocional.',
+  },
+  'GIVE Skills': {
+    title: 'Habilidades GIVE',
+    description: 'Practica ser amable, mostrar interés, validar y mantener una actitud tranquila en una conversación.',
+    reason: 'GIVE ayuda a cuidar la relación mientras expresas tus necesidades.',
+  },
+  'Message Mindfulness': {
+    title: 'Atención plena al escribir',
+    description: 'Antes de enviar un mensaje emocional hoy, pausa dos minutos y léelo de nuevo.',
+    reason: 'Una pausa breve puede prevenir arrepentimientos.',
+  },
+  'FAST Skills': {
+    title: 'Habilidades FAST',
+    description: 'Sé justo/a, no te disculpes por existir, mantén tus valores y sé honesto/a.',
+    reason: 'FAST ayuda a mantener autorrespeto en las interacciones.',
+  },
+  'Relationship Patterns': {
+    title: 'Patrones de relación',
+    description: 'Reflexiona: ¿qué patrones notas en tus vínculos? ¿Qué quieres cambiar?',
+    reason: 'Ver los patrones es el primer paso para crear vínculos más sanos.',
+  },
+  'Communication Review': {
+    title: 'Revisión de comunicación',
+    description: 'Mira cómo te comunicaste esta semana. Celebra un avance.',
+    reason: 'Reconocer el crecimiento motiva a seguir practicando.',
+  },
+  'Wise Mind Meditation': {
+    title: 'Meditación de mente sabia',
+    description: 'Dedica cinco minutos a encontrar el punto medio entre tu mente emocional y tu mente racional.',
+    reason: 'La mente sabia es una base para todas las habilidades DBT.',
+  },
+  'Observe Without Judging': {
+    title: 'Observa sin juzgar',
+    description: 'Nota tus pensamientos y sentimientos hoy sin etiquetarlos como buenos o malos.',
+    reason: 'Observar sin juicio reduce el poder de emociones difíciles.',
+  },
+  'One-Mindfully': {
+    title: 'Una cosa a la vez',
+    description: 'Elige una actividad hoy y hazla con toda tu atención.',
+    reason: 'Practicar una cosa a la vez entrena tu mente para volver al presente.',
+  },
+  'Thought Awareness': {
+    title: 'Conciencia de pensamientos',
+    description: 'Escribe cinco pensamientos recurrentes de hoy. ¿Son hechos o interpretaciones?',
+    reason: 'Distinguir hechos de pensamientos reduce la reactividad emocional.',
+  },
+  'Body Scan': {
+    title: 'Escaneo corporal',
+    description: 'Lleva atención lentamente a cada parte del cuerpo, de pies a cabeza, sin cambiar nada.',
+    reason: 'La conciencia corporal ayuda a notar emociones antes de que escalen.',
+  },
+  'Describe with Words': {
+    title: 'Describe con palabras',
+    description: 'Practica poner tu experiencia interna en palabras durante el día.',
+    reason: 'El lenguaje crea distancia de emociones abrumadoras.',
+  },
+  'Mindfulness Review': {
+    title: 'Revisión de atención plena',
+    description: '¿Qué práctica de mindfulness te ayudó más esta semana? Planea continuarla.',
+    reason: 'Identificar lo que resuena ayuda a construir una práctica sostenible.',
+  },
+  'Trigger Mapping': {
+    title: 'Mapa de detonantes',
+    description: 'Escribe sobre tu detonante relacional más reciente. ¿Qué historia contó tu mente?',
+    reason: 'Entender detonantes ayuda a prevenir escaladas.',
+  },
+  'Validation Practice': {
+    title: 'Práctica de validación',
+    description: 'Valida hoy la perspectiva de alguien más, incluso si no estás de acuerdo. Luego valida tus propios sentimientos.',
+    reason: 'La validación mutua reduce conflicto y construye confianza.',
+  },
+  'Pause Before Responding': {
+    title: 'Pausa antes de responder',
+    description: 'Cuando te sientas activado/a en una conversación, respira profundo tres veces antes de responder.',
+    reason: 'Una pausa puede cambiar todo el resultado de una interacción.',
+  },
+  'Boundary Script': {
+    title: 'Guion de límites',
+    description: 'Escribe un límite: “Me siento ___ cuando ___. Necesito ___.”',
+    reason: 'Tener guiones preparados hace que los límites sean más fáciles en el momento.',
+  },
+  'Pattern Recognition': {
+    title: 'Reconocimiento de patrones',
+    description: 'Revisa tus insights de relación. ¿Ves ciclos que se repiten?',
+    reason: 'Reconocer ciclos es el primer paso para romperlos.',
+  },
+  'Secure Communication': {
+    title: 'Comunicación segura',
+    description: 'Reescribe un borrador de mensaje usando un estilo calmado y seguro.',
+    reason: 'Practicar comunicación segura ayuda a cambiar patrones relacionales.',
+  },
+  'Relationship Check-In': {
+    title: 'Check-in de relaciones',
+    description: 'Reflexiona sobre tus vínculos esta semana. ¿Qué salió bien? ¿Qué quieres cambiar?',
+    reason: 'Reflexionar sobre relaciones con regularidad construye patrones más sanos.',
+  },
+  'Compassionate Letter': {
+    title: 'Carta compasiva',
+    description: 'Escribe una carta breve para ti como si le hablaras a una amistad querida pasando por lo mismo.',
+    reason: 'La autocompasión es una habilidad que se puede practicar.',
+  },
+  'Common Humanity': {
+    title: 'Humanidad compartida',
+    description: 'Cuando sufras hoy, recuérdate: “Otras personas también sienten esto. No estoy solo/a.”',
+    reason: 'Recordar la humanidad compartida reduce aislamiento y vergüenza.',
+  },
+  'Inner Critic Audit': {
+    title: 'Auditoría del crítico interno',
+    description: 'Escribe tu autocrítica más dura. Luego reescríbela con la voz de una amistad que te apoya.',
+    reason: 'Notar al crítico interno es el primer paso para suavizarlo.',
+  },
+  'Comfort Touch': {
+    title: 'Toque de consuelo',
+    description: 'Pon una mano en tu corazón cuando sientas malestar. Toma tres respiraciones lentas.',
+    reason: 'La autocompasión física activa el sistema de calma del cuerpo.',
+  },
+  'Mindful Self-Compassion Break': {
+    title: 'Pausa de autocompasión consciente',
+    description: '“Este es un momento de sufrimiento. Sufrir es parte de la vida. Que pueda tratarme con amabilidad.”',
+    reason: 'Estas frases activan componentes centrales de la autocompasión.',
+  },
+  'Strengths Journal': {
+    title: 'Diario de fortalezas',
+    description: 'Escribe tres cosas que manejaste bien recientemente, por pequeñas que parezcan.',
+    reason: 'Reconocer fortalezas contrarresta el sesgo negativo del TLP.',
+  },
+  'Self-Compassion Review': {
+    title: 'Revisión de autocompasión',
+    description: '¿Cómo se sintió practicar compasión hacia ti esta semana? ¿Qué cambió?',
+    reason: 'Reflexionar fortalece tu práctica de compasión.',
+  },
+};
+
+function localizePlanItems(items: TherapyPlanItem[]): TherapyPlanItem[] {
+  if (localizedText('en', 'es') !== 'es') return items;
+  return items.map(item => {
+    const copy = THERAPY_ITEM_SPANISH[item.title];
+    return copy ? { ...item, ...copy } : item;
+  });
+}
+
+function getFocusLabel(focus: TherapyFocusArea): string {
+  if (localizedText('en', 'es') !== 'es') return FOCUS_AREA_META[focus].label;
+  const labels: Record<TherapyFocusArea, string> = {
+    distress_tolerance: 'Tolerancia al malestar',
+    emotional_regulation: 'Regulación emocional',
+    interpersonal_effectiveness: 'Efectividad interpersonal',
+    mindfulness: 'Atención plena',
+    relationship_patterns: 'Patrones de relación',
+    self_compassion: 'Autocompasión',
+  };
+  return labels[focus];
 }
 
 function generatePlanItems(focus: TherapyFocusArea, analysis: ReturnType<typeof analyzePatterns>): TherapyPlanItem[] {
@@ -548,9 +818,8 @@ export function generateWeeklyPlan(
 ): WeeklyTherapyPlan {
   const analysis = analyzePatterns(journalEntries, messageDrafts);
   const focusArea = determineFocusArea(analysis);
-  const meta = FOCUS_AREA_META[focusArea];
   const { start, end } = getWeekBounds();
-  const items = generatePlanItems(focusArea, analysis);
+  const items = localizePlanItems(generatePlanItems(focusArea, analysis));
   const insight = generateInsight(analysis, focusArea);
   const encouragement = generateEncouragement(analysis);
 
@@ -559,7 +828,7 @@ export function generateWeeklyPlan(
     weekStart: start,
     weekEnd: end,
     focusArea,
-    focusLabel: meta.label,
+    focusLabel: getFocusLabel(focusArea),
     focusDescription: getFocusDescription(focusArea, analysis),
     items,
     personalInsight: insight,
@@ -575,26 +844,59 @@ function getFocusDescription(focus: TherapyFocusArea, analysis: ReturnType<typeo
   switch (focus) {
     case 'distress_tolerance':
       return analysis.hasHighDistress
-        ? 'Your distress levels have been elevated recently. This week focuses on building skills to ride the wave of intense emotions.'
-        : 'Building your ability to tolerate difficult moments without making them worse.';
+        ? localizedText(
+          'Your distress levels have been elevated recently. This week focuses on building skills to ride the wave of intense emotions.',
+          'Tus niveles de malestar han estado elevados recientemente. Esta semana se enfoca en construir habilidades para atravesar la ola de emociones intensas.',
+        )
+        : localizedText(
+          'Building your ability to tolerate difficult moments without making them worse.',
+          'Fortalecer tu capacidad de tolerar momentos difíciles sin empeorarlos.',
+        );
     case 'emotional_regulation':
       return analysis.hasAnger
-        ? 'Strong emotions have been showing up frequently. This week focuses on understanding and managing them.'
-        : 'Strengthening your ability to understand, label, and shift your emotional experiences.';
+        ? localizedText(
+          'Strong emotions have been showing up frequently. This week focuses on understanding and managing them.',
+          'Las emociones fuertes han aparecido con frecuencia. Esta semana se enfoca en entenderlas y manejarlas.',
+        )
+        : localizedText(
+          'Strengthening your ability to understand, label, and shift your emotional experiences.',
+          'Fortalecer tu capacidad de entender, nombrar y mover tus experiencias emocionales.',
+        );
     case 'interpersonal_effectiveness':
       return analysis.hasRelationshipIssues
-        ? 'Relationship patterns have been triggering you. This week focuses on building communication skills.'
-        : 'Developing skills to communicate your needs while maintaining relationships and self-respect.';
+        ? localizedText(
+          'Relationship patterns have been triggering you. This week focuses on building communication skills.',
+          'Los patrones relacionales te han estado activando. Esta semana se enfoca en construir habilidades de comunicación.',
+        )
+        : localizedText(
+          'Developing skills to communicate your needs while maintaining relationships and self-respect.',
+          'Desarrollar habilidades para comunicar tus necesidades cuidando los vínculos y tu autorrespeto.',
+        );
     case 'mindfulness':
       return analysis.hasAnxiety
-        ? 'Anxiety has been present for you recently. Mindfulness helps you return to the present moment.'
-        : 'Cultivating present-moment awareness to build a foundation for all other skills.';
+        ? localizedText(
+          'Anxiety has been present for you recently. Mindfulness helps you return to the present moment.',
+          'La ansiedad ha estado presente recientemente. La atención plena te ayuda a volver al momento presente.',
+        )
+        : localizedText(
+          'Cultivating present-moment awareness to build a foundation for all other skills.',
+          'Cultivar conciencia del momento presente como base para las demás habilidades.',
+        );
     case 'relationship_patterns':
-      return 'Understanding and transforming the patterns that shape your closest relationships.';
+      return localizedText(
+        'Understanding and transforming the patterns that shape your closest relationships.',
+        'Entender y transformar los patrones que moldean tus vínculos más cercanos.',
+      );
     case 'self_compassion':
       return analysis.hasSadness
-        ? 'You\'ve been carrying heavy emotions. This week is about treating yourself with the same kindness you\'d give a friend.'
-        : 'Building a more compassionate relationship with yourself as a foundation for healing.';
+        ? localizedText(
+          'You\'ve been carrying heavy emotions. This week is about treating yourself with the same kindness you\'d give a friend.',
+          'Has estado cargando emociones pesadas. Esta semana se trata de tratarte con la misma amabilidad que darías a una amistad.',
+        )
+        : localizedText(
+          'Building a more compassionate relationship with yourself as a foundation for healing.',
+          'Construir una relación más compasiva contigo como base para sanar.',
+        );
   }
 }
 

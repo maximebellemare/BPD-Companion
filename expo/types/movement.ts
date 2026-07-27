@@ -33,27 +33,27 @@ export const DEFAULT_MOVEMENT_STATE: MovementState = {
 };
 
 export const MOVEMENT_TYPES: { value: MovementType; label: string; icon: string }[] = [
-  { value: 'walk', label: 'Walk', icon: '🚶' },
-  { value: 'stretch', label: 'Stretch', icon: '🧘' },
-  { value: 'yoga', label: 'Yoga', icon: '🪷' },
-  { value: 'workout', label: 'Workout', icon: '💪' },
-  { value: 'movement_break', label: 'Movement Break', icon: '🌀' },
-  { value: 'calming_movement', label: 'Calming Movement', icon: '🌊' },
-  { value: 'other', label: 'Other', icon: '✨' },
+  { value: 'walk', get label() { return localizedText('Walk', 'Caminar'); }, icon: '🚶' },
+  { value: 'stretch', get label() { return localizedText('Stretch', 'Estiramiento'); }, icon: '🧘' },
+  { value: 'yoga', get label() { return localizedText('Yoga', 'Yoga'); }, icon: '🪷' },
+  { value: 'workout', get label() { return localizedText('Workout', 'Entrenamiento'); }, icon: '💪' },
+  { value: 'movement_break', get label() { return localizedText('Movement Break', 'Pausa de movimiento'); }, icon: '🌀' },
+  { value: 'calming_movement', get label() { return localizedText('Calming Movement', 'Movimiento calmante'); }, icon: '🌊' },
+  { value: 'other', get label() { return localizedText('Other', 'Otro'); }, icon: '✨' },
 ];
 
 export const INTENSITY_OPTIONS: { value: MovementIntensity; label: string; description: string }[] = [
-  { value: 'gentle', label: 'Gentle', description: 'Easy, calming pace' },
-  { value: 'moderate', label: 'Moderate', description: 'Steady effort' },
-  { value: 'vigorous', label: 'Vigorous', description: 'High energy' },
+  { value: 'gentle', get label() { return localizedText('Gentle', 'Suave'); }, get description() { return localizedText('Easy, calming pace', 'Ritmo fácil y calmante'); } },
+  { value: 'moderate', get label() { return localizedText('Moderate', 'Moderado'); }, get description() { return localizedText('Steady effort', 'Esfuerzo constante'); } },
+  { value: 'vigorous', get label() { return localizedText('Vigorous', 'Vigoroso'); }, get description() { return localizedText('High energy', 'Alta energía'); } },
 ];
 
 export const MOOD_LEVELS: { value: MoodLevel; label: string; emoji: string }[] = [
-  { value: 1, label: 'Very low', emoji: '😞' },
-  { value: 2, label: 'Low', emoji: '😕' },
-  { value: 3, label: 'Neutral', emoji: '😐' },
-  { value: 4, label: 'Good', emoji: '🙂' },
-  { value: 5, label: 'Great', emoji: '😊' },
+  { value: 1, get label() { return localizedText('Very low', 'Muy bajo'); }, emoji: '😞' },
+  { value: 2, get label() { return localizedText('Low', 'Bajo'); }, emoji: '😕' },
+  { value: 3, get label() { return localizedText('Neutral', 'Neutral'); }, emoji: '😐' },
+  { value: 4, get label() { return localizedText('Good', 'Bien'); }, emoji: '🙂' },
+  { value: 5, get label() { return localizedText('Great', 'Muy bien'); }, emoji: '😊' },
 ];
 
 export const DURATION_PRESETS: { value: number; label: string }[] = [
@@ -92,3 +92,4 @@ export function formatDuration(minutes: number): string {
   const mins = minutes % 60;
   return mins > 0 ? `${hrs}h ${mins}m` : `${hrs}h`;
 }
+import { localizedText } from '@/lib/i18n/staticText';

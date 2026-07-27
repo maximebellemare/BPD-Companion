@@ -9,6 +9,7 @@ import { behaviorTrackingService } from './behaviorTrackingService';
 import { notificationService } from './notificationService';
 import { QuietHours, NotificationCategory } from '@/types/notifications';
 import { analyticsEngine } from '@/services/analytics/analyticsEngine';
+import { localizedText } from '@/lib/i18n/staticText';
 
 const ANALYTICS_KEY = 'bpd_behavior_notif_analytics';
 const MAX_DAILY_BEHAVIOR_NOTIFS = 2;
@@ -84,6 +85,50 @@ const SIGNAL_COPY: Record<BehaviorSignalType, Array<{ title: string; body: strin
   evening_unprocessed: [
     { title: 'Before the day ends', body: 'A quick emotional check-in can help you sleep better.' },
     { title: 'Evening reflection', body: 'Noticing how you feel right now can bring gentle closure to the day.' },
+  ],
+};
+
+const SIGNAL_COPY_ES: Record<BehaviorSignalType, Array<{ title: string; body: string }>> = {
+  inactivity: [
+    { title: 'Este espacio está aquí para ti', body: 'Sin presión; solo un recordatorio de que el apoyo sigue disponible.' },
+    { title: 'Un momento tranquilo te espera', body: 'Cuando lo necesites, aquí tienes un espacio más calmado.' },
+    { title: 'Pensando en ti', body: 'Han pasado unos días. Incluso un check-in breve puede ayudar a sentirte más en el presente.' },
+  ],
+  distress_pattern: [
+    { title: 'Notando algo', body: 'Las cosas han estado intensas últimamente. No tienes que cargarlo solo/a.' },
+    { title: 'Un patrón que vale la pena notar', body: 'La intensidad emocional ha estado alta recientemente. Las herramientas de apoyo están listas.' },
+    { title: 'Un check-in suave', body: 'Ha sido una etapa pesada. ¿Ayudaría un check-in rápido?' },
+  ],
+  message_session_intense: [
+    { title: 'Después de esa sesión de mensajes', body: 'Escribir después del estrés de comunicación puede ayudarte a procesar.' },
+    { title: 'Un momento para reflexionar', body: 'Fue una sesión intensa. Escribir sobre eso podría traer claridad.' },
+    { title: 'Procesar lo que pasó', body: 'Una entrada breve de diario puede ayudarte a entender qué sentiste.' },
+  ],
+  streak_milestone: [
+    { title: 'Mírate presentándote por ti', body: 'Tu constancia está construyendo autoconciencia real.' },
+    { title: 'Un logro que vale notar', body: 'Has estado apareciendo con constancia. Eso importa.' },
+    { title: 'Tu ritmo está creciendo', body: 'Los check-ins constantes construyen una comprensión emocional más profunda.' },
+  ],
+  growth_signal: [
+    { title: 'Progreso para celebrar', body: 'Estás avanzando: pausas más, reaccionas menos.' },
+    { title: 'Algo positivo', body: 'Tus patrones se están moviendo en una dirección saludable.' },
+    { title: 'Progreso silencioso', body: 'Quizá todavía no lo sientas, pero estás construyendo patrones mejores.' },
+  ],
+  journal_prompt: [
+    { title: 'Un pensamiento para explorar', body: 'Escribir unas líneas puede ayudar a ordenar tus sentimientos.' },
+    { title: 'Reflexión al final del día', body: 'Antes de que termine el día, escribir un momento puede traer cierre.' },
+  ],
+  regulation_success: [
+    { title: 'Esa regulación funcionó', body: 'Usaste una herramienta de afrontamiento y ayudó. Vale recordarlo.' },
+    { title: 'Un logro para notar', body: 'La forma en que manejaste esa intensidad muestra crecimiento real.' },
+  ],
+  companion_absence: [
+    { title: 'Tu Companion está aquí', body: 'Ha pasado un tiempo desde que hablaron. No hace falta una agenda.' },
+    { title: 'Una conversación te espera', body: 'A veces hablar lo que sientes ayuda más de lo esperado.' },
+  ],
+  evening_unprocessed: [
+    { title: 'Antes de que termine el día', body: 'Un check-in emocional rápido puede ayudarte a dormir mejor.' },
+    { title: 'Reflexión nocturna', body: 'Notar cómo te sientes ahora puede cerrar el día con suavidad.' },
   ],
 };
 
@@ -251,7 +296,7 @@ class BehaviorNotificationEngine {
     shouldFire: boolean,
     reason: string,
   ): BehaviorNotificationDecision {
-    const copies = SIGNAL_COPY[signal.type];
+    const copies = localizedText('en', 'es') === 'es' ? SIGNAL_COPY_ES[signal.type] : SIGNAL_COPY[signal.type];
     const copy = copies[Math.floor(Math.random() * copies.length)];
     const deepLink = SIGNAL_DEEP_LINKS[signal.type];
     const cooldown = SIGNAL_COOLDOWN_HOURS[signal.type];

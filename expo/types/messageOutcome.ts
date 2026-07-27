@@ -121,35 +121,36 @@ export interface DraftVaultEntry {
 }
 
 export const DETAILED_OUTCOME_OPTIONS: { value: DetailedOutcome; label: string; emoji: string; color: string }[] = [
-  { value: 'sent_helped', label: 'Sent — it helped', emoji: '💚', color: '#14B8A6' },
-  { value: 'sent_neutral', label: 'Sent — neutral', emoji: '😐', color: '#2E2A72' },
-  { value: 'sent_regretted', label: 'Sent — regretted it', emoji: '💔', color: '#3B82F6' },
-  { value: 'not_sent_relieved', label: 'Didn\'t send — relieved', emoji: '😌', color: '#14B8A6' },
-  { value: 'not_sent_unsure', label: 'Didn\'t send — still unsure', emoji: '🤔', color: '#67E8F9' },
-  { value: 'waited_then_sent', label: 'Waited, then sent', emoji: '⏳', color: '#3B82F6' },
-  { value: 'rewrote_then_sent', label: 'Rewrote, then sent', emoji: '✏️', color: '#3B82F6' },
-  { value: 'decided_not_to_send', label: 'Decided not to send', emoji: '🛑', color: '#3B82F6' },
+  { value: 'sent_helped', get label() { return localizedText('Sent — it helped', 'Lo envié; ayudó'); }, emoji: '💚', color: '#14B8A6' },
+  { value: 'sent_neutral', get label() { return localizedText('Sent — neutral', 'Lo envié; fue neutral'); }, emoji: '😐', color: '#2E2A72' },
+  { value: 'sent_regretted', get label() { return localizedText('Sent — regretted it', 'Lo envié y me arrepentí'); }, emoji: '💔', color: '#3B82F6' },
+  { value: 'not_sent_relieved', get label() { return localizedText("Didn't send — relieved", 'No lo envié; sentí alivio'); }, emoji: '😌', color: '#14B8A6' },
+  { value: 'not_sent_unsure', get label() { return localizedText("Didn't send — still unsure", 'No lo envié; sigo con dudas'); }, emoji: '🤔', color: '#67E8F9' },
+  { value: 'waited_then_sent', get label() { return localizedText('Waited, then sent', 'Esperé y luego lo envié'); }, emoji: '⏳', color: '#3B82F6' },
+  { value: 'rewrote_then_sent', get label() { return localizedText('Rewrote, then sent', 'Lo reescribí y luego lo envié'); }, emoji: '✏️', color: '#3B82F6' },
+  { value: 'decided_not_to_send', get label() { return localizedText('Decided not to send', 'Decidí no enviarlo'); }, emoji: '🛑', color: '#3B82F6' },
 ];
 
 export const SENT_STATUS_OPTIONS: { value: SentStatus; label: string; emoji: string; color: string }[] = [
-  { value: 'sent_now', label: 'Sent it', emoji: '📤', color: '#14B8A6' },
-  { value: 'sent_later', label: 'Sent later', emoji: '⏳', color: '#3B82F6' },
-  { value: 'saved_unsent', label: 'Saved, not sent', emoji: '📂', color: '#67E8F9' },
-  { value: 'not_sent', label: 'Chose not to send', emoji: '🛑', color: '#3B82F6' },
+  { value: 'sent_now', get label() { return localizedText('Sent it', 'Lo envié'); }, emoji: '📤', color: '#14B8A6' },
+  { value: 'sent_later', get label() { return localizedText('Sent later', 'Lo envié después'); }, emoji: '⏳', color: '#3B82F6' },
+  { value: 'saved_unsent', get label() { return localizedText('Saved, not sent', 'Guardado, sin enviar'); }, emoji: '📂', color: '#67E8F9' },
+  { value: 'not_sent', get label() { return localizedText('Chose not to send', 'Elegí no enviarlo'); }, emoji: '🛑', color: '#3B82F6' },
 ];
 
 export const CONFLICT_RESULT_OPTIONS: { value: ConflictResult; label: string; emoji: string; color: string }[] = [
-  { value: 'helped', label: 'It helped', emoji: '💚', color: '#14B8A6' },
-  { value: 'neutral', label: 'Neutral', emoji: '😐', color: '#2E2A72' },
-  { value: 'escalated', label: 'Things escalated', emoji: '📈', color: '#3B82F6' },
-  { value: 'not_sure', label: 'Not sure yet', emoji: '🤔', color: '#67E8F9' },
+  { value: 'helped', get label() { return localizedText('It helped', 'Ayudó'); }, emoji: '💚', color: '#14B8A6' },
+  { value: 'neutral', get label() { return localizedText('Neutral', 'Neutral'); }, emoji: '😐', color: '#2E2A72' },
+  { value: 'escalated', get label() { return localizedText('Things escalated', 'Las cosas escalaron'); }, emoji: '📈', color: '#3B82F6' },
+  { value: 'not_sure', get label() { return localizedText('Not sure yet', 'Aún no lo sé'); }, emoji: '🤔', color: '#67E8F9' },
 ];
 
 export const OUTCOME_CAPTURE_QUESTIONS = {
-  sentStatus: 'What happened with the message?',
-  regret: 'Do you regret sending it?',
-  conflictResult: 'How did it affect the situation?',
-  waitingHelped: 'Did waiting help?',
-  distressAfter: 'How do you feel now? (1-10)',
-  selfRespect: 'Did you feel you protected your dignity?',
+  get sentStatus() { return localizedText('What happened with the message?', '¿Qué pasó con el mensaje?'); },
+  get regret() { return localizedText('Do you regret sending it?', '¿Te arrepientes de haberlo enviado?'); },
+  get conflictResult() { return localizedText('How did it affect the situation?', '¿Cómo afectó la situación?'); },
+  get waitingHelped() { return localizedText('Did waiting help?', '¿Ayudó esperar?'); },
+  get distressAfter() { return localizedText('How do you feel now? (1-10)', '¿Cómo te sientes ahora? (1-10)'); },
+  get selfRespect() { return localizedText('Did you feel you protected your dignity?', '¿Sentiste que protegiste tu dignidad?'); },
 } as const;
+import { localizedText } from '@/lib/i18n/staticText';

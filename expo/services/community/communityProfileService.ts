@@ -1,5 +1,6 @@
 import { storageService } from '@/services/storage/storageService';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
+import { localizedText } from '@/lib/i18n/staticText';
 
 const COMMUNITY_PROFILE_KEY = 'community_profile_v1';
 const RESERVED_USERNAMES_KEY = 'community_reserved_usernames_v1';
@@ -116,7 +117,7 @@ export function getCommunityAuthor(profile: CommunityProfile, isAnonymous: boole
   if (isAnonymous) {
     return {
       id: 'current_user',
-      displayName: 'Anonymous',
+      displayName: localizedText('Anonymous', 'Anónimo/a'),
       username: profile.username,
       avatarColor: profile.avatarColor,
       isAnonymous: true,
@@ -138,7 +139,11 @@ export function getPublicAuthorLabel(author: {
   isAnonymous: boolean;
   username?: string;
 }): string {
-  if (author.id === 'current_user') return author.isAnonymous ? 'You · Anonymous' : `You · @${author.username ?? author.displayName}`;
-  if (author.isAnonymous) return '🫧 Anonymous';
+  if (author.id === 'current_user') {
+    return author.isAnonymous
+      ? localizedText('You · Anonymous', 'Tú · Anónimo/a')
+      : `${localizedText('You', 'Tú')} · @${author.username ?? author.displayName}`;
+  }
+  if (author.isAnonymous) return localizedText('🫧 Anonymous', '🫧 Anónimo/a');
   return author.username ? `@${author.username}` : author.displayName;
 }

@@ -2,6 +2,7 @@ import {
   SecureRewriteOptions,
   ToneAnalysis,
 } from '@/types/messageGuard';
+import { localizedText } from '@/lib/i18n/staticText';
 
 function reduceUrgencyTransform(text: string): string {
   let result = text;
@@ -32,22 +33,40 @@ function addEmotionalClarityTransform(text: string, analysis: ToneAnalysis): str
   let emotionalPrefix = '';
 
   if (signalLabels.includes('abandonment_fear')) {
-    emotionalPrefix = "I'm feeling vulnerable right now, and I want to be honest about that. ";
+    emotionalPrefix = localizedText(
+      "I'm feeling vulnerable right now, and I want to be honest about that. ",
+      'Me siento vulnerable ahora mismo y quiero ser honesta/o con eso. ',
+    );
   } else if (signalLabels.includes('rejection_sensitivity')) {
-    emotionalPrefix = "I'm noticing some sensitivity coming up for me, and I want to be open about it. ";
+    emotionalPrefix = localizedText(
+      "I'm noticing some sensitivity coming up for me, and I want to be open about it. ",
+      'Estoy notando sensibilidad en mí y quiero hablarlo con apertura. ',
+    );
   } else if (signalLabels.includes('shame')) {
-    emotionalPrefix = "I'm carrying some hard feelings right now, and I'm doing my best to share them clearly. ";
+    emotionalPrefix = localizedText(
+      "I'm carrying some hard feelings right now, and I'm doing my best to share them clearly. ",
+      'Estoy cargando sentimientos difíciles ahora mismo y hago lo posible por expresarlos con claridad. ',
+    );
   } else if (signalLabels.includes('anger')) {
-    emotionalPrefix = "I'm feeling frustrated, and I want to express that without causing harm. ";
+    emotionalPrefix = localizedText(
+      "I'm feeling frustrated, and I want to express that without causing harm. ",
+      'Me siento frustrada/o y quiero expresarlo sin causar daño. ',
+    );
   } else if (analysis.emotionalIntensity >= 6) {
-    emotionalPrefix = "I have some strong feelings right now, and I want to share them thoughtfully. ";
+    emotionalPrefix = localizedText(
+      'I have some strong feelings right now, and I want to share them thoughtfully. ',
+      'Tengo sentimientos intensos ahora mismo y quiero compartirlos con cuidado. ',
+    );
   }
 
   return emotionalPrefix + text;
 }
 
 function addBoundariesTransform(text: string): string {
-  const boundaryCloser = " I care about this relationship, and I also need to protect my own peace right now.";
+  const boundaryCloser = localizedText(
+    ' I care about this relationship, and I also need to protect my own peace right now.',
+    ' Me importa esta relación y también necesito proteger mi paz en este momento.',
+  );
   return text.trimEnd().replace(/[.!?]*$/, '.') + boundaryCloser;
 }
 

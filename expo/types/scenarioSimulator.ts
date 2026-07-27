@@ -55,69 +55,70 @@ export type SimulatorStep =
 
 export const RESPONSE_STYLE_META: Record<ResponseStyle, { label: string; emoji: string; color: string; description: string }> = {
   urgent: {
-    label: 'Urgent',
+    get label() { return localizedText('Urgent', 'Urgente'); },
     emoji: '⚡',
     color: '#3B82F6',
-    description: 'Driven by anxiety and need for immediate resolution',
+    get description() { return localizedText('Driven by anxiety and need for immediate resolution', 'Impulsado por ansiedad y necesidad de resolver de inmediato'); },
   },
   avoidant: {
-    label: 'Avoidant',
+    get label() { return localizedText('Avoidant', 'Evitativo'); },
     emoji: '🧊',
     color: '#3B82F6',
-    description: 'Shutting down or pulling away to self-protect',
+    get description() { return localizedText('Shutting down or pulling away to self-protect', 'Cerrarse o alejarse para protegerse'); },
   },
   defensive: {
-    label: 'Defensive',
+    get label() { return localizedText('Defensive', 'Defensivo'); },
     emoji: '🛡️',
     color: '#67E8F9',
-    description: 'Protecting yourself through blame or justification',
+    get description() { return localizedText('Protecting yourself through blame or justification', 'Protegerse mediante culpa o justificación'); },
   },
   secure: {
-    label: 'Secure',
+    get label() { return localizedText('Secure', 'Seguro'); },
     emoji: '🌿',
     color: '#14B8A6',
-    description: 'Grounded, clear, and respectful of both sides',
+    get description() { return localizedText('Grounded, clear, and respectful of both sides', 'Centrado, claro y respetuoso con ambas partes'); },
   },
 };
 
 export const REFINE_TOOLS: RefineAction[] = [
   {
     id: 'remove_blame',
-    label: 'Remove Blame',
+    get label() { return localizedText('Remove Blame', 'Quitar culpa'); },
     emoji: '🕊️',
-    description: 'Replace accusatory language with observations',
+    get description() { return localizedText('Replace accusatory language with observations', 'Reemplazar lenguaje acusatorio por observaciones'); },
     active: true,
   },
   {
     id: 'reduce_urgency',
-    label: 'Reduce Urgency',
+    get label() { return localizedText('Reduce Urgency', 'Bajar urgencia'); },
     emoji: '🧘',
-    description: 'Soften time pressure and demands',
+    get description() { return localizedText('Soften time pressure and demands', 'Suavizar presión de tiempo y exigencias'); },
     active: true,
   },
   {
     id: 'add_clarity',
-    label: 'Add Emotional Clarity',
+    get label() { return localizedText('Add Emotional Clarity', 'Agregar claridad emocional'); },
     emoji: '💎',
-    description: 'Express feelings clearly without blame',
+    get description() { return localizedText('Express feelings clearly without blame', 'Expresar sentimientos con claridad y sin culpa'); },
     active: false,
   },
   {
     id: 'add_boundaries',
-    label: 'Add Boundaries',
+    get label() { return localizedText('Add Boundaries', 'Agregar límites'); },
     emoji: '🏔️',
-    description: 'Include self-respecting limits',
+    get description() { return localizedText('Include self-respecting limits', 'Incluir límites que respeten tu dignidad'); },
     active: false,
   },
 ];
 
 export const SCENARIO_CONTEXTS = [
-  { id: 'no_reply', label: 'They stopped replying', emoji: '📱' },
-  { id: 'tone_shift', label: 'Their tone changed', emoji: '❄️' },
-  { id: 'after_conflict', label: 'After an argument', emoji: '⚡' },
-  { id: 'feeling_rejected', label: 'Feeling rejected', emoji: '💔' },
-  { id: 'boundary_crossed', label: 'A boundary was crossed', emoji: '🚧' },
-  { id: 'misunderstanding', label: 'A misunderstanding', emoji: '😵‍💫' },
-  { id: 'need_to_talk', label: 'Need to bring something up', emoji: '💬' },
-  { id: 'other', label: 'Something else', emoji: '💭' },
+  { id: 'no_reply', get label() { return localizedText('They stopped replying', 'Dejó de responder'); }, emoji: '📱' },
+  { id: 'tone_shift', get label() { return localizedText('Their tone changed', 'Cambió su tono'); }, emoji: '❄️' },
+  { id: 'after_conflict', get label() { return localizedText('After an argument', 'Después de una discusión'); }, emoji: '⚡' },
+  { id: 'feeling_rejected', get label() { return localizedText('Feeling rejected', 'Sentirme rechazado/a'); }, emoji: '💔' },
+  { id: 'boundary_crossed', get label() { return localizedText('A boundary was crossed', 'Se cruzó un límite'); }, emoji: '🚧' },
+  { id: 'misunderstanding', get label() { return localizedText('A misunderstanding', 'Un malentendido'); }, emoji: '😵‍💫' },
+  { id: 'need_to_talk', get label() { return localizedText('Need to bring something up', 'Necesito hablar de algo'); }, emoji: '💬' },
+  { id: 'other', get label() { return localizedText('Something else', 'Otra cosa'); }, emoji: '💭' },
 ];
+import { localizedText } from '@/lib/i18n/staticText';

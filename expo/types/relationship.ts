@@ -84,7 +84,7 @@ export interface RelationshipIntelligenceInsight {
   relationshipTypeLabel?: string;
 }
 
-export const RELATIONSHIP_TYPE_META: Record<RelationshipType, { label: string; emoji: string; color: string }> = {
+const relationshipTypeMeta: Record<RelationshipType, { label: string; emoji: string; color: string }> = {
   partner: { label: 'Partner', emoji: '💕', color: '#3B82F6' },
   parent: { label: 'Parent', emoji: '🏠', color: '#3B82F6' },
   friend: { label: 'Friend', emoji: '🤝', color: '#14B8A6' },
@@ -95,11 +95,23 @@ export const RELATIONSHIP_TYPE_META: Record<RelationshipType, { label: string; e
   other: { label: 'Other', emoji: '👤', color: '#2E2A72' },
 };
 
+localizedField(relationshipTypeMeta.partner, 'label', 'Partner', 'Pareja');
+localizedField(relationshipTypeMeta.parent, 'label', 'Parent', 'Madre/padre');
+localizedField(relationshipTypeMeta.friend, 'label', 'Friend', 'Amistad');
+localizedField(relationshipTypeMeta.ex, 'label', 'Ex', 'Expareja');
+localizedField(relationshipTypeMeta.sibling, 'label', 'Sibling', 'Hermana/o');
+localizedField(relationshipTypeMeta.coworker, 'label', 'Coworker', 'Trabajo');
+localizedField(relationshipTypeMeta.therapist, 'label', 'Therapist', 'Terapeuta');
+localizedField(relationshipTypeMeta.other, 'label', 'Other', 'Otro');
+
+export const RELATIONSHIP_TYPE_META = relationshipTypeMeta;
+
 export const RELATIONSHIP_TAG_OPTIONS: { value: RelationshipType; label: string }[] = [
-  { value: 'partner', label: 'Partner' },
-  { value: 'parent', label: 'Parent' },
-  { value: 'friend', label: 'Friend' },
-  { value: 'ex', label: 'Ex' },
-  { value: 'coworker', label: 'Coworker' },
-  { value: 'other', label: 'Other' },
+  localizedField({ value: 'partner', label: 'Partner' }, 'label', 'Partner', 'Pareja'),
+  localizedField({ value: 'parent', label: 'Parent' }, 'label', 'Parent', 'Madre/padre'),
+  localizedField({ value: 'friend', label: 'Friend' }, 'label', 'Friend', 'Amistad'),
+  localizedField({ value: 'ex', label: 'Ex' }, 'label', 'Ex', 'Expareja'),
+  localizedField({ value: 'coworker', label: 'Coworker' }, 'label', 'Coworker', 'Trabajo'),
+  localizedField({ value: 'other', label: 'Other' }, 'label', 'Other', 'Otro'),
 ];
+import { localizedField } from '@/lib/i18n/staticText';

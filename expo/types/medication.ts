@@ -7,6 +7,7 @@ export type MedicationCategory =
   | 'stimulant'
   | 'supplement'
   | 'other';
+import { localizedField, localizedFields, localizedText } from '@/lib/i18n/staticText';
 
 export type MedicationSchedule =
   | 'daily'
@@ -71,72 +72,108 @@ export const DEFAULT_MEDICATION_STATE: MedicationState = {
 };
 
 export const MEDICATION_CATEGORIES: { value: MedicationCategory; label: string }[] = [
-  { value: 'antidepressant', label: 'Antidepressant' },
-  { value: 'mood_stabilizer', label: 'Mood Stabilizer' },
-  { value: 'antipsychotic', label: 'Antipsychotic' },
-  { value: 'anxiolytic', label: 'Anti-anxiety' },
-  { value: 'sleep_aid', label: 'Sleep Aid' },
-  { value: 'stimulant', label: 'Stimulant' },
-  { value: 'supplement', label: 'Supplement' },
-  { value: 'other', label: 'Other' },
+  localizedField({ value: 'antidepressant', label: 'Antidepressant' }, 'label', 'Antidepressant', 'Antidepresivo'),
+  localizedField({ value: 'mood_stabilizer', label: 'Mood Stabilizer' }, 'label', 'Mood Stabilizer', 'Estabilizador del ánimo'),
+  localizedField({ value: 'antipsychotic', label: 'Antipsychotic' }, 'label', 'Antipsychotic', 'Antipsicótico'),
+  localizedField({ value: 'anxiolytic', label: 'Anti-anxiety' }, 'label', 'Anti-anxiety', 'Ansiolítico'),
+  localizedField({ value: 'sleep_aid', label: 'Sleep Aid' }, 'label', 'Sleep Aid', 'Ayuda para dormir'),
+  localizedField({ value: 'stimulant', label: 'Stimulant' }, 'label', 'Stimulant', 'Estimulante'),
+  localizedField({ value: 'supplement', label: 'Supplement' }, 'label', 'Supplement', 'Suplemento'),
+  localizedField({ value: 'other', label: 'Other' }, 'label', 'Other', 'Otro'),
 ];
 
 export const MEDICATION_SCHEDULES: { value: MedicationSchedule; label: string; description: string }[] = [
-  { value: 'daily', label: 'Once daily', description: '1 time per day' },
-  { value: 'twice_daily', label: 'Twice daily', description: '2 times per day' },
-  { value: 'three_times_daily', label: 'Three times daily', description: '3 times per day' },
-  { value: 'weekly', label: 'Weekly', description: 'Choose one or more days' },
-  { value: 'custom', label: 'Custom', description: 'Choose any days and times' },
+  localizedFields({ value: 'daily', label: 'Once daily', description: '1 time per day' }, {
+    label: { en: 'Once daily', es: 'Una vez al día' },
+    description: { en: '1 time per day', es: '1 vez al día' },
+  }),
+  localizedFields({ value: 'twice_daily', label: 'Twice daily', description: '2 times per day' }, {
+    label: { en: 'Twice daily', es: 'Dos veces al día' },
+    description: { en: '2 times per day', es: '2 veces al día' },
+  }),
+  localizedFields({ value: 'three_times_daily', label: 'Three times daily', description: '3 times per day' }, {
+    label: { en: 'Three times daily', es: 'Tres veces al día' },
+    description: { en: '3 times per day', es: '3 veces al día' },
+  }),
+  localizedFields({ value: 'weekly', label: 'Weekly', description: 'Choose one or more days' }, {
+    label: { en: 'Weekly', es: 'Semanal' },
+    description: { en: 'Choose one or more days', es: 'Elige uno o más días' },
+  }),
+  localizedFields({ value: 'custom', label: 'Custom', description: 'Choose any days and times' }, {
+    label: { en: 'Custom', es: 'Personalizado' },
+    description: { en: 'Choose any days and times', es: 'Elige cualquier día y hora' },
+  }),
 ];
 
 export const MEDICATION_WEEKDAYS: { value: MedicationDayOfWeek; label: string; shortLabel: string; expoWeekday: number }[] = [
-  { value: 1, label: 'Monday', shortLabel: 'Mon', expoWeekday: 2 },
-  { value: 2, label: 'Tuesday', shortLabel: 'Tue', expoWeekday: 3 },
-  { value: 3, label: 'Wednesday', shortLabel: 'Wed', expoWeekday: 4 },
-  { value: 4, label: 'Thursday', shortLabel: 'Thu', expoWeekday: 5 },
-  { value: 5, label: 'Friday', shortLabel: 'Fri', expoWeekday: 6 },
-  { value: 6, label: 'Saturday', shortLabel: 'Sat', expoWeekday: 7 },
-  { value: 0, label: 'Sunday', shortLabel: 'Sun', expoWeekday: 1 },
+  localizedFields({ value: 1, label: 'Monday', shortLabel: 'Mon', expoWeekday: 2 }, {
+    label: { en: 'Monday', es: 'Lunes' },
+    shortLabel: { en: 'Mon', es: 'Lun' },
+  }),
+  localizedFields({ value: 2, label: 'Tuesday', shortLabel: 'Tue', expoWeekday: 3 }, {
+    label: { en: 'Tuesday', es: 'Martes' },
+    shortLabel: { en: 'Tue', es: 'Mar' },
+  }),
+  localizedFields({ value: 3, label: 'Wednesday', shortLabel: 'Wed', expoWeekday: 4 }, {
+    label: { en: 'Wednesday', es: 'Miércoles' },
+    shortLabel: { en: 'Wed', es: 'Mié' },
+  }),
+  localizedFields({ value: 4, label: 'Thursday', shortLabel: 'Thu', expoWeekday: 5 }, {
+    label: { en: 'Thursday', es: 'Jueves' },
+    shortLabel: { en: 'Thu', es: 'Jue' },
+  }),
+  localizedFields({ value: 5, label: 'Friday', shortLabel: 'Fri', expoWeekday: 6 }, {
+    label: { en: 'Friday', es: 'Viernes' },
+    shortLabel: { en: 'Fri', es: 'Vie' },
+  }),
+  localizedFields({ value: 6, label: 'Saturday', shortLabel: 'Sat', expoWeekday: 7 }, {
+    label: { en: 'Saturday', es: 'Sábado' },
+    shortLabel: { en: 'Sat', es: 'Sáb' },
+  }),
+  localizedFields({ value: 0, label: 'Sunday', shortLabel: 'Sun', expoWeekday: 1 }, {
+    label: { en: 'Sunday', es: 'Domingo' },
+    shortLabel: { en: 'Sun', es: 'Dom' },
+  }),
 ];
 
 export const EVERY_DAY_OF_WEEK: MedicationDayOfWeek[] = [0, 1, 2, 3, 4, 5, 6];
 
 export const MOOD_AFTER_OPTIONS: { value: MoodAfter; label: string; emoji: string }[] = [
-  { value: 'much_better', label: 'Much better', emoji: '😊' },
-  { value: 'better', label: 'A bit better', emoji: '🙂' },
-  { value: 'same', label: 'About the same', emoji: '😐' },
-  { value: 'worse', label: 'A bit worse', emoji: '😕' },
-  { value: 'much_worse', label: 'Much worse', emoji: '😞' },
+  localizedField({ value: 'much_better', label: 'Much better', emoji: '😊' }, 'label', 'Much better', 'Mucho mejor'),
+  localizedField({ value: 'better', label: 'A bit better', emoji: '🙂' }, 'label', 'A bit better', 'Un poco mejor'),
+  localizedField({ value: 'same', label: 'About the same', emoji: '😐' }, 'label', 'About the same', 'Más o menos igual'),
+  localizedField({ value: 'worse', label: 'A bit worse', emoji: '😕' }, 'label', 'A bit worse', 'Un poco peor'),
+  localizedField({ value: 'much_worse', label: 'Much worse', emoji: '😞' }, 'label', 'Much worse', 'Mucho peor'),
 ];
 
 export function getDefaultTimesForSchedule(schedule: MedicationSchedule): MedicationTime[] {
   switch (schedule) {
     case 'daily':
-      return [{ hour: 9, minute: 0, label: 'Morning' }];
+      return [{ hour: 9, minute: 0, label: localizedText('Morning', 'Mañana') }];
     case 'twice_daily':
       return [
-        { hour: 9, minute: 0, label: 'Morning' },
-        { hour: 21, minute: 0, label: 'Evening' },
+        { hour: 9, minute: 0, label: localizedText('Morning', 'Mañana') },
+        { hour: 21, minute: 0, label: localizedText('Evening', 'Noche') },
       ];
     case 'three_times_daily':
       return [
-        { hour: 8, minute: 0, label: 'Morning' },
-        { hour: 14, minute: 0, label: 'Afternoon' },
-        { hour: 20, minute: 0, label: 'Evening' },
+        { hour: 8, minute: 0, label: localizedText('Morning', 'Mañana') },
+        { hour: 14, minute: 0, label: localizedText('Afternoon', 'Tarde') },
+        { hour: 20, minute: 0, label: localizedText('Evening', 'Noche') },
       ];
     case 'four_times_daily':
       return [
-        { hour: 8, minute: 0, label: 'Morning' },
-        { hour: 12, minute: 0, label: 'Midday' },
-        { hour: 16, minute: 0, label: 'Afternoon' },
-        { hour: 20, minute: 0, label: 'Evening' },
+        { hour: 8, minute: 0, label: localizedText('Morning', 'Mañana') },
+        { hour: 12, minute: 0, label: localizedText('Midday', 'Mediodía') },
+        { hour: 16, minute: 0, label: localizedText('Afternoon', 'Tarde') },
+        { hour: 20, minute: 0, label: localizedText('Evening', 'Noche') },
       ];
     case 'weekly':
-      return [{ hour: 9, minute: 0, label: 'Weekly' }];
+      return [{ hour: 9, minute: 0, label: localizedText('Weekly', 'Semanal') }];
     case 'as_needed':
       return [];
     case 'custom':
-      return [{ hour: 9, minute: 0, label: 'Dose 1' }];
+      return [{ hour: 9, minute: 0, label: localizedText('Dose 1', 'Dosis 1') }];
   }
 }
 
@@ -182,10 +219,10 @@ export function formatTime(hour: number, minute: number): string {
 }
 
 export function formatMedicationSchedule(medication: Pick<Medication, 'schedule' | 'times' | 'daysOfWeek' | 'startDate'>): string {
-  if (medication.schedule === 'as_needed') return 'As needed';
+  if (medication.schedule === 'as_needed') return localizedText('As needed', 'Según sea necesario');
   const times = Array.isArray(medication.times) && medication.times.length > 0
     ? medication.times.map(t => formatTime(t.hour, t.minute)).join(', ')
-    : 'No times set';
+    : localizedText('No times set', 'Sin horarios configurados');
   const days = getMedicationDaysOfWeek(medication);
   const isEveryDay = days.length === 7;
   if (isEveryDay) return times;
@@ -193,7 +230,7 @@ export function formatMedicationSchedule(medication: Pick<Medication, 'schedule'
     .filter(day => days.includes(day.value))
     .map(day => day.shortLabel)
     .join(', ');
-  return `${dayLabels || 'No days set'} · ${times}`;
+  return `${dayLabels || localizedText('No days set', 'Sin días configurados')} · ${times}`;
 }
 
 export function getCategoryColor(category: MedicationCategory): string {

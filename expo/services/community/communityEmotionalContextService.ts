@@ -1,42 +1,67 @@
 import { ToneSuggestion, HelpfulnessRating, ResponseType, ThreadClosure } from '@/types/community';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { localizedText } from '@/lib/i18n/staticText';
 
 const HELPFULNESS_KEY = 'community_reply_helpfulness';
 const CLOSURE_KEY = 'community_thread_closures';
 const ANALYTICS_KEY = 'community_emotional_analytics';
 
-const HARSH_PATTERNS: { pattern: RegExp; suggestion: string }[] = [
+const HARSH_PATTERNS: { pattern: RegExp; suggestion: { en: string; es: string } }[] = [
   {
     pattern: /\byou'?re overreacting\b/i,
-    suggestion: 'It sounds like this situation might feel really overwhelming.',
+    suggestion: {
+      en: 'It sounds like this situation might feel really overwhelming.',
+      es: 'Parece que esta situación podría sentirse muy abrumadora.',
+    },
   },
   {
     pattern: /\bjust (calm down|relax|chill)\b/i,
-    suggestion: 'It makes sense that you feel this way right now.',
+    suggestion: {
+      en: 'It makes sense that you feel this way right now.',
+      es: 'Tiene sentido que te sientas así en este momento.',
+    },
   },
   {
     pattern: /\bthat'?s not (a big deal|that bad)\b/i,
-    suggestion: 'I can see how this feels really significant to you.',
+    suggestion: {
+      en: 'I can see how this feels really significant to you.',
+      es: 'Puedo ver que esto se siente muy importante para ti.',
+    },
   },
   {
     pattern: /\bstop being (so )?(dramatic|sensitive|emotional)\b/i,
-    suggestion: 'Your feelings are valid, even when they feel intense.',
+    suggestion: {
+      en: 'Your feelings are valid, even when they feel intense.',
+      es: 'Tus sentimientos son válidos, incluso cuando se sienten intensos.',
+    },
   },
   {
     pattern: /\byou (always|never)\b/i,
-    suggestion: 'Consider softening absolute language — it may feel more supportive.',
+    suggestion: {
+      en: 'Consider softening absolute language — it may feel more supportive.',
+      es: 'Considera suavizar el lenguaje absoluto; puede sentirse más comprensivo.',
+    },
   },
   {
     pattern: /\bget over it\b/i,
-    suggestion: 'Moving through difficult emotions takes time. Would a gentler phrasing work here?',
+    suggestion: {
+      en: 'Moving through difficult emotions takes time. Would a gentler phrasing work here?',
+      es: 'Atravesar emociones difíciles toma tiempo. ¿Funcionaría una forma más amable de decirlo?',
+    },
   },
   {
     pattern: /\byou should(n'?t| not) feel\b/i,
-    suggestion: 'All emotions are valid. Consider acknowledging their experience first.',
+    suggestion: {
+      en: 'All emotions are valid. Consider acknowledging their experience first.',
+      es: 'Todas las emociones son válidas. Considera reconocer primero su experiencia.',
+    },
   },
   {
     pattern: /\bthat'?s (stupid|dumb|ridiculous)\b/i,
-    suggestion: 'Try acknowledging their perspective before sharing yours.',
+    suggestion: {
+      en: 'Try acknowledging their perspective before sharing yours.',
+      es: 'Intenta reconocer su perspectiva antes de compartir la tuya.',
+    },
   },
 ];
 
@@ -49,8 +74,11 @@ export function checkTone(text: string): ToneSuggestion | null {
       console.log('[EmotionalContext] Tone issue detected:', match[0]);
       return {
         original: match[0],
-        suggested: suggestion,
-        reason: 'This phrasing might feel dismissive. A softer approach could help the person feel heard.',
+        suggested: localizedText(suggestion.en, suggestion.es),
+        reason: localizedText(
+          'This phrasing might feel dismissive. A softer approach could help the person feel heard.',
+          'Esta frase podría sentirse invalidante. Un enfoque más suave puede ayudar a que la persona se sienta escuchada.',
+        ),
       };
     }
   }
@@ -59,45 +87,45 @@ export function checkTone(text: string): ToneSuggestion | null {
 }
 
 export function getDistressLabel(level: number): { label: string; color: string } {
-  if (level <= 3) return { label: 'Low distress', color: '#14B8A6' };
-  if (level <= 6) return { label: 'Moderate distress', color: '#67E8F9' };
-  return { label: 'High distress', color: '#3B82F6' };
+  if (level <= 3) return { label: localizedText('Low distress', 'Malestar bajo'), color: '#14B8A6' };
+  if (level <= 6) return { label: localizedText('Moderate distress', 'Malestar moderado'), color: '#67E8F9' };
+  return { label: localizedText('High distress', 'Malestar alto'), color: '#3B82F6' };
 }
 
 export function getSupportRequestLabel(type: string): { emoji: string; label: string } {
   const map: Record<string, { emoji: string; label: string }> = {
-    validation: { emoji: '💛', label: 'Looking for validation' },
-    'shared-experience': { emoji: '🤝', label: 'Want shared experiences' },
-    advice: { emoji: '💡', label: 'Open to advice' },
-    'another-perspective': { emoji: '🔄', label: 'Want another perspective' },
+    validation: { emoji: '💛', label: localizedText('Looking for validation', 'Busca validación') },
+    'shared-experience': { emoji: '🤝', label: localizedText('Want shared experiences', 'Quiere experiencias compartidas') },
+    advice: { emoji: '💡', label: localizedText('Open to advice', 'Abierto/a a consejos') },
+    'another-perspective': { emoji: '🔄', label: localizedText('Want another perspective', 'Quiere otra perspectiva') },
   };
   return map[type] ?? { emoji: '💬', label: type };
 }
 
 export function getResponseTypeLabel(type: ResponseType): { emoji: string; label: string; color: string } {
   const map: Record<ResponseType, { emoji: string; label: string; color: string }> = {
-    validation: { emoji: '💛', label: 'Validation', color: '#67E8F9' },
-    'shared-experience': { emoji: '🤝', label: 'Shared experience', color: '#14B8A6' },
-    advice: { emoji: '💡', label: 'Advice', color: '#3B82F6' },
-    'another-perspective': { emoji: '🔄', label: 'Another perspective', color: '#14B8A6' },
+    validation: { emoji: '💛', label: localizedText('Validation', 'Validación'), color: '#67E8F9' },
+    'shared-experience': { emoji: '🤝', label: localizedText('Shared experience', 'Experiencia compartida'), color: '#14B8A6' },
+    advice: { emoji: '💡', label: localizedText('Advice', 'Consejos'), color: '#3B82F6' },
+    'another-perspective': { emoji: '🔄', label: localizedText('Another perspective', 'Otra perspectiva'), color: '#14B8A6' },
   };
   return map[type];
 }
 
 export function getHelpfulnessLabel(rating: HelpfulnessRating): { emoji: string; label: string } {
   const map: Record<HelpfulnessRating, { emoji: string; label: string }> = {
-    helped: { emoji: '✨', label: 'This helped' },
-    'gave-perspective': { emoji: '🔄', label: 'Gave me perspective' },
-    'not-helpful': { emoji: '🤷', label: 'Not helpful' },
+    helped: { emoji: '✨', label: localizedText('This helped', 'Esto ayudó') },
+    'gave-perspective': { emoji: '🔄', label: localizedText('Gave me perspective', 'Me dio perspectiva') },
+    'not-helpful': { emoji: '🤷', label: localizedText('Not helpful', 'No ayudó') },
   };
   return map[rating];
 }
 
 export function getClosureTypeLabel(type: ThreadClosure['type']): { emoji: string; label: string } {
   const map: Record<string, { emoji: string; label: string }> = {
-    'what-i-realized': { emoji: '💡', label: 'What I realized' },
-    'what-helped': { emoji: '🌱', label: 'What helped' },
-    'what-i-will-try': { emoji: '🎯', label: 'What I will try next' },
+    'what-i-realized': { emoji: '💡', label: localizedText('What I realized', 'Lo que me di cuenta') },
+    'what-helped': { emoji: '🌱', label: localizedText('What helped', 'Lo que ayudó') },
+    'what-i-will-try': { emoji: '🎯', label: localizedText('What I will try next', 'Lo que intentaré después') },
   };
   return map[type] ?? { emoji: '💬', label: type };
 }

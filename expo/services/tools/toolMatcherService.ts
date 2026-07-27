@@ -3,6 +3,7 @@ import { DBT_SKILLS } from '@/data/dbtSkills';
 import { MENTALIZATION_TOOLS } from '@/data/mentalizationTools';
 import { RELATIONSHIP_RECOVERY_TOOLS } from '@/data/relationshipRecoveryTools';
 import { BODY_REGULATION_TOOLS } from '@/data/bodyRegulationTools';
+import { localizedText } from '@/lib/i18n/staticText';
 
 interface MatchContext {
   emotions: string[];
@@ -58,25 +59,31 @@ function generateReason(toolId: string, context: MatchContext): string {
 
   if (context.distressLevel >= 7) {
     if (['dt-tip', 'dt-stop', 'br-temperature-shift', 'br-60-second-settle'].includes(toolId)) {
-      return 'Your distress is high — this can help reduce intensity quickly.';
+      return localizedText(
+        'Your distress is high — this can help reduce intensity quickly.',
+        'Tu angustia está alta; esto puede ayudar a bajar la intensidad rápidamente.',
+      );
     }
   }
 
   if (context.relationshipContext) {
-    if (info.type === 'relationship-recovery') return 'This can help process what happened in the relationship.';
-    if (info.type === 'mentalization') return 'This may help you understand both perspectives more clearly.';
-    if (['ie-dear-man', 'ie-give', 'ie-fast'].includes(toolId)) return 'This helps communicate needs while protecting the relationship.';
+    if (info.type === 'relationship-recovery') return localizedText('This can help process what happened in the relationship.', 'Esto puede ayudarte a procesar lo que pasó en la relación.');
+    if (info.type === 'mentalization') return localizedText('This may help you understand both perspectives more clearly.', 'Esto puede ayudarte a entender ambas perspectivas con más claridad.');
+    if (['ie-dear-man', 'ie-give', 'ie-fast'].includes(toolId)) return localizedText('This helps communicate needs while protecting the relationship.', 'Esto ayuda a comunicar necesidades mientras cuidas la relación.');
   }
 
   if (context.emotions.some(e => e.toLowerCase().includes('sham'))) {
-    if (['rr-shame-recovery', 'mbt-self-view'].includes(toolId)) return 'This addresses shame directly by separating behavior from identity.';
+    if (['rr-shame-recovery', 'mbt-self-view'].includes(toolId)) return localizedText('This addresses shame directly by separating behavior from identity.', 'Esto aborda la vergüenza directamente al separar conducta e identidad.');
   }
 
   if (context.emotions.some(e => e.toLowerCase().includes('ang'))) {
-    if (['dt-stop', 'rr-come-down-anger', 'br-movement-reset'].includes(toolId)) return 'This helps safely process and reduce anger.';
+    if (['dt-stop', 'rr-come-down-anger', 'br-movement-reset'].includes(toolId)) return localizedText('This helps safely process and reduce anger.', 'Esto ayuda a procesar y bajar el enojo de forma segura.');
   }
 
-  return `${info.title} may help with what you're experiencing right now.`;
+  return localizedText(
+    `${info.title} may help with what you're experiencing right now.`,
+    `${info.title} puede ayudar con lo que estás viviendo ahora mismo.`,
+  );
 }
 
 export function matchTools(context: MatchContext): ToolMatchResult[] {

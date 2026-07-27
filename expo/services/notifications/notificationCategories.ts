@@ -1,6 +1,7 @@
 import { NotificationCategoryConfig } from '@/types/notifications';
+import { localizedFields } from '@/lib/i18n/staticText';
 
-export const NOTIFICATION_CATEGORIES: NotificationCategoryConfig[] = [
+const ENGLISH_NOTIFICATION_CATEGORIES: NotificationCategoryConfig[] = [
   {
     id: 'daily_checkin',
     label: 'Daily Check-in',
@@ -122,6 +123,31 @@ export const NOTIFICATION_CATEGORIES: NotificationCategoryConfig[] = [
     safetyExempt: false,
   },
 ];
+
+const NOTIFICATION_CATEGORY_ES: Record<string, { label: string; description: string }> = {
+  daily_checkin: { label: 'Check-in diario', description: 'Un recordatorio suave para hacer check-in contigo' },
+  weekly_reflection: { label: 'Reflexión semanal', description: 'Aviso cuando tu reflexión semanal está lista' },
+  ritual_reminder: { label: 'Rituales diarios', description: 'Recordatorios de ritual de mañana, mediodía y noche' },
+  relationship_support: { label: 'Apoyo relacional', description: 'Recordatorios suaves de pausa durante detonantes relacionales' },
+  calm_followup: { label: 'Seguimiento de calma', description: 'Un check-in después de que bajan momentos intensos' },
+  regulation_followup: { label: 'Seguimiento de regulación', description: 'Check-in después de episodios de malestar alto' },
+  premium_reflection: { label: 'Insights de membresía', description: 'Insights más profundos sobre patrones emocionales' },
+  therapist_report: { label: 'Reporte para terapia', description: 'Cuando hay un nuevo reporte para terapia listo' },
+  reengagement: { label: 'Reconexión suave', description: 'Un recordatorio de apoyo si no has entrado en un tiempo' },
+  streak_support: { label: 'Apoyo de racha', description: 'Ánimo para mantener tu ritmo de check-ins' },
+  gentle_nudge: { label: 'Recordatorio suave', description: 'Ánimo para un check-in al final del día' },
+  premium_upgrade: { label: 'Recordatorios de insights de membresía', description: 'Recordatorios ocasionales sobre funciones avanzadas que te interesaron' },
+};
+
+export const NOTIFICATION_CATEGORIES: NotificationCategoryConfig[] = ENGLISH_NOTIFICATION_CATEGORIES.map(category =>
+  localizedFields({ ...category }, {
+    label: { en: category.label, es: NOTIFICATION_CATEGORY_ES[category.id]?.label ?? category.label },
+    description: {
+      en: category.description,
+      es: NOTIFICATION_CATEGORY_ES[category.id]?.description ?? category.description,
+    },
+  }),
+);
 
 export function getCategoryConfig(id: string): NotificationCategoryConfig | undefined {
   return NOTIFICATION_CATEGORIES.find(c => c.id === id);

@@ -4,6 +4,7 @@ import {
   RitualDayStatus,
   RitualStreakData,
 } from '@/types/ritual';
+import { localizedArrayProxy, localizedFields } from '@/lib/i18n/staticText';
 
 const EMOTIONS_MORNING = [
   { id: 'hopeful', label: 'Hopeful', emoji: '🌱' },
@@ -14,6 +15,17 @@ const EMOTIONS_MORNING = [
   { id: 'heavy', label: 'Heavy', emoji: '🪨' },
   { id: 'grateful', label: 'Grateful', emoji: '🙏' },
   { id: 'uncertain', label: 'Uncertain', emoji: '🌫️' },
+];
+
+const EMOTIONS_MORNING_ES = [
+  { id: 'hopeful', label: 'Esperanzado/a', emoji: '🌱' },
+  { id: 'anxious', label: 'Ansioso/a', emoji: '😟' },
+  { id: 'calm', label: 'En calma', emoji: '🌊' },
+  { id: 'tired', label: 'Cansado/a', emoji: '😴' },
+  { id: 'energized', label: 'Con energía', emoji: '⚡' },
+  { id: 'heavy', label: 'Pesado/a', emoji: '🪨' },
+  { id: 'grateful', label: 'Agradecido/a', emoji: '🙏' },
+  { id: 'uncertain', label: 'Inseguro/a', emoji: '🌫️' },
 ];
 
 const EMOTIONS_EVENING = [
@@ -27,6 +39,17 @@ const EMOTIONS_EVENING = [
   { id: 'overwhelmed', label: 'Overwhelmed', emoji: '🌊' },
 ];
 
+const EMOTIONS_EVENING_ES = [
+  { id: 'relieved', label: 'Aliviado/a', emoji: '😮‍💨' },
+  { id: 'proud', label: 'Orgulloso/a', emoji: '💪' },
+  { id: 'drained', label: 'Agotado/a', emoji: '🫠' },
+  { id: 'peaceful', label: 'En paz', emoji: '☁️' },
+  { id: 'frustrated', label: 'Frustrado/a', emoji: '😤' },
+  { id: 'sad', label: 'Triste', emoji: '💧' },
+  { id: 'content', label: 'Contento/a', emoji: '😌' },
+  { id: 'overwhelmed', label: 'Abrumado/a', emoji: '🌊' },
+];
+
 const INTENTION_SUGGESTIONS = [
   'Be gentle with myself',
   'Stay present in conversations',
@@ -36,6 +59,17 @@ const INTENTION_SUGGESTIONS = [
   'Move through discomfort slowly',
   'Reach out if I need support',
   'Celebrate small wins',
+];
+
+const INTENTION_SUGGESTIONS_ES = [
+  'Ser amable conmigo',
+  'Mantenerme presente en conversaciones',
+  'Pausar antes de reaccionar',
+  'Honrar mis límites',
+  'Practicar autocompasión',
+  'Atravesar la incomodidad poco a poco',
+  'Pedir apoyo si lo necesito',
+  'Celebrar avances pequeños',
 ];
 
 const COPING_TOOLS = [
@@ -49,8 +83,31 @@ const COPING_TOOLS = [
   { id: 'rest', label: 'Rest', emoji: '🛌' },
 ];
 
+const COPING_TOOLS_ES = [
+  { id: 'breathing', label: 'Respiración', emoji: '🌬️' },
+  { id: 'grounding', label: 'Anclaje', emoji: '🌿' },
+  { id: 'journaling', label: 'Escritura', emoji: '📝' },
+  { id: 'movement', label: 'Movimiento', emoji: '🏃' },
+  { id: 'talking', label: 'Hablar con alguien', emoji: '💬' },
+  { id: 'music', label: 'Música', emoji: '🎵' },
+  { id: 'nature', label: 'Naturaleza', emoji: '🌳' },
+  { id: 'rest', label: 'Descanso', emoji: '🛌' },
+];
+
+function localizeOptionArray<T extends { id: string; label: string }>(
+  english: T[],
+  spanish: Pick<T, 'id' | 'label'>[],
+): T[] {
+  return english.map(item => localizedFields({ ...item }, {
+    label: {
+      en: item.label,
+      es: spanish.find(option => option.id === item.id)?.label ?? item.label,
+    },
+  }));
+}
+
 export const RITUAL_CONFIG = {
-  morning: {
+  morning: localizedFields({
     label: 'Morning Check-In',
     shortLabel: 'Morning',
     emoji: '🌅',
@@ -59,10 +116,15 @@ export const RITUAL_CONFIG = {
     description: 'Start your day with awareness',
     windowStart: 5,
     windowEnd: 12,
-    emotions: EMOTIONS_MORNING,
-    intentionSuggestions: INTENTION_SUGGESTIONS,
-  },
-  midday: {
+    emotions: localizeOptionArray(EMOTIONS_MORNING, EMOTIONS_MORNING_ES),
+    intentionSuggestions: localizedArrayProxy(INTENTION_SUGGESTIONS, INTENTION_SUGGESTIONS_ES),
+  }, {
+    label: { en: 'Morning Check-In', es: 'Check-in de la mañana' },
+    shortLabel: { en: 'Morning', es: 'Mañana' },
+    prompt: { en: 'How are you feeling today?', es: '¿Cómo te sientes hoy?' },
+    description: { en: 'Start your day with awareness', es: 'Empieza el día con conciencia' },
+  }),
+  midday: localizedFields({
     label: 'Midday Pause',
     shortLabel: 'Midday',
     emoji: '☀️',
@@ -73,8 +135,13 @@ export const RITUAL_CONFIG = {
     windowEnd: 17,
     emotions: [],
     intentionSuggestions: [],
-  },
-  evening: {
+  }, {
+    label: { en: 'Midday Pause', es: 'Pausa del mediodía' },
+    shortLabel: { en: 'Midday', es: 'Mediodía' },
+    prompt: { en: 'Take a moment to breathe.', es: 'Toma un momento para respirar.' },
+    description: { en: 'A gentle reset in the middle of your day', es: 'Un reinicio suave a mitad del día' },
+  }),
+  evening: localizedFields({
     label: 'Evening Reflection',
     shortLabel: 'Evening',
     emoji: '🌙',
@@ -83,9 +150,14 @@ export const RITUAL_CONFIG = {
     description: 'Close the day with reflection',
     windowStart: 17,
     windowEnd: 24,
-    emotions: EMOTIONS_EVENING,
-    copingTools: COPING_TOOLS,
-  },
+    emotions: localizeOptionArray(EMOTIONS_EVENING, EMOTIONS_EVENING_ES),
+    copingTools: localizeOptionArray(COPING_TOOLS, COPING_TOOLS_ES),
+  }, {
+    label: { en: 'Evening Reflection', es: 'Reflexión de la noche' },
+    shortLabel: { en: 'Evening', es: 'Noche' },
+    prompt: { en: 'What stood out emotionally today?', es: '¿Qué destacó emocionalmente hoy?' },
+    description: { en: 'Close the day with reflection', es: 'Cierra el día con reflexión' },
+  }),
 } as const;
 
 export function getTodayDateString(): string {

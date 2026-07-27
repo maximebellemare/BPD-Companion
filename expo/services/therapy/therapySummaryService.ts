@@ -1,4 +1,5 @@
 import { JournalEntry, MessageDraft } from '@/types';
+import { localizedText } from '@/lib/i18n/staticText';
 import {
   TherapySummaryReport,
   EmotionalPatternInsight,
@@ -156,8 +157,11 @@ function getProgressHighlights(entries: JournalEntry[], drafts: MessageDraft[], 
     highlights.push({
       id: `ph_${idCounter++}`,
       icon: '📉',
-      title: 'Lower Distress',
-      description: `Your average distress dropped by ${drop}% compared to the previous period.`,
+      title: localizedText('Lower Distress', 'Menos malestar'),
+      description: localizedText(
+        `Your average distress dropped by ${drop}% compared to the previous period.`,
+        `Tu malestar promedio bajó ${drop}% en comparación con el periodo anterior.`,
+      ),
       type: 'growth',
     });
   }
@@ -167,8 +171,11 @@ function getProgressHighlights(entries: JournalEntry[], drafts: MessageDraft[], 
     highlights.push({
       id: `ph_${idCounter++}`,
       icon: '⏸️',
-      title: 'Mindful Pausing',
-      description: `You paused before sending ${pauseCount} message${pauseCount !== 1 ? 's' : ''}. That shows real self-regulation.`,
+      title: localizedText('Mindful Pausing', 'Pausas conscientes'),
+      description: localizedText(
+        `You paused before sending ${pauseCount} message${pauseCount !== 1 ? 's' : ''}. That shows real self-regulation.`,
+        `Pausaste antes de enviar ${pauseCount} mensaje${pauseCount !== 1 ? 's' : ''}. Eso muestra autorregulación real.`,
+      ),
       type: 'skill',
     });
   }
@@ -178,8 +185,11 @@ function getProgressHighlights(entries: JournalEntry[], drafts: MessageDraft[], 
     highlights.push({
       id: `ph_${idCounter++}`,
       icon: '🧰',
-      title: 'Active Coping',
-      description: `You used coping tools ${copingCount} time${copingCount !== 1 ? 's' : ''} recently. Reaching for support is a strength.`,
+      title: localizedText('Active Coping', 'Afrontamiento activo'),
+      description: localizedText(
+        `You used coping tools ${copingCount} time${copingCount !== 1 ? 's' : ''} recently. Reaching for support is a strength.`,
+        `Usaste herramientas de afrontamiento ${copingCount} ${copingCount !== 1 ? 'veces' : 'vez'} recientemente. Buscar apoyo es una fortaleza.`,
+      ),
       type: 'skill',
     });
   }
@@ -188,8 +198,11 @@ function getProgressHighlights(entries: JournalEntry[], drafts: MessageDraft[], 
     highlights.push({
       id: `ph_${idCounter++}`,
       icon: '📋',
-      title: 'Consistent Check-Ins',
-      description: `You completed ${recent.length} check-in${recent.length !== 1 ? 's' : ''} recently. Showing up for yourself matters.`,
+      title: localizedText('Consistent Check-Ins', 'Registros constantes'),
+      description: localizedText(
+        `You completed ${recent.length} check-in${recent.length !== 1 ? 's' : ''} recently. Showing up for yourself matters.`,
+        `Completaste ${recent.length} registro${recent.length !== 1 ? 's' : ''} recientemente. Estar presente para ti importa.`,
+      ),
       type: 'consistency',
     });
   }
@@ -199,8 +212,11 @@ function getProgressHighlights(entries: JournalEntry[], drafts: MessageDraft[], 
     highlights.push({
       id: `ph_${idCounter++}`,
       icon: '🪞',
-      title: 'Deeper Reflection',
-      description: `You wrote thoughtful reflections ${reflections} times. Self-awareness is growing.`,
+      title: localizedText('Deeper Reflection', 'Reflexión más profunda'),
+      description: localizedText(
+        `You wrote thoughtful reflections ${reflections} times. Self-awareness is growing.`,
+        `Escribiste reflexiones cuidadosas ${reflections} veces. Tu autoconciencia está creciendo.`,
+      ),
       type: 'awareness',
     });
   }
@@ -210,8 +226,11 @@ function getProgressHighlights(entries: JournalEntry[], drafts: MessageDraft[], 
     highlights.push({
       id: `ph_${idCounter++}`,
       icon: '✍️',
-      title: 'Clearer Communication',
-      description: `You rewrote ${rewriteCount} message${rewriteCount !== 1 ? 's' : ''} for clarity. That takes intentional effort.`,
+      title: localizedText('Clearer Communication', 'Comunicación más clara'),
+      description: localizedText(
+        `You rewrote ${rewriteCount} message${rewriteCount !== 1 ? 's' : ''} for clarity. That takes intentional effort.`,
+        `Reescribiste ${rewriteCount} mensaje${rewriteCount !== 1 ? 's' : ''} para ganar claridad. Eso requiere intención.`,
+      ),
       type: 'skill',
     });
   }
@@ -220,8 +239,11 @@ function getProgressHighlights(entries: JournalEntry[], drafts: MessageDraft[], 
     highlights.push({
       id: `ph_${idCounter++}`,
       icon: '🌱',
-      title: 'Starting Your Journey',
-      description: 'Every check-in and every pause contributes to your growth. Keep going.',
+      title: localizedText('Starting Your Journey', 'Comenzando tu camino'),
+      description: localizedText(
+        'Every check-in and every pause contributes to your growth. Keep going.',
+        'Cada registro y cada pausa contribuyen a tu crecimiento. Sigue adelante.',
+      ),
       type: 'growth',
     });
   }
@@ -384,7 +406,10 @@ function generateOverallNarrative(
   const recentDrafts = drafts.filter(d => isWithinDays(d.timestamp, days));
 
   if (recent.length < 2) {
-    return 'As you continue checking in, your reflection reports will become richer and more personalized. Even starting is a meaningful step.';
+    return localizedText(
+      'As you continue checking in, your reflection reports will become richer and more personalized. Even starting is a meaningful step.',
+      'A medida que sigas registrándote, tus reportes de reflexión serán más ricos y personalizados. Incluso empezar ya es un paso significativo.',
+    );
   }
 
   const avgDistress = recent.reduce((s, e) => s + e.checkIn.intensityLevel, 0) / recent.length;
@@ -395,25 +420,43 @@ function generateOverallNarrative(
   const parts: string[] = [];
 
   if (topEmotion) {
-    parts.push(`Over the past ${days} days, ${topEmotion.toLowerCase()} has been your most frequent emotional state.`);
+    parts.push(localizedText(
+      `Over the past ${days} days, ${topEmotion.toLowerCase()} has been your most frequent emotional state.`,
+      `Durante los últimos ${days} días, ${topEmotion.toLowerCase()} ha sido tu estado emocional más frecuente.`,
+    ));
   }
 
   if (topTrigger) {
-    parts.push(`"${topTrigger}" appears to be a recurring trigger in your experience.`);
+    parts.push(localizedText(
+      `"${topTrigger}" appears to be a recurring trigger in your experience.`,
+      `"${topTrigger}" parece ser un detonante recurrente en tu experiencia.`,
+    ));
   }
 
   if (avgDistress >= 6) {
-    parts.push('Your distress levels have been somewhat elevated, which suggests this has been a challenging period.');
+    parts.push(localizedText(
+      'Your distress levels have been somewhat elevated, which suggests this has been a challenging period.',
+      'Tus niveles de malestar han estado algo elevados, lo que sugiere que este ha sido un periodo desafiante.',
+    ));
   } else if (avgDistress <= 3) {
-    parts.push('Your distress has remained relatively low, which may reflect growing stabilization.');
+    parts.push(localizedText(
+      'Your distress has remained relatively low, which may reflect growing stabilization.',
+      'Tu malestar se ha mantenido relativamente bajo, lo que puede reflejar más estabilidad.',
+    ));
   }
 
   if (pauseCount > 0) {
-    parts.push(`You paused before sending ${pauseCount} message${pauseCount !== 1 ? 's' : ''}, showing increasing awareness in communication.`);
+    parts.push(localizedText(
+      `You paused before sending ${pauseCount} message${pauseCount !== 1 ? 's' : ''}, showing increasing awareness in communication.`,
+      `Pausaste antes de enviar ${pauseCount} mensaje${pauseCount !== 1 ? 's' : ''}, mostrando más conciencia en tu comunicación.`,
+    ));
   }
 
   if (parts.length === 0) {
-    return 'Your recent patterns suggest a period of gradual awareness-building. Keep showing up for yourself.';
+    return localizedText(
+      'Your recent patterns suggest a period of gradual awareness-building. Keep showing up for yourself.',
+      'Tus patrones recientes sugieren un periodo de construcción gradual de conciencia. Sigue presente para ti.',
+    );
   }
 
   return parts.join(' ');
@@ -423,25 +466,40 @@ function generateClosingReflection(entries: JournalEntry[], days: number): strin
   const recent = entries.filter(e => isWithinDays(e.timestamp, days));
 
   if (recent.length < 2) {
-    return 'Your journey is just beginning. Every moment of self-awareness counts.';
+    return localizedText(
+      'Your journey is just beginning. Every moment of self-awareness counts.',
+      'Tu camino apenas comienza. Cada momento de autoconciencia cuenta.',
+    );
   }
 
   const copingCount = recent.reduce((s, e) => s + (e.checkIn.copingUsed?.length ?? 0), 0);
   const reflections = recent.filter(e => e.reflection && e.reflection.length > 15).length;
 
   if (copingCount > 3 && reflections > 2) {
-    return 'You are actively using tools and reflecting on your experiences. This combination builds lasting emotional resilience.';
+    return localizedText(
+      'You are actively using tools and reflecting on your experiences. This combination builds lasting emotional resilience.',
+      'Estás usando herramientas activamente y reflexionando sobre tus experiencias. Esta combinación construye resiliencia emocional duradera.',
+    );
   }
 
   if (copingCount > 0) {
-    return 'You are beginning to reach for coping tools when things feel hard. That willingness to try is meaningful progress.';
+    return localizedText(
+      'You are beginning to reach for coping tools when things feel hard. That willingness to try is meaningful progress.',
+      'Estás empezando a recurrir a herramientas de afrontamiento cuando las cosas se sienten difíciles. Esa disposición a intentar es progreso significativo.',
+    );
   }
 
   if (reflections > 0) {
-    return 'Your reflections show growing self-awareness. Understanding your patterns is a powerful step toward change.';
+    return localizedText(
+      'Your reflections show growing self-awareness. Understanding your patterns is a powerful step toward change.',
+      'Tus reflexiones muestran una autoconciencia creciente. Entender tus patrones es un paso poderoso hacia el cambio.',
+    );
   }
 
-  return 'Showing up to check in with yourself takes courage. You are building a habit that supports your wellbeing.';
+  return localizedText(
+    'Showing up to check in with yourself takes courage. You are building a habit that supports your wellbeing.',
+    'Presentarte para hacer registros contigo mismo/a requiere valentía. Estás construyendo un hábito que sostiene tu bienestar.',
+  );
 }
 
 function getTopItem(items: string[]): string | null {
@@ -458,7 +516,11 @@ export function generateTherapySummary(
 ): TherapySummaryReport {
   console.log('[TherapySummary] Generating report for', periodDays, 'days with', journalEntries.length, 'entries');
 
-  const periodLabel = periodDays <= 7 ? 'This Week' : periodDays <= 14 ? 'Past Two Weeks' : 'This Month';
+  const periodLabel = periodDays <= 7
+    ? localizedText('This Week', 'Esta semana')
+    : periodDays <= 14
+      ? localizedText('Past Two Weeks', 'Últimas dos semanas')
+      : localizedText('This Month', 'Este mes');
 
   const report: TherapySummaryReport = {
     id: `report_${Date.now()}`,

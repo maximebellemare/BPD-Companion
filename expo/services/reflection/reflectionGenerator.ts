@@ -1,4 +1,5 @@
 import { JournalEntry, MessageDraft } from '@/types';
+import { localizedText } from '@/lib/i18n/staticText';
 import {
   ReflectionTheme,
   RelationshipPattern,
@@ -260,8 +261,11 @@ export function generateGrowthSignals(
   if (olderAvg > 0 && recentAvg < olderAvg - 0.5) {
     signals.push({
       id: 'growth_distress',
-      area: 'Lower distress',
-      description: 'Your overall distress levels seem to be softening over time.',
+      area: localizedText('Lower distress', 'Menos malestar'),
+      description: localizedText(
+        'Your overall distress levels seem to be softening over time.',
+        'Tus niveles generales de malestar parecen suavizarse con el tiempo.',
+      ),
       emoji: '📉',
     });
   }
@@ -277,8 +281,11 @@ export function generateGrowthSignals(
   if (recentPauses > olderPauses) {
     signals.push({
       id: 'growth_pausing',
-      area: 'More pausing',
-      description: 'You are pausing before reacting more often. This is a meaningful shift.',
+      area: localizedText('More pausing', 'Más pausas'),
+      description: localizedText(
+        'You are pausing before reacting more often. This is a meaningful shift.',
+        'Estás pausando antes de reaccionar con más frecuencia. Es un cambio significativo.',
+      ),
       emoji: '⏸️',
     });
   }
@@ -287,8 +294,11 @@ export function generateGrowthSignals(
   if (recentReflections >= 3) {
     signals.push({
       id: 'growth_reflection',
-      area: 'Deeper reflections',
-      description: 'Your reflections are becoming more thoughtful and detailed.',
+      area: localizedText('Deeper reflections', 'Reflexiones más profundas'),
+      description: localizedText(
+        'Your reflections are becoming more thoughtful and detailed.',
+        'Tus reflexiones se están volviendo más cuidadosas y detalladas.',
+      ),
       emoji: '✨',
     });
   }
@@ -296,8 +306,11 @@ export function generateGrowthSignals(
   if (recent.length >= 5) {
     signals.push({
       id: 'growth_consistency',
-      area: 'Consistent check-ins',
-      description: 'Showing up regularly is building deeper self-awareness.',
+      area: localizedText('Consistent check-ins', 'Registros constantes'),
+      description: localizedText(
+        'Showing up regularly is building deeper self-awareness.',
+        'Presentarte con regularidad está construyendo una autoconciencia más profunda.',
+      ),
       emoji: '🔄',
     });
   }
@@ -307,8 +320,11 @@ export function generateGrowthSignals(
   if (recentCoping > olderCoping && recentCoping >= 3) {
     signals.push({
       id: 'growth_coping',
-      area: 'Active coping',
-      description: 'You are reaching for coping tools more frequently.',
+      area: localizedText('Active coping', 'Afrontamiento activo'),
+      description: localizedText(
+        'You are reaching for coping tools more frequently.',
+        'Estás recurriendo a herramientas de afrontamiento con más frecuencia.',
+      ),
       emoji: '🧰',
     });
   }
@@ -317,8 +333,11 @@ export function generateGrowthSignals(
   if (recentRewrites >= 2) {
     signals.push({
       id: 'growth_communication',
-      area: 'Mindful communication',
-      description: 'Rewriting messages before sending shows growing self-regulation.',
+      area: localizedText('Mindful communication', 'Comunicación consciente'),
+      description: localizedText(
+        'Rewriting messages before sending shows growing self-regulation.',
+        'Reescribir mensajes antes de enviarlos muestra una autorregulación creciente.',
+      ),
       emoji: '💬',
     });
   }
@@ -326,8 +345,11 @@ export function generateGrowthSignals(
   if (signals.length === 0) {
     signals.push({
       id: 'growth_presence',
-      area: 'Being here',
-      description: 'The fact that you are here, reflecting, is itself a sign of growth.',
+      area: localizedText('Being here', 'Estar aquí'),
+      description: localizedText(
+        'The fact that you are here, reflecting, is itself a sign of growth.',
+        'El hecho de que estés aquí, reflexionando, ya es una señal de crecimiento.',
+      ),
       emoji: '🌱',
     });
   }
@@ -343,7 +365,10 @@ export function generateOpeningReflection(
   const recent = getRecentEntries(entries, 14);
 
   if (recent.length < 2) {
-    return 'As you continue checking in, your reflection mirror will reveal deeper patterns and insights about your emotional world.';
+    return localizedText(
+      'As you continue checking in, your reflection mirror will reveal deeper patterns and insights about your emotional world.',
+      'A medida que sigas registrándote, tu espejo de reflexión revelará patrones e insights más profundos sobre tu mundo emocional.',
+    );
   }
 
   const avgDistress = recent.reduce((s, e) => s + e.checkIn.intensityLevel, 0) / recent.length;
@@ -359,23 +384,41 @@ export function generateOpeningReflection(
   const parts: string[] = [];
 
   if (avgDistress >= 6) {
-    parts.push('Recent days seem to have carried significant emotional weight.');
+    parts.push(localizedText(
+      'Recent days seem to have carried significant emotional weight.',
+      'Los últimos días parecen haber cargado un peso emocional significativo.',
+    ));
   } else if (avgDistress >= 3.5) {
-    parts.push('Your emotional landscape recently has had its share of ups and downs.');
+    parts.push(localizedText(
+      'Your emotional landscape recently has had its share of ups and downs.',
+      'Tu paisaje emocional reciente ha tenido altibajos.',
+    ));
   } else {
-    parts.push('Things seem to have been relatively calmer lately.');
+    parts.push(localizedText(
+      'Things seem to have been relatively calmer lately.',
+      'Las cosas parecen haber estado relativamente más calmadas últimamente.',
+    ));
   }
 
   if (topEmotion) {
-    parts.push(`${topEmotion} has been your most present emotion.`);
+    parts.push(localizedText(
+      `${topEmotion} has been your most present emotion.`,
+      `${topEmotion} ha sido tu emoción más presente.`,
+    ));
   }
 
   if (relTriggers.length >= 3) {
-    parts.push('Relationship themes have been particularly active.');
+    parts.push(localizedText(
+      'Relationship themes have been particularly active.',
+      'Los temas relacionales han estado especialmente activos.',
+    ));
   }
 
   if (pauseCount > 0) {
-    parts.push(`You paused before responding ${pauseCount} time${pauseCount !== 1 ? 's' : ''} — that takes real strength.`);
+    parts.push(localizedText(
+      `You paused before responding ${pauseCount} time${pauseCount !== 1 ? 's' : ''} — that takes real strength.`,
+      `Pausaste antes de responder ${pauseCount} ${pauseCount !== 1 ? 'veces' : 'vez'}; eso requiere fortaleza real.`,
+    ));
   }
 
   return parts.join(' ');

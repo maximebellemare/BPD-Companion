@@ -1,5 +1,6 @@
 import { JournalEntry } from '@/types';
 import { storageService } from '@/services/storage/storageService';
+import { localizedText } from '@/lib/i18n/staticText';
 
 export const TODAY_TUTORIAL_KEY = 'today_tutorial_seen_v1';
 const ACHIEVEMENTS_KEY = 'habit_achievements_seen_v1';
@@ -70,15 +71,69 @@ export async function getNextHabitAchievement(params: {
   const streak = getStreak(params.entries);
   const reflectionDays = new Set(params.entries.map(entry => new Date(entry.timestamp).toISOString().slice(0, 10))).size;
   const candidates: HabitAchievement[] = [
-    { id: 'first_checkin', title: 'First Check-In', body: 'You created the first signal in your emotional map.' },
-    { id: 'first_insight', title: 'First Insight', body: 'A pattern is starting to become visible.' },
-    { id: 'first_calm_me_down', title: 'First Calm Me Down', body: 'You practiced settling your body before moving forward.' },
-    { id: 'first_saved_insight', title: 'First Saved Insight', body: 'You kept something meaningful for later reflection.' },
-    { id: 'five_day_reflection', title: '5 Day Reflection', body: 'Reflection is becoming part of how you care for yourself.' },
-    { id: 'seven_day_checkin', title: '7 Day Check-In', body: 'Seven days of awareness gives your patterns more shape.' },
-    { id: 'first_week_complete', title: 'First Week Complete', body: 'Your first week of signals is ready to become insight.' },
-    { id: 'first_community_post', title: 'First Community Post', body: 'You reached for peer support without having to carry it alone.' },
-    { id: 'first_dont_send_it', title: "First Don't Send It", body: 'You made space between emotion and action.' },
+    {
+      id: 'first_checkin',
+      title: localizedText('First Check-In', 'Primer registro'),
+      body: localizedText('You created the first signal in your emotional map.', 'Creaste la primera señal en tu mapa emocional.'),
+    },
+    {
+      id: 'first_insight',
+      title: localizedText('First Insight', 'Primer insight'),
+      body: localizedText('A pattern is starting to become visible.', 'Un patrón está empezando a hacerse visible.'),
+    },
+    {
+      id: 'first_calm_me_down',
+      title: localizedText('First Calm Me Down', 'Primer Calm Me Down'),
+      body: localizedText(
+        'You practiced settling your body before moving forward.',
+        'Practicaste calmar tu cuerpo antes de seguir adelante.',
+      ),
+    },
+    {
+      id: 'first_saved_insight',
+      title: localizedText('First Saved Insight', 'Primer insight guardado'),
+      body: localizedText(
+        'You kept something meaningful for later reflection.',
+        'Guardaste algo significativo para reflexionar después.',
+      ),
+    },
+    {
+      id: 'five_day_reflection',
+      title: localizedText('5 Day Reflection', 'Reflexión de 5 días'),
+      body: localizedText(
+        'Reflection is becoming part of how you care for yourself.',
+        'La reflexión está empezando a ser parte de cómo te cuidas.',
+      ),
+    },
+    {
+      id: 'seven_day_checkin',
+      title: localizedText('7 Day Check-In', 'Registro de 7 días'),
+      body: localizedText(
+        'Seven days of awareness gives your patterns more shape.',
+        'Siete días de conciencia dan más forma a tus patrones.',
+      ),
+    },
+    {
+      id: 'first_week_complete',
+      title: localizedText('First Week Complete', 'Primera semana completa'),
+      body: localizedText(
+        'Your first week of signals is ready to become insight.',
+        'Tu primera semana de señales está lista para convertirse en insight.',
+      ),
+    },
+    {
+      id: 'first_community_post',
+      title: localizedText('First Community Post', 'Primera publicación en comunidad'),
+      body: localizedText(
+        'You reached for peer support without having to carry it alone.',
+        'Buscaste apoyo de pares sin tener que cargarlo todo a solas.',
+      ),
+    },
+    {
+      id: 'first_dont_send_it',
+      title: localizedText("First Don't Send It", 'Primer No lo envíes'),
+      body: localizedText('You made space between emotion and action.', 'Creaste espacio entre la emoción y la acción.'),
+    },
   ];
   const unlocked = candidates.find((item) => {
     if (seen.includes(item.id)) return false;

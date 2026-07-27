@@ -1,4 +1,5 @@
 import { JournalEntry, MessageDraft } from '@/types';
+import { localizedText } from '@/lib/i18n/staticText';
 import {
   ProgressSummary,
   ProgressMetrics,
@@ -187,59 +188,59 @@ function computeMilestones(entries: JournalEntry[], drafts: MessageDraft[]): Mil
   return [
     {
       id: 'first_checkin',
-      label: 'First Check-In',
+      label: localizedText('First Check-In', 'Primer registro'),
       achieved: totalCheckIns >= 1,
       icon: '🌱',
-      description: 'Complete your first emotional check-in',
+      description: localizedText('Complete your first emotional check-in', 'Completa tu primer registro emocional'),
     },
     {
       id: 'week_streak',
-      label: '7-Day Streak',
+      label: localizedText('7-Day Streak', 'Racha de 7 días'),
       achieved: streak >= 7,
       icon: '🔥',
-      description: 'Check in for 7 days in a row',
+      description: localizedText('Check in for 7 days in a row', 'Haz registros durante 7 días seguidos'),
     },
     {
       id: 'ten_checkins',
-      label: '10 Check-Ins',
+      label: localizedText('10 Check-Ins', '10 registros'),
       achieved: totalCheckIns >= 10,
       icon: '⭐',
-      description: 'Complete 10 emotional check-ins',
+      description: localizedText('Complete 10 emotional check-ins', 'Completa 10 registros emocionales'),
     },
     {
       id: 'coping_explorer',
-      label: 'Coping Explorer',
+      label: localizedText('Coping Explorer', 'Explorador/a de afrontamiento'),
       achieved: copingCount >= 5,
       icon: '🧭',
-      description: 'Use coping tools 5 times',
+      description: localizedText('Use coping tools 5 times', 'Usa herramientas de afrontamiento 5 veces'),
     },
     {
       id: 'mindful_messenger',
-      label: 'Mindful Messenger',
+      label: localizedText('Mindful Messenger', 'Mensajería consciente'),
       achieved: pausedCount >= 3,
       icon: '💭',
-      description: 'Successfully pause 3 messages',
+      description: localizedText('Successfully pause 3 messages', 'Pausa 3 mensajes con éxito'),
     },
     {
       id: 'rewrite_master',
-      label: 'Rewrite Mastery',
+      label: localizedText('Rewrite Mastery', 'Dominio de reescritura'),
       achieved: rewriteCount >= 5,
       icon: '✍️',
-      description: 'Rewrite 5 messages mindfully',
+      description: localizedText('Rewrite 5 messages mindfully', 'Reescribe 5 mensajes con conciencia'),
     },
     {
       id: 'month_warrior',
-      label: 'Month Warrior',
+      label: localizedText('Month Warrior', 'Constancia de un mes'),
       achieved: totalCheckIns >= 30,
       icon: '🏆',
-      description: 'Complete 30 check-ins',
+      description: localizedText('Complete 30 check-ins', 'Completa 30 registros'),
     },
     {
       id: 'regulation_pro',
-      label: 'Regulation Pro',
+      label: localizedText('Regulation Pro', 'Regulación pro'),
       achieved: copingCount >= 20,
       icon: '🎯',
-      description: 'Use coping tools 20 times',
+      description: localizedText('Use coping tools 20 times', 'Usa herramientas de afrontamiento 20 veces'),
     },
   ];
 }
@@ -427,18 +428,33 @@ function generateEncouragingMessage(comparison: WeekComparison, metrics: Progres
     return `You handled distress better this week than last week. Your average dropped by ${comparison.changePercent}%.`;
   }
   if (metrics.journalStreak >= 7) {
-    return `Amazing — ${metrics.journalStreak} day streak! Consistency is a powerful form of self-care.`;
+    return localizedText(
+      `Amazing — ${metrics.journalStreak} day streak! Consistency is a powerful form of self-care.`,
+      `Increíble: racha de ${metrics.journalStreak} días. La constancia es una forma poderosa de autocuidado.`,
+    );
   }
   if (metrics.copingExercisesUsed > 0) {
-    return `You've used coping tools ${metrics.copingExercisesUsed} times. Every small step counts.`;
+    return localizedText(
+      `You've used coping tools ${metrics.copingExercisesUsed} times. Every small step counts.`,
+      `Has usado herramientas de afrontamiento ${metrics.copingExercisesUsed} veces. Cada pequeño paso cuenta.`,
+    );
   }
   if (metrics.successfulMessagePauses > 0) {
-    return `You paused before sending ${metrics.successfulMessagePauses} message${metrics.successfulMessagePauses !== 1 ? 's' : ''}. That takes real strength.`;
+    return localizedText(
+      `You paused before sending ${metrics.successfulMessagePauses} message${metrics.successfulMessagePauses !== 1 ? 's' : ''}. That takes real strength.`,
+      `Pausaste antes de enviar ${metrics.successfulMessagePauses} mensaje${metrics.successfulMessagePauses !== 1 ? 's' : ''}. Eso requiere fortaleza real.`,
+    );
   }
   if (metrics.totalCheckIns > 0) {
-    return 'Showing up to check in with yourself is brave. Keep going.';
+    return localizedText(
+      'Showing up to check in with yourself is brave. Keep going.',
+      'Presentarte para hacer un registro contigo mismo/a es valiente. Sigue adelante.',
+    );
   }
-  return 'Start your first check-in to begin tracking your recovery journey.';
+  return localizedText(
+    'Start your first check-in to begin tracking your recovery journey.',
+    'Empieza tu primer registro para comenzar a seguir tu camino de recuperación.',
+  );
 }
 
 export function computeProgressSummary(

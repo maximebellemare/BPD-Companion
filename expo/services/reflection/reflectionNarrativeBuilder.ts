@@ -1,4 +1,5 @@
 import { JournalEntry, MessageDraft } from '@/types';
+import { localizedText } from '@/lib/i18n/staticText';
 import { GraphPatternSummary } from '@/types/memoryGraph';
 import {
   EmotionalLandscape,
@@ -11,7 +12,9 @@ import {
 
 function getDayLabel(timestamp: number): string {
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  return days[new Date(timestamp).getDay()];
+  const daysEs = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+  const dayIndex = new Date(timestamp).getDay();
+  return localizedText(days[dayIndex], daysEs[dayIndex]);
 }
 
 export function buildEmotionalLandscape(
@@ -119,7 +122,10 @@ function buildEmotionalNarrative(
   }
 
   if (parts.length === 0) {
-    return 'This week held its own emotional landscape. Each feeling you noticed matters.';
+    return localizedText(
+      'This week held its own emotional landscape. Each feeling you noticed matters.',
+      'Esta semana tuvo su propio paisaje emocional. Cada emoción que notaste importa.',
+    );
   }
 
   return parts.join(' ');
@@ -159,7 +165,10 @@ export function buildRelationshipReflection(
 
   if (reassuranceTriggers.length > 0) {
     reassurancePatterns.push({
-      description: 'Reassurance-seeking patterns were present this week, often connected to communication uncertainty.',
+      description: localizedText(
+        'Reassurance-seeking patterns were present this week, often connected to communication uncertainty.',
+        'Esta semana hubo patrones de búsqueda de seguridad, a menudo conectados con incertidumbre en la comunicación.',
+      ),
       frequency: reassuranceTriggers.length,
     });
   }
@@ -514,33 +523,54 @@ export function buildClosingMessage(
   growthSignals: GrowthSignalSection,
 ): string {
   if (thisWeek.length < 2) {
-    return 'Your journey is unfolding. Every small check-in builds a deeper understanding of yourself.';
+    return localizedText(
+      'Your journey is unfolding. Every small check-in builds a deeper understanding of yourself.',
+      'Tu camino se está desplegando. Cada pequeño registro construye una comprensión más profunda de ti.',
+    );
   }
 
   const hasRelWork = thisWeek.some(e => e.checkIn.triggers.some(t => t.category === 'relationship'));
   const avgDistress = thisWeek.reduce((s, e) => s + e.checkIn.intensityLevel, 0) / thisWeek.length;
 
   if (avgDistress >= 7 && growthSignals.improvements.length > 0) {
-    return 'This was a hard week, and you still found ways to grow through it. That is not nothing — it is courage.';
+    return localizedText(
+      'This was a hard week, and you still found ways to grow through it. That is not nothing — it is courage.',
+      'Esta fue una semana difícil, y aun así encontraste formas de crecer en medio de ella. Eso no es poco; es valentía.',
+    );
   }
 
   if (growthSignals.improvements.length >= 2) {
-    return 'This week showed meaningful signs of growth. You are building something real — keep going, even on the days it feels invisible.';
+    return localizedText(
+      'This week showed meaningful signs of growth. You are building something real — keep going, even on the days it feels invisible.',
+      'Esta semana mostró señales significativas de crecimiento. Estás construyendo algo real; sigue, incluso en los días en que parece invisible.',
+    );
   }
 
   if (hasRelWork && growthSignals.communicationWins.length > 0) {
-    return 'The way you are approaching relationships is shifting. Choosing care over urgency is one of the hardest things to do — and you did it this week.';
+    return localizedText(
+      'The way you are approaching relationships is shifting. Choosing care over urgency is one of the hardest things to do — and you did it this week.',
+      'La forma en que te acercas a las relaciones está cambiando. Elegir cuidado en vez de urgencia es de lo más difícil, y esta semana lo hiciste.',
+    );
   }
 
   if (growthSignals.communicationWins.length > 0) {
-    return 'Your communication patterns are shifting. The effort you are putting in matters more than you might realize right now.';
+    return localizedText(
+      'Your communication patterns are shifting. The effort you are putting in matters more than you might realize right now.',
+      'Tus patrones de comunicación están cambiando. El esfuerzo que estás haciendo importa más de lo que quizá notas ahora.',
+    );
   }
 
   if (growthSignals.awarenessGains.length > 0) {
-    return 'Your awareness is deepening. Understanding your patterns is one of the most powerful things you can do for yourself.';
+    return localizedText(
+      'Your awareness is deepening. Understanding your patterns is one of the most powerful things you can do for yourself.',
+      'Tu conciencia se está profundizando. Entender tus patrones es una de las cosas más poderosas que puedes hacer por ti.',
+    );
   }
 
-  return 'Another week of showing up for yourself. That consistency, even when it feels small, is building something stronger underneath.';
+  return localizedText(
+    'Another week of showing up for yourself. That consistency, even when it feels small, is building something stronger underneath.',
+    'Otra semana de estar presente para ti. Esa constancia, incluso cuando parece pequeña, está construyendo algo más fuerte por dentro.',
+  );
 }
 
 export function buildWhatEscalated(

@@ -31,6 +31,7 @@ async function loadFacebookSdk(): Promise<MetaAttributionFacebookSdk | null> {
 
 const metaRevenueCatAttribution = createMetaRevenueCatAttributionController({
   isNativeRuntime,
+  shouldInitializeFacebookSdkInJs: () => Platform.OS === 'ios',
   loadFacebookSdk,
   log: (message, details) => {
     if (__DEV__) {

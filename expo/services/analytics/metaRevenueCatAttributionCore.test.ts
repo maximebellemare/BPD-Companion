@@ -3,6 +3,7 @@ import {
   type MetaAttributionFacebookSdk,
   type MetaAttributionPurchasesClient,
 } from '@/services/analytics/metaRevenueCatAttributionCore';
+import appConfig from '../../app.config';
 
 function assert(condition: unknown, message: string): void {
   if (!condition) throw new Error(`Meta RevenueCat attribution regression failed: ${message}`);
@@ -32,11 +33,32 @@ function createMockPurchases(calls: string[]): MetaAttributionPurchasesClient {
   };
 }
 
+function getMetaPluginConfig(): Record<string, unknown> {
+  const resolvedConfig = appConfig({ config: {} } as never) as { plugins?: unknown[] };
+  const plugin = resolvedConfig.plugins?.find((entry) => Array.isArray(entry) && entry[0] === 'react-native-fbsdk-next');
+  if (!Array.isArray(plugin)) {
+    throw new Error('Meta RevenueCat attribution regression failed: react-native-fbsdk-next plugin is configured');
+  }
+  const pluginConfig = plugin[1];
+  if (!pluginConfig || typeof pluginConfig !== 'object' || Array.isArray(pluginConfig)) {
+    throw new Error('Meta RevenueCat attribution regression failed: react-native-fbsdk-next plugin options are configured');
+  }
+  return pluginConfig as Record<string, unknown>;
+}
+
 export async function assertMetaRevenueCatAttributionRegressionScenarios(): Promise<true> {
+  const metaPluginConfig = getMetaPluginConfig();
+  assert(metaPluginConfig.appID === '1546153426837970', 'BPD Meta App ID is configured');
+  assert(metaPluginConfig.isAutoInitEnabled === true, 'Android native Meta auto-init is enabled');
+  assert(metaPluginConfig.autoLogAppEventsEnabled === false, 'automatic Meta app events are disabled');
+  assert(metaPluginConfig.advertiserIDCollectionEnabled === false, 'Meta advertiser ID collection is disabled');
+  assert(metaPluginConfig.iosUserTrackingPermission === false, 'ATT prompt remains disabled');
+
   const calls: string[] = [];
   let loadCount = 0;
   const controller = createMetaRevenueCatAttributionController({
     isNativeRuntime: () => true,
+    shouldInitializeFacebookSdkInJs: () => true,
     loadFacebookSdk: async () => {
       loadCount += 1;
       return createMockFacebookSdk(calls);
@@ -72,6 +94,7 @@ export async function assertMetaRevenueCatAttributionRegressionScenarios(): Prom
   const skippedCalls: string[] = [];
   const skippedController = createMetaRevenueCatAttributionController({
     isNativeRuntime: () => false,
+    shouldInitializeFacebookSdkInJs: () => false,
     loadFacebookSdk: async () => {
       skippedCalls.push('loadFacebookSdk');
       return createMockFacebookSdk(skippedCalls);
@@ -83,6 +106,7 @@ export async function assertMetaRevenueCatAttributionRegressionScenarios(): Prom
   const missingModuleCalls: string[] = [];
   const missingModuleController = createMetaRevenueCatAttributionController({
     isNativeRuntime: () => true,
+    shouldInitializeFacebookSdkInJs: () => false,
     loadFacebookSdk: async () => null,
   });
   await missingModuleController.sync(createMockPurchases(missingModuleCalls));
@@ -91,6 +115,7 @@ export async function assertMetaRevenueCatAttributionRegressionScenarios(): Prom
   const nullAnonymousCalls: string[] = [];
   const nullAnonymousController = createMetaRevenueCatAttributionController({
     isNativeRuntime: () => true,
+    shouldInitializeFacebookSdkInJs: () => false,
     loadFacebookSdk: async () => createMockFacebookSdk(nullAnonymousCalls, null),
   });
   await nullAnonymousController.sync(createMockPurchases(nullAnonymousCalls));
@@ -100,6 +125,7 @@ export async function assertMetaRevenueCatAttributionRegressionScenarios(): Prom
   const errors: string[] = [];
   const rejectedController = createMetaRevenueCatAttributionController({
     isNativeRuntime: () => true,
+    shouldInitializeFacebookSdkInJs: () => false,
     loadFacebookSdk: async () => ({
       ...createMockFacebookSdk(rejectedCalls),
       AppEventsLogger: {
@@ -119,6 +145,7 @@ export async function assertMetaRevenueCatAttributionRegressionScenarios(): Prom
   const initFailureErrors: string[] = [];
   const initFailureController = createMetaRevenueCatAttributionController({
     isNativeRuntime: () => true,
+    shouldInitializeFacebookSdkInJs: () => true,
     loadFacebookSdk: async () => ({
       ...createMockFacebookSdk(initFailureCalls),
       Settings: {
@@ -135,6 +162,22 @@ export async function assertMetaRevenueCatAttributionRegressionScenarios(): Prom
   await initFailureController.sync(createMockPurchases(initFailureCalls));
   assert(initFailureErrors.length === 1, 'SDK init/config failure is caught');
   assert(!initFailureCalls.some(call => call.startsWith('setFBAnonymousID')), 'SDK init/config failure does not set RevenueCat attribute');
+
+  const androidAutoInitCalls: string[] = [];
+  const androidAutoInitController = createMetaRevenueCatAttributionController({
+    isNativeRuntime: () => true,
+    shouldInitializeFacebookSdkInJs: () => false,
+    loadFacebookSdk: async () => createMockFacebookSdk(androidAutoInitCalls),
+  });
+  await androidAutoInitController.sync(createMockPurchases(androidAutoInitCalls));
+  assert(androidAutoInitCalls.includes('setAutoLog:false'), 'Android keeps automatic app events disabled');
+  assert(androidAutoInitCalls.includes('setAdvertiserIdCollection:false'), 'Android keeps advertiser ID collection disabled');
+  assert(!androidAutoInitCalls.includes('initializeSDK'), 'Android relies on native auto-init before JS package access');
+  assert(
+    androidAutoInitCalls.indexOf('getAnonymousID') > androidAutoInitCalls.indexOf('setAdvertiserIdCollection:false'),
+    'Facebook SDK settings are applied before anonymous ID access',
+  );
+  assert(androidAutoInitCalls.includes('setFBAnonymousID:fb_anon_123'), 'Android still syncs Facebook anonymous ID to RevenueCat');
 
   return true;
 }

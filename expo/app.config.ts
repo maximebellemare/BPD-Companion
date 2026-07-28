@@ -75,7 +75,7 @@ export default ({ config }: ConfigContext) => {
           scheme: `fb${META_APP_ID}`,
           autoLogAppEventsEnabled: false,
           advertiserIDCollectionEnabled: false,
-          isAutoInitEnabled: false,
+          isAutoInitEnabled: true,
           iosUserTrackingPermission: false,
         },
       ],

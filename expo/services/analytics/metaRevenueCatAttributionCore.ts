@@ -15,6 +15,7 @@ export type MetaAttributionFacebookSdk = {
 
 export type MetaRevenueCatAttributionDependencies = {
   isNativeRuntime: () => boolean;
+  shouldInitializeFacebookSdkInJs: () => boolean;
   loadFacebookSdk: () => Promise<MetaAttributionFacebookSdk | null>;
   log?: (message: string, details?: Record<string, unknown>) => void;
   warn?: (message: string, error: unknown) => void;
@@ -32,7 +33,9 @@ export function createMetaRevenueCatAttributionController(
     deps.log?.('[MetaAttribution] Facebook SDK initialization attempted');
     module.Settings.setAutoLogAppEventsEnabled(false);
     module.Settings.setAdvertiserIDCollectionEnabled(false);
-    module.Settings.initializeSDK();
+    if (deps.shouldInitializeFacebookSdkInJs()) {
+      module.Settings.initializeSDK();
+    }
     metaSdkInitialized = true;
     deps.log?.('[MetaAttribution] Facebook SDK initialization succeeded');
   }

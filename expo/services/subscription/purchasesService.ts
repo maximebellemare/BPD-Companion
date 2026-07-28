@@ -19,6 +19,7 @@ import {
   selectAndroidSubscriptionOption,
 } from '@/services/subscription/androidPurchaseSelector';
 import { syncMetaAnonymousIdToRevenueCat } from '@/services/analytics/metaRevenueCatAttribution';
+import { syncFirebaseAppInstanceIdToRevenueCat } from '@/services/analytics/firebaseRevenueCatAttribution';
 import type { SubscriptionPeriod } from '@/types/subscription';
 import type {
   PurchasesOffering,
@@ -227,6 +228,7 @@ export async function configurePurchases(appUserId?: string): Promise<boolean> {
       Purchases.setLogLevel(Purchases.LOG_LEVEL.WARN);
       Purchases.configure({ apiKey, appUserID: appUserId ?? null });
       void collectRevenueCatDeviceIdentifiers(Purchases);
+      void syncFirebaseAppInstanceIdToRevenueCat(Purchases);
       void syncMetaAnonymousIdToRevenueCat(Purchases);
       await enableAppleAdsAttribution(Purchases);
       configured = true;
@@ -260,6 +262,7 @@ export async function logInPurchases(appUserId: string): Promise<CustomerInfo | 
   try {
     const Purchases = (await import('react-native-purchases')).default;
     const result = await Purchases.logIn(appUserId);
+    await syncFirebaseAppInstanceIdToRevenueCat(Purchases, { forceNew: true });
     void syncMetaAnonymousIdToRevenueCat(Purchases);
     let customerInfo = result.customerInfo as CustomerInfo | null;
     if (shouldAttemptAndroidSync(customerInfo)) {
@@ -334,8 +337,9 @@ export async function purchasePackage(
   if (!arePurchasesAvailable()) throw new Error(PURCHASES_UNAVAILABLE_MESSAGE);
   const Purchases = (await import('react-native-purchases')).default;
   try {
-    await syncMetaAnonymousIdToRevenueCat(Purchases);
     await ensureRevenueCatIdentity(Purchases, supabaseUserId);
+    await syncFirebaseAppInstanceIdToRevenueCat(Purchases, { forceNew: true });
+    await syncMetaAnonymousIdToRevenueCat(Purchases);
     let result: { customerInfo?: CustomerInfo | null };
     if (Platform.OS === 'android' && period) {
       const customerInfoBeforePurchase = await Purchases.getCustomerInfo() as CustomerInfo;

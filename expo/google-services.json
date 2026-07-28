@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "658250495499",
+    "project_id": "bpd-companion-68a45",
+    "storage_bucket": "bpd-companion-68a45.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:658250495499:android:508b4e868fd76ca157f90e",
+        "android_client_info": {
+          "package_name": "com.maximebellemare.bpdcompanion"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAIBl95qIeJ0OEc8SbsxgfVrXdf2t9weNU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

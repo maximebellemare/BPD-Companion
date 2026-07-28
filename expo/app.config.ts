@@ -30,22 +30,42 @@ export default ({ config }: ConfigContext) => {
     ios: {
       ...(configLike.ios || {}),
       ...(appJson.expo.ios || {}),
+      googleServicesFile: './GoogleService-Info.plist',
     },
     android: {
       ...(configLike.android || {}),
       ...(appJson.expo.android || {}),
+      googleServicesFile: './google-services.json',
     },
     extra: {
       ...(configLike.extra || {}),
       ...(appJson.expo.extra || {}),
     },
   };
+  const configuredPlugins = [
+    'react-native-fbsdk-next',
+    'expo-localization',
+    '@react-native-firebase/app',
+    '@react-native-firebase/analytics',
+  ].reduce<unknown[]>(
+    (plugins, pluginName) => withoutPlugin(plugins, pluginName),
+    Array.isArray(expo.plugins) ? expo.plugins : [],
+  );
 
   return {
     ...expo,
     plugins: [
-      ...withoutPlugin(withoutPlugin(expo.plugins, 'react-native-fbsdk-next'), 'expo-localization'),
+      ...configuredPlugins,
       'expo-localization',
+      '@react-native-firebase/app',
+      [
+        '@react-native-firebase/analytics',
+        {
+          ios: {
+            withoutAdIdSupport: true,
+          },
+        },
+      ],
       [
         'react-native-fbsdk-next',
         {

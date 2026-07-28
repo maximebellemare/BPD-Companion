@@ -16,6 +16,8 @@ const APPROVED_VERSION_STATES = new Set([
 const ASC_API_BASE_URL = 'https://api.appstoreconnect.apple.com/v1';
 const FALLBACK_VERSION_ENV = 'BPD_COMPANION_LATEST_APPROVED_IOS_VERSION';
 const FALLBACK_CONFIRM_ENV = 'BPD_COMPANION_CONFIRM_LATEST_APPROVED_VERSION';
+const IOS_FIREBASE_FILE = './GoogleService-Info.plist';
+const ANDROID_FIREBASE_FILE = './google-services.json';
 
 function printError(message) {
   console.error(`\n[preflight:ios] ${message}`);
@@ -194,18 +196,48 @@ function getFallbackLatestApprovedVersion() {
   return fallbackVersion;
 }
 
+function getPluginEntry(plugins, pluginName) {
+  return (plugins ?? []).find(plugin => {
+    if (plugin === pluginName) return true;
+    return Array.isArray(plugin) && plugin[0] === pluginName;
+  });
+}
+
+function getPluginOptions(plugins, pluginName) {
+  const entry = getPluginEntry(plugins, pluginName);
+  return Array.isArray(entry) ? entry[1] ?? {} : {};
+}
+
+function hasDependency(packageJson, packageName) {
+  return Boolean(packageJson.dependencies?.[packageName] || packageJson.devDependencies?.[packageName]);
+}
+
 async function main() {
   const projectRoot = path.resolve(__dirname, '..');
   const resolvedConfig = getResolvedExpoConfig(projectRoot);
   const easJson = readJson(path.join(projectRoot, 'eas.json'));
+  const packageJson = readJson(path.join(projectRoot, 'package.json'));
   const localVersion = resolvedConfig.version;
   const bundleIdentifier = resolvedConfig.ios?.bundleIdentifier;
   const appVersionSource = easJson.cli?.appVersionSource ?? 'local';
   const productionAutoIncrement = easJson.build?.production?.autoIncrement ?? null;
+  const plugins = resolvedConfig.plugins ?? [];
+  const firebaseAnalyticsOptions = getPluginOptions(plugins, '@react-native-firebase/analytics');
+  const hasTrackingTransparencyPlugin = Boolean(getPluginEntry(plugins, 'expo-tracking-transparency'));
+  const hasTrackingTransparencyDependency = hasDependency(packageJson, 'expo-tracking-transparency');
+  const userTrackingPurpose = resolvedConfig.ios?.infoPlist?.NSUserTrackingUsageDescription;
 
   if (!localVersion || !bundleIdentifier) {
     throw new Error('Could not resolve local Expo iOS version or bundle identifier.');
   }
+
+  const iosFirebaseFileExists = fs.existsSync(path.join(projectRoot, 'GoogleService-Info.plist'));
+  const androidFirebaseFileExists = fs.existsSync(path.join(projectRoot, 'google-services.json'));
+  const hasFirebaseAppPackage = hasDependency(packageJson, '@react-native-firebase/app');
+  const hasFirebaseAnalyticsPackage = hasDependency(packageJson, '@react-native-firebase/analytics');
+  const hasFirebaseAppPlugin = Boolean(getPluginEntry(plugins, '@react-native-firebase/app'));
+  const hasFirebaseAnalyticsPlugin = Boolean(getPluginEntry(plugins, '@react-native-firebase/analytics'));
+  const firebaseWithoutAdIdSupport = firebaseAnalyticsOptions?.ios?.withoutAdIdSupport === true;
 
   let latestApprovedVersion = await fetchLatestApprovedVersion(bundleIdentifier);
   let source = 'App Store Connect API';
@@ -219,6 +251,14 @@ async function main() {
   console.log('[preflight:ios] local Expo version:', localVersion);
   console.log('[preflight:ios] EAS version source:', appVersionSource);
   console.log('[preflight:ios] production autoIncrement:', productionAutoIncrement);
+  console.log('[preflight:ios] iOS Firebase file present:', iosFirebaseFileExists);
+  console.log('[preflight:ios] Android Firebase file present:', androidFirebaseFileExists);
+  console.log('[preflight:ios] iOS googleServicesFile:', resolvedConfig.ios?.googleServicesFile);
+  console.log('[preflight:ios] Android googleServicesFile:', resolvedConfig.android?.googleServicesFile);
+  console.log('[preflight:ios] Firebase packages installed:', hasFirebaseAppPackage && hasFirebaseAnalyticsPackage);
+  console.log('[preflight:ios] Firebase plugins configured:', hasFirebaseAppPlugin && hasFirebaseAnalyticsPlugin);
+  console.log('[preflight:ios] Firebase iOS without Ad ID support:', firebaseWithoutAdIdSupport);
+  console.log('[preflight:ios] ATT plugin/dependency absent:', !hasTrackingTransparencyPlugin && !hasTrackingTransparencyDependency);
 
   if (!latestApprovedVersion) {
     printError('App Store Connect credentials are unavailable, and no explicit fallback confirmation was provided.');
@@ -232,6 +272,36 @@ async function main() {
     printError(
       `Blocked production iOS build. Local Expo version ${localVersion} must be greater than latest approved App Store version ${latestApprovedVersion} (${source}).`,
     );
+    process.exit(1);
+  }
+
+  if (!iosFirebaseFileExists || !androidFirebaseFileExists) {
+    printError('Firebase configuration files are missing.');
+    process.exit(1);
+  }
+
+  if (resolvedConfig.ios?.googleServicesFile !== IOS_FIREBASE_FILE) {
+    printError(`iOS googleServicesFile must be ${IOS_FIREBASE_FILE}; resolved ${resolvedConfig.ios?.googleServicesFile || 'missing'}.`);
+    process.exit(1);
+  }
+
+  if (resolvedConfig.android?.googleServicesFile !== ANDROID_FIREBASE_FILE) {
+    printError(`Android googleServicesFile must be ${ANDROID_FIREBASE_FILE}; resolved ${resolvedConfig.android?.googleServicesFile || 'missing'}.`);
+    process.exit(1);
+  }
+
+  if (!hasFirebaseAppPackage || !hasFirebaseAnalyticsPackage || !hasFirebaseAppPlugin || !hasFirebaseAnalyticsPlugin) {
+    printError('React Native Firebase packages/plugins are not fully configured.');
+    process.exit(1);
+  }
+
+  if (!firebaseWithoutAdIdSupport) {
+    printError('Firebase Analytics iOS plugin must use withoutAdIdSupport=true.');
+    process.exit(1);
+  }
+
+  if (hasTrackingTransparencyPlugin || hasTrackingTransparencyDependency || userTrackingPurpose) {
+    printError('ATT/tracking transparency configuration must remain absent.');
     process.exit(1);
   }
 

@@ -21,6 +21,8 @@ export type SingularAppEventName =
   | 'onboarding_complete'
   | 'paywall_view';
 
+export type SingularStandardEventName = 'sngStartTrial';
+
 export type SingularControllerDependencies = {
   platform: SingularPlatform;
   appOwnership: SingularAppOwnership;
@@ -211,7 +213,7 @@ export function createSingularController(deps: SingularControllerDependencies) {
     }
   };
 
-  const trackEvent = async (name: SingularAppEventName): Promise<void> => {
+  const trackEvent = async (name: SingularAppEventName | SingularStandardEventName): Promise<void> => {
     const ready = await initialize();
     if (!ready) {
       return;

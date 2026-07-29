@@ -20,6 +20,7 @@ import {
 } from '@/services/subscription/androidPurchaseSelector';
 import { syncMetaAnonymousIdToRevenueCat } from '@/services/analytics/metaRevenueCatAttribution';
 import { syncFirebaseAppInstanceIdToRevenueCat } from '@/services/analytics/firebaseRevenueCatAttribution';
+import { trackSingularTrialStartedOnce } from '@/services/analytics/singularTrialStartTracking';
 import type { SubscriptionPeriod } from '@/types/subscription';
 import type {
   PurchasesOffering,
@@ -46,6 +47,7 @@ export type CustomerInfo = {
       productIdentifier?: string;
       productPlanIdentifier?: string | null;
       periodType?: string;
+      latestPurchaseDateMillis?: number | null;
       willRenew?: boolean;
       billingIssueDetectedAt?: string | null;
       unsubscribeDetectedAt?: string | null;
@@ -56,6 +58,7 @@ export type CustomerInfo = {
       productIdentifier?: string;
       productPlanIdentifier?: string | null;
       periodType?: string;
+      latestPurchaseDateMillis?: number | null;
       willRenew?: boolean;
       billingIssueDetectedAt?: string | null;
       unsubscribeDetectedAt?: string | null;
@@ -363,6 +366,7 @@ export async function purchasePackage(
     if ((Platform.OS === 'android' || emptyClassification) && emptyClassification && typeof Purchases.syncPurchases === 'function') {
       customerInfo = await syncPurchasesIfAvailable(Purchases, 'purchase_missing_entitlement') ?? customerInfo;
     }
+    void trackSingularTrialStartedOnce(customerInfo);
     return customerInfo;
   } catch (error) {
     let syncedCustomerInfo: CustomerInfo | null = null;
@@ -501,5 +505,5 @@ export function getActivePeriodType(info: CustomerInfo | null): 'monthly' | 'yea
 export function isTrialActive(info: CustomerInfo | null): boolean {
   if (!info) return false;
   const ent = info.entitlements.active[REVENUECAT_ENTITLEMENT_ID];
-  return ent?.periodType === 'TRIAL';
+  return ent?.periodType?.trim().toUpperCase() === 'TRIAL';
 }

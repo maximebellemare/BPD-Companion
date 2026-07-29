@@ -89,9 +89,11 @@ export async function assertSingularIntegrationRegressionScenarios(): Promise<tr
   await controller.trackEvent('sign_up');
   await controller.trackEvent('onboarding_complete');
   await controller.trackEvent('paywall_view');
+  await controller.trackEvent('sngStartTrial');
   assert(calls.includes('event:sign_up'), 'sign_up event is tracked');
   assert(calls.includes('event:onboarding_complete'), 'onboarding_complete event is tracked');
   assert(calls.includes('event:paywall_view'), 'paywall_view event is tracked');
+  assert(calls.includes('event:sngStartTrial'), 'Singular standard trial-start event is tracked');
 
   const missingEnvCalls: string[] = [];
   const missingEnvController = createSingularController({

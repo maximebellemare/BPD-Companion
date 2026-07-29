@@ -90,6 +90,7 @@ export async function assertSingularIntegrationRegressionScenarios(): Promise<tr
   await controller.trackEvent('onboarding_complete');
   await controller.trackEvent('paywall_view');
   await controller.trackEvent('sngStartTrial');
+  assert((await controller.invokeEvent('sngStartTrial')) === true, 'event invocation reports non-throwing SDK call');
   assert(calls.includes('event:sign_up'), 'sign_up event is tracked');
   assert(calls.includes('event:onboarding_complete'), 'onboarding_complete event is tracked');
   assert(calls.includes('event:paywall_view'), 'paywall_view event is tracked');
@@ -121,6 +122,26 @@ export async function assertSingularIntegrationRegressionScenarios(): Promise<tr
   });
   assert((await webController.initialize()) === false, 'web does not initialize');
   assert(webCalls.length === 0, 'web does not touch native API');
+
+  const throwingEventCalls: string[] = [];
+  const throwingEventController = createSingularController({
+    platform: 'android',
+    appOwnership: 'standalone',
+    env: {
+      EXPO_PUBLIC_SINGULAR_SDK_KEY: 'key',
+      EXPO_PUBLIC_SINGULAR_SDK_SECRET: 'secret',
+    },
+    isDevelopment: true,
+    loadNativeApi: async () => ({
+      ...createMockApi(throwingEventCalls),
+      event: (name) => {
+        throwingEventCalls.push(`event:${name}`);
+        throw new Error('Native event invocation failed');
+      },
+    }),
+  });
+  assert((await throwingEventController.invokeEvent('sngStartTrial')) === false, 'throwing SDK event invocation reports false');
+  assert(throwingEventCalls.includes('event:sngStartTrial'), 'throwing event invocation is attempted once');
 
   return true;
 }

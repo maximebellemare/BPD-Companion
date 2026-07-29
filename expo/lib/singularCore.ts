@@ -12,7 +12,7 @@ export type SingularNativeApi = {
   init: (config: unknown) => void | Promise<void>;
   setCustomUserId: (userId: string) => void | Promise<void>;
   unsetCustomUserId: () => void | Promise<void>;
-  event: (name: string) => void | Promise<void>;
+  event: (name: string) => void;
   enableLogging?: (config: unknown) => void | Promise<void>;
 };
 
@@ -22,6 +22,14 @@ export type SingularAppEventName =
   | 'paywall_view';
 
 export type SingularStandardEventName = 'sngStartTrial';
+
+export type SingularDiagnosticEventName =
+  | 'trial_track_purchase_success'
+  | 'trial_track_no_entitlement'
+  | 'trial_track_inactive'
+  | 'trial_track_not_trial'
+  | 'trial_track_duplicate'
+  | 'trial_track_event_called';
 
 export type SingularControllerDependencies = {
   platform: SingularPlatform;
@@ -213,19 +221,29 @@ export function createSingularController(deps: SingularControllerDependencies) {
     }
   };
 
-  const trackEvent = async (name: SingularAppEventName | SingularStandardEventName): Promise<void> => {
+  const invokeEvent = async (
+    name: SingularAppEventName | SingularStandardEventName | SingularDiagnosticEventName,
+  ): Promise<boolean> => {
     const ready = await initialize();
     if (!ready) {
-      return;
+      return false;
     }
 
     try {
       const api = await loadNativeApi();
-      await api.event(name);
-      log('[Singular] Event tracked', { name });
+      api.event(name);
+      log('[Singular] Event invocation completed', { name });
+      return true;
     } catch (error) {
       warn('[Singular] Failed to track event', error);
+      return false;
     }
+  };
+
+  const trackEvent = async (
+    name: SingularAppEventName | SingularStandardEventName | SingularDiagnosticEventName,
+  ): Promise<void> => {
+    await invokeEvent(name);
   };
 
   const getState = (): SingularRuntimeState => ({
@@ -244,6 +262,7 @@ export function createSingularController(deps: SingularControllerDependencies) {
     initialize,
     setCustomUserId,
     clearCustomUserId,
+    invokeEvent,
     trackEvent,
     getState,
   };

@@ -42,5 +42,6 @@ export const singular = createSingularController({
 export const initializeSingular = singular.initialize;
 export const setSingularCustomUserId = singular.setCustomUserId;
 export const clearSingularCustomUserId = singular.clearCustomUserId;
+export const invokeSingularEvent = singular.invokeEvent;
 export const trackSingularEvent = singular.trackEvent;
 export const getSingularRuntimeState = singular.getState;

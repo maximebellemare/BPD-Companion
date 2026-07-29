@@ -48,6 +48,7 @@ export type CustomerInfo = {
       productPlanIdentifier?: string | null;
       periodType?: string;
       latestPurchaseDateMillis?: number | null;
+      isSandbox?: boolean | null;
       willRenew?: boolean;
       billingIssueDetectedAt?: string | null;
       unsubscribeDetectedAt?: string | null;
@@ -59,6 +60,7 @@ export type CustomerInfo = {
       productPlanIdentifier?: string | null;
       periodType?: string;
       latestPurchaseDateMillis?: number | null;
+      isSandbox?: boolean | null;
       willRenew?: boolean;
       billingIssueDetectedAt?: string | null;
       unsubscribeDetectedAt?: string | null;

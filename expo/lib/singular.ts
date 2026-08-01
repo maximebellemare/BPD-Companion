@@ -6,16 +6,19 @@ import {
 } from '@/lib/singularCore';
 
 type SingularModule = typeof import('singular-react-native');
+type NativeSingularModule = typeof import('singular-react-native/js/NativeSingular');
 
 async function loadSingularNativeApi(): Promise<SingularNativeApi> {
   const module: SingularModule = await import('singular-react-native');
+  const nativeModule: NativeSingularModule = await import('singular-react-native/js/NativeSingular');
+  const NativeSingular = nativeModule.default;
 
   return {
     createConfig: (sdkKey, sdkSecret) => new module.SingularConfig(sdkKey, sdkSecret),
     init: (config) => module.Singular.init(config as InstanceType<typeof module.SingularConfig>),
     setCustomUserId: (userId) => module.Singular.setCustomUserId(userId),
     unsetCustomUserId: () => module.Singular.unsetCustomUserId(),
-    event: (name) => module.Singular.event(name),
+    event: (name) => NativeSingular.event(name),
     enableLogging: (config) => {
       if (config instanceof module.SingularConfig) {
         config.withLoggingEnabled();

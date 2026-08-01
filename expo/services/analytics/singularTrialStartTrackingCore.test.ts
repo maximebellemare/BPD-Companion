@@ -142,6 +142,26 @@ export async function assertSingularTrialStartTrackingRegressionScenarios(): Pro
   assert(androidResult.status === 'sent', 'Android MakePurchaseResult customerInfo sends trial event');
   assert(countEvents(androidResultEvents, SINGULAR_START_TRIAL_EVENT) === 1, 'helper receives CustomerInfo, not whole MakePurchaseResult wrapper');
 
+  const iosPurchaseResult = {
+    productIdentifier: 'com.maximebellemare.bpdcompanion.yearly',
+    customerInfo: createCustomerInfo({
+      periodType: 'TRIAL',
+      productIdentifier: 'com.maximebellemare.bpdcompanion.yearly',
+      latestPurchaseDateMillis: 14,
+    }),
+  };
+  const iosResultEvents: string[] = [];
+  const iosResultTracker = createSingularTrialStartTracker({
+    storage: createStorage(),
+    invokeEvent: async (name) => {
+      iosResultEvents.push(name);
+      return true;
+    },
+  });
+  const iosResult = await iosResultTracker(iosPurchaseResult.customerInfo);
+  assert(iosResult.status === 'sent', 'iOS MakePurchaseResult customerInfo sends trial event');
+  assert(countEvents(iosResultEvents, SINGULAR_START_TRIAL_EVENT) === 1, 'iOS trial purchase sends sngStartTrial once');
+
   const diagnosticEvents: string[] = [];
   const diagnosticStorage = createStorage();
   const diagnosticTracker = createSingularTrialStartTracker({

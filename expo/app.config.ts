@@ -45,6 +45,7 @@ export default ({ config }: ConfigContext) => {
   const configuredPlugins = [
     'react-native-fbsdk-next',
     'expo-localization',
+    'expo-build-properties',
     '@react-native-firebase/app',
     '@react-native-firebase/analytics',
   ].reduce<unknown[]>(
@@ -57,6 +58,18 @@ export default ({ config }: ConfigContext) => {
     plugins: [
       ...configuredPlugins,
       'expo-localization',
+      [
+        'expo-build-properties',
+        {
+          ios: {
+            useFrameworks: 'static',
+            forceStaticLinking: [
+              'RNFBApp',
+              'RNFBAnalytics',
+            ],
+          },
+        },
+      ],
       '@react-native-firebase/app',
       [
         '@react-native-firebase/analytics',

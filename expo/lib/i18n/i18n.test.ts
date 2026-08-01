@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
 import { getAiLanguageInstruction, i18n } from './index';
-import { normalizeLanguageTag, resolveLanguage } from './languageStorage';
+import {
+  isLanguageSelectable,
+  normalizeLanguageTag,
+  resolveLanguage,
+  SPANISH_LANGUAGE_SELECTION_ENABLED,
+} from './languageStorage';
 
 async function run() {
   assert.equal(normalizeLanguageTag('es'), 'es');
@@ -11,8 +16,11 @@ async function run() {
   assert.equal(normalizeLanguageTag('en-US'), 'en');
   assert.equal(normalizeLanguageTag('fr-CA'), null);
 
-  assert.deepEqual(resolveLanguage({ manualOverride: 'es-MX' }), { language: 'es', source: 'manual' });
-  assert.deepEqual(resolveLanguage({ deviceLocales: [{ languageTag: 'es-AR' }] }), { language: 'es', source: 'device' });
+  assert.equal(SPANISH_LANGUAGE_SELECTION_ENABLED, false);
+  assert.equal(isLanguageSelectable('en'), true);
+  assert.equal(isLanguageSelectable('es'), false);
+  assert.deepEqual(resolveLanguage({ manualOverride: 'es-MX' }), { language: 'en', source: 'fallback' });
+  assert.deepEqual(resolveLanguage({ deviceLocales: [{ languageTag: 'es-AR' }] }), { language: 'en', source: 'fallback' });
   assert.deepEqual(resolveLanguage({ deviceLocales: [{ languageTag: 'fr-CA' }] }), { language: 'en', source: 'fallback' });
 
   await i18n.changeLanguage('es');

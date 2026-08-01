@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import { i18n, SupportedLanguage } from '@/lib/i18n';
 import {
   DEFAULT_LANGUAGE,
+  isLanguageSelectable,
   LanguageSource,
   resolveInitialLanguage,
   setStoredLanguageOverride,
@@ -39,10 +40,11 @@ export function LocalizationProvider({ children }: { children: React.ReactNode }
   }, []);
 
   const setLanguage = useCallback(async (nextLanguage: SupportedLanguage) => {
-    await i18n.changeLanguage(nextLanguage);
-    setLanguageState(nextLanguage);
+    const selectableLanguage = isLanguageSelectable(nextLanguage) ? nextLanguage : DEFAULT_LANGUAGE;
+    await i18n.changeLanguage(selectableLanguage);
+    setLanguageState(selectableLanguage);
     setSource('manual');
-    void setStoredLanguageOverride(nextLanguage);
+    void setStoredLanguageOverride(selectableLanguage);
   }, []);
 
   const value = useMemo<LocalizationContextValue>(() => ({

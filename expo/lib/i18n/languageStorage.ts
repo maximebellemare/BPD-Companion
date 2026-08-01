@@ -4,6 +4,10 @@ import type { SupportedLanguage } from './resources';
 
 export const DEFAULT_LANGUAGE: SupportedLanguage = 'en';
 export const SUPPORTED_LANGUAGES: SupportedLanguage[] = ['en', 'es'];
+export const SPANISH_LANGUAGE_SELECTION_ENABLED = false;
+export const SELECTABLE_LANGUAGES: SupportedLanguage[] = SPANISH_LANGUAGE_SELECTION_ENABLED
+  ? SUPPORTED_LANGUAGES
+  : [DEFAULT_LANGUAGE];
 export const LANGUAGE_STORAGE_KEY = 'bpd_app_language';
 
 export type LanguageSource = 'manual' | 'device' | 'fallback';
@@ -22,21 +26,25 @@ export function normalizeLanguageTag(tag: string | null | undefined): SupportedL
   return null;
 }
 
+export function isLanguageSelectable(language: SupportedLanguage): boolean {
+  return SELECTABLE_LANGUAGES.includes(language);
+}
+
 export function resolveLanguage(params: {
   manualOverride?: string | null;
   profileLanguage?: string | null;
   deviceLocales?: { languageTag?: string | null; languageCode?: string | null }[] | null;
 }): ResolvedLanguage {
   const manual = normalizeLanguageTag(params.manualOverride);
-  if (manual) return { language: manual, source: 'manual' };
+  if (manual && isLanguageSelectable(manual)) return { language: manual, source: 'manual' };
 
   const profile = normalizeLanguageTag(params.profileLanguage);
-  if (profile) return { language: profile, source: 'manual' };
+  if (profile && isLanguageSelectable(profile)) return { language: profile, source: 'manual' };
 
   const deviceLocales = params.deviceLocales ?? [];
   for (const locale of deviceLocales) {
     const language = normalizeLanguageTag(locale.languageTag ?? locale.languageCode);
-    if (language) return { language, source: 'device' };
+    if (language && isLanguageSelectable(language)) return { language, source: 'device' };
   }
 
   return { language: DEFAULT_LANGUAGE, source: 'fallback' };

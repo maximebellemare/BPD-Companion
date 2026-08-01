@@ -59,6 +59,7 @@ import {
 } from '@/services/community/communityProfileService';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useTranslation } from 'react-i18next';
+import { SELECTABLE_LANGUAGES, SPANISH_LANGUAGE_SELECTION_ENABLED } from '@/lib/i18n/languageStorage';
 
 const OWNER_QA_EMAIL = 'valmontmarketing@gmail.com';
 const AVATAR_COLORS = ['#2E2A72', '#3B82F6', '#14B8A6', '#67E8F9', '#059669'];
@@ -669,42 +670,45 @@ export default function ProfileScreen() {
         <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
           <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>{t('profile:sections.appearance')}</Text>
           <View style={[styles.card, { backgroundColor: palette.card, borderColor: palette.borderLight }]}>
-            <View style={styles.themeHeader}>
-              <View style={styles.rowIcon}>
-                <Globe2 size={17} color={Colors.brandTeal} />
-              </View>
-              <View style={styles.rowText}>
-                <Text style={[styles.rowTitle, { color: palette.text }]}>{t('profile:appearance.language')}</Text>
-                <Text style={[styles.rowDescription, { color: palette.textSecondary }]}>
-                  {language === 'es' ? t('common:spanish') : t('common:english')}
-                </Text>
-              </View>
-            </View>
-            <View style={[styles.segmentedControl, { backgroundColor: palette.surface }]}>
-              {[
-                { id: 'en', label: t('common:english') },
-                { id: 'es', label: t('common:spanish') },
-              ].map((option) => {
-                const active = language === option.id;
-                return (
-                  <TouchableOpacity
-                    key={option.id}
-                    style={[styles.segmentButton, { backgroundColor: palette.surface, borderColor: palette.border }, active && { backgroundColor: palette.primary, borderColor: palette.primary }]}
-                    onPress={() => {
-                      handleHaptic();
-                      void setLanguage(option.id as 'en' | 'es');
-                    }}
-                    activeOpacity={0.8}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: active }}
-                    testID={`profile-language-${option.id}`}
-                  >
-                    <Text style={[styles.segmentText, { color: palette.textSecondary }, active && { color: palette.white }]}>{option.label}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-            <View style={[styles.divider, { backgroundColor: palette.borderLight }]} />
+            {SPANISH_LANGUAGE_SELECTION_ENABLED && (
+              <>
+                <View style={styles.themeHeader}>
+                  <View style={styles.rowIcon}>
+                    <Globe2 size={17} color={Colors.brandTeal} />
+                  </View>
+                  <View style={styles.rowText}>
+                    <Text style={[styles.rowTitle, { color: palette.text }]}>{t('profile:appearance.language')}</Text>
+                    <Text style={[styles.rowDescription, { color: palette.textSecondary }]}>
+                      {language === 'es' ? t('common:spanish') : t('common:english')}
+                    </Text>
+                  </View>
+                </View>
+                <View style={[styles.segmentedControl, { backgroundColor: palette.surface }]}>
+                  {SELECTABLE_LANGUAGES.map((option) => {
+                    const active = language === option;
+                    return (
+                      <TouchableOpacity
+                        key={option}
+                        style={[styles.segmentButton, { backgroundColor: palette.surface, borderColor: palette.border }, active && { backgroundColor: palette.primary, borderColor: palette.primary }]}
+                        onPress={() => {
+                          handleHaptic();
+                          void setLanguage(option);
+                        }}
+                        activeOpacity={0.8}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: active }}
+                        testID={`profile-language-${option}`}
+                      >
+                        <Text style={[styles.segmentText, { color: palette.textSecondary }, active && { color: palette.white }]}>
+                          {option === 'es' ? t('common:spanish') : t('common:english')}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+                <View style={[styles.divider, { backgroundColor: palette.borderLight }]} />
+              </>
+            )}
             <View style={styles.themeHeader}>
               <View style={styles.rowIcon}>
                 <Sun size={17} color={Colors.primary} />

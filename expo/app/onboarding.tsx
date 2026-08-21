@@ -6,6 +6,7 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   TouchableOpacity,
@@ -19,6 +20,7 @@ import {
   ChevronLeft,
   ChevronRight,
   HeartHandshake,
+  Mail,
   MessageCircle,
   Shield,
   Sparkles,
@@ -29,6 +31,9 @@ import Colors from '@/constants/colors';
 import BrandLogo from '@/components/branding/BrandLogo';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
 import { trackSingularEvent } from '@/lib/singular';
+import { attributeAffiliateReferralCode } from '@/lib/supabase/affiliateAttribution';
+import { updateMarketingPreference } from '@/lib/supabase/marketingPreferences';
+import { useAuth } from '@/providers/AuthProvider';
 import { useOnboarding } from '@/providers/OnboardingProvider';
 import { useAppTheme } from '@/providers/ThemeProvider';
 import { useReviewPrompt } from '@/providers/ReviewPromptProvider';
@@ -276,6 +281,7 @@ export default function OnboardingScreen() {
   const { colors } = useAppTheme();
   const { t } = useTranslation(['onboarding', 'common']);
   const { completeOnboarding } = useOnboarding();
+  const { user } = useAuth();
   const { trackEvent } = useAnalytics();
   const { maybeShowReviewPrompt } = useReviewPrompt();
   const [currentStep, setCurrentStep] = useState<number>(0);
@@ -287,9 +293,24 @@ export default function OnboardingScreen() {
   const [customSuccess, setCustomSuccess] = useState<string>('');
   const [isCompleting, setIsCompleting] = useState<boolean>(false);
   const [completionText, setCompletionText] = useState<string>(() => t('onboarding:completion.saving'));
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
+  const [isSavingMarketingPreference, setIsSavingMarketingPreference] = useState(false);
+  const [marketingPreferenceError, setMarketingPreferenceError] = useState<string | null>(null);
+  const [referralCode, setReferralCode] = useState<string>('');
+  const [referralCodeError, setReferralCodeError] = useState<string | null>(null);
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const slideAnim = useRef(new Animated.Value(0)).current;
   const progressAnim = useRef(new Animated.Value(1 / TOTAL_STEPS)).current;
+  const marketingPreferenceUserIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    marketingPreferenceUserIdRef.current = user?.id ?? null;
+    setMarketingOptIn(false);
+    setMarketingPreferenceError(null);
+    setIsSavingMarketingPreference(false);
+    setReferralCode('');
+    setReferralCodeError(null);
+  }, [user?.id]);
 
   const focus = useMemo(
     () => getFocus(reasons, situations, success, [customReason, customSituation, customSuccess]),
@@ -355,6 +376,25 @@ export default function OnboardingScreen() {
     }
   }, []);
 
+  const handleMarketingOptInChange = useCallback(async (nextOptIn: boolean) => {
+    if (!user?.id || isSavingMarketingPreference) return;
+    const previous = marketingOptIn;
+    setMarketingOptIn(nextOptIn);
+    setMarketingPreferenceError(null);
+    setIsSavingMarketingPreference(true);
+    try {
+      await updateMarketingPreference(user.id, nextOptIn, 'onboarding');
+    } catch {
+      if (marketingPreferenceUserIdRef.current !== user.id) return;
+      setMarketingOptIn(previous);
+      setMarketingPreferenceError(t('onboarding:membership.marketingSaveError'));
+    } finally {
+      if (marketingPreferenceUserIdRef.current === user.id) {
+        setIsSavingMarketingPreference(false);
+      }
+    }
+  }, [isSavingMarketingPreference, marketingOptIn, t, user?.id]);
+
   const saveAndRoute = useCallback(async (skipped: boolean) => {
     if (isCompleting) return;
     if (Platform.OS !== 'web') {
@@ -365,6 +405,22 @@ export default function OnboardingScreen() {
     const timer = createAccessFlowTimer('onboarding');
     const profile = buildProfile(reasons, situations, success, customReason, customSituation, customSuccess, skipped);
     try {
+      const normalizedReferralCode = referralCode.trim();
+      if (normalizedReferralCode && user?.id) {
+        const attribution = await attributeAffiliateReferralCode(normalizedReferralCode, 'manual_code');
+        if (!attribution.ok && attribution.reason !== 'already_attributed') {
+          setReferralCodeError(
+            attribution.reason === 'invalid_code'
+              ? t('onboarding:membership.referralInvalid')
+              : attribution.reason === 'self_referral'
+                ? t('onboarding:membership.referralSelf')
+                : t('onboarding:membership.referralSaveError'),
+          );
+          setIsCompleting(false);
+          return;
+        }
+        void trackEvent('affiliate_referral_code_applied', { source: 'onboarding', result: attribution.reason });
+      }
       await completeOnboarding(profile);
       trackEvent(skipped ? 'onboarding_skipped' : 'onboarding_completed', {
         version: VERSION,
@@ -382,7 +438,7 @@ export default function OnboardingScreen() {
       Alert.alert(t('onboarding:completion.errorTitle'), t('onboarding:completion.errorBody'));
       setIsCompleting(false);
     }
-  }, [completeOnboarding, customReason, customSituation, customSuccess, isCompleting, maybeShowReviewPrompt, reasons, router, situations, success, t, trackEvent]);
+  }, [completeOnboarding, customReason, customSituation, customSuccess, isCompleting, maybeShowReviewPrompt, reasons, referralCode, router, situations, success, t, trackEvent, user?.id]);
 
   const canContinue = useMemo(() => {
     if (currentStep === 1) return reasons.length > 0 && (!reasons.includes('other') || reasons.length > 1 || cleanCustom(customReason).length > 0);
@@ -490,7 +546,20 @@ export default function OnboardingScreen() {
               colors={colors}
             />
           ) : (
-            <MembershipIntroStep colors={colors} />
+            <MembershipIntroStep
+              colors={colors}
+              showMarketingOptIn={Boolean(user?.id)}
+              marketingOptIn={marketingOptIn}
+              isSavingMarketingPreference={isSavingMarketingPreference}
+              marketingPreferenceError={marketingPreferenceError}
+              onMarketingOptInChange={(value) => void handleMarketingOptInChange(value)}
+              referralCode={referralCode}
+              referralCodeError={referralCodeError}
+              onReferralCodeChange={(value) => {
+                setReferralCode(value);
+                setReferralCodeError(null);
+              }}
+            />
           )}
         </Animated.View>
       </ScrollView>
@@ -711,8 +780,24 @@ function HowItHelpsStep({
 
 function MembershipIntroStep({
   colors,
+  showMarketingOptIn,
+  marketingOptIn,
+  isSavingMarketingPreference,
+  marketingPreferenceError,
+  onMarketingOptInChange,
+  referralCode,
+  referralCodeError,
+  onReferralCodeChange,
 }: {
   colors: ReturnType<typeof useAppTheme>['colors'];
+  showMarketingOptIn: boolean;
+  marketingOptIn: boolean;
+  isSavingMarketingPreference: boolean;
+  marketingPreferenceError: string | null;
+  onMarketingOptInChange: (value: boolean) => void;
+  referralCode: string;
+  referralCodeError: string | null;
+  onReferralCodeChange: (value: string) => void;
 }) {
   const { t } = useTranslation('onboarding');
   const transformationPoints = t('membership.transformations', { returnObjects: true }) as string[];
@@ -746,6 +831,54 @@ function MembershipIntroStep({
       <Text style={[styles.cancelText, { color: colors.textMuted }]}>
         {t('membership.trialNote')}
       </Text>
+      {showMarketingOptIn ? (
+        <View style={[styles.marketingPreferenceCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
+          <View style={[styles.marketingIcon, { backgroundColor: colors.primaryLight }]}>
+            <Mail size={18} color={colors.primary} />
+          </View>
+          <View style={styles.marketingCopy}>
+            <Text style={[styles.marketingTitle, { color: colors.text }]}>{t('membership.marketingTitle')}</Text>
+            <Text style={[styles.marketingDescription, { color: colors.textSecondary }]}>
+              {t('membership.marketingDescription')}
+            </Text>
+            <Text style={[styles.marketingConsentLabel, { color: colors.text }]}>{t('membership.marketingConsentLabel')}</Text>
+            <Text style={[styles.marketingFooter, { color: colors.textMuted }]}>{t('membership.marketingFooter')}</Text>
+            {marketingPreferenceError ? <Text style={styles.marketingError}>{marketingPreferenceError}</Text> : null}
+          </View>
+          <Switch
+            value={marketingOptIn}
+            disabled={isSavingMarketingPreference}
+            onValueChange={onMarketingOptInChange}
+            trackColor={{ false: Colors.border, true: Colors.accentLight }}
+            thumbColor={marketingOptIn ? Colors.accent : Colors.textMuted}
+            accessibilityLabel={t('membership.marketingConsentLabel')}
+            accessibilityHint={`${t('membership.marketingDescription')} ${t('membership.marketingFooter')}`}
+            testID="onboarding-marketing-email-opt-in-switch"
+          />
+        </View>
+      ) : null}
+      {showMarketingOptIn ? (
+        <View style={[styles.referralCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
+          <Text style={[styles.referralTitle, { color: colors.text }]}>{t('membership.referralLabel')}</Text>
+          <Text style={[styles.referralDescription, { color: colors.textSecondary }]}>
+            {t('membership.referralDescription')}
+          </Text>
+          <TextInput
+            value={referralCode}
+            onChangeText={onReferralCodeChange}
+            placeholder={t('membership.referralPlaceholder')}
+            placeholderTextColor={colors.textMuted}
+            autoCapitalize="characters"
+            autoCorrect={false}
+            maxLength={32}
+            style={[styles.referralInput, { color: colors.text, borderColor: colors.borderLight, backgroundColor: colors.surface }]}
+            testID="onboarding-referral-code-input"
+            accessibilityLabel={t('membership.referralLabel')}
+            accessibilityHint={t('membership.referralDescription')}
+          />
+          {referralCodeError ? <Text style={styles.marketingError}>{referralCodeError}</Text> : null}
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -982,6 +1115,82 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontWeight: '700',
     marginTop: 14,
+  },
+  marketingPreferenceCard: {
+    marginTop: 16,
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  marketingIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  marketingCopy: {
+    flex: 1,
+  },
+  marketingTitle: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '900',
+    marginBottom: 4,
+  },
+  marketingDescription: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '700',
+  },
+  marketingConsentLabel: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '900',
+    marginTop: 8,
+  },
+  marketingFooter: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  marketingError: {
+    color: Colors.danger,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '700',
+    marginTop: 6,
+  },
+  referralCard: {
+    marginTop: 12,
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 14,
+  },
+  referralTitle: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '900',
+    marginBottom: 4,
+  },
+  referralDescription: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '700',
+    marginBottom: 10,
+  },
+  referralInput: {
+    minHeight: 46,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: Platform.OS === 'ios' ? 12 : 8,
+    fontSize: 15,
+    fontWeight: '800',
   },
   bottomBar: {
     position: 'absolute',

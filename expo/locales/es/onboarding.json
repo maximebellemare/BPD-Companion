@@ -93,6 +93,15 @@
     "includesTitle": "Tu membresía incluye:",
     "trialNote": "Cancela cuando quieras antes de que terminen los 3 días de prueba. No se te cobrará hasta que termine la prueba.",
     "primary": "Comenzar prueba gratis de 3 días",
+    "marketingTitle": "Aprovecha más tu prueba de BPD Companion",
+    "marketingDescription": "Recibe por correo herramientas prácticas para BPD, novedades y ofertas exclusivas para miembros.",
+    "marketingSaveError": "No se pudo guardar tu preferencia de correo. Puedes actualizarla más tarde en Perfil.",
+    "referralLabel": "Código de referido",
+    "referralDescription": "¿Tienes un código de un creador de BPD Companion? Escríbelo aquí.",
+    "referralPlaceholder": "CODIGOCREADOR",
+    "referralInvalid": "Ese código de creador no está activo. Revisa el código e inténtalo de nuevo.",
+    "referralSelf": "Los códigos de creador no pueden aplicarse a la cuenta del propio creador.",
+    "referralSaveError": "No se pudo aplicar ese código de creador. Puedes continuar sin él.",
     "transformations": [
       "Más calma durante discusiones en vez de reaccionar al instante",
       "Poder entender por qué cambió tu ánimo hoy",
@@ -114,6 +123,8 @@
       "Comunidad",
       "Seguimiento del progreso",
       "Actualizaciones futuras incluidas"
-    ]
+    ],
+    "marketingConsentLabel": "Envíenme correos útiles y ofertas especiales",
+    "marketingFooter": "Opcional. Puedes darte de baja cuando quieras."
   }
 }

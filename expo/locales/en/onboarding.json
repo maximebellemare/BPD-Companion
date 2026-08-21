@@ -93,6 +93,15 @@
     "includesTitle": "Your membership includes:",
     "trialNote": "Cancel anytime before your 3-day trial ends. You won’t be charged until your trial is over.",
     "primary": "Start 3-Day Free Trial",
+    "marketingTitle": "Get more from your BPD Companion trial",
+    "marketingDescription": "Get practical BPD tools, new-feature updates, and member-only offers by email.",
+    "marketingSaveError": "Could not save your email preference. You can update it later in Profile.",
+    "referralLabel": "Referral code",
+    "referralDescription": "Have a code from a BPD Companion creator? Enter it here.",
+    "referralPlaceholder": "CREATORCODE",
+    "referralInvalid": "That creator code is not active. Check the code and try again.",
+    "referralSelf": "Creator codes cannot be applied to the creator's own account.",
+    "referralSaveError": "Could not apply that creator code. You can continue without it.",
     "transformations": [
       "Calmer during arguments instead of reacting instantly",
       "Able to understand why your mood changed today",
@@ -114,6 +123,8 @@
       "Community",
       "Progress tracking",
       "Future updates included"
-    ]
+    ],
+    "marketingConsentLabel": "Send me helpful emails and special offers",
+    "marketingFooter": "Optional. Unsubscribe anytime."
   }
 }

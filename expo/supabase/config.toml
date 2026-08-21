@@ -1,0 +1,8 @@
+[functions.revenuecat-webhook]
+verify_jwt = false
+
+[functions.send-winback-emails]
+verify_jwt = false
+
+[functions.marketing-unsubscribe]
+verify_jwt = false

@@ -450,7 +450,7 @@ export default function UpgradeScreen() {
     if (!hasStoreAccess) return;
     if (isSubscriptionManagement) return;
 
-    if (routeNewTrialToActivationRef.current && state.isTrialActive) {
+    if (routeNewTrialToActivationRef.current) {
       routeNewTrialToActivationRef.current = false;
       if (hasNavigatedAfterAccessRef.current) return;
 
@@ -467,7 +467,6 @@ export default function UpgradeScreen() {
     isSubscriptionManagement,
     navigateToAppOnce,
     router,
-    state.isTrialActive,
     trackEvent,
   ]);
   const [testimonialIndex, setTestimonialIndex] = useState<number>(0);

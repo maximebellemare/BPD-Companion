@@ -37,12 +37,20 @@ export default function TrialFirstWinScreen() {
       await scheduleTrialActivationRemindersAfterFirstWin();
     } finally {
       setScheduling(false);
+      if (router.canDismiss()) {
+        router.dismissAll();
+      }
       router.replace('/(tabs)/(home)' as never);
     }
   };
 
   const continueWithoutReminders = async () => {
     await dismissTrialFirstWin();
+
+    if (router.canDismiss()) {
+      router.dismissAll();
+    }
+
     router.replace('/(tabs)/(home)' as never);
   };
 

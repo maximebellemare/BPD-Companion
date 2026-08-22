@@ -130,7 +130,7 @@ export default function TrialActivationScreen() {
       }
     }
 
-    router.replace(choice.route as never);
+    router.push(choice.route as never);
   };
 
   const skip = () => {

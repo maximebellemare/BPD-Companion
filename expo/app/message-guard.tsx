@@ -1,3 +1,4 @@
+import { claimTrialFirstWin } from '@/services/subscription/trialActivationService';
 import React, { useRef, useEffect, useCallback } from 'react';
 import {
   View,
@@ -374,6 +375,8 @@ export default function MessageGuardScreen() {
     animateTransition();
   }, [step, animateTransition]);
 
+  const trialPauseWasActiveRef = useRef(false);
+
   useEffect(() => {
     if (step === 'pause' && isDelaying) {
       const loop = Animated.loop(
@@ -386,6 +389,30 @@ export default function MessageGuardScreen() {
       return () => loop.stop();
     }
   }, [step, isDelaying, breatheAnim]);
+
+  useEffect(() => {
+    if (step !== 'pause') {
+      trialPauseWasActiveRef.current = false;
+      return;
+    }
+
+    if (isDelaying) {
+      trialPauseWasActiveRef.current = true;
+      return;
+    }
+
+    if (!trialPauseWasActiveRef.current || delayRemaining !== 0) {
+      return;
+    }
+
+    trialPauseWasActiveRef.current = false;
+
+    void claimTrialFirstWin('pause_before_send').then((claimed) => {
+      if (claimed) {
+        router.replace('/trial-first-win' as never);
+      }
+    });
+  }, [delayRemaining, isDelaying, router, step]);
 
   const renderInputStep = () => (
     <>

@@ -1,3 +1,4 @@
+import { claimTrialFirstWin } from '@/services/subscription/trialActivationService';
 import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
@@ -219,10 +220,16 @@ export default function GuidedWalkthroughScreen() {
     setShowFeedback(false);
   }, [tool, toolType, distressBefore, distressAfter]);
 
-  const handleFinish = useCallback(() => {
+  const handleFinish = useCallback(async () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    if (await claimTrialFirstWin(`guided_${toolType ?? 'tool'}`)) {
+      router.replace('/trial-first-win' as never);
+      return;
+    }
+
     router.back();
-  }, [router]);
+  }, [router, toolType]);
 
   if (!tool) {
     return (

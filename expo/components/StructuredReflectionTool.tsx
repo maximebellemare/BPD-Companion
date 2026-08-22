@@ -1,3 +1,4 @@
+import { claimTrialFirstWin } from '@/services/subscription/trialActivationService';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   Platform,
@@ -100,7 +101,7 @@ export default function StructuredReflectionTool({
     setCurrentIndex(index => Math.max(0, index - 1));
   }, [currentIndex, router]);
 
-  const saveEntry = useCallback(() => {
+  const saveEntry = useCallback(async () => {
     const now = Date.now();
     const emotion = responses.emotion || responses.newEmotion || responses.mainEmotion || t('structured.completionReflectionTitle');
     const trigger = responses.trigger || responses.situation || responses.whatHappened || t('structured.completionReflectionTitle');
@@ -125,10 +126,15 @@ export default function StructuredReflectionTool({
     addJournalEntry(entry);
     setSaved(true);
     void trackEvent(`${eventName}_completed`, { step_count: steps.length });
+
     if (Platform.OS !== 'web') {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
-  }, [addJournalEntry, eventName, responses, steps.length, summary, t]);
+
+    if (await claimTrialFirstWin(eventName)) {
+      router.replace('/trial-first-win' as never);
+    }
+  }, [addJournalEntry, eventName, responses, router, steps.length, summary, t]);
 
   const handleNext = useCallback(() => {
     if (!canContinue) return;
@@ -136,7 +142,7 @@ export default function StructuredReflectionTool({
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     if (isLast) {
-      saveEntry();
+      void saveEntry();
       return;
     }
     setCurrentIndex(index => Math.min(steps.length - 1, index + 1));

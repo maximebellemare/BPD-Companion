@@ -1,3 +1,4 @@
+import { claimTrialFirstWin } from '@/services/subscription/trialActivationService';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
@@ -216,9 +217,17 @@ export default function CalmMeDownScreen() {
       emotion: topEmotion ?? 'unknown',
       support_key: supportKey,
     });
+    if (Platform.OS !== 'web') {
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+
+    if (await claimTrialFirstWin('calm_me_down')) {
+      router.replace('/trial-first-win' as never);
+      return;
+    }
+
     setPhase('complete');
-    if (Platform.OS !== 'web') void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-  }, [afterIntensity, beforeIntensity, supportKey, topEmotion, topTrigger, trackEvent]);
+  }, [afterIntensity, beforeIntensity, router, supportKey, topEmotion, topTrigger, trackEvent]);
 
   const close = useCallback(() => {
     clearBreathingTimers();

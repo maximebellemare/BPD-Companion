@@ -327,6 +327,7 @@ export default function UpgradeScreen() {
   const [membershipOptionsTimedOut, setMembershipOptionsTimedOut] = useState<boolean>(false);
   const isNativePurchases = isNativePurchasesPlatform();
   const hasNavigatedAfterAccessRef = useRef<boolean>(false);
+  const routeNewTrialToActivationRef = useRef<boolean>(false);
   const timingRef = useRef(createAccessFlowTimer('paywall'));
   const paywallRenderMarkedRef = useRef<boolean>(false);
   const offeringsReadyMarkedRef = useRef<boolean>(false);
@@ -448,11 +449,26 @@ export default function UpgradeScreen() {
   useEffect(() => {
     if (!hasStoreAccess) return;
     if (isSubscriptionManagement) return;
+
+    if (routeNewTrialToActivationRef.current && state.isTrialActive) {
+      routeNewTrialToActivationRef.current = false;
+      if (hasNavigatedAfterAccessRef.current) return;
+
+      hasNavigatedAfterAccessRef.current = true;
+      trackEvent('trial_activation_started');
+      router.replace('/trial-activation' as never);
+      return;
+    }
+
+    routeNewTrialToActivationRef.current = false;
     navigateToAppOnce();
   }, [
     hasStoreAccess,
     isSubscriptionManagement,
     navigateToAppOnce,
+    router,
+    state.isTrialActive,
+    trackEvent,
   ]);
   const [testimonialIndex, setTestimonialIndex] = useState<number>(0);
 
@@ -562,6 +578,12 @@ export default function UpgradeScreen() {
       return;
     }
     trackEvent('upgrade_clicked', { plan_id: selectedPlanId });
+
+    routeNewTrialToActivationRef.current =
+      primaryAction.kind === 'purchase' &&
+      !hasStoreAccess &&
+      (Platform.OS !== 'android' || !!selected.androidTrialCopy);
+
     subscribe(selected);
   }, [activeManagementUrl, activePeriodForPrimaryAction, activeProductIdentifier, hasStoreAccess, isExpoGo, pendingPlanChange?.targetPeriod, router, selectedPlanId, subscribe, t, trackEvent, plans, offeringStatus, isNativePurchases]);
 
@@ -584,6 +606,8 @@ export default function UpgradeScreen() {
       router.replace('/');
       return;
     }
+    routeNewTrialToActivationRef.current = false;
+
     restore()
       .then((active) => {
         if (active) {

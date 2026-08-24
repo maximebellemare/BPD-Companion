@@ -405,6 +405,7 @@ export default function UpgradeScreen() {
   const routeNewTrialToActivationRef = useRef<boolean>(false);
   const timingRef = useRef(createAccessFlowTimer('paywall'));
   const paywallRenderMarkedRef = useRef<boolean>(false);
+  const controlPaywallImpressionTrackedRef = useRef<boolean>(false);
   const offeringsReadyMarkedRef = useRef<boolean>(false);
   const managementInitialPlanAppliedRef = useRef<boolean>(false);
   const hasUserSelectedPlanRef = useRef<boolean>(false);
@@ -489,6 +490,7 @@ export default function UpgradeScreen() {
     activeAccountRef.current = accountKey;
     hasUserSelectedPlanRef.current = false;
     managementInitialPlanAppliedRef.current = false;
+    controlPaywallImpressionTrackedRef.current = false;
     setUseRevenueCatAcquisitionPaywall(false);
   }, [user?.id]);
 
@@ -518,6 +520,43 @@ export default function UpgradeScreen() {
       trackEvent('upgrade_screen_anchored', { anchor });
     }
   }, [trackEvent, anchor]);
+
+  useEffect(() => {
+    if (controlPaywallImpressionTrackedRef.current) return;
+    if (isSubscriptionManagement) return;
+    if (isExpoGo) return;
+    if (!isNativePurchases) return;
+    if (isLoading) return;
+    if (hasStoreAccess) return;
+    if (offeringStatus !== 'ready') return;
+
+    // Variant B uses RevenueCat Paywalls, which tracks impressions automatically.
+    if (offeringIdentifier === OUTCOME_PAYWALL_OFFERING_ID) return;
+
+    controlPaywallImpressionTrackedRef.current = true;
+
+    void import('react-native-purchases')
+      .then(({ default: Purchases }) =>
+        Purchases.trackCustomPaywallImpression({
+          paywallId: 'bpd_current_paywall_control_v1',
+        }),
+      )
+      .catch((error) => {
+        if (__DEV__) {
+          console.log('[Upgrade] custom paywall impression failed', {
+            message: error instanceof Error ? error.message : String(error),
+          });
+        }
+      });
+  }, [
+    hasStoreAccess,
+    isExpoGo,
+    isLoading,
+    isNativePurchases,
+    isSubscriptionManagement,
+    offeringIdentifier,
+    offeringStatus,
+  ]);
 
   useEffect(() => {
     if (offeringsReadyMarkedRef.current || offeringStatus !== 'ready') return;

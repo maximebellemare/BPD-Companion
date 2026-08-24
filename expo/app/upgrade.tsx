@@ -35,7 +35,11 @@ import { useAnalytics } from '@/providers/AnalyticsProvider';
 import { useAuth } from '@/providers/AuthProvider';
 import { usePersonalization } from '@/hooks/usePersonalization';
 import BrandLogo from '@/components/branding/BrandLogo';
-import { isNativePurchasesPlatform } from '@/services/subscription/purchasesService';
+import {
+  PURCHASE_SYNC_PENDING_MESSAGE,
+  isNativePurchasesPlatform,
+} from '@/services/subscription/purchasesService';
+import type { RevenueCatAccessKind } from '@/services/subscription/purchasesService';
 import { useAppTheme } from '@/providers/ThemeProvider';
 import { trackSingularEvent } from '@/lib/singular';
 import { createAccessFlowTimer } from '@/services/performance/accessFlowTiming';
@@ -46,15 +50,30 @@ import {
   getInitialManageSelectedPlanId,
   getMembershipPrimaryAction,
 } from '@/services/subscription/membershipPrimaryActionModel';
-import { openSubscriptionManagement } from '@/services/subscription/manageSubscriptionService';
+import {
+  openBillingPaymentManagement,
+  openCustomerCenterAfterModalDismiss,
+  openCustomerCenterOrSubscriptionManagement,
+} from '@/services/subscription/manageSubscriptionService';
 import {
   shouldRefreshMembershipPricingOnAppStateChange,
   shouldRefreshMembershipPricingOnManageOpen,
 } from '@/services/subscription/membershipPricingRefreshModel';
+import { trackBillingIssueBannerViewedOnce } from '@/services/subscription/billingIssueRecoveryAnalytics';
+import { getBillingIssueAnalyticsMetadata } from '@/services/subscription/billingIssueRecoveryModel';
+import { BILLING_ISSUE_MANAGEMENT_RETURN_REASON } from '@/services/subscription/customerInfoRefreshModel';
+import {
+  shouldShowTrialCopyForSelectedPlan,
+  shouldShowTrialEndingReminderCopy,
+} from '@/services/subscription/trialReminderModel';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '@/hooks/useLanguage';
 import { formatDateForLanguage } from '@/lib/i18n';
-import type { SubscriptionPlan, SubscriptionPeriod } from '@/types/subscription';
+import type { SubscriptionPlan, SubscriptionPeriod, SubscriptionPlanPeriod } from '@/types/subscription';
+import RevenueCatUI from 'react-native-purchases-ui';
+import type { CustomerInfo, PurchasesPackage } from 'react-native-purchases';
+
+const OUTCOME_PAYWALL_OFFERING_ID = 'paywall_outcome_v1';
 
 const TESTIMONIALS = [
   {
@@ -166,9 +185,10 @@ const MEMBERSHIP_FEATURES = [
   },
 ];
 
-function getLocalizedPlanName(t: (key: string, options?: Record<string, unknown>) => string, period: SubscriptionPeriod | null | undefined): string | null {
+function getLocalizedPlanName(t: (key: string, options?: Record<string, unknown>) => string, period: SubscriptionPlanPeriod | null | undefined): string | null {
   if (period === 'monthly') return t('plans.monthly');
   if (period === 'yearly') return t('plans.yearly');
+  if (period === 'lifetime') return t('plans.lifetime');
   return null;
 }
 
@@ -181,10 +201,21 @@ function getLocalizedPrimaryActionLabel(
   const plan = getLocalizedPlanName(t, selectedPlan?.period) ?? selectedPlan?.name ?? '';
   if (primaryAction.kind === 'continue') return t('actions.continue');
   if (primaryAction.kind === 'manage') return t('actions.manage');
+  if (primaryAction.kind === 'owned') return t('actions.lifetimeActive');
   if (primaryAction.kind === 'scheduled') return t('actions.scheduled', { plan });
   if (primaryAction.kind === 'switch') return t('actions.switch', { plan });
+  if (selectedPlan?.period === 'lifetime' && primaryAction.kind === 'purchase') return t('actions.purchaseLifetime');
   if (primaryAction.kind === 'purchase') return shouldShowTrialCopy ? t('actions.purchaseTrial') : t('actions.purchaseMembership');
   return t('actions.loading');
+}
+
+function getPlanCadenceLabel(
+  t: (key: string, options?: Record<string, unknown>) => string,
+  period: SubscriptionPlanPeriod,
+): string {
+  if (period === 'monthly') return t('perMonth');
+  if (period === 'yearly') return t('perYear');
+  return t('payOnce');
 }
 
 function getMembershipFeatureTranslationKey(id: string): string {
@@ -197,12 +228,15 @@ function getLocalizedStatusCopy(params: {
   hasStoreAccess: boolean;
   isEntitlementActive: boolean;
   isTrialActive: boolean;
-  currentPeriod: SubscriptionPeriod | null;
+  currentPeriod: SubscriptionPlanPeriod | null;
   pendingTargetPeriod?: SubscriptionPeriod | null;
   pendingEffectiveDateLabel?: string | null;
   activeExpirationDateLabel?: string | null;
   activeWillRenew?: boolean | null;
   billingIssueDateLabel?: string | null;
+  billingIssueRecoveryKind?: 'active_grace' | 'inactive_billing_issue' | null;
+  billingIssueRecoveryStore?: string | null;
+  accessKind?: RevenueCatAccessKind;
   inactiveExpirationDateLabel?: string | null;
   trialDaysRemaining: number;
   shouldShowTrialCopy: boolean;
@@ -212,6 +246,7 @@ function getLocalizedStatusCopy(params: {
   const t = params.t;
   const currentPlanLabel = getLocalizedPlanName(t, params.currentPeriod);
   const pendingTargetLabel = getLocalizedPlanName(t, params.pendingTargetPeriod);
+  const accessKind = params.accessKind ?? 'none';
   const heroTitle = params.hasStoreAccess || (params.isSubscriptionManagement && params.isMembershipLoading)
     ? t('status.yourMembership')
     : params.shouldShowTrialCopy
@@ -233,13 +268,36 @@ function getLocalizedStatusCopy(params: {
     };
   }
 
+  if (params.hasStoreAccess && accessKind === 'support_grant') {
+    return {
+      heroTitle,
+      plansTitle,
+      title: t('status.membershipActive'),
+      body: params.activeExpirationDateLabel
+        ? t('status.supportGrantActiveUntil', { date: params.activeExpirationDateLabel })
+        : t('status.supportGrantActive'),
+    };
+  }
+
   if (params.hasStoreAccess && currentPlanLabel) {
+    if (params.currentPeriod === 'lifetime' || accessKind === 'purchased_lifetime') {
+      return {
+        heroTitle,
+        plansTitle,
+        title: t('status.membershipActive'),
+        body: t('status.lifetimeActive'),
+      };
+    }
+
     if (params.billingIssueDateLabel) {
       return {
         heroTitle,
         plansTitle,
         title: t('status.billingIssue'),
-        body: t('status.billing', { plan: currentPlanLabel, dateText: ` ${params.billingIssueDateLabel}` }),
+        body: t('status.billing', {
+          plan: currentPlanLabel,
+          dateText: params.billingIssueDateLabel ? t('status.billingDateText', { date: params.billingIssueDateLabel }) : '',
+        }),
       };
     }
     if (params.activeWillRenew === false) {
@@ -270,6 +328,18 @@ function getLocalizedStatusCopy(params: {
 
   if (params.isEntitlementActive) {
     return { heroTitle, plansTitle, title: t('status.membershipActive'), body: t('status.fullAccess') };
+  }
+
+  if (params.billingIssueRecoveryKind === 'inactive_billing_issue') {
+    const bodyKey = params.billingIssueRecoveryStore === 'APP_STORE'
+      ? 'status.inactiveBillingIssueBodyApple'
+      : 'status.inactiveBillingIssueBody';
+    return {
+      heroTitle: t('status.yourMembership'),
+      plansTitle: t('status.recoveryPlan'),
+      title: t('status.inactiveBillingIssueTitle'),
+      body: t(bodyKey),
+    };
   }
 
   if (params.inactiveExpirationDateLabel) {
@@ -304,7 +374,9 @@ export default function UpgradeScreen() {
     activeManagementUrl,
     activeWillRenew,
     activeBillingIssueDetectedAt,
+    billingIssueRecoveryState,
     inactiveExpirationAt,
+    revenueCatAccessKind,
     subscribe,
     restore,
     isLoading,
@@ -313,6 +385,7 @@ export default function UpgradeScreen() {
     state,
     pendingPlanChange,
     plans,
+    offeringIdentifier,
     offeringStatus,
     purchaseError,
     restoreError,
@@ -324,6 +397,8 @@ export default function UpgradeScreen() {
   const { trackEvent } = useAnalytics();
   const [selectedPlanId, setSelectedPlanId] = useState<string>('yearly');
   const [restoreNotice, setRestoreNotice] = useState<string | null>(null);
+  const [useRevenueCatAcquisitionPaywall, setUseRevenueCatAcquisitionPaywall] =
+    useState<boolean>(false);
   const [membershipOptionsTimedOut, setMembershipOptionsTimedOut] = useState<boolean>(false);
   const isNativePurchases = isNativePurchasesPlatform();
   const hasNavigatedAfterAccessRef = useRef<boolean>(false);
@@ -335,17 +410,28 @@ export default function UpgradeScreen() {
   const hasUserSelectedPlanRef = useRef<boolean>(false);
   const activeAccountRef = useRef<string | null>(null);
   const manageModeRefreshStartedRef = useRef<boolean>(false);
+  const awaitingBillingManagementReturnRef = useRef<boolean>(false);
   const appStateRef = useRef(AppState.currentState);
   const membershipActive = isEntitlementActive || state.isTrialActive;
   const hasStoreAccess = membershipActive;
   const isSubscriptionManagement = mode === 'manage';
-  const activePeriodForPrimaryAction = Platform.OS === 'android'
-    ? getAndroidActivePeriodFromProductIdentifier(activeProductIdentifier)
-    : Platform.OS === 'ios'
-      ? getIosActivePeriodFromProductIdentifier(activeProductIdentifier)
-      : state.plan?.period ?? null;
+  const fallbackActivePeriod = state.plan?.period === 'monthly' || state.plan?.period === 'yearly'
+    ? state.plan.period
+    : null;
+  const activePeriodForPrimaryAction: SubscriptionPlanPeriod | null = state.plan?.period === 'lifetime'
+    ? 'lifetime'
+    : revenueCatAccessKind === 'support_grant'
+      ? null
+      : Platform.OS === 'android'
+        ? getAndroidActivePeriodFromProductIdentifier(activeProductIdentifier)
+        : Platform.OS === 'ios'
+          ? getIosActivePeriodFromProductIdentifier(activeProductIdentifier)
+          : fallbackActivePeriod;
   const hasEntitlementBackedActivePlan = isEntitlementActive && !!activePeriodForPrimaryAction;
   const hasStoreAccessForPresentation = hasStoreAccess || hasEntitlementBackedActivePlan;
+  const inactiveBillingIssueRecovery = billingIssueRecoveryState?.kind === 'inactive_billing_issue'
+    ? billingIssueRecoveryState
+    : null;
 
   const navigateToAppOnce = useCallback(() => {
     if (hasNavigatedAfterAccessRef.current) return;
@@ -382,7 +468,11 @@ export default function UpgradeScreen() {
         previousState,
         nextState,
       })) return;
-      void refreshMembershipOptions('app_foreground').catch((error) => {
+      const refreshReason = awaitingBillingManagementReturnRef.current
+        ? BILLING_ISSUE_MANAGEMENT_RETURN_REASON
+        : 'app_foreground';
+      awaitingBillingManagementReturnRef.current = false;
+      void refreshMembershipOptions(refreshReason).catch((error) => {
         if (__DEV__) {
           console.log('[Upgrade] foreground membership refresh failed', {
             message: error instanceof Error ? error.message : String(error),
@@ -399,6 +489,7 @@ export default function UpgradeScreen() {
     activeAccountRef.current = accountKey;
     hasUserSelectedPlanRef.current = false;
     managementInitialPlanAppliedRef.current = false;
+    setUseRevenueCatAcquisitionPaywall(false);
   }, [user?.id]);
 
   useEffect(() => {
@@ -447,11 +538,38 @@ export default function UpgradeScreen() {
   }, [offeringStatus]);
 
   useEffect(() => {
+    if (useRevenueCatAcquisitionPaywall) return;
+    if (isSubscriptionManagement) return;
+    if (isExpoGo) return;
+    if (!isNativePurchases) return;
+    if (isLoading) return;
+    if (hasStoreAccess) return;
+    if (offeringStatus !== 'ready') return;
+    if (offeringIdentifier !== OUTCOME_PAYWALL_OFFERING_ID) return;
+
+    setUseRevenueCatAcquisitionPaywall(true);
+  }, [
+    hasStoreAccess,
+    isExpoGo,
+    isLoading,
+    isNativePurchases,
+    isSubscriptionManagement,
+    offeringIdentifier,
+    offeringStatus,
+    useRevenueCatAcquisitionPaywall,
+  ]);
+
+  useEffect(() => {
+    // Never navigate from the paywall until RevenueCat access for the
+    // current signed-in account has finished resolving.
+    if (isLoading) return;
+    if (useRevenueCatAcquisitionPaywall) return;
     if (!hasStoreAccess) return;
     if (isSubscriptionManagement) return;
 
     if (routeNewTrialToActivationRef.current) {
       routeNewTrialToActivationRef.current = false;
+
       if (hasNavigatedAfterAccessRef.current) return;
 
       hasNavigatedAfterAccessRef.current = true;
@@ -460,11 +578,12 @@ export default function UpgradeScreen() {
       return;
     }
 
-    routeNewTrialToActivationRef.current = false;
     navigateToAppOnce();
   }, [
     hasStoreAccess,
+    isLoading,
     isSubscriptionManagement,
+    useRevenueCatAcquisitionPaywall,
     navigateToAppOnce,
     router,
     trackEvent,
@@ -537,6 +656,58 @@ export default function UpgradeScreen() {
     }
   }, []);
 
+  const handleRevenueCatPaywallPurchaseStarted = useCallback(
+    ({ packageBeingPurchased }: { packageBeingPurchased: PurchasesPackage }) => {
+      trackEvent('upgrade_clicked', {
+        plan_id: packageBeingPurchased.identifier,
+        source: 'revenuecat_paywall',
+        package_type: packageBeingPurchased.packageType,
+      });
+    },
+    [trackEvent],
+  );
+
+  const handleRevenueCatPaywallPurchaseCompleted = useCallback(
+    ({ customerInfo }: { customerInfo: CustomerInfo }) => {
+      const activeEntitlements = Object.values(
+        customerInfo.entitlements.active ?? {},
+      );
+
+      const startedTrial = activeEntitlements.some(
+        entitlement =>
+          String(entitlement.periodType).toUpperCase() === 'TRIAL',
+      );
+
+      if (hasNavigatedAfterAccessRef.current) return;
+      hasNavigatedAfterAccessRef.current = true;
+
+      if (startedTrial) {
+        trackEvent('trial_activation_started', {
+          source: 'revenuecat_paywall',
+        });
+        router.replace('/trial-activation' as never);
+        return;
+      }
+
+      router.replace('/(tabs)/(home)');
+    },
+    [router, trackEvent],
+  );
+
+  const handleRevenueCatPaywallRestoreCompleted = useCallback(
+    ({ customerInfo }: { customerInfo: CustomerInfo }) => {
+      const hasActiveEntitlement =
+        Object.keys(customerInfo.entitlements.active ?? {}).length > 0;
+
+      if (!hasActiveEntitlement) return;
+      if (hasNavigatedAfterAccessRef.current) return;
+
+      hasNavigatedAfterAccessRef.current = true;
+      router.replace('/(tabs)/(home)');
+    },
+    [router],
+  );
+
   const handleSubscribe = useCallback(() => {
     if (Platform.OS !== 'web') {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -545,7 +716,31 @@ export default function UpgradeScreen() {
       router.replace('/');
       return;
     }
+    if (inactiveBillingIssueRecovery) {
+      trackEvent('billing_issue_fix_payment_tapped', getBillingIssueAnalyticsMetadata(inactiveBillingIssueRecovery));
+      awaitingBillingManagementReturnRef.current = true;
+      void openBillingPaymentManagement(
+        Platform.OS,
+        Linking,
+        inactiveBillingIssueRecovery.productIdentifier,
+        inactiveBillingIssueRecovery.managementUrl ?? activeManagementUrl,
+      ).then((result) => {
+        if (!result.opened) {
+          awaitingBillingManagementReturnRef.current = false;
+          Alert.alert(t('billingRecovery.fixPaymentTitle'), t('manageFallback'));
+        }
+      }).catch(() => {
+        awaitingBillingManagementReturnRef.current = false;
+        Alert.alert(t('billingRecovery.fixPaymentTitle'), t('manageFallback'));
+      });
+      return;
+    }
     const selected = plans.find(p => p.id === selectedPlanId);
+    const selectedShowsTrialCopy = shouldShowTrialCopyForSelectedPlan({
+      platform: Platform.OS,
+      androidTrialCopy: Platform.OS === 'android' ? selected?.androidTrialCopy ?? null : null,
+      trialEligibilityStatus: selected?.trialEligibilityStatus ?? 'unknown',
+    });
     const primaryAction = getMembershipPrimaryAction({
       isExpoGo,
       platform: Platform.OS,
@@ -554,15 +749,42 @@ export default function UpgradeScreen() {
       selectedPeriod: selected?.period ?? null,
       pendingTargetPeriod: pendingPlanChange?.targetPeriod ?? null,
       canSubscribe: !isExpoGo && isNativePurchases && !!selected && !selected.isFallbackPrice && offeringStatus === 'ready',
-      shouldShowTrialCopy: Platform.OS !== 'android' || !!selected?.androidTrialCopy,
+      shouldShowTrialCopy: selectedShowsTrialCopy,
       selectedPriceLabel: selected?.priceLabel ?? '',
     });
     if (primaryAction.kind === 'manage') {
-      void openSubscriptionManagement(Platform.OS, Linking, activeProductIdentifier, activeManagementUrl).then((result) => {
+      const logManageFlow = (event: string, metadata?: Record<string, unknown>) => {
+        if (!__DEV__) return;
+        console.log('[Upgrade] Membership management flow', {
+          event,
+          platform: Platform.OS,
+          activeProductIdentifier,
+          hasManagementUrl: !!activeManagementUrl,
+          ...(metadata ?? {}),
+        });
+      };
+      void openCustomerCenterAfterModalDismiss({
+        dismissModal: () => {
+          router.back();
+        },
+        openAfterDismiss: () => openCustomerCenterOrSubscriptionManagement(
+          Platform.OS,
+          Linking,
+          activeProductIdentifier,
+          activeManagementUrl,
+        ),
+        onLog: logManageFlow,
+      }).then((result) => {
         if (!result.opened) {
           Alert.alert(t('manageTitle'), t('manageFallback'));
         }
-      }).catch(() => {
+      }).catch((error) => {
+        if (__DEV__) {
+          console.log('[Upgrade] Membership management flow', {
+            event: 'store_fallback_error',
+            message: error instanceof Error ? error.message : String(error),
+          });
+        }
         Alert.alert(t('manageTitle'), t('manageFallback'));
       });
       return;
@@ -581,10 +803,10 @@ export default function UpgradeScreen() {
     routeNewTrialToActivationRef.current =
       primaryAction.kind === 'purchase' &&
       !hasStoreAccess &&
-      (Platform.OS !== 'android' || !!selected.androidTrialCopy);
-
+      selectedShowsTrialCopy &&
+      selected.period !== 'lifetime';
     subscribe(selected);
-  }, [activeManagementUrl, activePeriodForPrimaryAction, activeProductIdentifier, hasStoreAccess, isExpoGo, pendingPlanChange?.targetPeriod, router, selectedPlanId, subscribe, t, trackEvent, plans, offeringStatus, isNativePurchases]);
+  }, [activeManagementUrl, activePeriodForPrimaryAction, activeProductIdentifier, hasStoreAccess, inactiveBillingIssueRecovery, isExpoGo, pendingPlanChange?.targetPeriod, router, selectedPlanId, subscribe, t, trackEvent, plans, offeringStatus, isNativePurchases]);
 
   const handleClose = useCallback(() => {
     if (isExpoGo) {
@@ -601,6 +823,9 @@ export default function UpgradeScreen() {
   const handleRestore = useCallback(() => {
     handleHaptic();
     setRestoreNotice(null);
+    if (inactiveBillingIssueRecovery) {
+      trackEvent('billing_issue_restore_tapped', getBillingIssueAnalyticsMetadata(inactiveBillingIssueRecovery));
+    }
     if (isExpoGo) {
       router.replace('/');
       return;
@@ -619,7 +844,7 @@ export default function UpgradeScreen() {
       .catch((error) => {
         setRestoreNotice(error instanceof Error ? error.message : t('restoreFailed'));
       });
-  }, [handleHaptic, isExpoGo, restore, router, navigateToAppOnce, t]);
+  }, [handleHaptic, inactiveBillingIssueRecovery, isExpoGo, restore, router, navigateToAppOnce, t, trackEvent]);
 
   const handleRetryMembershipOptions = useCallback(() => {
     handleHaptic();
@@ -636,8 +861,18 @@ export default function UpgradeScreen() {
   }, [handleHaptic, retryMembershipOptions]);
 
   const selectedPlan = plans.find(p => p.id === selectedPlanId);
+  const selectedIsLifetime = selectedPlan?.period === 'lifetime';
   const selectedAndroidTrialCopy = Platform.OS === 'android' ? selectedPlan?.androidTrialCopy ?? null : null;
-  const shouldShowTrialCopy = Platform.OS !== 'android' || !!selectedAndroidTrialCopy;
+  const shouldShowTrialCopy = shouldShowTrialCopyForSelectedPlan({
+    platform: Platform.OS,
+    androidTrialCopy: selectedAndroidTrialCopy,
+    trialEligibilityStatus: selectedPlan?.trialEligibilityStatus ?? 'unknown',
+  });
+  const showTrialEndingReminderCopy = shouldShowTrialEndingReminderCopy({
+    hasStoreAccess: hasStoreAccessForPresentation,
+    inactiveBillingRecovery: !!inactiveBillingIssueRecovery,
+    shouldShowTrialCopy,
+  });
   const hasValidSelectedPackage = !isExpoGo && isNativePurchases && !!selectedPlan && !selectedPlan.isFallbackPrice;
   const paywallLoadingState = useMemo(() => computePaywallLoadingState({
     offeringStatus,
@@ -649,6 +884,7 @@ export default function UpgradeScreen() {
     isExpoGo,
     platform: Platform.OS,
     hasStoreAccess,
+    accessKind: revenueCatAccessKind,
     activePeriod: activePeriodForPrimaryAction,
     selectedPeriod: selectedPlan?.period ?? null,
     pendingTargetPeriod: pendingPlanChange?.targetPeriod ?? null,
@@ -659,6 +895,7 @@ export default function UpgradeScreen() {
     canSubscribe,
     hasStoreAccess,
     isExpoGo,
+    revenueCatAccessKind,
     pendingPlanChange?.targetPeriod,
     activePeriodForPrimaryAction,
     selectedPlan?.period,
@@ -667,6 +904,7 @@ export default function UpgradeScreen() {
   ]);
   const canUsePrimaryCta = primaryAction.kind === 'continue' ||
     primaryAction.kind === 'manage' ||
+    !!inactiveBillingIssueRecovery ||
     (primaryAction.requiresPurchasablePlan && canSubscribe);
   const pendingEffectiveDateLabel = formatDateForLanguage(pendingPlanChange?.effectiveAt ?? null, language);
   const trialDaysRemaining = state.trialEndsAt
@@ -682,7 +920,10 @@ export default function UpgradeScreen() {
     pendingEffectiveDateLabel,
     activeExpirationDateLabel: formatDateForLanguage(state.expiresAt, language),
     activeWillRenew,
+    accessKind: revenueCatAccessKind,
     billingIssueDateLabel: formatDateForLanguage(activeBillingIssueDetectedAt, language),
+    billingIssueRecoveryKind: billingIssueRecoveryState?.kind ?? null,
+    billingIssueRecoveryStore: billingIssueRecoveryState?.store ?? null,
     inactiveExpirationDateLabel: formatDateForLanguage(inactiveExpirationAt, language),
     trialDaysRemaining,
     shouldShowTrialCopy,
@@ -690,6 +931,7 @@ export default function UpgradeScreen() {
     isMembershipLoading: isLoading,
   });
   const planChangeTimingMessage = useMemo(() => {
+    if (selectedPlan?.period === 'lifetime') return null;
     const activeLabel = getLocalizedPlanName(t, activePeriodForPrimaryAction);
     const selectedLabel = getLocalizedPlanName(t, selectedPlan?.period);
     if (!hasStoreAccessForPresentation || !activeLabel || !selectedLabel || activePeriodForPrimaryAction === selectedPlan?.period) {
@@ -726,6 +968,41 @@ export default function UpgradeScreen() {
   });
   const visibleTestimonials = language === 'es' ? TESTIMONIALS_ES : TESTIMONIALS;
   const primaryActionLabel = getLocalizedPrimaryActionLabel(t, primaryAction, selectedPlan, shouldShowTrialCopy);
+  const visiblePrimaryActionLabel = inactiveBillingIssueRecovery
+    ? t('billingRecovery.fixPayment')
+    : primaryActionLabel;
+  const isPurchaseSyncPending = purchaseError === PURCHASE_SYNC_PENDING_MESSAGE;
+  const primaryCtaDisabled = !canUsePrimaryCta ||
+    isSubscribing ||
+    (!inactiveBillingIssueRecovery && !isExpoGo && !isPremium && isLoading);
+
+  useEffect(() => {
+    if (!inactiveBillingIssueRecovery) return;
+    trackBillingIssueBannerViewedOnce({
+      state: inactiveBillingIssueRecovery,
+      surface: 'upgrade_recovery',
+      trackEvent,
+    });
+  }, [inactiveBillingIssueRecovery, trackEvent]);
+
+  if (useRevenueCatAcquisitionPaywall) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+        <Stack.Screen options={{ headerShown: false }} />
+
+        <RevenueCatUI.Paywall
+          style={{ flex: 1 }}
+          options={{
+            displayCloseButton: false,
+          }}
+          onPurchaseStarted={handleRevenueCatPaywallPurchaseStarted}
+          onPurchaseCompleted={handleRevenueCatPaywallPurchaseCompleted}
+          onRestoreCompleted={handleRevenueCatPaywallRestoreCompleted}
+        />
+      </View>
+    );
+  }
+
   return (
     <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -835,6 +1112,10 @@ export default function UpgradeScreen() {
             <Text style={styles.trialClarifier}>
               {t('trialClarifier')}
             </Text>
+          ) : selectedIsLifetime ? (
+            <Text style={styles.trialClarifier}>
+              {t('lifetimeClarifier')}
+            </Text>
           ) : (
             <Text style={styles.trialClarifier}>
               {t('settingsClarifier')}
@@ -904,11 +1185,12 @@ export default function UpgradeScreen() {
             </View>
           ) : null}
           {plans.length > 0 ? (
-            <View style={styles.plansRow}>
+            <View style={styles.plansList}>
               {plans.map((plan) => {
                 const isSelected = plan.id === selectedPlanId;
                 const isCurrentPlan = hasStoreAccessForPresentation && activePeriodForPrimaryAction === plan.period;
                 const isScheduledPlan = pendingPlanChange?.targetPeriod === plan.period;
+                const cadenceLabel = getPlanCadenceLabel(t, plan.period);
                 return (
                   <TouchableOpacity
                     key={plan.id}
@@ -924,39 +1206,54 @@ export default function UpgradeScreen() {
                     activeOpacity={0.7}
                     testID={`plan-${plan.id}`}
                   >
-                    {plan.popular && (
-                      <View style={styles.popularBadge}>
-                        <Text style={styles.popularBadgeText}>{t('bestValue')}</Text>
+                    <View style={styles.planContent}>
+                      <View style={styles.planTextColumn}>
+                        <View style={styles.planHeaderRow}>
+                          <Text style={[styles.planName, isSelected && styles.planNameSelected]}>
+                            {getLocalizedPlanName(t, plan.period) ?? plan.name}
+                          </Text>
+                          <View style={styles.planBadgeRow}>
+                            {plan.badge ? (
+                              <View style={styles.popularBadge}>
+                                <Text style={styles.popularBadgeText}>
+                                  {plan.badge === 'mostPopular' ? t('mostPopular') : t('bestValue')}
+                                </Text>
+                              </View>
+                            ) : null}
+                            {isScheduledPlan ? (
+                              <View style={styles.scheduledBadge}>
+                                <Text style={styles.scheduledBadgeText}>{t('scheduled')}</Text>
+                              </View>
+                            ) : null}
+                            {isCurrentPlan ? (
+                              <View style={styles.currentPlanBadge}>
+                                <Text style={styles.currentPlanBadgeText}>{t('currentPlan')}</Text>
+                              </View>
+                            ) : null}
+                          </View>
+                        </View>
+                        <View style={styles.planPriceRow}>
+                          <Text
+                            style={[styles.planPrice, isSelected && styles.planPriceSelected]}
+                            numberOfLines={1}
+                            adjustsFontSizeToFit
+                            minimumFontScale={0.86}
+                          >
+                            {plan.priceLabel}
+                          </Text>
+                          <Text style={[styles.planCadenceText, isSelected && styles.planCadenceTextSelected]}>
+                            {cadenceLabel}
+                          </Text>
+                        </View>
+                        {Platform.OS === 'android' && plan.androidTrialCopy ? (
+                          <Text style={[styles.planTrialText, isSelected && styles.planTrialTextSelected]}>
+                            {plan.androidTrialCopy}
+                          </Text>
+                        ) : null}
                       </View>
-                    )}
-                    {isScheduledPlan ? (
-                      <View style={styles.scheduledBadge}>
-                        <Text style={styles.scheduledBadgeText}>{t('scheduled')}</Text>
+                      <View style={[styles.planRadio, isSelected && styles.planRadioSelected]}>
+                        {isSelected && <View style={styles.planRadioInner} />}
                       </View>
-                    ) : null}
-                    <Text style={[styles.planName, isSelected && styles.planNameSelected]}>
-                      {getLocalizedPlanName(t, plan.period) ?? plan.name}
-                    </Text>
-                    {isCurrentPlan ? (
-                      <Text style={[styles.planCurrentText, isSelected && styles.planCurrentTextSelected]}>
-                        {t('currentPlan')}
-                      </Text>
-                    ) : null}
-                    <Text style={[styles.planPrice, isSelected && styles.planPriceSelected]}>
-                      {plan.priceLabel}
-                    </Text>
-                    {Platform.OS === 'android' && plan.androidTrialCopy ? (
-                      <Text style={[styles.planTrialText, isSelected && styles.planTrialTextSelected]}>
-                        {plan.androidTrialCopy}
-                      </Text>
-                    ) : null}
-                    {plan.savings && (
-                      <Text style={[styles.planSavings, isSelected && styles.planSavingsSelected]}>
-                        {plan.savings}
-                      </Text>
-                    )}
-                    <View style={[styles.planRadio, isSelected && styles.planRadioSelected]}>
-                      {isSelected && <View style={styles.planRadioInner} />}
                     </View>
                   </TouchableOpacity>
                 );
@@ -993,20 +1290,44 @@ export default function UpgradeScreen() {
               <Text style={styles.planChangeTimingText}>{planChangeTimingMessage}</Text>
             </View>
           ) : null}
+          {showTrialEndingReminderCopy ? (
+            <View style={styles.trialReminderCard}>
+              <Clock size={15} color={Colors.primary} />
+              <View style={styles.trialReminderTextWrap}>
+                <Text style={styles.trialReminderLine}>{t('trialReminder.today')}</Text>
+                <Text style={styles.trialReminderLine}>{t('trialReminder.reminder')}</Text>
+                <Text style={styles.trialReminderLine}>{t('trialReminder.day3')}</Text>
+                <Text style={styles.trialReminderNote}>{t('trialReminder.permissionNote')}</Text>
+              </View>
+            </View>
+          ) : null}
           <TouchableOpacity
-            style={[styles.ctaButton, (!canUsePrimaryCta || isSubscribing || (!isExpoGo && !isPremium && isLoading)) && styles.ctaButtonDisabled]}
+            style={[styles.ctaButton, primaryCtaDisabled && styles.ctaButtonDisabled]}
             onPress={handleSubscribe}
             activeOpacity={0.8}
-            disabled={!canUsePrimaryCta || isSubscribing || (!isExpoGo && !isPremium && isLoading)}
+            disabled={primaryCtaDisabled}
             testID="subscribe-btn"
           >
             <Crown size={18} color={Colors.white} />
             <Text style={styles.ctaButtonText}>
-              {isSubscribing ? t('processing') : primaryActionLabel}
+              {isSubscribing ? t('processing') : visiblePrimaryActionLabel}
             </Text>
           </TouchableOpacity>
 
           {purchaseError ? <Text style={styles.inlineErrorText}>{purchaseError}</Text> : null}
+          {showTrialEndingReminderCopy ? (
+            <Text style={styles.trialReminderReassurance}>{t('trialReminder.reassurance')}</Text>
+          ) : null}
+          {isPurchaseSyncPending || inactiveBillingIssueRecovery ? (
+            <TouchableOpacity
+              onPress={handleRestore}
+              style={styles.syncPurchaseButton}
+              activeOpacity={0.75}
+              testID="sync-purchase-btn"
+            >
+              <Text style={styles.syncPurchaseButtonText}>{t('syncPurchase')}</Text>
+            </TouchableOpacity>
+          ) : null}
         </Animated.View>
 
         <View style={styles.trustSection}>
@@ -1015,6 +1336,8 @@ export default function UpgradeScreen() {
             <Text style={styles.trustText}>
               {shouldShowTrialCopy
                 ? t('trialEligible')
+                : selectedIsLifetime
+                  ? t('lifetimeTrust')
                 : t('cancelAnytime')}
             </Text>
           </View>
@@ -1027,7 +1350,7 @@ export default function UpgradeScreen() {
 
         <View style={styles.disclaimerSection}>
           <Text style={styles.disclaimerText}>
-            {t('disclaimer')}
+            {selectedIsLifetime ? t('lifetimeDisclaimer') : t('disclaimer')}
           </Text>
           <View style={styles.legalLinksRow}>
             <TouchableOpacity onPress={() => router.push('/terms-of-service')} testID="terms-link">
@@ -1385,10 +1708,8 @@ const styles = StyleSheet.create({
     fontWeight: '800' as const,
     color: Colors.primary,
   },
-  plansRow: {
-    flexDirection: 'row' as const,
-    gap: 12,
-    paddingTop: 30,
+  plansList: {
+    gap: 10,
   },
   emptyPlansCard: {
     backgroundColor: Colors.card,
@@ -1422,47 +1743,61 @@ const styles = StyleSheet.create({
     color: Colors.white,
   },
   planCard: {
-    flex: 1,
+    width: '100%' as const,
     backgroundColor: Colors.card,
-    borderRadius: 18,
-    paddingHorizontal: 18,
-    paddingTop: 38,
-    paddingBottom: 18,
-    alignItems: 'center' as const,
+    borderRadius: 16,
+    padding: 14,
     borderWidth: 2,
     borderColor: Colors.borderLight,
-    position: 'relative' as const,
-    overflow: 'visible' as const,
   },
   planCardSelected: {
     borderColor: Colors.brandTeal,
     backgroundColor: Colors.brandTealSoft,
   },
+  planContent: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 12,
+  },
+  planTextColumn: {
+    flex: 1,
+    minWidth: 0,
+  },
+  planHeaderRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    gap: 8,
+    marginBottom: 8,
+  },
+  planBadgeRow: {
+    flexDirection: 'row' as const,
+    flexWrap: 'wrap' as const,
+    justifyContent: 'flex-end' as const,
+    gap: 6,
+    flexShrink: 1,
+  },
   popularBadge: {
-    position: 'absolute' as const,
-    top: -25,
-    alignSelf: 'center' as const,
     backgroundColor: Colors.brandTealSoft,
-    paddingHorizontal: 14,
-    paddingVertical: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: Colors.brandTeal,
   },
   popularBadgeText: {
-    fontSize: 11,
-    fontWeight: '700' as const,
+    fontSize: 9,
+    fontWeight: '800' as const,
     color: Colors.primary,
+    textTransform: 'uppercase' as const,
   },
   scheduledBadge: {
-    alignSelf: 'center' as const,
     backgroundColor: Colors.brandTealSoft,
-    paddingHorizontal: 10,
+    paddingHorizontal: 9,
     paddingVertical: 4,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: Colors.brandTeal,
-    marginBottom: 8,
   },
   scheduledBadgeText: {
     fontSize: 10,
@@ -1470,12 +1805,25 @@ const styles = StyleSheet.create({
     color: Colors.brandTeal,
     textTransform: 'uppercase' as const,
   },
+  currentPlanBadge: {
+    backgroundColor: Colors.primaryLight,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  currentPlanBadgeText: {
+    fontSize: 9,
+    fontWeight: '800' as const,
+    color: Colors.brandNavy,
+    textTransform: 'uppercase' as const,
+  },
   planName: {
-    fontSize: 15,
-    fontWeight: '600' as const,
+    fontSize: 16,
+    fontWeight: '800' as const,
     color: Colors.textSecondary,
-    marginBottom: 8,
-    marginTop: 4,
+    flexShrink: 0,
   },
   planNameSelected: {
     color: Colors.brandNavy,
@@ -1490,12 +1838,27 @@ const styles = StyleSheet.create({
     color: Colors.brandNavy,
   },
   planPrice: {
-    fontSize: 22,
+    fontSize: 23,
     fontWeight: '800' as const,
     color: Colors.text,
-    marginBottom: 4,
+    flexShrink: 1,
   },
   planPriceSelected: {
+    color: Colors.brandNavy,
+  },
+  planPriceRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'baseline' as const,
+    gap: 8,
+    flexWrap: 'nowrap' as const,
+  },
+  planCadenceText: {
+    fontSize: 13,
+    fontWeight: '700' as const,
+    color: Colors.textSecondary,
+    flexShrink: 0,
+  },
+  planCadenceTextSelected: {
     color: Colors.brandNavy,
   },
   planTrialText: {
@@ -1503,8 +1866,8 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     fontWeight: '700' as const,
     color: Colors.primary,
-    textAlign: 'center' as const,
-    marginBottom: 6,
+    textAlign: 'left' as const,
+    marginTop: 5,
   },
   planTrialTextSelected: {
     color: Colors.brandNavy,
@@ -1532,7 +1895,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    marginTop: 4,
+    marginLeft: 2,
   },
   planRadioSelected: {
     borderColor: Colors.brandTeal,
@@ -1564,6 +1927,41 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     fontWeight: '700' as const,
   },
+  trialReminderCard: {
+    flexDirection: 'row' as const,
+    alignItems: 'flex-start' as const,
+    gap: 10,
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 12,
+  },
+  trialReminderTextWrap: {
+    flex: 1,
+    gap: 4,
+  },
+  trialReminderLine: {
+    color: Colors.text,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '800' as const,
+  },
+  trialReminderNote: {
+    color: Colors.textSecondary,
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: 3,
+  },
+  trialReminderReassurance: {
+    color: Colors.textSecondary,
+    fontSize: 12,
+    lineHeight: 17,
+    textAlign: 'center' as const,
+    marginTop: 10,
+    paddingHorizontal: 12,
+  },
   ctaButton: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
@@ -1593,6 +1991,21 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     marginTop: 10,
     paddingHorizontal: 12,
+  },
+  syncPurchaseButton: {
+    alignSelf: 'center' as const,
+    marginTop: 10,
+    borderRadius: 999,
+    backgroundColor: Colors.brandTealSoft,
+    borderWidth: 1,
+    borderColor: Colors.brandTeal,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+  },
+  syncPurchaseButtonText: {
+    color: Colors.primary,
+    fontSize: 13,
+    fontWeight: '900' as const,
   },
   inlineNoticeText: {
     fontSize: 12,

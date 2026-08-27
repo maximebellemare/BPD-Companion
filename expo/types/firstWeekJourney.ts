@@ -33,6 +33,8 @@ export interface FirstWeekJourneySummary {
   nextStep: FirstWeekJourneyStep;
   steps: FirstWeekJourneyStep[];
   premiumInsights: PremiumInsightItem[];
+  day2AhaInsight: PremiumInsightItem | null;
+  day3ProgressRecap: PremiumInsightItem | null;
   emotionalReportReady: boolean;
   paywallLossHeadline: string;
   paywallLossBullets: string[];

@@ -40,6 +40,7 @@ import { formatTime, MedicationTime } from '@/types/medication';
 import { useAppointments } from '@/providers/AppointmentProvider';
 import { APPOINTMENT_TYPE_LABELS, formatAppointmentDate, formatAppointmentTime } from '@/types/appointment';
 import { useReviewPrompt } from '@/providers/ReviewPromptProvider';
+import { useFirstWeekJourney } from '@/hooks/useFirstWeekJourney';
 import { loadSavedCompanionInsights } from '@/services/companion/companionInsightService';
 import {
   getNextHabitAchievement,
@@ -657,6 +658,18 @@ export default function HomeScreen() {
   }, [handleHaptic, intensity, recommendation, router, saveQuickCheckIn, trackEvent]);
 
   const RecommendationIcon = recommendation.icon;
+  const firstWeekJourney = useFirstWeekJourney();
+  const retentionInsight = firstWeekJourney.day3ProgressRecap ?? firstWeekJourney.day2AhaInsight;
+
+  const handleRetentionInsightPress = useCallback(() => {
+    if (!retentionInsight) return;
+    handleHaptic();
+    trackEvent('retention_insight_tapped', {
+      insight_id: retentionInsight.id,
+      journey_day: firstWeekJourney.currentDay,
+    });
+    router.push('/(tabs)/insights' as never);
+  }, [firstWeekJourney.currentDay, handleHaptic, retentionInsight, router, trackEvent]);
 
   const handleMedicationTaken = useCallback(async (medicationId: string, time: MedicationTime | null) => {
     handleHaptic(Haptics.ImpactFeedbackStyle.Medium);
@@ -1090,6 +1103,25 @@ export default function HomeScreen() {
                 <Text style={[styles.completedSecondaryActionText, { color: colors.primary }]}>{t('home.actions.editCheckIn')}</Text>
               </TouchableOpacity>
             </View>
+          ) : null}
+
+          {retentionInsight ? (
+            <TouchableOpacity
+              style={[styles.retentionInsightCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}
+              onPress={handleRetentionInsightPress}
+              activeOpacity={0.82}
+              testID="today-retention-insight"
+            >
+              <View style={[styles.retentionInsightIcon, { backgroundColor: colors.primaryLight }]}>
+                <Target size={18} color={colors.primary} />
+              </View>
+              <View style={styles.retentionInsightTextWrap}>
+                <Text style={[styles.cardKicker, { color: colors.brandTeal }]}>{retentionInsight.title}</Text>
+                <Text style={[styles.retentionInsightTitle, { color: colors.text }]}>{retentionInsight.value}</Text>
+                <Text style={[styles.retentionInsightBody, { color: colors.textSecondary }]}>{retentionInsight.description}</Text>
+              </View>
+              <ChevronRight size={18} color={colors.textMuted} />
+            </TouchableOpacity>
           ) : null}
 
           <View style={[styles.insightCard, { backgroundColor: colors.card, borderColor: colors.borderLight }]}>
@@ -1773,6 +1805,41 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '900',
     marginTop: 8,
+  },
+  retentionInsightCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: Colors.card,
+    borderRadius: 18,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    marginBottom: 14,
+  },
+  retentionInsightIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  retentionInsightTextWrap: {
+    flex: 1,
+    minWidth: 0,
+  },
+  retentionInsightTitle: {
+    color: Colors.text,
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: '900',
+    marginBottom: 3,
+  },
+  retentionInsightBody: {
+    color: Colors.textSecondary,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '700',
   },
   dontSendCard: {
     flexDirection: 'row',

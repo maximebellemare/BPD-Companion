@@ -67,6 +67,7 @@ import { useRewards } from '@/providers/RewardsProvider';
 import { ConsistencyMetrics, MilestoneDefinition } from '@/types/reward';
 import { localizedText } from '@/lib/i18n/staticText';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useFirstWeekJourney } from '@/hooks/useFirstWeekJourney';
 
 type CountItem = {
   label: string;
@@ -708,6 +709,7 @@ export default function PremiumInsightsScreen() {
   const { profiles: relationshipProfiles, events: relationshipEvents } = useRelationships();
   const { hasPremiumAccess, state, isEntitlementActive } = useSubscription();
   const { metrics: rewardMetrics, recentMilestone } = useRewards();
+  const firstWeekJourney = useFirstWeekJourney();
   const [savedCompanionInsights, setSavedCompanionInsights] = useState<SavedCompanionInsight[]>([]);
   const [selectedSavedInsight, setSelectedSavedInsight] = useState<SavedCompanionInsight | null>(null);
   const [favoriteAhaMoments, setFavoriteAhaMoments] = useState<FavoriteAhaMoment[]>([]);
@@ -735,6 +737,10 @@ export default function PremiumInsightsScreen() {
   const todaysCheckIn = useMemo(() => sortedEntries.find(entry => isSameLocalDay(entry.timestamp, Date.now())) ?? null, [sortedEntries]);
   const checkInCount = sortedEntries.length;
   const stage = getStage(checkInCount);
+  const firstWeekRetentionInsights = [
+    firstWeekJourney.day2AhaInsight,
+    firstWeekJourney.day3ProgressRecap,
+  ].filter((insight): insight is NonNullable<typeof insight> => insight !== null);
   const topEmotion = useMemo(() => {
     return countLabels(recentEntries.flatMap(entry => entry.checkIn.emotions.map(emotion => emotion.label)))[0] ?? null;
   }, [recentEntries]);
@@ -926,6 +932,22 @@ export default function PremiumInsightsScreen() {
             </TouchableOpacity>
           </View>
         )}
+
+        {firstWeekRetentionInsights.length > 0 ? (
+          <Section title={localizedText('First-week progress', 'Progreso de la primera semana')}>
+            <View style={styles.patternList}>
+              {firstWeekRetentionInsights.map((insight) => (
+                <CareInsightsCard
+                  key={insight.id}
+                  title={insight.title}
+                  body={insight.value}
+                  detail={insight.description}
+                  icon={<Target size={18} color={colors.primary} />}
+                />
+              ))}
+            </View>
+          </Section>
+        ) : null}
 
         <HealthyProgressCard metrics={rewardMetrics} recentMilestone={recentMilestone} />
 

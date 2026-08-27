@@ -1,7 +1,6 @@
 import {
   ANDROID_REPLACEMENT_MODE_MONTHLY_TO_YEARLY,
   ANDROID_REPLACEMENT_MODE_YEARLY_TO_MONTHLY,
-  ANDROID_TRIAL_COPY,
   getAndroidPaywallSelection,
   parseSubscriptionOptionId,
   selectAndroidSubscriptionOption,
@@ -81,6 +80,7 @@ function monthlyPackage(extraOptions: SubscriptionOption[] = []): PurchasesPacka
 function monthlyPackageWithDefault(
   defaultOptionId: string,
   extraOptions: SubscriptionOption[] = [],
+  trialPeriod: string = 'P3D',
 ): PurchasesPackage {
   const base = option({
     id: 'monthly',
@@ -91,6 +91,7 @@ function monthlyPackageWithDefault(
   const trial = option({
     id: 'monthly:free-trial',
     productId: 'bpd_monthly',
+    freePhase: { billingPeriod: { iso8601: trialPeriod }, price: { amountMicros: 0 } } as never,
   });
   return pkg({
     productId: 'bpd_monthly',
@@ -106,6 +107,7 @@ function yearlyPackage(extraOptions: SubscriptionOption[] = []): PurchasesPackag
 function yearlyPackageWithDefault(
   defaultOptionId: string,
   extraOptions: SubscriptionOption[] = [],
+  trialPeriod: string = 'P3D',
 ): PurchasesPackage {
   const base = option({
     id: 'annual',
@@ -116,6 +118,7 @@ function yearlyPackageWithDefault(
   const trial = option({
     id: 'annual:free-trial',
     productId: 'bpd_yearly',
+    freePhase: { billingPeriod: { iso8601: trialPeriod }, price: { amountMicros: 0 } } as never,
   });
   return pkg({
     productId: 'bpd_yearly',
@@ -135,6 +138,7 @@ function assertSelection(params: {
   period: SubscriptionPeriod;
   expectedOptionId: string | null;
   expectedTrialCopy: string | null;
+  expectedTrialDays?: number | null;
   expectedChangeInfo?: string | null;
   expectedReplacementMode?: string | null;
   info?: CustomerInfo | null;
@@ -146,6 +150,7 @@ function assertSelection(params: {
   });
   assert(result.selectedOptionId === params.expectedOptionId, `${params.name}: selected option`);
   assert(result.trialCopy === params.expectedTrialCopy, `${params.name}: trial copy`);
+  assert(result.trialDays === (params.expectedTrialDays ?? null), `${params.name}: trial days`);
   assert(
     (result.googleProductChangeInfo?.oldProductIdentifier ?? null) === (params.expectedChangeInfo ?? null),
     `${params.name}: product change info`,
@@ -171,7 +176,8 @@ export function assertAndroidPurchaseSelectorRegressionScenarios(): true {
     pkg: monthlyPackage(),
     period: 'monthly',
     expectedOptionId: 'monthly:free-trial',
-    expectedTrialCopy: ANDROID_TRIAL_COPY,
+    expectedTrialCopy: '3-day free trial for eligible new subscribers',
+    expectedTrialDays: 3,
   });
 
   assertSelection({
@@ -179,7 +185,8 @@ export function assertAndroidPurchaseSelectorRegressionScenarios(): true {
     pkg: yearlyPackage(),
     period: 'yearly',
     expectedOptionId: 'annual:free-trial',
-    expectedTrialCopy: ANDROID_TRIAL_COPY,
+    expectedTrialCopy: '3-day free trial for eligible new subscribers',
+    expectedTrialDays: 3,
   });
 
   assertSelection({
@@ -187,7 +194,8 @@ export function assertAndroidPurchaseSelectorRegressionScenarios(): true {
     pkg: monthlyPackage([option({ id: 'annual:free-trial', productId: 'bpd_yearly' })]),
     period: 'monthly',
     expectedOptionId: 'monthly:free-trial',
-    expectedTrialCopy: ANDROID_TRIAL_COPY,
+    expectedTrialCopy: '3-day free trial for eligible new subscribers',
+    expectedTrialDays: 3,
   });
 
   assertSelection({
@@ -195,7 +203,8 @@ export function assertAndroidPurchaseSelectorRegressionScenarios(): true {
     pkg: yearlyPackage([option({ id: 'monthly:free-trial', productId: 'bpd_monthly' })]),
     period: 'yearly',
     expectedOptionId: 'annual:free-trial',
-    expectedTrialCopy: ANDROID_TRIAL_COPY,
+    expectedTrialCopy: '3-day free trial for eligible new subscribers',
+    expectedTrialDays: 3,
   });
 
   assert(parseSubscriptionOptionId('too:many:parts').malformed, 'malformed option ID is detected');
@@ -221,7 +230,7 @@ export function assertAndroidPurchaseSelectorRegressionScenarios(): true {
       defaultOptionId: 'monthly',
       options: [
         option({ id: 'monthly', productId: 'bpd_monthly', isBasePlan: true, freePhase: null }),
-        option({ id: 'monthly:wrong-offer', productId: 'bpd_monthly' }),
+        option({ id: 'other:wrong-offer', productId: 'bpd_monthly' }),
       ],
     }),
     period: 'monthly',
@@ -250,7 +259,8 @@ export function assertAndroidPurchaseSelectorRegressionScenarios(): true {
     pkg: monthlyPackage(),
     period: 'monthly',
     expectedOptionId: 'monthly:free-trial',
-    expectedTrialCopy: ANDROID_TRIAL_COPY,
+    expectedTrialCopy: '3-day free trial for eligible new subscribers',
+    expectedTrialDays: 3,
     info: infoWithoutEntitlement(),
   });
 
@@ -259,7 +269,8 @@ export function assertAndroidPurchaseSelectorRegressionScenarios(): true {
     pkg: yearlyPackage(),
     period: 'yearly',
     expectedOptionId: 'annual:free-trial',
-    expectedTrialCopy: ANDROID_TRIAL_COPY,
+    expectedTrialCopy: '3-day free trial for eligible new subscribers',
+    expectedTrialDays: 3,
     info: infoWithoutEntitlement(),
   });
 
@@ -268,9 +279,79 @@ export function assertAndroidPurchaseSelectorRegressionScenarios(): true {
     pkg: monthlyPackage(),
     period: 'monthly',
     expectedOptionId: 'monthly:free-trial',
-    expectedTrialCopy: ANDROID_TRIAL_COPY,
+    expectedTrialCopy: '3-day free trial for eligible new subscribers',
+    expectedTrialDays: 3,
     expectedChangeInfo: null,
     info: infoWithoutEntitlement(),
+  });
+
+  assertSelection({
+    name: 'fresh Yearly supports RevenueCat seven-day trial experiment',
+    pkg: yearlyPackageWithDefault('annual:free-trial', [], 'P7D'),
+    period: 'yearly',
+    expectedOptionId: 'annual:free-trial',
+    expectedTrialCopy: '7-day free trial for eligible new subscribers',
+    expectedTrialDays: 7,
+  });
+
+  assertSelection({
+    name: 'fresh Yearly respects current offering default three-day trial when multiple offers exist',
+    pkg: yearlyPackageWithDefault('annual:trial-3-day', [
+      option({
+        id: 'annual:trial-3-day',
+        productId: 'bpd_yearly',
+        freePhase: { billingPeriod: { iso8601: 'P3D' }, price: { amountMicros: 0 } } as never,
+      }),
+      option({
+        id: 'annual:trial-7-day',
+        productId: 'bpd_yearly',
+        freePhase: { billingPeriod: { iso8601: 'P7D' }, price: { amountMicros: 0 } } as never,
+      }),
+    ]),
+    period: 'yearly',
+    expectedOptionId: 'annual:trial-3-day',
+    expectedTrialCopy: '3-day free trial for eligible new subscribers',
+    expectedTrialDays: 3,
+  });
+
+  assertSelection({
+    name: 'fresh Yearly respects current offering default seven-day trial when multiple offers exist',
+    pkg: yearlyPackageWithDefault('annual:trial-7-day', [
+      option({
+        id: 'annual:trial-3-day',
+        productId: 'bpd_yearly',
+        freePhase: { billingPeriod: { iso8601: 'P3D' }, price: { amountMicros: 0 } } as never,
+      }),
+      option({
+        id: 'annual:trial-7-day',
+        productId: 'bpd_yearly',
+        freePhase: { billingPeriod: { iso8601: 'P7D' }, price: { amountMicros: 0 } } as never,
+      }),
+    ]),
+    period: 'yearly',
+    expectedOptionId: 'annual:trial-7-day',
+    expectedTrialCopy: '7-day free trial for eligible new subscribers',
+    expectedTrialDays: 7,
+  });
+
+  assertSelection({
+    name: 'fresh Yearly does not guess between multiple eligible trial offers without current default',
+    pkg: yearlyPackageWithDefault('annual', [
+      option({
+        id: 'annual:trial-3-day',
+        productId: 'bpd_yearly',
+        freePhase: { billingPeriod: { iso8601: 'P3D' }, price: { amountMicros: 0 } } as never,
+      }),
+      option({
+        id: 'annual:trial-7-day',
+        productId: 'bpd_yearly',
+        freePhase: { billingPeriod: { iso8601: 'P7D' }, price: { amountMicros: 0 } } as never,
+      }),
+    ]),
+    period: 'yearly',
+    expectedOptionId: 'annual',
+    expectedTrialCopy: null,
+    expectedTrialDays: null,
   });
 
   assertSelection({

@@ -128,6 +128,17 @@ const NOTIFICATION_ROUTES: NotificationRoute[] = [
     entryTitle: { en: 'Before the day ends.', es: 'Antes de que termine el día.' },
     entrySubtitle: { en: 'Even a quick reflection can bring closure to your day.', es: 'Incluso una reflexión breve puede traer cierre al día.' },
   }),
+  localizedFields({
+    category: 'trial_reminder',
+    route: '/upgrade',
+    entryTitle: 'Your trial ends soon.',
+    entrySubtitle: 'You can review or cancel your membership in store settings.',
+    quickActions: ['dismiss'],
+    contextKeys: [],
+  }, {
+    entryTitle: { en: 'Your trial ends soon.', es: 'Tu prueba termina pronto.' },
+    entrySubtitle: { en: 'You can review or cancel your membership in store settings.', es: 'Puedes revisar o cancelar tu membresía en la configuración de la tienda.' },
+  }),
 ];
 
 export const QUICK_ACTION_CONFIGS: NotificationQuickActionConfig[] = [

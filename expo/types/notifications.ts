@@ -6,6 +6,7 @@ export type NotificationCategory =
   | 'calm_followup'
   | 'premium_reflection'
   | 'premium_upgrade'
+  | 'trial_reminder'
   | 'therapist_report'
   | 'reengagement'
   | 'streak_support'
@@ -54,15 +55,15 @@ export interface NotificationEvent {
 
 export interface NotificationTemplate {
   category: NotificationCategory;
-  variants: Array<{
+  variants: {
     title: string;
     body: string;
-  }>;
+  }[];
   deepLink: string;
 }
 
 export interface NotificationDebugEntry {
-  type: 'scheduled' | 'triggered' | 'cancelled' | 'blocked_quiet' | 'blocked_safety';
+  type: 'scheduled' | 'triggered' | 'cancelled' | 'blocked_quiet' | 'blocked_safety' | 'permission';
   category: NotificationCategory;
   title: string;
   body: string;

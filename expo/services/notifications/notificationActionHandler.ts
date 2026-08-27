@@ -77,6 +77,12 @@ class NotificationActionHandler {
       rule_id: data?.rule_id ?? 'unknown',
     });
 
+    if (cat === 'trial_reminder') {
+      void trackEvent('trial_reminder_opened', {
+        category: cat,
+      });
+    }
+
     void notificationVariantResolver.trackOpened(cat);
 
     console.log('[NotificationActionHandler] Session started:', sessionId);

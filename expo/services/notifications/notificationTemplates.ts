@@ -106,6 +106,13 @@ export const NOTIFICATION_TEMPLATES: NotificationTemplate[] = [
     ],
     deepLink: '/upgrade',
   },
+  {
+    category: 'trial_reminder',
+    variants: [
+      { title: 'Your BPD Companion trial ends tomorrow', body: 'Open BPD Companion to review your membership before your trial ends.' },
+    ],
+    deepLink: '/upgrade',
+  },
 ];
 
 export function getLocalizedNotificationVariants(category: NotificationCategory): { title: string; body: string }[] | null {

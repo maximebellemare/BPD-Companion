@@ -1,5 +1,6 @@
 import { JournalEntry } from '@/types';
 import { storageService } from '@/services/storage/storageService';
+import type { OnboardingProfile } from '@/types/onboarding';
 
 const FAVORITE_AHA_MOMENTS_KEY = 'bpd_companion_favorite_aha_moments';
 const MIN_HIGH_CONFIDENCE_COUNT = 3;
@@ -15,6 +16,14 @@ export interface AhaMoment {
 
 export interface FavoriteAhaMoment extends AhaMoment {
   savedAt: number;
+}
+
+export interface Day2AhaInsight {
+  id: string;
+  title: string;
+  value: string;
+  description: string;
+  confidence: 'building' | 'emerging';
 }
 
 function normalize(value: string | undefined): string {
@@ -220,6 +229,105 @@ export function generateAhaMoments(journalEntries: JournalEntry[], now = Date.no
     buildIgnoredMoreThanRejected(entries, now),
     buildSleepBeforeStrongDays(entries, now),
   ].filter((moment): moment is AhaMoment => moment !== null);
+}
+
+function getMostFrequentLabel(entries: JournalEntry[], kind: 'emotion' | 'trigger'): string | null {
+  const counts = new Map<string, { label: string; count: number }>();
+  entries.forEach((entry) => {
+    const items = kind === 'emotion' ? entry.checkIn.emotions : entry.checkIn.triggers;
+    items.forEach((item) => {
+      const label = item.label.trim();
+      if (!label) return;
+      const key = label.toLowerCase();
+      const existing = counts.get(key) ?? { label, count: 0 };
+      counts.set(key, { label: existing.label, count: existing.count + 1 });
+    });
+  });
+  return [...counts.values()].sort((a, b) => b.count - a.count)[0]?.label ?? null;
+}
+
+function getOnboardingFocus(profile: OnboardingProfile | null | undefined): string {
+  if (!profile) return 'your first emotional pattern';
+  if (
+    profile.primaryReasons.includes('relationship_spirals') ||
+    profile.primaryReasons.includes('relationship_conflict') ||
+    profile.primaryReasons.includes('fear_of_abandonment') ||
+    profile.hardestMoments.includes('delayed_replies') ||
+    profile.hardestMoments.includes('feeling_rejected')
+  ) {
+    return 'relationship stress';
+  }
+  if (
+    profile.primaryReasons.includes('impulsive_messaging') ||
+    profile.primaryReasons.includes('impulsive_urges') ||
+    profile.preferredTools.includes('pause_before_messaging')
+  ) {
+    return 'the pause before reacting';
+  }
+  if (
+    profile.primaryReasons.includes('emotional_overwhelm') ||
+    profile.primaryReasons.includes('intense_emotions') ||
+    profile.preferredTools.includes('calm_emotional_spikes')
+  ) {
+    return 'emotional intensity';
+  }
+  if (
+    profile.primaryReasons.includes('understanding_patterns') ||
+    profile.preferredTools.includes('track_moods_triggers') ||
+    profile.preferredTools.includes('reflections_insights')
+  ) {
+    return 'your pattern map';
+  }
+  return 'your first emotional pattern';
+}
+
+export function generateDay2PersonalizedAhaInsight(params: {
+  journalEntries: JournalEntry[];
+  onboardingProfile?: OnboardingProfile | null;
+  now?: number;
+}): Day2AhaInsight | null {
+  const entries = [...params.journalEntries].sort((a, b) => b.timestamp - a.timestamp);
+  if (entries.length < 2) return null;
+
+  const recent = entries.slice(0, 4);
+  const emotion = getMostFrequentLabel(recent, 'emotion');
+  const trigger = getMostFrequentLabel(recent, 'trigger');
+  const onboardingFocus = getOnboardingFocus(params.onboardingProfile);
+  const onboardingContext = params.onboardingProfile
+    ? `Based on what you told us, ${onboardingFocus} is one area BPD Companion will watch as real check-in patterns build.`
+    : 'BPD Companion will keep watching for real check-in patterns as you log more moments.';
+
+  if (emotion && trigger) {
+    return {
+      id: 'day2_aha_emotion_trigger',
+      title: 'Your first pattern is starting to show',
+      value: `${emotion} around ${trigger}`,
+      description: `After a couple of check-ins, BPD Companion detected ${emotion.toLowerCase()} showing up around ${trigger.toLowerCase()}. ${onboardingContext} Keep logging small moments so this gets sharper.`,
+      confidence: recent.length >= 3 ? 'emerging' : 'building',
+    };
+  }
+
+  if (emotion) {
+    return {
+      id: 'day2_aha_emotion',
+      title: 'One emotion is showing up early',
+      value: emotion,
+      description: `This is an early signal from your check-ins, not a conclusion. ${onboardingContext} A few more check-ins will help connect ${emotion.toLowerCase()} with the situations that tend to come before it.`,
+      confidence: recent.length >= 3 ? 'emerging' : 'building',
+    };
+  }
+
+  if (trigger) {
+    return {
+      id: 'day2_aha_trigger',
+      title: 'One trigger is worth watching',
+      value: trigger,
+      description: `This is an early trigger signal from your check-ins, not a conclusion. ${onboardingContext} More check-ins will show whether it repeats.`,
+      confidence: recent.length >= 3 ? 'emerging' : 'building',
+    };
+  }
+
+  return null;
 }
 
 export async function loadFavoriteAhaMoments(): Promise<FavoriteAhaMoment[]> {

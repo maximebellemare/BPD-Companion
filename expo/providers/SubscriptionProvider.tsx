@@ -50,6 +50,7 @@ import {
   getKnownInactiveExpiration,
   getManagementUrl,
   getRevenueCatAccessKind,
+  getActiveTrialStartedAt,
   isTrialActive as rcIsTrialActive,
   checkTrialIntroEligibility,
   PURCHASES_UNAVAILABLE_MESSAGE,
@@ -678,7 +679,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
       tier: 'premium',
       plan,
       expiresAt,
-      startedAt: null,
+      startedAt: getActiveTrialStartedAt(info),
       trialEndsAt: trial ? expiresAt : null,
       isTrialActive: trial,
     };
@@ -782,6 +783,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
         period: 'monthly',
         fallbackProductIdentifier: REVENUECAT_MONTHLY_PRODUCT_ID,
         androidTrialCopy: androidSelection?.trialCopy ?? null,
+        trialDays: androidSelection?.trialDays ?? null,
         trialEligibilityStatus: Platform.OS === 'android'
           ? (androidSelection?.trialCopy ? 'eligible' : 'unknown')
           : iosTrialEligibilityQuery.data?.[offering.monthly.product.identifier] ?? 'unknown',
@@ -802,6 +804,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
         period: 'yearly',
         fallbackProductIdentifier: REVENUECAT_YEARLY_PRODUCT_ID,
         androidTrialCopy: androidSelection?.trialCopy ?? null,
+        trialDays: androidSelection?.trialDays ?? null,
         trialEligibilityStatus: Platform.OS === 'android'
           ? (androidSelection?.trialCopy ? 'eligible' : 'unknown')
           : iosTrialEligibilityQuery.data?.[offering.annual.product.identifier] ?? 'unknown',

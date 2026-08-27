@@ -63,6 +63,7 @@ import { trackBillingIssueBannerViewedOnce } from '@/services/subscription/billi
 import { getBillingIssueAnalyticsMetadata } from '@/services/subscription/billingIssueRecoveryModel';
 import { BILLING_ISSUE_MANAGEMENT_RETURN_REASON } from '@/services/subscription/customerInfoRefreshModel';
 import {
+  getTrialLengthLabel,
   shouldShowTrialCopyForSelectedPlan,
   shouldShowTrialEndingReminderCopy,
 } from '@/services/subscription/trialReminderModel';
@@ -197,6 +198,7 @@ function getLocalizedPrimaryActionLabel(
   primaryAction: ReturnType<typeof getMembershipPrimaryAction>,
   selectedPlan: SubscriptionPlan | undefined,
   shouldShowTrialCopy: boolean,
+  trialLengthLabel: string,
 ): string {
   const plan = getLocalizedPlanName(t, selectedPlan?.period) ?? selectedPlan?.name ?? '';
   if (primaryAction.kind === 'continue') return t('actions.continue');
@@ -205,7 +207,7 @@ function getLocalizedPrimaryActionLabel(
   if (primaryAction.kind === 'scheduled') return t('actions.scheduled', { plan });
   if (primaryAction.kind === 'switch') return t('actions.switch', { plan });
   if (selectedPlan?.period === 'lifetime' && primaryAction.kind === 'purchase') return t('actions.purchaseLifetime');
-  if (primaryAction.kind === 'purchase') return shouldShowTrialCopy ? t('actions.purchaseTrial') : t('actions.purchaseMembership');
+  if (primaryAction.kind === 'purchase') return shouldShowTrialCopy ? t('actions.purchaseTrial', { trialLength: trialLengthLabel }) : t('actions.purchaseMembership');
   return t('actions.loading');
 }
 
@@ -216,6 +218,13 @@ function getPlanCadenceLabel(
   if (period === 'monthly') return t('perMonth');
   if (period === 'yearly') return t('perYear');
   return t('payOnce');
+}
+
+function getLocalizedTrialLengthLabel(language: string, trialDays: number | null | undefined): string {
+  if (language === 'es') {
+    return trialDays && Number.isFinite(trialDays) && trialDays > 0 ? `${trialDays} días gratis` : 'gratis';
+  }
+  return getTrialLengthLabel(trialDays);
 }
 
 function getMembershipFeatureTranslationKey(id: string): string {
@@ -240,6 +249,7 @@ function getLocalizedStatusCopy(params: {
   inactiveExpirationDateLabel?: string | null;
   trialDaysRemaining: number;
   shouldShowTrialCopy: boolean;
+  trialLengthLabel: string;
   isSubscriptionManagement?: boolean;
   isMembershipLoading?: boolean;
 }): { title: string; body: string; heroTitle: string; plansTitle: string } {
@@ -250,7 +260,7 @@ function getLocalizedStatusCopy(params: {
   const heroTitle = params.hasStoreAccess || (params.isSubscriptionManagement && params.isMembershipLoading)
     ? t('status.yourMembership')
     : params.shouldShowTrialCopy
-      ? t('status.startTrialHero')
+      ? t('status.startTrialHero', { trialLength: params.trialLengthLabel })
       : t('status.startMembershipHero');
   const plansTitle = params.hasStoreAccess || params.isSubscriptionManagement ? t('status.managePlan') : t('status.choosePlan');
 
@@ -354,8 +364,8 @@ function getLocalizedStatusCopy(params: {
   return {
     heroTitle,
     plansTitle,
-    title: params.shouldShowTrialCopy ? t('status.startTrialTitle') : t('status.startMembershipTitle'),
-    body: params.shouldShowTrialCopy ? t('status.startTrialBody') : t('status.startMembershipBody'),
+    title: params.shouldShowTrialCopy ? t('status.startTrialTitle', { trialLength: params.trialLengthLabel }) : t('status.startMembershipTitle'),
+    body: params.shouldShowTrialCopy ? t('status.startTrialBody', { trialLength: params.trialLengthLabel }) : t('status.startMembershipBody'),
   };
 }
 
@@ -789,6 +799,7 @@ export default function UpgradeScreen() {
       pendingTargetPeriod: pendingPlanChange?.targetPeriod ?? null,
       canSubscribe: !isExpoGo && isNativePurchases && !!selected && !selected.isFallbackPrice && offeringStatus === 'ready',
       shouldShowTrialCopy: selectedShowsTrialCopy,
+      trialLengthLabel: getLocalizedTrialLengthLabel(language, selected?.trialDays ?? null),
       selectedPriceLabel: selected?.priceLabel ?? '',
     });
     if (primaryAction.kind === 'manage') {
@@ -845,7 +856,7 @@ export default function UpgradeScreen() {
       selectedShowsTrialCopy &&
       selected.period !== 'lifetime';
     subscribe(selected);
-  }, [activeManagementUrl, activePeriodForPrimaryAction, activeProductIdentifier, hasStoreAccess, inactiveBillingIssueRecovery, isExpoGo, pendingPlanChange?.targetPeriod, router, selectedPlanId, subscribe, t, trackEvent, plans, offeringStatus, isNativePurchases]);
+  }, [activeManagementUrl, activePeriodForPrimaryAction, activeProductIdentifier, hasStoreAccess, inactiveBillingIssueRecovery, isExpoGo, language, pendingPlanChange?.targetPeriod, router, selectedPlanId, subscribe, t, trackEvent, plans, offeringStatus, isNativePurchases]);
 
   const handleClose = useCallback(() => {
     if (isExpoGo) {
@@ -901,6 +912,7 @@ export default function UpgradeScreen() {
 
   const selectedPlan = plans.find(p => p.id === selectedPlanId);
   const selectedIsLifetime = selectedPlan?.period === 'lifetime';
+  const selectedTrialLengthLabel = getLocalizedTrialLengthLabel(language, selectedPlan?.trialDays ?? null);
   const selectedAndroidTrialCopy = Platform.OS === 'android' ? selectedPlan?.androidTrialCopy ?? null : null;
   const shouldShowTrialCopy = shouldShowTrialCopyForSelectedPlan({
     platform: Platform.OS,
@@ -929,6 +941,7 @@ export default function UpgradeScreen() {
     pendingTargetPeriod: pendingPlanChange?.targetPeriod ?? null,
     canSubscribe,
     shouldShowTrialCopy,
+    trialLengthLabel: selectedTrialLengthLabel,
     selectedPriceLabel: selectedPlan?.priceLabel ?? '',
   }), [
     canSubscribe,
@@ -939,6 +952,7 @@ export default function UpgradeScreen() {
     activePeriodForPrimaryAction,
     selectedPlan?.period,
     selectedPlan?.priceLabel,
+    selectedTrialLengthLabel,
     shouldShowTrialCopy,
   ]);
   const canUsePrimaryCta = primaryAction.kind === 'continue' ||
@@ -966,6 +980,7 @@ export default function UpgradeScreen() {
     inactiveExpirationDateLabel: formatDateForLanguage(inactiveExpirationAt, language),
     trialDaysRemaining,
     shouldShowTrialCopy,
+    trialLengthLabel: selectedTrialLengthLabel,
     isSubscriptionManagement,
     isMembershipLoading: isLoading,
   });
@@ -1006,7 +1021,7 @@ export default function UpgradeScreen() {
     outputRange: [0.7, 1],
   });
   const visibleTestimonials = language === 'es' ? TESTIMONIALS_ES : TESTIMONIALS;
-  const primaryActionLabel = getLocalizedPrimaryActionLabel(t, primaryAction, selectedPlan, shouldShowTrialCopy);
+  const primaryActionLabel = getLocalizedPrimaryActionLabel(t, primaryAction, selectedPlan, shouldShowTrialCopy, selectedTrialLengthLabel);
   const visiblePrimaryActionLabel = inactiveBillingIssueRecovery
     ? t('billingRecovery.fixPayment')
     : primaryActionLabel;
@@ -1149,7 +1164,7 @@ export default function UpgradeScreen() {
           </View>
           {shouldShowTrialCopy ? (
             <Text style={styles.trialClarifier}>
-              {t('trialClarifier')}
+              {t('trialClarifier', { trialLength: selectedTrialLengthLabel })}
             </Text>
           ) : selectedIsLifetime ? (
             <Text style={styles.trialClarifier}>
@@ -1333,7 +1348,7 @@ export default function UpgradeScreen() {
             <View style={styles.trialReminderCard}>
               <Clock size={15} color={Colors.primary} />
               <View style={styles.trialReminderTextWrap}>
-                <Text style={styles.trialReminderLine}>{t('trialReminder.today')}</Text>
+                <Text style={styles.trialReminderLine}>{t('trialReminder.today', { trialLength: selectedTrialLengthLabel })}</Text>
                 <Text style={styles.trialReminderLine}>{t('trialReminder.reminder')}</Text>
                 <Text style={styles.trialReminderLine}>{t('trialReminder.day3')}</Text>
                 <Text style={styles.trialReminderNote}>{t('trialReminder.permissionNote')}</Text>
@@ -1374,7 +1389,7 @@ export default function UpgradeScreen() {
             <Shield size={13} color={Colors.textMuted} />
             <Text style={styles.trustText}>
               {shouldShowTrialCopy
-                ? t('trialEligible')
+                ? t('trialEligible', { trialLength: selectedTrialLengthLabel })
                 : selectedIsLifetime
                   ? t('lifetimeTrust')
                 : t('cancelAnytime')}

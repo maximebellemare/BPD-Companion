@@ -53,7 +53,7 @@ export default function UpgradePromptCard() {
           </View>
           <View style={styles.textWrap}>
             <Text style={styles.title}>{localizedText('Membership access', 'Acceso de membresía')}</Text>
-            <Text style={styles.subtitle}>{localizedText('Start your 3-day free trial', 'Inicia tu prueba gratis de 3 días')}</Text>
+            <Text style={styles.subtitle}>{localizedText('Start your free trial', 'Inicia tu prueba gratis')}</Text>
           </View>
         </View>
         <View style={styles.arrowWrap}>

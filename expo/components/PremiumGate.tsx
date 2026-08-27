@@ -123,7 +123,7 @@ function FullUpgradePrompt({ feature }: { feature: PremiumFeature }) {
         <Crown size={16} color={Colors.white} />
         <Text style={styles.fullButtonText}>{localizedText('Start membership', 'Iniciar membresía')}</Text>
       </TouchableOpacity>
-      <Text style={styles.fullFooter}>{localizedText('3-day free trial available', 'Prueba gratis de 3 días disponible')}</Text>
+      <Text style={styles.fullFooter}>{localizedText('Free trial available', 'Prueba gratis disponible')}</Text>
     </Animated.View>
   );
 }

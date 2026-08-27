@@ -4,18 +4,29 @@ import { useProfile } from '@/providers/ProfileProvider';
 import { useEmotionalContext } from '@/providers/EmotionalContextProvider';
 import { useApp } from '@/providers/AppProvider';
 import { useAnalytics } from '@/providers/AnalyticsProvider';
+import { useAuth } from '@/providers/AuthProvider';
+import { useOnboarding } from '@/providers/OnboardingProvider';
+import { useSubscription } from '@/providers/SubscriptionProvider';
+import { useFirstWeekJourney } from '@/hooks/useFirstWeekJourney';
+import { generateWeeklyDiscoveries } from '@/services/insights/weeklyDiscoveriesService';
 import { behaviorTrackingService } from '@/services/notifications/behaviorTrackingService';
 import { behaviorNotificationEngine, BehaviorNotificationPreferences } from '@/services/notifications/behaviorNotificationEngine';
+import { scheduleRetentionNotificationOnce } from '@/services/notifications/retentionNotificationService';
 import { QuietHours } from '@/types/notifications';
 
 const EVAL_INTERVAL_MS = 20 * 60 * 1000;
 const MIN_EVAL_GAP_MS = 10 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 export function useBehaviorNotifications() {
   const { profile } = useProfile();
   const { activeContext } = useEmotionalContext();
   const { journalEntries, messageDrafts } = useApp();
   const { trackEvent } = useAnalytics();
+  const { isAuthenticated, user } = useAuth();
+  const { onboardingProfile } = useOnboarding();
+  const { state } = useSubscription();
+  const firstWeekJourney = useFirstWeekJourney();
   const lastEvalRef = useRef<number>(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const initializedRef = useRef(false);
@@ -34,6 +45,10 @@ export function useBehaviorNotifications() {
   ]);
 
   const frequency = profile.notifications.frequency ?? 'balanced';
+  const weeklyDiscoveries = useMemo(
+    () => generateWeeklyDiscoveries(journalEntries, messageDrafts),
+    [journalEntries, messageDrafts],
+  );
 
   const behaviorPrefs = useMemo<BehaviorNotificationPreferences>(() => ({
     behaviorCheckIns: profile.notifications.behaviorCheckIns ?? true,
@@ -60,6 +75,7 @@ export function useBehaviorNotifications() {
         quietHours,
         frequency,
         behaviorPrefs,
+        { onboardingProfile },
       );
 
       for (const decision of result.fired) {
@@ -85,7 +101,7 @@ export function useBehaviorNotifications() {
     } catch (error) {
       console.error('[useBehaviorNotifications] Evaluation error:', error);
     }
-  }, [activeContext.latestIntensity, quietHours, frequency, behaviorPrefs, trackEvent]);
+  }, [activeContext.latestIntensity, quietHours, frequency, behaviorPrefs, onboardingProfile, trackEvent]);
 
   useEffect(() => {
     if (initializedRef.current) return;
@@ -153,6 +169,52 @@ export function useBehaviorNotifications() {
     }
     prevDraftCountRef.current = messageDrafts.length;
   }, [messageDrafts.length, messageDrafts]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !user?.id || !state.isTrialActive || !state.startedAt) return;
+
+    const trialStartedAt = state.startedAt;
+    const schedule = (
+      kind: Parameters<typeof scheduleRetentionNotificationOnce>[0]['kind'],
+      episodeKey: string,
+      eligibleAt: number,
+    ) => {
+      void scheduleRetentionNotificationOnce({
+        ownerId: user.id,
+        kind,
+        episodeKey,
+        eligibleAt,
+        onboardingProfile,
+        quietHours,
+        currentDistress: activeContext.latestIntensity,
+        trackEvent,
+      });
+    };
+
+    if (firstWeekJourney.day2AhaInsight) {
+      schedule('day2_aha', `trial_${trialStartedAt}`, trialStartedAt + DAY_MS);
+    }
+    if (firstWeekJourney.day3ProgressRecap) {
+      schedule('day3_recap', `trial_${trialStartedAt}`, trialStartedAt + DAY_MS * 2);
+    }
+    if (weeklyDiscoveries.hasEnoughData) {
+      schedule('weekly_insight', weeklyDiscoveries.id, weeklyDiscoveries.weekEnd);
+    }
+  }, [
+    activeContext.latestIntensity,
+    firstWeekJourney.day2AhaInsight,
+    firstWeekJourney.day3ProgressRecap,
+    isAuthenticated,
+    onboardingProfile,
+    quietHours,
+    state.isTrialActive,
+    state.startedAt,
+    trackEvent,
+    user?.id,
+    weeklyDiscoveries.hasEnoughData,
+    weeklyDiscoveries.id,
+    weeklyDiscoveries.weekEnd,
+  ]);
 
   const recordCompanionSession = useCallback(() => {
     void behaviorTrackingService.recordCompanionSession();

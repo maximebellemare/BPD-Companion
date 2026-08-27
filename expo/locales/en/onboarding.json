@@ -87,12 +87,12 @@
     "insightsTitle": "Personalized insights"
   },
   "membership": {
-    "headline": "Start your 3-day free trial.",
+    "headline": "Start your free trial.",
     "subheadline": "Everything is unlocked from day one.",
     "transformTitle": "Imagine feeling:",
     "includesTitle": "Your membership includes:",
-    "trialNote": "Cancel anytime before your 3-day trial ends. You won’t be charged until your trial is over.",
-    "primary": "Start 3-Day Free Trial",
+    "trialNote": "Cancel anytime before your trial ends. You won’t be charged until your trial is over.",
+    "primary": "Start Free Trial",
     "marketingTitle": "Get more from your BPD Companion trial",
     "marketingDescription": "Get practical BPD tools, new-feature updates, and member-only offers by email.",
     "marketingSaveError": "Could not save your email preference. You can update it later in Profile.",

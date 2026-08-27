@@ -10,6 +10,10 @@ import { notificationService } from './notificationService';
 import { QuietHours, NotificationCategory } from '@/types/notifications';
 import { analyticsEngine } from '@/services/analytics/analyticsEngine';
 import { localizedText } from '@/lib/i18n/staticText';
+import {
+  selectPersonalizedNotificationCopy,
+  type PersonalizedNotificationContext,
+} from '@/services/notifications/personalizedNotificationModel';
 
 const ANALYTICS_KEY = 'bpd_behavior_notif_analytics';
 const MAX_DAILY_BEHAVIOR_NOTIFS = 2;
@@ -44,7 +48,7 @@ const SIGNAL_COOLDOWN_HOURS: Record<BehaviorSignalType, number> = {
   evening_unprocessed: 24,
 };
 
-const SIGNAL_COPY: Record<BehaviorSignalType, Array<{ title: string; body: string }>> = {
+const SIGNAL_COPY: Record<BehaviorSignalType, { title: string; body: string }[]> = {
   inactivity: [
     { title: 'This space is here for you', body: 'No pressure — just a reminder that support is always available.' },
     { title: 'A quiet moment waiting', body: 'Whenever you need it, a calmer space is here.' },
@@ -88,7 +92,7 @@ const SIGNAL_COPY: Record<BehaviorSignalType, Array<{ title: string; body: strin
   ],
 };
 
-const SIGNAL_COPY_ES: Record<BehaviorSignalType, Array<{ title: string; body: string }>> = {
+const SIGNAL_COPY_ES: Record<BehaviorSignalType, { title: string; body: string }[]> = {
   inactivity: [
     { title: 'Este espacio está aquí para ti', body: 'Sin presión; solo un recordatorio de que el apoyo sigue disponible.' },
     { title: 'Un momento tranquilo te espera', body: 'Cuando lo necesites, aquí tienes un espacio más calmado.' },
@@ -169,6 +173,7 @@ class BehaviorNotificationEngine {
     quietHours: QuietHours,
     frequency: 'minimal' | 'balanced' | 'supportive',
     preferences?: BehaviorNotificationPreferences,
+    personalizationContext?: PersonalizedNotificationContext,
   ): Promise<{ fired: BehaviorNotificationDecision[]; suppressed: BehaviorNotificationDecision[] }> {
     const signals = await behaviorTrackingService.detectSignals();
     const fired: BehaviorNotificationDecision[] = [];
@@ -185,14 +190,14 @@ class BehaviorNotificationEngine {
 
     if (dailyCount >= effectiveMax) {
       for (const signal of signals) {
-        suppressed.push(this.buildDecision(signal, false, `Daily notification cap reached (${dailyCount}/${effectiveMax})`));
+        suppressed.push(this.buildDecision(signal, false, `Daily notification cap reached (${dailyCount}/${effectiveMax})`, personalizationContext));
       }
       return { fired, suppressed };
     }
 
     if (notificationService.isWithinQuietHours(quietHours)) {
       for (const signal of signals) {
-        suppressed.push(this.buildDecision(signal, false, 'Quiet hours active'));
+        suppressed.push(this.buildDecision(signal, false, 'Quiet hours active', personalizationContext));
       }
       return { fired, suppressed };
     }
@@ -203,33 +208,33 @@ class BehaviorNotificationEngine {
       if (preferences) {
         const prefKey = SIGNAL_PREFERENCE_MAP[signal.type];
         if (prefKey && !preferences[prefKey]) {
-          suppressed.push(this.buildDecision(signal, false, `Preference disabled: ${prefKey}`));
+          suppressed.push(this.buildDecision(signal, false, `Preference disabled: ${prefKey}`, personalizationContext));
           continue;
         }
       }
 
       if (fired.length >= (effectiveMax - dailyCount)) {
-        suppressed.push(this.buildDecision(signal, false, 'Already queued enough for today'));
+        suppressed.push(this.buildDecision(signal, false, 'Already queued enough for today', personalizationContext));
         continue;
       }
 
       if (currentDistress >= 8 && signal.type !== 'distress_pattern') {
-        suppressed.push(this.buildDecision(signal, false, `High distress (${currentDistress}) — only support nudges allowed`));
+        suppressed.push(this.buildDecision(signal, false, `High distress (${currentDistress}) — only support nudges allowed`, personalizationContext));
         continue;
       }
 
       const cooldown = SIGNAL_COOLDOWN_HOURS[signal.type];
       if (behaviorTrackingService.isCooldownActive(signal.type, cooldown)) {
-        suppressed.push(this.buildDecision(signal, false, `Cooldown active (${cooldown}h)`));
+        suppressed.push(this.buildDecision(signal, false, `Cooldown active (${cooldown}h)`, personalizationContext));
         continue;
       }
 
       if (currentDistress >= 6 && (signal.type === 'streak_milestone' || signal.type === 'growth_signal')) {
-        suppressed.push(this.buildDecision(signal, false, 'Celebratory notifications suppressed during moderate distress'));
+        suppressed.push(this.buildDecision(signal, false, 'Celebratory notifications suppressed during moderate distress', personalizationContext));
         continue;
       }
 
-      const decision = this.buildDecision(signal, true, 'Signal conditions met');
+      const decision = this.buildDecision(signal, true, 'Signal conditions met', personalizationContext);
       fired.push(decision);
     }
 
@@ -295,9 +300,11 @@ class BehaviorNotificationEngine {
     signal: BehaviorSignal,
     shouldFire: boolean,
     reason: string,
+    personalizationContext?: PersonalizedNotificationContext,
   ): BehaviorNotificationDecision {
     const copies = localizedText('en', 'es') === 'es' ? SIGNAL_COPY_ES[signal.type] : SIGNAL_COPY[signal.type];
-    const copy = copies[Math.floor(Math.random() * copies.length)];
+    const fallbackCopy = copies[Math.floor(Math.random() * copies.length)];
+    const copy = selectPersonalizedNotificationCopy(signal.type, personalizationContext, fallbackCopy);
     const deepLink = SIGNAL_DEEP_LINKS[signal.type];
     const cooldown = SIGNAL_COOLDOWN_HOURS[signal.type];
 

@@ -5,7 +5,6 @@ import {
   REVENUECAT_ENTITLEMENT_ID,
   REVENUECAT_IOS_API_KEY_ENV,
   REVENUECAT_MONTHLY_PRODUCT_ID,
-  REVENUECAT_OFFERING_ID,
   REVENUECAT_TEST_API_KEY_ENV,
   REVENUECAT_YEARLY_PRODUCT_ID,
 } from '@/constants/revenuecat';
@@ -305,11 +304,17 @@ export async function fetchOfferings(): Promise<PurchasesOffering | null> {
   try {
     const Purchases = (await import('react-native-purchases')).default;
     const offerings = await Purchases.getOfferings();
-    const current = offerings.current ?? offerings.all[REVENUECAT_OFFERING_ID] ?? null;
-    return current;
+    return selectCurrentOfferingForPurchase(offerings);
   } catch (error) {
     throw new Error(error instanceof Error ? error.message : 'RevenueCat offerings request failed.');
   }
+}
+
+export function selectCurrentOfferingForPurchase(offerings: {
+  current?: PurchasesOffering | null;
+  all?: Record<string, PurchasesOffering>;
+} | null): PurchasesOffering | null {
+  return offerings?.current ?? null;
 }
 
 export async function fetchCustomerInfo(): Promise<CustomerInfo | null> {
@@ -508,4 +513,11 @@ export function isTrialActive(info: CustomerInfo | null): boolean {
   if (!info) return false;
   const ent = info.entitlements.active[REVENUECAT_ENTITLEMENT_ID];
   return ent?.periodType?.trim().toUpperCase() === 'TRIAL';
+}
+
+export function getActiveTrialStartedAt(info: CustomerInfo | null): number | null {
+  if (!isTrialActive(info)) return null;
+  const timestamp = info?.entitlements.active[REVENUECAT_ENTITLEMENT_ID]?.latestPurchaseDateMillis;
+  if (typeof timestamp !== 'number') return null;
+  return Number.isFinite(timestamp) ? timestamp : null;
 }

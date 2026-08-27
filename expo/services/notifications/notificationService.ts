@@ -9,6 +9,12 @@ import {
   QuietHours,
 } from '@/types/notifications';
 import { getCategoryConfig } from './notificationCategories';
+import {
+  canScheduleNotification,
+  normalizeNotificationPermissionState,
+  shouldRequestNotificationPermission,
+  type NotificationPermissionState,
+} from './notificationPermissionModel';
 
 const NOTIFICATION_EVENTS_KEY = 'bpd_notification_events';
 const SCHEDULED_REMINDERS_KEY = 'bpd_scheduled_reminders';
@@ -29,7 +35,11 @@ if (Platform.OS !== 'web') {
 class NotificationService {
   private initialized = false;
 
-  async initialize(): Promise<boolean> {
+  private getAndroidSdkVersion(): string | number | null {
+    return Platform.OS === 'android' ? Platform.Version : null;
+  }
+
+  async initializePassive(): Promise<boolean> {
     if (this.initialized) return true;
 
     if (Platform.OS === 'web') {
@@ -39,19 +49,6 @@ class NotificationService {
     }
 
     try {
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-
-      if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-
-      if (finalStatus !== 'granted') {
-        console.log('[NotificationService] Permission not granted');
-        return false;
-      }
-
       if (Platform.OS === 'android') {
         await Notifications.setNotificationChannelAsync('default', {
           name: 'BPD Companion',
@@ -77,13 +74,56 @@ class NotificationService {
     }
   }
 
-  async getPermissionStatus(): Promise<string> {
-    if (Platform.OS === 'web') return 'web_unsupported';
+  async initialize(): Promise<boolean> {
+    const passiveReady = await this.initializePassive();
+    if (!passiveReady || Platform.OS === 'web') return passiveReady;
+
     try {
-      const { status } = await Notifications.getPermissionsAsync();
-      return status;
+      const existingPermission = await this.getPermissionState();
+      let finalPermission = existingPermission;
+
+      if (shouldRequestNotificationPermission({
+        existingPermission,
+        requestPermissionIfNeeded: true,
+      })) {
+        finalPermission = normalizeNotificationPermissionState({
+          ...(await Notifications.requestPermissionsAsync()),
+          androidSdkVersion: this.getAndroidSdkVersion(),
+        });
+      }
+
+      if (!canScheduleNotification(finalPermission)) {
+        console.log('[NotificationService] Permission not granted');
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('[NotificationService] Permission request failed:', error);
+      return false;
+    }
+  }
+
+  async getPermissionStatus(): Promise<string> {
+    return (await this.getPermissionState()).status;
+  }
+
+  async getPermissionState(): Promise<NotificationPermissionState> {
+    if (Platform.OS === 'web') {
+      return normalizeNotificationPermissionState('web_unsupported');
+    }
+    try {
+      return normalizeNotificationPermissionState({
+        ...(await Notifications.getPermissionsAsync()),
+        androidSdkVersion: this.getAndroidSdkVersion(),
+      });
     } catch {
-      return 'unknown';
+      return normalizeNotificationPermissionState({
+        androidSdkVersion: this.getAndroidSdkVersion(),
+        canAskAgain: false,
+        granted: false,
+        status: 'unknown',
+      });
     }
   }
 
@@ -132,6 +172,7 @@ class NotificationService {
     data?: Record<string, string>,
     quietHours?: QuietHours,
     currentDistress?: number,
+    requestPermissionIfNeeded: boolean = false,
   ): Promise<string | null> {
     const config = getCategoryConfig(category);
 
@@ -174,7 +215,22 @@ class NotificationService {
     }
 
     try {
-      await this.initialize();
+      await this.initializePassive();
+      const existingPermission = await this.getPermissionState();
+      let finalPermission = existingPermission;
+      if (shouldRequestNotificationPermission({ existingPermission, requestPermissionIfNeeded })) {
+        try {
+          finalPermission = normalizeNotificationPermissionState({
+            ...(await Notifications.requestPermissionsAsync()),
+            androidSdkVersion: this.getAndroidSdkVersion(),
+          });
+        } catch {
+          return null;
+        }
+      }
+      if (!canScheduleNotification(finalPermission)) {
+        return null;
+      }
 
       const trigger: Notifications.NotificationTriggerInput = {
         type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
@@ -224,6 +280,7 @@ class NotificationService {
     title: string,
     body: string,
     category: NotificationCategory,
+    requestPermissionIfNeeded: boolean = false,
   ): Promise<string | null> {
     if (Platform.OS === 'web') {
       console.log('[NotificationService] [Web] Would schedule daily:', { hour, minute, title });
@@ -239,7 +296,16 @@ class NotificationService {
     }
 
     try {
-      await this.initialize();
+      await this.initializePassive();
+      const existingPermission = await this.getPermissionState();
+      let finalPermission = existingPermission;
+      if (shouldRequestNotificationPermission({ existingPermission, requestPermissionIfNeeded })) {
+        finalPermission = normalizeNotificationPermissionState({
+          ...(await Notifications.requestPermissionsAsync()),
+          androidSdkVersion: this.getAndroidSdkVersion(),
+        });
+      }
+      if (!canScheduleNotification(finalPermission)) return null;
 
       const notificationId = await Notifications.scheduleNotificationAsync({
         content: {
@@ -288,6 +354,7 @@ class NotificationService {
     title: string,
     body: string,
     category: NotificationCategory,
+    requestPermissionIfNeeded: boolean = false,
   ): Promise<string | null> {
     if (Platform.OS === 'web') {
       console.log('[NotificationService] [Web] Would schedule weekly:', { weekday, hour, minute, title });
@@ -303,7 +370,16 @@ class NotificationService {
     }
 
     try {
-      await this.initialize();
+      await this.initializePassive();
+      const existingPermission = await this.getPermissionState();
+      let finalPermission = existingPermission;
+      if (shouldRequestNotificationPermission({ existingPermission, requestPermissionIfNeeded })) {
+        finalPermission = normalizeNotificationPermissionState({
+          ...(await Notifications.requestPermissionsAsync()),
+          androidSdkVersion: this.getAndroidSdkVersion(),
+        });
+      }
+      if (!canScheduleNotification(finalPermission)) return null;
 
       const notificationId = await Notifications.scheduleNotificationAsync({
         content: {

@@ -15,16 +15,16 @@
   "unavailableBody": "Inténtalo de nuevo. También puedes restaurar una suscripción existente.",
   "loadingAlertTitle": "Las opciones de membresía se están cargando",
   "loadingAlertBody": "Inténtalo de nuevo en un momento.",
-  "closeRequiresTrial": "Comienza tu prueba gratis de 3 días para entrar a BPD Companion.",
+  "closeRequiresTrial": "Comienza tu prueba gratis para entrar a BPD Companion.",
   "restoreActive": "Suscripción restaurada. El acceso de membresía está activo.",
   "restoreNone": "No se encontró una membresía activa para esta cuenta de la tienda.",
   "restoreFailed": "No se pudo completar la restauración. Inténtalo de nuevo.",
   "currentPlan": "Plan actual",
   "bestValue": "Mejor valor",
   "scheduled": "Programado",
-  "trialEligible": "Prueba gratis de 3 días para nuevos suscriptores elegibles · Cancela cuando quieras",
+  "trialEligible": "Prueba de {{trialLength}} para nuevos suscriptores elegibles · Cancela cuando quieras",
   "cancelAnytime": "Cancela cuando quieras",
-  "trialClarifier": "Cancela cuando quieras antes de que terminen los 3 días de prueba. No se te cobrará hasta que termine la prueba.",
+  "trialClarifier": "Cancela cuando quieras antes de que termine tu prueba de {{trialLength}}. No se te cobrará hasta que termine la prueba.",
   "settingsClarifier": "Cancela cuando quieras desde la configuración de suscripciones de App Store o Google Play.",
   "disclaimer": "El pago se cargará a tu cuenta de Apple ID o Google Play al confirmar la compra. La suscripción se renueva automáticamente a menos que se cancele antes de que termine el período actual. Puedes administrar y cancelar tu suscripción en la configuración de tu cuenta de la tienda. Esta app es de acompañamiento y no reemplaza terapia ni consejo médico.",
   "plans": {
@@ -67,7 +67,7 @@
   ],
   "status": {
     "yourMembership": "Tu membresía",
-    "startTrialHero": "Comienza tu prueba gratis de 3 días.",
+    "startTrialHero": "Comienza tu prueba de {{trialLength}}.",
     "startMembershipHero": "Comienza tu membresía.",
     "managePlan": "Administra tu plan",
     "choosePlan": "Elige tu plan",
@@ -77,7 +77,7 @@
     "membershipExpired": "Membresía vencida",
     "billingIssue": "Problema de facturación",
     "renewalDate": "tu fecha de renovación",
-    "startTrialTitle": "Comienza tu prueba gratis de 3 días",
+    "startTrialTitle": "Comienza tu prueba de {{trialLength}}",
     "startMembershipTitle": "Comienza tu membresía",
     "fullAccess": "Tienes acceso completo a todas las funciones, incluyendo Companion, registros, herramientas, ideas y Comunidad.",
     "expired": "Tu membresía anterior venció el {{date}}. Comienza la membresía de nuevo para tener acceso completo desde el primer día.",
@@ -90,7 +90,7 @@
     "cancelledNoDate": "Plan actual: {{plan}}. El acceso sigue activo hasta que termine el período pagado actual.",
     "billing": "Plan actual: {{plan}}. Detectamos un problema de facturación{{dateText}}. Administra tu suscripción de la tienda para mantener activo el acceso.",
     "pending": "Plan actual: {{source}}. El plan actual sigue activo hasta el {{date}}. Próximo plan programado: {{target}}. Tu membresía {{target}} comenzará después de que termine tu período {{source}} actual el {{date}}.",
-    "startTrialBody": "Comienza tu prueba gratis de 3 días para tener acceso completo desde el primer día. Cancela cuando quieras antes de que termine la prueba.",
+    "startTrialBody": "Comienza tu prueba de {{trialLength}} para tener acceso completo desde el primer día. Cancela cuando quieras antes de que termine la prueba.",
     "startMembershipBody": "Comienza la membresía para tener acceso completo desde el primer día. Cancela cuando quieras.",
     "membershipActiveTitle": "Membresía {{plan}} activa",
     "trialActiveTitle": "Prueba {{plan}} activa",
@@ -101,7 +101,7 @@
     "manage": "Administrar suscripción actual",
     "scheduled": "Cambio a {{plan}} programado",
     "switch": "Cambiar a {{plan}}",
-    "purchaseTrial": "Comenzar prueba gratis de 3 días",
+    "purchaseTrial": "Comenzar prueba de {{trialLength}}",
     "purchaseMembership": "Comenzar membresía",
     "loading": "Cargando opciones de membresía..."
   },
@@ -129,5 +129,12 @@
     "communication_insights": "Descubre tus patrones de comunicación",
     "unlimited_rewrites": "Continúa con reescrituras ilimitadas de mensajes",
     "fallback": "Continúa con herramientas de apoyo más profundas"
+  },
+  "trialReminder": {
+    "today": "Hoy — Comienza tu prueba de {{trialLength}}",
+    "reminder": "Antes de que termine — Te lo recordaremos",
+    "day3": "Después de la prueba — Continúa con el plan elegido a menos que canceles",
+    "reassurance": "Te recordaremos antes de que termine tu prueba.",
+    "permissionNote": "Si permites notificaciones después de confirmar, BPD Companion enviará un recordatorio unas 24 horas antes de que termine tu prueba."
   }
 }

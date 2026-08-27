@@ -5,7 +5,11 @@ function assert(condition: unknown, message: string): void {
   if (!condition) throw new Error(`Localized pricing regression failed: ${message}`);
 }
 
-function pkg(priceString?: string, identifier: string = '$rc_monthly'): PurchasesPackage {
+function pkg(
+  priceString?: string,
+  identifier: string = '$rc_monthly',
+  introPeriod: string | null = null,
+): PurchasesPackage {
   return {
     identifier,
     packageType: 'MONTHLY',
@@ -13,6 +17,7 @@ function pkg(priceString?: string, identifier: string = '$rc_monthly'): Purchase
       identifier: 'bpd_monthly:monthly',
       price: 12.99,
       priceString: priceString ?? '',
+      introPrice: introPeriod ? { period: introPeriod, price: 0, priceString: '$0.00' } : null,
     },
   } as unknown as PurchasesPackage;
 }
@@ -62,6 +67,15 @@ export function assertLocalizedPricingRegressionScenarios(): true {
       freshCadPlan.productIdentifier === 'bpd_monthly:monthly',
     'display plan preserves the RevenueCat package/product used for purchase',
   );
+  const iosSevenDayTrialPlan = createLocalizedSubscriptionPlan({
+    pkg: pkg('$9.99', '$rc_monthly', 'P7D'),
+    period: 'monthly',
+    fallbackProductIdentifier: 'bpd_monthly:monthly',
+    trialEligibilityStatus: 'eligible',
+  });
+  assert(iosSevenDayTrialPlan?.trialDays === 7, 'iOS trial days come from StoreProduct introPrice period');
+  assert(iosSevenDayTrialPlan?.androidTrialCopy === '7-day free trial for eligible new subscribers', 'eligible native trial copy can reflect seven-day experiment metadata');
+
   assert(
     createLocalizedSubscriptionPlan({
       pkg: pkg(undefined),

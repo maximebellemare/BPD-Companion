@@ -76,6 +76,7 @@ export function getMembershipStatusCopy(params: {
   inactiveExpirationDateLabel?: string | null;
   trialDaysRemaining: number;
   shouldShowTrialCopy: boolean;
+  trialLengthLabel?: string;
   isSubscriptionManagement?: boolean;
   isMembershipLoading?: boolean;
 }): { title: string; body: string; heroTitle: string; plansTitle: string } {
@@ -84,12 +85,13 @@ export function getMembershipStatusCopy(params: {
   const expirationDateText = params.activeExpirationDateLabel ?? null;
   const hasBillingIssue = Boolean(params.billingIssueDateLabel);
   const hasCancelledAutoRenew = params.activeWillRenew === false;
+  const trialLengthLabel = params.trialLengthLabel ?? 'free';
 
   const heroTitle = params.hasStoreAccess
     || (params.isSubscriptionManagement && params.isMembershipLoading)
     ? 'Your Membership'
     : params.shouldShowTrialCopy
-      ? 'Start your 3-day free trial.'
+      ? `Start your ${trialLengthLabel} trial.`
       : 'Start your membership.';
 
   const plansTitle = params.hasStoreAccess || params.isSubscriptionManagement ? 'Manage your plan' : 'Choose your plan';
@@ -169,9 +171,9 @@ export function getMembershipStatusCopy(params: {
   return {
     heroTitle,
     plansTitle,
-    title: params.shouldShowTrialCopy ? 'Start your 3-day free trial' : 'Start your membership',
+    title: params.shouldShowTrialCopy ? `Start your ${trialLengthLabel} trial` : 'Start your membership',
     body: params.shouldShowTrialCopy
-      ? 'Start your 3-day free trial for full access from day one. Cancel anytime before the trial ends.'
+      ? `Start your ${trialLengthLabel} trial for full access from day one. Cancel anytime before the trial ends.`
       : 'Start membership for full access from day one. Cancel anytime.',
   };
 }
@@ -260,6 +262,7 @@ export function getMembershipPrimaryAction(params: {
   pendingTargetPeriod?: SubscriptionPeriod | null;
   canSubscribe: boolean;
   shouldShowTrialCopy: boolean;
+  trialLengthLabel?: string;
   selectedPriceLabel: string;
 }): MembershipPrimaryAction {
   const {
@@ -271,6 +274,7 @@ export function getMembershipPrimaryAction(params: {
     pendingTargetPeriod = null,
     canSubscribe,
     shouldShowTrialCopy,
+    trialLengthLabel = 'free',
     selectedPriceLabel,
   } = params;
 
@@ -315,7 +319,7 @@ export function getMembershipPrimaryAction(params: {
   return {
     kind: 'purchase',
     label: shouldShowTrialCopy
-      ? `Start your 3-day free trial ${selectedPriceLabel}`
+      ? `Start your ${trialLengthLabel} trial ${selectedPriceLabel}`
       : `Start membership ${selectedPriceLabel}`,
     requiresPurchasablePlan: true,
   };

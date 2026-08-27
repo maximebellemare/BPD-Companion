@@ -55,7 +55,7 @@ export function useNotifications() {
   }), [profile.notifications, quietHours]);
 
   useEffect(() => {
-    void notificationService.initialize();
+    void notificationService.initializePassive();
   }, []);
 
   useEffect(() => {

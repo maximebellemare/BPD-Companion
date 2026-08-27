@@ -14,6 +14,8 @@ export interface SubscriptionPlan {
   packageIdentifier?: string;
   isFallbackPrice?: boolean;
   androidTrialCopy?: string | null;
+  trialDays?: number | null;
+  trialEligibilityStatus?: 'eligible' | 'ineligible' | 'unknown';
 }
 
 export interface SubscriptionState {

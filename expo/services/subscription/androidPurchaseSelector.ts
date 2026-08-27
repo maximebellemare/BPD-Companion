@@ -1,15 +1,13 @@
 import {
   REVENUECAT_ANDROID_MONTHLY_BASE_PLAN_ID,
   REVENUECAT_ANDROID_MONTHLY_PRODUCT_ID,
-  REVENUECAT_ANDROID_MONTHLY_TRIAL_OFFER_ID,
   REVENUECAT_ANDROID_YEARLY_BASE_PLAN_ID,
   REVENUECAT_ANDROID_YEARLY_PRODUCT_ID,
-  REVENUECAT_ANDROID_YEARLY_TRIAL_OFFER_ID,
   REVENUECAT_ENTITLEMENT_ID,
   REVENUECAT_MONTHLY_PRODUCT_ID,
-  REVENUECAT_TRIAL_DAYS,
   REVENUECAT_YEARLY_PRODUCT_ID,
 } from '@/constants/revenuecat';
+import { getTrialDaysFromIsoPeriod, getTrialEligibilityCopy } from '@/services/subscription/trialReminderModel';
 import type {
   CustomerInfo,
   PurchasesPackage,
@@ -19,12 +17,9 @@ import type {
 } from '@/services/subscription/purchasesService';
 import type { SubscriptionPeriod } from '@/types/subscription';
 
-export const ANDROID_TRIAL_COPY = `${REVENUECAT_TRIAL_DAYS}-day free trial for eligible new subscribers`;
-
 type AndroidPlanConfig = {
   productId: string;
   basePlanId: string;
-  offerId: string;
 };
 
 export type ParsedSubscriptionOptionId = {
@@ -38,6 +33,7 @@ export type AndroidPurchaseSelection = {
   googleProductChangeInfo: StoreProductChangeInfo | null;
   selectedOptionId: string | null;
   trialCopy: string | null;
+  trialDays: number | null;
   priceString: string;
 };
 
@@ -51,12 +47,10 @@ function getAndroidPlanConfig(period: SubscriptionPeriod): AndroidPlanConfig {
     ? {
         productId: REVENUECAT_ANDROID_YEARLY_PRODUCT_ID,
         basePlanId: REVENUECAT_ANDROID_YEARLY_BASE_PLAN_ID,
-        offerId: REVENUECAT_ANDROID_YEARLY_TRIAL_OFFER_ID,
       }
     : {
         productId: REVENUECAT_ANDROID_MONTHLY_PRODUCT_ID,
         basePlanId: REVENUECAT_ANDROID_MONTHLY_BASE_PLAN_ID,
-        offerId: REVENUECAT_ANDROID_MONTHLY_TRIAL_OFFER_ID,
       };
 }
 
@@ -86,18 +80,23 @@ function getIsoBillingPeriod(period: RevenueCatBillingPeriod | null | undefined)
   return typeof period === 'string' ? period : period.iso8601 ?? null;
 }
 
-function hasThreeDayFreeTrial(option: SubscriptionOption): boolean {
+function getTrialDaysFromSubscriptionOption(option: SubscriptionOption): number | null {
   const freePhasePeriod = getIsoBillingPeriod(option.freePhase?.billingPeriod ?? null);
-  if (freePhasePeriod === 'P3D') return true;
+  const freePhaseDays = getTrialDaysFromIsoPeriod(freePhasePeriod);
+  if (freePhaseDays) return freePhaseDays;
 
-  return (option.pricingPhases ?? []).some(phase => {
+  for (const phase of option.pricingPhases ?? []) {
     const billingPeriod = getIsoBillingPeriod(phase.billingPeriod ?? null);
     const paymentMode = String(phase.offerPaymentMode ?? '').toUpperCase();
     const legacyPriceAmountMicros = (phase as { priceAmountMicros?: number | string | null }).priceAmountMicros ?? null;
     const amountMicros = phase.price?.amountMicros ?? legacyPriceAmountMicros;
-    return billingPeriod === 'P3D' &&
-      (paymentMode === 'FREE_TRIAL' || String(amountMicros) === '0');
-  });
+    if (paymentMode === 'FREE_TRIAL' || String(amountMicros) === '0') {
+      const days = getTrialDaysFromIsoPeriod(billingPeriod);
+      if (days) return days;
+    }
+  }
+
+  return null;
 }
 
 function hasAnyFreeTrial(option: SubscriptionOption): boolean {
@@ -118,8 +117,8 @@ function isExactTrialOption(option: SubscriptionOption, period: SubscriptionPeri
   const config = getAndroidPlanConfig(period);
   return optionProductId(option) === config.productId &&
     parsed.basePlanId === config.basePlanId &&
-    parsed.offerId === config.offerId &&
-    hasThreeDayFreeTrial(option);
+    parsed.offerId !== null &&
+    !!getTrialDaysFromSubscriptionOption(option);
 }
 
 function isExactBasePlanOption(option: SubscriptionOption, period: SubscriptionPeriod): boolean {
@@ -133,13 +132,24 @@ function isExactBasePlanOption(option: SubscriptionOption, period: SubscriptionP
 }
 
 function getDefaultNonPrepaidOption(pkg: PurchasesPackage): SubscriptionOption | null {
-  if (pkg.product.defaultOption && !pkg.product.defaultOption.isPrepaid) {
+  if (pkg.product.defaultOption && !pkg.product.defaultOption.isPrepaid && !hasAnyFreeTrial(pkg.product.defaultOption)) {
     return pkg.product.defaultOption;
   }
 
-  return (pkg.product.subscriptionOptions ?? []).find(option => option.isBasePlan && !option.isPrepaid) ??
-    (pkg.product.subscriptionOptions ?? []).find(option => !option.isPrepaid) ??
+  return (pkg.product.subscriptionOptions ?? []).find(option => option.isBasePlan && !option.isPrepaid && !hasAnyFreeTrial(option)) ??
+    (pkg.product.subscriptionOptions ?? []).find(option => !option.isPrepaid && !hasAnyFreeTrial(option)) ??
     null;
+}
+
+function getCurrentOfferingTrialOption(pkg: PurchasesPackage, period: SubscriptionPeriod): SubscriptionOption | null {
+  const defaultOption = pkg.product.defaultOption ?? null;
+  if (defaultOption && isExactTrialOption(defaultOption, period)) {
+    return defaultOption;
+  }
+
+  const exactTrialOptions = (pkg.product.subscriptionOptions ?? [])
+    .filter(option => isExactTrialOption(option, period));
+  return exactTrialOptions.length === 1 ? exactTrialOptions[0] : null;
 }
 
 function getActiveSubscriberTargetOption(pkg: PurchasesPackage, period: SubscriptionPeriod): SubscriptionOption | null {
@@ -233,6 +243,7 @@ export function selectAndroidSubscriptionOption(params: {
         googleProductChangeInfo: null,
         selectedOptionId: null,
         trialCopy: null,
+        trialDays: null,
         priceString: pkg.product.priceString,
       };
     }
@@ -242,20 +253,20 @@ export function selectAndroidSubscriptionOption(params: {
       googleProductChangeInfo: { oldProductIdentifier: activeGoogleProductIdentifier, replacementMode },
       selectedOptionId: activeSubscriberOption?.id ?? null,
       trialCopy: null,
+      trialDays: null,
       priceString: pkg.product.priceString,
     };
   }
 
-  const exactTrialOptions = (pkg.product.subscriptionOptions ?? [])
-    .filter(option => isExactTrialOption(option, period));
-  const exactTrialOption = exactTrialOptions.length === 1 ? exactTrialOptions[0] : null;
+  const exactTrialOption = getCurrentOfferingTrialOption(pkg, period);
   const subscriptionOption = exactTrialOption ?? defaultOption;
 
   return {
     subscriptionOption,
     googleProductChangeInfo: null,
     selectedOptionId: subscriptionOption?.id ?? null,
-    trialCopy: exactTrialOption ? ANDROID_TRIAL_COPY : null,
+    trialCopy: exactTrialOption ? getTrialEligibilityCopy(getTrialDaysFromSubscriptionOption(exactTrialOption)) : null,
+    trialDays: exactTrialOption ? getTrialDaysFromSubscriptionOption(exactTrialOption) : null,
     priceString: pkg.product.priceString,
   };
 }

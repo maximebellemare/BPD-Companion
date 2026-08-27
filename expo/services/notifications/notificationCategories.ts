@@ -122,6 +122,16 @@ const ENGLISH_NOTIFICATION_CATEGORIES: NotificationCategoryConfig[] = [
     premiumOnly: false,
     safetyExempt: false,
   },
+  {
+    id: 'trial_reminder',
+    label: 'Trial Reminder',
+    description: 'A reminder before your store trial ends',
+    defaultEnabled: true,
+    defaultTimeWindow: null,
+    respectsQuietHours: true,
+    premiumOnly: false,
+    safetyExempt: true,
+  },
 ];
 
 const NOTIFICATION_CATEGORY_ES: Record<string, { label: string; description: string }> = {
@@ -137,6 +147,7 @@ const NOTIFICATION_CATEGORY_ES: Record<string, { label: string; description: str
   streak_support: { label: 'Apoyo de racha', description: 'Ánimo para mantener tu ritmo de check-ins' },
   gentle_nudge: { label: 'Recordatorio suave', description: 'Ánimo para un check-in al final del día' },
   premium_upgrade: { label: 'Recordatorios de insights de membresía', description: 'Recordatorios ocasionales sobre funciones avanzadas que te interesaron' },
+  trial_reminder: { label: 'Recordatorio de prueba', description: 'Un aviso antes de que termine tu prueba de la tienda' },
 };
 
 export const NOTIFICATION_CATEGORIES: NotificationCategoryConfig[] = ENGLISH_NOTIFICATION_CATEGORIES.map(category =>
@@ -175,6 +186,7 @@ export function getDeepLinkForCategory(category: string): string {
     case 'streak_support':
       return '/check-in';
     case 'premium_upgrade':
+    case 'trial_reminder':
       return '/upgrade';
     default:
       return '/check-in';

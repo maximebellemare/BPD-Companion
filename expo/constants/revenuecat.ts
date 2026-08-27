@@ -11,15 +11,9 @@ export const REVENUECAT_MONTHLY_PRODUCT_ID =
 export const REVENUECAT_YEARLY_PRODUCT_ID =
   process.env.EXPO_PUBLIC_REVENUECAT_YEARLY_PRODUCT_ID ?? 'bpd_yearly:annual';
 
-export const REVENUECAT_OFFERING_ID =
-  process.env.EXPO_PUBLIC_REVENUECAT_OFFERING_ID ?? 'default';
 
 export const REVENUECAT_ANDROID_MONTHLY_PRODUCT_ID = 'bpd_monthly';
 export const REVENUECAT_ANDROID_MONTHLY_BASE_PLAN_ID = 'monthly';
-export const REVENUECAT_ANDROID_MONTHLY_TRIAL_OFFER_ID = 'free-trial';
 
 export const REVENUECAT_ANDROID_YEARLY_PRODUCT_ID = 'bpd_yearly';
 export const REVENUECAT_ANDROID_YEARLY_BASE_PLAN_ID = 'annual';
-export const REVENUECAT_ANDROID_YEARLY_TRIAL_OFFER_ID = 'free-trial';
-
-export const REVENUECAT_TRIAL_DAYS = 3;

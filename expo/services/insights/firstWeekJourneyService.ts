@@ -1,19 +1,12 @@
-import { AIConversation } from '@/types/ai';
-import { FirstWeekJourneyStep, FirstWeekJourneySummary, PremiumInsightItem } from '@/types/firstWeekJourney';
-import { JournalEntry } from '@/types';
-import { MemoryProfile } from '@/types/memory';
-import { ProgressSummary } from '@/types/progress';
+import type { AIConversation } from '@/types/ai';
+import type { FirstWeekJourneyStep, FirstWeekJourneySummary, PremiumInsightItem } from '@/types/firstWeekJourney';
+import type { JournalEntry } from '@/types';
+import { generateDay2PersonalizedAhaInsight } from '@/services/insights/ahaMomentsService';
+import type { MemoryProfile } from '@/types/memory';
+import type { OnboardingProfile } from '@/types/onboarding';
+import type { ProgressSummary } from '@/types/progress';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-
-function getFirstActivityAt(entries: JournalEntry[], conversations: AIConversation[]): number {
-  const timestamps = [
-    ...entries.map(entry => entry.timestamp),
-    ...conversations.map(conversation => conversation.createdAt),
-  ].filter(Boolean);
-
-  return timestamps.length > 0 ? Math.min(...timestamps) : Date.now();
-}
 
 function getUniqueActiveDays(entries: JournalEntry[], conversations: AIConversation[]): number {
   const days = new Set<string>();
@@ -25,9 +18,9 @@ function getUniqueActiveDays(entries: JournalEntry[], conversations: AIConversat
   return days.size;
 }
 
-function getCurrentJourneyDay(entries: JournalEntry[], conversations: AIConversation[]): number {
-  const firstActivityAt = getFirstActivityAt(entries, conversations);
-  const day = Math.floor((Date.now() - firstActivityAt) / DAY_MS) + 1;
+function getCurrentJourneyDay(trialStartedAt: number | null | undefined, now: number): number {
+  if (!trialStartedAt || trialStartedAt > now) return 1;
+  const day = Math.floor((now - trialStartedAt) / DAY_MS) + 1;
   return Math.max(1, Math.min(7, day));
 }
 
@@ -156,14 +149,53 @@ function buildPremiumInsights(
   ];
 }
 
+function buildDay3ProgressRecap(params: {
+  checkInCount: number;
+  aiConversationCount: number;
+  activeDays: number;
+  progress: ProgressSummary;
+}): PremiumInsightItem | null {
+  const { checkInCount, aiConversationCount, activeDays, progress } = params;
+  const toolsUsed = progress.metrics.copingExercisesUsed + progress.metrics.successfulMessagePauses;
+  const metrics = [
+    checkInCount > 0 ? `${checkInCount} check-in${checkInCount === 1 ? '' : 's'}` : null,
+    activeDays > 0 ? `${activeDays} active day${activeDays === 1 ? '' : 's'}` : null,
+    aiConversationCount > 0 ? `${aiConversationCount} companion conversation${aiConversationCount === 1 ? '' : 's'}` : null,
+    toolsUsed > 0 ? `${toolsUsed} support step${toolsUsed === 1 ? '' : 's'}` : null,
+  ].filter((item): item is string => !!item);
+
+  if (metrics.length === 0) return null;
+
+  const headline = checkInCount >= 3
+    ? `${checkInCount} check-ins are building your progress map`
+    : aiConversationCount > 0
+      ? `${aiConversationCount} AI conversation${aiConversationCount === 1 ? '' : 's'} added context`
+      : `${activeDays} active day${activeDays === 1 ? '' : 's'} logged`;
+  const behaviorValue = toolsUsed > 0
+    ? 'Those support steps help connect emotional intensity to what actually helps.'
+    : 'The next check-in or support tool will make the progress picture more useful.';
+
+  return {
+    id: 'day3_progress_recap',
+    title: 'Your first progress recap',
+    value: headline,
+    description: `So far: ${metrics.join(', ')}. BPD Companion uses only your logged activity for this recap. ${behaviorValue}`,
+    confidence: checkInCount >= 4 || activeDays >= 3 ? 'emerging' : 'building',
+  };
+}
+
 export function buildFirstWeekJourneySummary(params: {
   journalEntries: JournalEntry[];
   conversations: AIConversation[];
   memoryProfile: MemoryProfile;
   progress: ProgressSummary;
+  onboardingProfile?: OnboardingProfile | null;
+  trialStartedAt?: number | null;
+  now?: number;
 }): FirstWeekJourneySummary {
-  const { journalEntries, conversations, memoryProfile, progress } = params;
-  const currentDay = getCurrentJourneyDay(journalEntries, conversations);
+  const { journalEntries, conversations, memoryProfile, onboardingProfile, progress } = params;
+  const now = params.now ?? Date.now();
+  const currentDay = getCurrentJourneyDay(params.trialStartedAt, now);
   const checkInCount = journalEntries.length;
   const aiConversationCount = conversations.length;
   const activeDays = getUniqueActiveDays(journalEntries, conversations);
@@ -184,6 +216,12 @@ export function buildFirstWeekJourneySummary(params: {
   const nextStep = steps.find(step => step.status === 'active') ?? steps.find(step => step.status === 'locked') ?? steps[steps.length - 1];
   const completedSteps = steps.filter(step => step.status === 'complete').length;
   const premiumInsights = buildPremiumInsights(memoryProfile, progress, conversations);
+  const day2AhaInsight = currentDay >= 2
+    ? generateDay2PersonalizedAhaInsight({ journalEntries, onboardingProfile })
+    : null;
+  const day3ProgressRecap = currentDay >= 3
+    ? buildDay3ProgressRecap({ checkInCount, aiConversationCount, activeDays, progress })
+    : null;
   const insightDepth = Math.min(100, Math.round(
     checkInCount * 9 +
     aiConversationCount * 12 +
@@ -202,6 +240,8 @@ export function buildFirstWeekJourneySummary(params: {
     nextStep,
     steps,
     premiumInsights,
+    day2AhaInsight,
+    day3ProgressRecap,
     emotionalReportReady,
     paywallLossHeadline: emotionalReportReady
       ? 'Your first emotional report is ready to unlock'

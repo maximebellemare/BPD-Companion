@@ -1,10 +1,10 @@
-import { JournalEntry, MessageDraft } from '@/types';
+import type { JournalEntry, MessageDraft } from '@/types';
 import { storageService } from '@/services/storage/storageService';
 import {
   buildRelationshipTaggedSources,
   formatRelationshipType,
 } from '@/services/relationships/relationshipTaggingService';
-import { RelationshipType } from '@/types/relationship';
+import type { RelationshipType } from '@/types/relationship';
 
 export type DiscoveryConfidence = 'low' | 'medium' | 'high';
 
@@ -33,8 +33,22 @@ export interface WeeklyDiscoveriesReport {
   savedAt?: number;
 }
 
+export interface WeeklyProgressHistoryItem {
+  id: string;
+  generatedAt: number;
+  weekStart: number;
+  weekEnd: number;
+  checkInCount: number;
+  messageMomentCount: number;
+  strongestPatternTitle: string;
+  biggestImprovementTitle: string;
+  watchNextWeekTitle: string;
+  savedAt?: number;
+}
+
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const SAVED_WEEKLY_DISCOVERIES_KEY = 'bpd_companion_saved_weekly_discoveries';
+const SAVED_WEEKLY_PROGRESS_HISTORY_KEY = 'bpd_companion_weekly_progress_history';
 
 type CountItem = { label: string; count: number; weight: number };
 
@@ -42,7 +56,21 @@ function inRange(timestamp: number, start: number, end: number): boolean {
   return timestamp >= start && timestamp < end;
 }
 
-function countLabels(items: Array<{ label: string; weight?: number }>): CountItem[] {
+function getStartOfLocalWeek(timestamp: number): number {
+  const date = new Date(timestamp);
+  date.setHours(0, 0, 0, 0);
+  const day = date.getDay();
+  const daysSinceMonday = (day + 6) % 7;
+  date.setDate(date.getDate() - daysSinceMonday);
+  return date.getTime();
+}
+
+export function getWeeklyDiscoveryWeekKey(timestamp: number): string {
+  const weekStart = getStartOfLocalWeek(timestamp);
+  return new Date(weekStart).toISOString().slice(0, 10);
+}
+
+function countLabels(items: { label: string; weight?: number }[]): CountItem[] {
   const counts = new Map<string, CountItem>();
   items.forEach((item) => {
     const label = item.label.trim();
@@ -336,11 +364,13 @@ export function generateWeeklyDiscoveries(
   messageDrafts: MessageDraft[],
   now = Date.now(),
 ): WeeklyDiscoveriesReport {
-  const weekStart = now - WEEK_MS;
-  const previousWeekStart = now - WEEK_MS * 2;
-  const thisWeek = journalEntries.filter(entry => inRange(entry.timestamp, weekStart, now));
+  const weekStart = getStartOfLocalWeek(now);
+  const previousWeekStart = weekStart - WEEK_MS;
+  const weekEnd = weekStart + WEEK_MS;
+  const analysisEnd = Math.min(now, weekEnd);
+  const thisWeek = journalEntries.filter(entry => inRange(entry.timestamp, weekStart, analysisEnd));
   const lastWeek = journalEntries.filter(entry => inRange(entry.timestamp, previousWeekStart, weekStart));
-  const thisWeekDrafts = messageDrafts.filter(draft => inRange(draft.timestamp, weekStart, now));
+  const thisWeekDrafts = messageDrafts.filter(draft => inRange(draft.timestamp, weekStart, analysisEnd));
 
   const strongestEmotionalPattern = buildStrongestPattern(thisWeek);
   const mostCommonTrigger = buildMostCommonTrigger(thisWeek);
@@ -349,10 +379,10 @@ export function generateWeeklyDiscoveries(
   const oneThingToWatchNextWeek = buildOneThingToWatchNextWeek(thisWeek, thisWeekDrafts);
 
   return {
-    id: `weekly_discovery_${weekStart}_${now}`,
+    id: `weekly_discovery_${getWeeklyDiscoveryWeekKey(now)}`,
     generatedAt: now,
     weekStart,
-    weekEnd: now,
+    weekEnd,
     weekEntryCount: thisWeek.length,
     weekDraftCount: thisWeekDrafts.length,
     hasEnoughData: thisWeek.length + thisWeekDrafts.length >= 2,
@@ -397,5 +427,47 @@ export async function saveWeeklyDiscoveryReport(report: WeeklyDiscoveriesReport)
     ...existing.filter(item => item.id !== report.id),
   ].slice(0, 24);
   await storageService.set(SAVED_WEEKLY_DISCOVERIES_KEY, updated);
+  return updated;
+}
+
+export function buildWeeklyProgressHistoryItem(report: WeeklyDiscoveriesReport): WeeklyProgressHistoryItem {
+  return {
+    id: `weekly_progress_${new Date(report.weekStart).toISOString().slice(0, 10)}`,
+    generatedAt: report.generatedAt,
+    weekStart: report.weekStart,
+    weekEnd: report.weekEnd,
+    checkInCount: report.weekEntryCount,
+    messageMomentCount: report.weekDraftCount,
+    strongestPatternTitle: report.strongestEmotionalPattern.title,
+    biggestImprovementTitle: report.biggestImprovement.title,
+    watchNextWeekTitle: report.oneThingToWatchNextWeek.title,
+  };
+}
+
+export async function loadSavedWeeklyProgressHistory(): Promise<WeeklyProgressHistoryItem[]> {
+  return (await storageService.get<WeeklyProgressHistoryItem[]>(SAVED_WEEKLY_PROGRESS_HISTORY_KEY)) ?? [];
+}
+
+export function mergeWeeklyProgressHistory(
+  existing: WeeklyProgressHistoryItem[],
+  item: WeeklyProgressHistoryItem,
+  savedAt: number,
+): WeeklyProgressHistoryItem[] {
+  const savedItem: WeeklyProgressHistoryItem = {
+    ...item,
+    savedAt,
+  };
+  return [
+    savedItem,
+    ...existing.filter(existingItem => existingItem.id !== item.id),
+  ].slice(0, 52);
+}
+
+export async function saveWeeklyProgressHistoryItem(
+  item: WeeklyProgressHistoryItem,
+): Promise<WeeklyProgressHistoryItem[]> {
+  const existing = await loadSavedWeeklyProgressHistory();
+  const updated = mergeWeeklyProgressHistory(existing, item, Date.now());
+  await storageService.set(SAVED_WEEKLY_PROGRESS_HISTORY_KEY, updated);
   return updated;
 }

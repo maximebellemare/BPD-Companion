@@ -409,10 +409,11 @@ export function assertMembershipPrimaryActionRegressionScenarios(): true {
     selectedPeriod: 'monthly',
     canSubscribe: true,
     shouldShowTrialCopy: true,
+    trialLengthLabel: '7-day free',
     selectedPriceLabel: '$9.99/mo',
   });
   assert(freshPurchase.kind === 'purchase', 'fresh user uses purchase action');
-  assert(freshPurchase.label.includes('3-day free trial'), 'fresh user trial label');
+  assert(freshPurchase.label.includes('7-day free trial'), 'fresh user trial label follows RevenueCat trial metadata');
 
   assert(
     getMembershipPrimaryAction({

@@ -9,6 +9,7 @@ import { clearSingularCustomUserId, setSingularCustomUserId, trackSingularEvent 
 import { createAccessFlowTimer } from '@/services/performance/accessFlowTiming';
 import { startAccessFlowBackgroundTask } from '@/services/performance/accessFlowPerformanceModel';
 import { clearProfileCache } from '@/lib/supabase/profiles';
+import { clearMarketingPreferenceCache } from '@/lib/supabase/marketingPreferences';
 
 type AuthMode = 'authenticated' | 'guest' | 'unauthenticated';
 
@@ -40,6 +41,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
           storageService.setUser(null);
           void clearSingularCustomUserId();
           clearProfileCache();
+          clearMarketingPreferenceCache();
         }
       } catch (e) {
         console.log('[AuthProvider] bootstrap error:', e);
@@ -56,6 +58,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     const { data: sub } = supabase.auth.onAuthStateChange(async (event, sbSession) => {
       console.log('[AuthProvider] auth event:', event);
       clearProfileCache();
+      clearMarketingPreferenceCache();
       if (sbSession) {
         const mapped: AuthSession = {
           user: {
@@ -98,13 +101,44 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       setIsLoading(true);
       try {
         const s = await authRepository.signIn(credentials);
-        storageService.setUser(s.user.id);
-        void setSingularCustomUserId(s.user.id);
+        const signedInUserId = s.user.id;
+
+        storageService.setUser(signedInUserId);
+        void setSingularCustomUserId(signedInUserId);
         setSession(s);
         setUser(s.user);
         setIsGuest(false);
-        await storageService.hydrateFromCloud();
-        await queryClient.invalidateQueries();
+
+        const syncAfterSignIn = async () => {
+          try {
+            if (storageService.getUserId() !== signedInUserId) return;
+            await storageService.hydrateFromCloudForUser(signedInUserId);
+          } catch (error) {
+            if (__DEV__) {
+              console.log('[AuthProvider] post-signin storage sync failed:', error);
+            }
+          }
+
+          if (storageService.getUserId() !== signedInUserId) return;
+
+          try {
+            await Promise.all([
+              queryClient.invalidateQueries({ queryKey: ['profile'] }),
+              queryClient.invalidateQueries({ queryKey: ['onboarding_profile'] }),
+            ]);
+          } catch (error) {
+            if (__DEV__) {
+              console.log('[AuthProvider] post-signin query refresh failed:', error);
+            }
+          }
+        };
+
+        startAccessFlowBackgroundTask(syncAfterSignIn, (error) => {
+          if (__DEV__) {
+            console.log('[AuthProvider] post-signin background task failed:', error);
+          }
+        });
+
         return s;
       } finally {
         setIsLoading(false);
@@ -186,6 +220,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     storageService.setUser(null);
     void clearSingularCustomUserId();
     clearProfileCache();
+    clearMarketingPreferenceCache();
     setSession(null);
     setUser(null);
     setIsGuest(false);

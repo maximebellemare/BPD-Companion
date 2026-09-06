@@ -1840,12 +1840,10 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   popularBadge: {
-    backgroundColor: Colors.brandTealSoft,
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: Colors.brandTeal,
+    backgroundColor: Colors.primaryLight,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 7,
   },
   popularBadgeText: {
     fontSize: 9,

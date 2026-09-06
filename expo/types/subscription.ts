@@ -1,14 +1,16 @@
 export type SubscriptionTier = 'free' | 'premium';
 
 export type SubscriptionPeriod = 'monthly' | 'yearly';
+export type SubscriptionPlanPeriod = SubscriptionPeriod | 'lifetime';
 
 export interface SubscriptionPlan {
   id: string;
   name: string;
-  period: SubscriptionPeriod;
+  period: SubscriptionPlanPeriod;
   price: number;
   priceLabel: string;
   savings?: string;
+  badge?: 'mostPopular' | 'bestValue';
   popular?: boolean;
   productIdentifier?: string;
   packageIdentifier?: string;

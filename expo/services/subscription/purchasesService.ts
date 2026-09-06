@@ -20,11 +20,23 @@ import {
 import { syncMetaAnonymousIdToRevenueCat } from '@/services/analytics/metaRevenueCatAttribution';
 import { syncFirebaseAppInstanceIdToRevenueCat } from '@/services/analytics/firebaseRevenueCatAttribution';
 import { trackSingularTrialStartedOnce } from '@/services/analytics/singularTrialStartTracking';
-import type { SubscriptionPeriod } from '@/types/subscription';
+import {
+  PURCHASE_SYNC_PENDING_MESSAGE,
+} from '@/services/subscription/postPurchaseRecoveryModel';
+import {
+  getBillingIssueRecoveryState as deriveBillingIssueRecoveryState,
+  type BillingIssueRecoveryState,
+} from '@/services/subscription/billingIssueRecoveryModel';
+import {
+  fetchCustomerInfoWithOptionalInvalidation,
+} from '@/services/subscription/customerInfoRefreshModel';
+import type { SubscriptionPeriod, SubscriptionPlanPeriod } from '@/types/subscription';
 import type {
   PurchasesOffering,
   PurchasesPackage,
 } from 'react-native-purchases';
+
+export { PURCHASE_SYNC_PENDING_MESSAGE } from '@/services/subscription/postPurchaseRecoveryModel';
 
 export type {
   GoogleProductChangeInfo,
@@ -39,29 +51,38 @@ export type CustomerInfo = {
   activeSubscriptions?: string[];
   allPurchasedProductIdentifiers?: string[];
   managementURL?: string | null;
+  requestDate?: string | null;
   entitlements: {
     all?: Record<string, {
       expirationDate?: string | null;
+      expirationDateMillis?: number | null;
       isActive?: boolean;
       productIdentifier?: string;
       productPlanIdentifier?: string | null;
       periodType?: string;
+      latestPurchaseDate?: string | null;
       latestPurchaseDateMillis?: number | null;
       isSandbox?: boolean | null;
       willRenew?: boolean;
+      store?: string | null;
       billingIssueDetectedAt?: string | null;
+      billingIssueDetectedAtMillis?: number | null;
       unsubscribeDetectedAt?: string | null;
     }>;
     active: Record<string, {
       expirationDate?: string | null;
+      expirationDateMillis?: number | null;
       isActive?: boolean;
       productIdentifier?: string;
       productPlanIdentifier?: string | null;
       periodType?: string;
+      latestPurchaseDate?: string | null;
       latestPurchaseDateMillis?: number | null;
       isSandbox?: boolean | null;
       willRenew?: boolean;
+      store?: string | null;
       billingIssueDetectedAt?: string | null;
+      billingIssueDetectedAtMillis?: number | null;
       unsubscribeDetectedAt?: string | null;
     }>;
   };
@@ -71,8 +92,28 @@ export type CustomerInfo = {
     isActive?: boolean;
     periodType?: string;
     willRenew?: boolean;
+    store?: string | null;
+    billingIssuesDetectedAt?: string | null;
+    gracePeriodExpiresDate?: string | null;
+    unsubscribeDetectedAt?: string | null;
   }>;
 };
+
+export type { BillingIssueRecoveryState };
+
+export type FetchCustomerInfoOptions = {
+  forceFresh?: boolean;
+  reason?: string;
+};
+
+export type TrialIntroEligibilityStatus = 'eligible' | 'ineligible' | 'unknown';
+
+export type RevenueCatAccessKind =
+  | 'purchased_lifetime'
+  | 'support_grant'
+  | 'active_subscription'
+  | 'cancelled_subscription_access'
+  | 'none';
 
 export type RevenueCatBillingPeriod = string | {
   iso8601?: string;
@@ -85,6 +126,7 @@ let appleAdsAttributionEnabled = false;
 let deviceIdentifierCollectionStarted = false;
 
 type PurchasesStatic = typeof import('react-native-purchases').default;
+type CustomerInfoUpdateListener = (customerInfo: CustomerInfo) => void;
 
 export const PURCHASES_UNAVAILABLE_MESSAGE =
   'Membership options are loading. Please try again in a moment.';
@@ -317,7 +359,39 @@ export function selectCurrentOfferingForPurchase(offerings: {
   return offerings?.current ?? null;
 }
 
-export async function fetchCustomerInfo(): Promise<CustomerInfo | null> {
+export async function checkTrialIntroEligibility(
+  productIdentifiers: string[],
+): Promise<Record<string, TrialIntroEligibilityStatus>> {
+  const unknown = Object.fromEntries(
+    productIdentifiers.map(productIdentifier => [productIdentifier, 'unknown' as const]),
+  );
+  if (productIdentifiers.length === 0 || isExpoGoPurchases() || Platform.OS !== 'ios') {
+    return unknown;
+  }
+  await ensureConfigured();
+  if (!isNativePurchasesPlatform()) return unknown;
+  try {
+    const Purchases = (await import('react-native-purchases')).default;
+    const result = await Purchases.checkTrialOrIntroductoryPriceEligibility(productIdentifiers);
+    return Object.fromEntries(productIdentifiers.map((productIdentifier) => {
+      const status = result[productIdentifier]?.status;
+      if (status === Purchases.INTRO_ELIGIBILITY_STATUS.INTRO_ELIGIBILITY_STATUS_ELIGIBLE) {
+        return [productIdentifier, 'eligible' as const];
+      }
+      if (
+        status === Purchases.INTRO_ELIGIBILITY_STATUS.INTRO_ELIGIBILITY_STATUS_INELIGIBLE ||
+        status === Purchases.INTRO_ELIGIBILITY_STATUS.INTRO_ELIGIBILITY_STATUS_NO_INTRO_OFFER_EXISTS
+      ) {
+        return [productIdentifier, 'ineligible' as const];
+      }
+      return [productIdentifier, 'unknown' as const];
+    }));
+  } catch {
+    return unknown;
+  }
+}
+
+export async function fetchCustomerInfo(options: FetchCustomerInfoOptions = {}): Promise<CustomerInfo | null> {
   if (isExpoGoPurchases()) {
     return null;
   }
@@ -325,7 +399,14 @@ export async function fetchCustomerInfo(): Promise<CustomerInfo | null> {
   if (!isNativePurchasesPlatform()) return null;
   try {
     const Purchases = (await import('react-native-purchases')).default;
-    let customerInfo = await Purchases.getCustomerInfo() as CustomerInfo;
+    let customerInfo = await fetchCustomerInfoWithOptionalInvalidation<CustomerInfo>({
+      getCustomerInfo: async () => await Purchases.getCustomerInfo() as CustomerInfo,
+      invalidateCustomerInfoCache: typeof Purchases.invalidateCustomerInfoCache === 'function'
+        ? async () => {
+            await Purchases.invalidateCustomerInfoCache();
+          }
+        : undefined,
+    }, { forceFresh: options.forceFresh });
     if (shouldAttemptAndroidSync(customerInfo)) {
       customerInfo = await syncPurchasesIfAvailable(Purchases, 'android_fetch_customer_info_empty') ?? customerInfo;
     }
@@ -333,6 +414,22 @@ export async function fetchCustomerInfo(): Promise<CustomerInfo | null> {
   } catch {
     return null;
   }
+}
+
+export async function addCustomerInfoUpdateListener(
+  listener: CustomerInfoUpdateListener,
+): Promise<() => void> {
+  if (isExpoGoPurchases()) return () => {};
+  await ensureConfigured();
+  if (!isNativePurchasesPlatform()) return () => {};
+  const Purchases = (await import('react-native-purchases')).default;
+  const typedListener = (customerInfo: unknown) => {
+    listener(customerInfo as CustomerInfo);
+  };
+  Purchases.addCustomerInfoUpdateListener(typedListener);
+  return () => {
+    Purchases.removeCustomerInfoUpdateListener(typedListener);
+  };
 }
 
 export async function purchasePackage(
@@ -473,10 +570,16 @@ export function getActiveWillRenew(info: CustomerInfo | null): boolean | null {
 
 export function getActiveBillingIssueDetectedAt(info: CustomerInfo | null): number | null {
   if (!info) return null;
+  const recoveryState = deriveBillingIssueRecoveryState(info);
+  if (recoveryState?.kind === 'active_grace') return recoveryState.detectedAt;
   const ent = info.entitlements.active[REVENUECAT_ENTITLEMENT_ID];
   if (!ent?.billingIssueDetectedAt) return null;
   const timestamp = new Date(ent.billingIssueDetectedAt).getTime();
   return Number.isFinite(timestamp) ? timestamp : null;
+}
+
+export function getBillingIssueRecoveryState(info: CustomerInfo | null): BillingIssueRecoveryState | null {
+  return deriveBillingIssueRecoveryState(info);
 }
 
 export function getActiveUnsubscribeDetectedAt(info: CustomerInfo | null): number | null {
@@ -507,6 +610,49 @@ export function getActivePeriodType(info: CustomerInfo | null): 'monthly' | 'yea
   if (id.includes('year') || id.includes('annual')) return 'yearly';
   if (id.includes('month')) return 'monthly';
   return null;
+}
+
+function isLifetimeProductIdentifier(productIdentifier: string | null | undefined): boolean {
+  return !!productIdentifier && productIdentifier.toLowerCase().includes('lifetime');
+}
+
+function parseRevenueCatTimestamp(value: string | number | null | undefined): number | null {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+  if (!value) return null;
+  const timestamp = new Date(value).getTime();
+  return Number.isFinite(timestamp) ? timestamp : null;
+}
+
+function isFarFutureSupportExpiration(entitlement: CustomerInfo['entitlements']['active'][string]): boolean {
+  const expirationAt = parseRevenueCatTimestamp(entitlement.expirationDateMillis) ??
+    parseRevenueCatTimestamp(entitlement.expirationDate);
+  if (!expirationAt) return false;
+  return new Date(expirationAt).getUTCFullYear() >= 2100;
+}
+
+function isStoreBackedEntitlementStore(store: string | null | undefined): boolean {
+  return store === 'PLAY_STORE' || store === 'APP_STORE';
+}
+
+export function getActivePlanPeriodType(info: CustomerInfo | null): SubscriptionPlanPeriod | null {
+  if (!info) return null;
+  const ent = info.entitlements.active[REVENUECAT_ENTITLEMENT_ID];
+  if (!ent) return null;
+  if (isLifetimeProductIdentifier(ent.productIdentifier)) return 'lifetime';
+  return getActivePeriodType(info);
+}
+
+export function getRevenueCatAccessKind(info: CustomerInfo | null): RevenueCatAccessKind {
+  const ent = info?.entitlements.active[REVENUECAT_ENTITLEMENT_ID] ?? null;
+  if (ent?.isActive !== true) return 'none';
+  if (isLifetimeProductIdentifier(ent.productIdentifier)) return 'purchased_lifetime';
+
+  const period = getActivePeriodType(info);
+  const hasKnownStore = typeof ent.store === 'string' && ent.store.length > 0;
+  if (hasKnownStore && !isStoreBackedEntitlementStore(ent.store)) return 'support_grant';
+  if (!hasKnownStore && ent.willRenew === false && isFarFutureSupportExpiration(ent)) return 'support_grant';
+  if (!period) return 'support_grant';
+  return ent.willRenew === false ? 'cancelled_subscription_access' : 'active_subscription';
 }
 
 export function isTrialActive(info: CustomerInfo | null): boolean {

@@ -78,7 +78,6 @@ import {
 } from '@/services/subscription/pendingPlanChangeModel';
 import {
   createLocalizedSubscriptionPlan,
-  getLifetimePackageFromOffering,
 } from '@/services/subscription/localizedPricingModel';
 import { shouldApplyCustomerInfoListenerUpdate } from '@/services/subscription/postPurchaseRecoveryModel';
 import {
@@ -849,7 +848,6 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
       platform: Platform.OS,
       monthly: toSnapshot(offering.monthly),
       yearly: toSnapshot(offering.annual),
-      lifetime: toSnapshot(getLifetimePackageFromOffering(offering)),
     });
   }, []);
 

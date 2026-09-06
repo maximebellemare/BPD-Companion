@@ -1,5 +1,5 @@
 import type { PurchasesPackage } from '@/services/subscription/purchasesService';
-import type { SubscriptionPeriod, SubscriptionPlan } from '@/types/subscription';
+import type { SubscriptionPlanPeriod, SubscriptionPlan } from '@/types/subscription';
 import {
   getTrialDaysFromIsoPeriod,
   getTrialEligibilityCopy,
@@ -8,7 +8,7 @@ import {
 
 export function createLocalizedSubscriptionPlan(params: {
   pkg: PurchasesPackage;
-  period: SubscriptionPeriod;
+  period: SubscriptionPlanPeriod;
   fallbackProductIdentifier: string;
   androidTrialCopy?: string | null;
   trialDays?: number | null;
@@ -26,11 +26,12 @@ export function createLocalizedSubscriptionPlan(params: {
   const trialDays = params.trialDays ?? inferredTrialDays;
   return {
     id: period,
-    name: period === 'yearly' ? 'Yearly' : 'Monthly',
+    name: period === 'lifetime' ? 'Lifetime' : period === 'yearly' ? 'Yearly' : 'Monthly',
     period,
     price: typeof pkg.product.price === 'number' ? pkg.product.price : 0,
     priceLabel: period === 'yearly' ? `${localizedPrice}/yr` : `${localizedPrice}/mo`,
     savings: period === 'yearly' ? 'Best value' : undefined,
+    badge: period === 'yearly' ? 'mostPopular' : undefined,
     popular: period === 'yearly',
     productIdentifier: pkg.product.identifier ?? fallbackProductIdentifier,
     packageIdentifier: pkg.identifier,

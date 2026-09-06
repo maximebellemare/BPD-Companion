@@ -197,6 +197,15 @@ function getLocalizedPlanName(t: (key: string, options?: Record<string, unknown>
   return null;
 }
 
+function getPlanBadgeLabel(
+  t: (key: string, options?: Record<string, unknown>) => string,
+  badge: SubscriptionPlan['badge'],
+): string {
+  const fallback = badge === 'mostPopular' ? 'Most Popular' : 'Best Value';
+  const translated = t(badge === 'mostPopular' ? 'mostPopular' : 'bestValue', { defaultValue: fallback });
+  return translated.trim().length > 0 ? translated : fallback;
+}
+
 function getLocalizedPrimaryActionLabel(
   t: (key: string, options?: Record<string, unknown>) => string,
   primaryAction: ReturnType<typeof getMembershipPrimaryAction>,
@@ -1253,6 +1262,7 @@ export default function UpgradeScreen() {
                 const isCurrentPlan = hasStoreAccessForPresentation && activePeriodForPrimaryAction === plan.period;
                 const isScheduledPlan = pendingPlanChange?.targetPeriod === plan.period;
                 const cadenceLabel = getPlanCadenceLabel(t, plan.period);
+                const badgeLabel = plan.badge ? getPlanBadgeLabel(t, plan.badge) : null;
                 return (
                   <TouchableOpacity
                     key={plan.id}
@@ -1275,10 +1285,10 @@ export default function UpgradeScreen() {
                             {getLocalizedPlanName(t, plan.period) ?? plan.name}
                           </Text>
                           <View style={styles.planBadgeRow}>
-                            {plan.badge ? (
+                            {badgeLabel ? (
                               <View style={styles.popularBadge}>
-                                <Text style={styles.popularBadgeText}>
-                                  {plan.badge === 'mostPopular' ? t('mostPopular') : t('bestValue')}
+                                <Text style={styles.popularBadgeText} numberOfLines={1}>
+                                  {badgeLabel}
                                 </Text>
                               </View>
                             ) : null}
@@ -1837,19 +1847,25 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap' as const,
     justifyContent: 'flex-end' as const,
     gap: 6,
-    flexShrink: 1,
+    flexShrink: 0,
+    marginLeft: 8,
   },
   popularBadge: {
     backgroundColor: Colors.primaryLight,
-    paddingHorizontal: 10,
+    minWidth: 88,
+    paddingHorizontal: 11,
     paddingVertical: 5,
-    borderRadius: 7,
+    borderRadius: 8,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    flexShrink: 0,
   },
   popularBadgeText: {
     fontSize: 9,
     fontWeight: '800' as const,
     color: Colors.primary,
     textTransform: 'uppercase' as const,
+    textAlign: 'center' as const,
   },
   scheduledBadge: {
     backgroundColor: Colors.brandTealSoft,
@@ -1883,7 +1899,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800' as const,
     color: Colors.textSecondary,
-    flexShrink: 0,
+    flexShrink: 1,
   },
   planNameSelected: {
     color: Colors.brandNavy,

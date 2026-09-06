@@ -127,6 +127,20 @@ function RootLayoutNav() {
         }}
       />
       <Stack.Screen
+        name="trial-activation"
+        options={{
+          presentation: "modal",
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="trial-first-win"
+        options={{
+          presentation: "modal",
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
         name="relationship-spiral"
         options={{
           presentation: "modal",

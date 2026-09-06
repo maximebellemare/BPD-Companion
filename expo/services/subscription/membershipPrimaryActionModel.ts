@@ -1,4 +1,5 @@
-import type { SubscriptionPeriod } from '@/types/subscription';
+import type { SubscriptionPeriod, SubscriptionPlanPeriod } from '@/types/subscription';
+import type { RevenueCatAccessKind } from '@/services/subscription/purchasesService';
 import {
   REVENUECAT_ANDROID_MONTHLY_BASE_PLAN_ID,
   REVENUECAT_ANDROID_MONTHLY_PRODUCT_ID,
@@ -11,6 +12,7 @@ import {
 export type MembershipPrimaryAction =
   | { kind: 'continue'; label: string; requiresPurchasablePlan: false }
   | { kind: 'manage'; label: string; requiresPurchasablePlan: false }
+  | { kind: 'owned'; label: string; requiresPurchasablePlan: false }
   | { kind: 'scheduled'; label: string; requiresPurchasablePlan: false }
   | { kind: 'switch'; label: string; requiresPurchasablePlan: true }
   | { kind: 'purchase'; label: string; requiresPurchasablePlan: true }
@@ -57,7 +59,8 @@ export function getIosActivePeriodFromProductIdentifier(
   return null;
 }
 
-function getPlanDisplayName(period: SubscriptionPeriod | null | undefined): string | null {
+function getPlanDisplayName(period: SubscriptionPlanPeriod | null | undefined): string | null {
+  if (period === 'lifetime') return 'Lifetime';
   if (period === 'yearly') return 'Yearly';
   if (period === 'monthly') return 'Monthly';
   return null;
@@ -67,7 +70,7 @@ export function getMembershipStatusCopy(params: {
   hasStoreAccess: boolean;
   isEntitlementActive: boolean;
   isTrialActive: boolean;
-  currentPeriod: SubscriptionPeriod | null;
+  currentPeriod: SubscriptionPlanPeriod | null;
   pendingTargetPeriod?: SubscriptionPeriod | null;
   pendingEffectiveDateLabel?: string | null;
   activeExpirationDateLabel?: string | null;
@@ -116,6 +119,15 @@ export function getMembershipStatusCopy(params: {
   }
 
   if (params.hasStoreAccess && currentPlanLabel) {
+    if (params.currentPeriod === 'lifetime') {
+      return {
+        heroTitle,
+        plansTitle,
+        title: 'Membership active',
+        body: 'Current plan: Lifetime. You have lifetime access to all BPD Companion features. No recurring payments.',
+      };
+    }
+
     if (hasBillingIssue) {
       return {
         heroTitle,
@@ -182,7 +194,7 @@ export function getAndroidPlanChangeTimingMessage(params: {
   platform: 'ios' | 'android' | 'web' | string;
   hasStoreAccess: boolean;
   activePeriod: SubscriptionPeriod | null;
-  selectedPeriod: SubscriptionPeriod | null;
+  selectedPeriod: SubscriptionPlanPeriod | null;
   effectiveDateLabel: string | null;
   pendingTargetPeriod?: SubscriptionPeriod | null;
 }): string | null {
@@ -207,7 +219,7 @@ export function getIosPlanChangeTimingMessage(params: {
   platform: 'ios' | 'android' | 'web' | string;
   hasStoreAccess: boolean;
   activePeriod: SubscriptionPeriod | null;
-  selectedPeriod: SubscriptionPeriod | null;
+  selectedPeriod: SubscriptionPlanPeriod | null;
 }): string | null {
   if (params.platform !== 'ios') return null;
   if (!params.hasStoreAccess) return null;
@@ -229,7 +241,7 @@ export function getInitialManageSelectedPlanId(params: {
   isSubscriptionManagement: boolean;
   hasAppliedInitialSelection: boolean;
   hasUserSelectedPlan: boolean;
-  activePeriod: SubscriptionPeriod | null;
+  activePeriod: SubscriptionPlanPeriod | null;
   availablePlanIds: string[];
   currentSelectedPlanId: string;
 }): string {
@@ -257,8 +269,9 @@ export function getMembershipPrimaryAction(params: {
   isExpoGo: boolean;
   platform: 'ios' | 'android' | 'web' | string;
   hasStoreAccess: boolean;
-  activePeriod: SubscriptionPeriod | null;
-  selectedPeriod: SubscriptionPeriod | null;
+  activePeriod: SubscriptionPlanPeriod | null;
+  selectedPeriod: SubscriptionPlanPeriod | null;
+  accessKind?: RevenueCatAccessKind;
   pendingTargetPeriod?: SubscriptionPeriod | null;
   canSubscribe: boolean;
   shouldShowTrialCopy: boolean;
@@ -292,6 +305,18 @@ export function getMembershipPrimaryAction(params: {
       label: `${pendingTargetPeriod === 'yearly' ? 'Yearly' : 'Monthly'} switch scheduled`,
       requiresPurchasablePlan: false,
     };
+  }
+
+  if (hasStoreAccess && activePeriod === 'lifetime') {
+    return {
+      kind: 'owned',
+      label: 'Lifetime Active',
+      requiresPurchasablePlan: false,
+    };
+  }
+
+  if (selectedPeriod === 'lifetime') {
+    return { kind: 'loading', label: 'Loading membership options...', requiresPurchasablePlan: false };
   }
 
   if (

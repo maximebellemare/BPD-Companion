@@ -106,15 +106,6 @@ type OfferingStatus = 'loading' | 'ready' | 'empty' | 'error' | 'preview';
 
 const FALLBACK_PREVIEW_PLANS: SubscriptionPlan[] = [
   {
-    id: 'monthly',
-    name: 'Monthly',
-    period: 'monthly',
-    price: 9.99,
-    priceLabel: '$9.99/mo',
-    productIdentifier: REVENUECAT_MONTHLY_PRODUCT_ID,
-    isFallbackPrice: true,
-  },
-  {
     id: 'yearly',
     name: 'Yearly',
     period: 'yearly',
@@ -123,6 +114,15 @@ const FALLBACK_PREVIEW_PLANS: SubscriptionPlan[] = [
     savings: 'Best value',
     popular: true,
     productIdentifier: REVENUECAT_YEARLY_PRODUCT_ID,
+    isFallbackPrice: true,
+  },
+  {
+    id: 'monthly',
+    name: 'Monthly',
+    period: 'monthly',
+    price: 9.99,
+    priceLabel: '$9.99/mo',
+    productIdentifier: REVENUECAT_MONTHLY_PRODUCT_ID,
     isFallbackPrice: true,
   },
 ];
@@ -175,7 +175,6 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   const accountGenerationRef = useRef<number>(0);
   const membershipOptionsRequestKeyRef = useRef<string | null>(null);
   const offeringsRecoveryKeyRef = useRef<string | null>(null);
-  const missingLifetimePackageWarningLoggedRef = useRef<boolean>(false);
   const membershipOptionsRetryPromiseRef = useRef<Promise<void> | null>(null);
   const membershipOptionsRefreshPromiseRef = useRef<Promise<void> | null>(null);
   const previousBillingIssueRecoveryRef = useRef<BillingIssueRecoveryState | null>(null);
@@ -718,7 +717,6 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
       isOfferingsError: offeringsQuery.isError,
       hasMonthlyPackage: !!offeringsQuery.data?.monthly,
       hasAnnualPackage: !!offeringsQuery.data?.annual,
-      hasLifetimePackage: !!getLifetimePackageFromOffering(offeringsQuery.data ?? null),
       hasOffering: !!offeringsQuery.data,
       isDev: __DEV__,
     });
@@ -768,7 +766,9 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     }
 
     const nextPlans: SubscriptionPlan[] = [];
-    const lifetimePackage = getLifetimePackageFromOffering(offering);
+
+    let monthlyPlan: SubscriptionPlan | null = null;
+    let annualPlan: SubscriptionPlan | null = null;
 
     if (offering.monthly) {
       const androidSelection = Platform.OS === 'android'
@@ -778,7 +778,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
             customerInfo: customerInfoQuery.data ?? null,
           })
         : null;
-      const monthlyPlan = createLocalizedSubscriptionPlan({
+      monthlyPlan = createLocalizedSubscriptionPlan({
         pkg: offering.monthly,
         period: 'monthly',
         fallbackProductIdentifier: REVENUECAT_MONTHLY_PRODUCT_ID,
@@ -788,7 +788,6 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
           ? (androidSelection?.trialCopy ? 'eligible' : 'unknown')
           : iosTrialEligibilityQuery.data?.[offering.monthly.product.identifier] ?? 'unknown',
       });
-      if (monthlyPlan) nextPlans.push(monthlyPlan);
     }
 
     if (offering.annual) {
@@ -799,7 +798,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
             customerInfo: customerInfoQuery.data ?? null,
           })
         : null;
-      const annualPlan = createLocalizedSubscriptionPlan({
+      annualPlan = createLocalizedSubscriptionPlan({
         pkg: offering.annual,
         period: 'yearly',
         fallbackProductIdentifier: REVENUECAT_YEARLY_PRODUCT_ID,
@@ -809,21 +808,10 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
           ? (androidSelection?.trialCopy ? 'eligible' : 'unknown')
           : iosTrialEligibilityQuery.data?.[offering.annual.product.identifier] ?? 'unknown',
       });
-      if (annualPlan) nextPlans.push(annualPlan);
     }
 
-    if (lifetimePackage) {
-      const lifetimePlan = createLocalizedSubscriptionPlan({
-        pkg: lifetimePackage,
-        period: 'lifetime',
-        fallbackProductIdentifier: lifetimePackage.product.identifier,
-        trialEligibilityStatus: 'ineligible',
-      });
-      if (lifetimePlan) nextPlans.push(lifetimePlan);
-    } else if (__DEV__ && !missingLifetimePackageWarningLoggedRef.current) {
-      missingLifetimePackageWarningLoggedRef.current = true;
-      console.warn('[SubscriptionProvider] RevenueCat lifetime package is unavailable; hiding Lifetime option.');
-    }
+    if (annualPlan) nextPlans.push(annualPlan);
+    if (monthlyPlan) nextPlans.push(monthlyPlan);
 
     return nextPlans;
   }, [customerInfoQuery.data, iosTrialEligibilityQuery.data, offeringStatus, offeringsQuery.data]);
@@ -1101,15 +1089,16 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
 
   const subscribe = useCallback((_plan: SubscriptionPlan) => {
     if (isExpoGo) return;
+    if (_plan.period === 'lifetime') {
+      throw new Error(PURCHASES_UNAVAILABLE_MESSAGE);
+    }
     const current = offeringsQuery.data;
     if (!current) {
       throw new Error(PURCHASES_UNAVAILABLE_MESSAGE);
     }
-    const pkg = _plan.period === 'lifetime'
-      ? getLifetimePackageFromOffering(current)
-      : _plan.period === 'yearly'
-        ? current.annual
-        : current.monthly;
+    const pkg = _plan.period === 'yearly'
+      ? current.annual
+      : current.monthly;
     if (!pkg) {
       throw new Error(PURCHASES_UNAVAILABLE_MESSAGE);
     }

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -45,8 +45,8 @@ export default function TrialActivationScreen() {
   const { user } = useAuth();
   const { language } = useLanguage();
 
-  const localizedText = (english: string, spanish: string) =>
-    language === 'es' ? spanish : english;
+  const localizedText = useCallback((english: string, spanish: string) =>
+    language === 'es' ? spanish : english, [language]);
 
   const choices = useMemo<ActivationChoice[]>(
     () => [
@@ -103,7 +103,7 @@ export default function TrialActivationScreen() {
         icon: HeartHandshake,
       },
     ],
-    [language],
+    [localizedText],
   );
 
   useEffect(() => {
@@ -163,8 +163,8 @@ export default function TrialActivationScreen() {
         >
           <Text style={[styles.badgeText, { color: colors.primary }]}>
             {localizedText(
-              'YOUR 3-DAY TRIAL IS ACTIVE',
-              'TU PRUEBA DE 3 DÍAS ESTÁ ACTIVA',
+              'YOUR TRIAL IS ACTIVE',
+              'TU PRUEBA ESTÁ ACTIVA',
             )}
           </Text>
         </View>
@@ -243,7 +243,7 @@ export default function TrialActivationScreen() {
           ]}
         >
           <Text style={[styles.planEyebrow, { color: colors.primary }]}>
-            {localizedText('YOUR 3-DAY PLAN', 'TU PLAN DE 3 DÍAS')}
+            {localizedText('YOUR STARTER ROADMAP', 'TU MAPA INICIAL')}
           </Text>
 
           <PlanRow

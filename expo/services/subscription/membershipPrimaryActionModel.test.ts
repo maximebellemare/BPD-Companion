@@ -74,6 +74,21 @@ export function assertMembershipPrimaryActionRegressionScenarios(): true {
   });
   assert(activeYearlyStatus.title === 'Yearly membership active', 'active yearly status identifies current plan');
 
+  const activeLifetimeStatus = getMembershipStatusCopy({
+    hasStoreAccess: true,
+    isEntitlementActive: true,
+    isTrialActive: false,
+    currentPeriod: 'lifetime',
+    activeWillRenew: false,
+    activeExpirationDateLabel: 'Jul 20, 2027',
+    trialDaysRemaining: 0,
+    shouldShowTrialCopy: false,
+  });
+  assert(activeLifetimeStatus.title === 'Membership active', 'lifetime entitlement shows active membership status');
+  assert(activeLifetimeStatus.body.includes('Current plan: Lifetime'), 'lifetime status names Lifetime as current plan');
+  assert(activeLifetimeStatus.body.includes('No recurring payments'), 'lifetime status explains one-time access');
+  assert(!activeLifetimeStatus.body.includes('Access ends'), 'lifetime status does not show cancellation/access-end copy');
+
   const monthlyTrialStatus = getMembershipStatusCopy({
     hasStoreAccess: true,
     isEntitlementActive: true,
@@ -415,6 +430,56 @@ export function assertMembershipPrimaryActionRegressionScenarios(): true {
   assert(freshPurchase.kind === 'purchase', 'fresh user uses purchase action');
   assert(freshPurchase.label.includes('7-day free trial'), 'fresh user trial label follows RevenueCat trial metadata');
 
+  const lifetimePurchase = getMembershipPrimaryAction({
+    isExpoGo: false,
+    platform: 'ios',
+    hasStoreAccess: false,
+    activePeriod: null,
+    selectedPeriod: 'lifetime',
+    canSubscribe: true,
+    shouldShowTrialCopy: false,
+    selectedPriceLabel: 'CA$149.99',
+  });
+  assert(lifetimePurchase.kind === 'loading', 'fresh user cannot purchase lifetime through normal paywall action');
+  assert(!lifetimePurchase.label.includes('trial'), 'lifetime purchase label has no trial language');
+
+  const activeSubscriberLifetimePurchase = getMembershipPrimaryAction({
+    isExpoGo: false,
+    platform: 'android',
+    hasStoreAccess: true,
+    activePeriod: 'monthly',
+    selectedPeriod: 'lifetime',
+    canSubscribe: true,
+    shouldShowTrialCopy: false,
+    selectedPriceLabel: 'CA$149.99',
+  });
+  assert(activeSubscriberLifetimePurchase.kind === 'loading', 'active subscription user cannot buy lifetime through normal manage UI');
+
+  const activeLifetimeOwnedAction = getMembershipPrimaryAction({
+    isExpoGo: false,
+    platform: 'ios',
+    hasStoreAccess: true,
+    activePeriod: 'lifetime',
+    selectedPeriod: 'lifetime',
+    canSubscribe: true,
+    shouldShowTrialCopy: false,
+    selectedPriceLabel: 'CA$199.99 CAD',
+  });
+  assert(activeLifetimeOwnedAction.kind === 'owned', 'lifetime owner cannot purchase Lifetime again');
+  assert(activeLifetimeOwnedAction.label === 'Lifetime Active', 'lifetime owner sees owned CTA');
+
+  const activeLifetimeSelectedYearly = getMembershipPrimaryAction({
+    isExpoGo: false,
+    platform: 'ios',
+    hasStoreAccess: true,
+    activePeriod: 'lifetime',
+    selectedPeriod: 'yearly',
+    canSubscribe: true,
+    shouldShowTrialCopy: false,
+    selectedPriceLabel: '$59.99 USD/yr',
+  });
+  assert(activeLifetimeSelectedYearly.kind === 'owned', 'lifetime owner is not shown subscription switch/purchase CTA');
+
   assert(
     getMembershipPrimaryAction({
       isExpoGo: false,
@@ -475,6 +540,18 @@ export function assertMembershipPrimaryActionRegressionScenarios(): true {
       currentSelectedPlanId: 'monthly',
     }) === 'yearly',
     'account or product change can reinitialize selected plan',
+  );
+
+  assert(
+    getInitialManageSelectedPlanId({
+      isSubscriptionManagement: true,
+      hasAppliedInitialSelection: false,
+      hasUserSelectedPlan: false,
+      activePeriod: 'lifetime',
+      availablePlanIds: ['monthly', 'yearly', 'lifetime'],
+      currentSelectedPlanId: 'yearly',
+    }) === 'lifetime',
+    'manage mode initializes lifetime owner to Lifetime plan',
   );
 
   return true;

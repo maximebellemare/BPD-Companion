@@ -67,6 +67,10 @@ import {
   shouldShowTrialCopyForSelectedPlan,
   shouldShowTrialEndingReminderCopy,
 } from '@/services/subscription/trialReminderModel';
+import {
+  shouldPrepareTrialActivationRoadmap,
+  shouldRouteTrialActivationRoadmapFromPurchase,
+} from '@/services/subscription/trialActivationModel';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '@/hooks/useLanguage';
 import { formatDateForLanguage } from '@/lib/i18n';
@@ -395,6 +399,7 @@ export default function UpgradeScreen() {
     state,
     pendingPlanChange,
     plans,
+    customerInfo,
     offeringIdentifier,
     offeringStatus,
     purchaseError,
@@ -619,6 +624,14 @@ export default function UpgradeScreen() {
     if (routeNewTrialToActivationRef.current) {
       routeNewTrialToActivationRef.current = false;
 
+      if (!shouldRouteTrialActivationRoadmapFromPurchase({
+        customerInfo,
+        purchaseCompleted: true,
+      })) {
+        navigateToAppOnce();
+        return;
+      }
+
       if (hasNavigatedAfterAccessRef.current) return;
 
       hasNavigatedAfterAccessRef.current = true;
@@ -633,6 +646,7 @@ export default function UpgradeScreen() {
     isLoading,
     isSubscriptionManagement,
     useRevenueCatAcquisitionPaywall,
+    customerInfo,
     navigateToAppOnce,
     router,
     trackEvent,
@@ -718,19 +732,13 @@ export default function UpgradeScreen() {
 
   const handleRevenueCatPaywallPurchaseCompleted = useCallback(
     ({ customerInfo }: { customerInfo: CustomerInfo }) => {
-      const activeEntitlements = Object.values(
-        customerInfo.entitlements.active ?? {},
-      );
-
-      const startedTrial = activeEntitlements.some(
-        entitlement =>
-          String(entitlement.periodType).toUpperCase() === 'TRIAL',
-      );
-
       if (hasNavigatedAfterAccessRef.current) return;
       hasNavigatedAfterAccessRef.current = true;
 
-      if (startedTrial) {
+      if (shouldRouteTrialActivationRoadmapFromPurchase({
+        customerInfo,
+        purchaseCompleted: true,
+      })) {
         trackEvent('trial_activation_started', {
           source: 'revenuecat_paywall',
         });
@@ -850,11 +858,12 @@ export default function UpgradeScreen() {
     }
     trackEvent('upgrade_clicked', { plan_id: selectedPlanId });
 
-    routeNewTrialToActivationRef.current =
-      primaryAction.kind === 'purchase' &&
-      !hasStoreAccess &&
-      selectedShowsTrialCopy &&
-      selected.period !== 'lifetime';
+    routeNewTrialToActivationRef.current = shouldPrepareTrialActivationRoadmap({
+      primaryAction,
+      hasStoreAccess,
+      selectedPeriod: selected.period,
+      shouldShowTrialCopy: selectedShowsTrialCopy,
+    });
     subscribe(selected);
   }, [activeManagementUrl, activePeriodForPrimaryAction, activeProductIdentifier, hasStoreAccess, inactiveBillingIssueRecovery, isExpoGo, language, pendingPlanChange?.targetPeriod, router, selectedPlanId, subscribe, t, trackEvent, plans, offeringStatus, isNativePurchases]);
 
@@ -881,7 +890,6 @@ export default function UpgradeScreen() {
       return;
     }
     routeNewTrialToActivationRef.current = false;
-
     restore()
       .then((active) => {
         if (active) {

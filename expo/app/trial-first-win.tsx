@@ -90,7 +90,7 @@ export default function TrialFirstWinScreen() {
 
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
           {localizedText(
-            "That's the goal — not another app to scroll through, but tools you can reach for when emotions, triggers, or relationships feel hard.",
+            "That's the goal: not another app to scroll through, but tools you can reach for when emotions, triggers, or relationships feel hard.",
             'Ese es el objetivo: no otra aplicación para explorar, sino herramientas que puedas usar cuando las emociones, los desencadenantes o las relaciones se sientan difíciles.',
           )}
         </Text>
@@ -158,8 +158,8 @@ export default function TrialFirstWinScreen() {
 
         <Text style={[styles.permissionNote, { color: colors.textMuted }]}>
           {localizedText(
-            "We'll ask permission to send your Day 2 reminder.",
-            'Pediremos permiso para enviarte el recordatorio del Día 2.',
+            "We'll ask permission before sending roadmap reminders.",
+            'Pediremos permiso antes de enviarte recordatorios del mapa.',
           )}
         </Text>
 

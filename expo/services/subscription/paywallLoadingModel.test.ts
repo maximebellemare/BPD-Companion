@@ -34,6 +34,12 @@ export function assertPaywallLoadingRegressionScenarios(): true {
     'offerings can become ready independently of customer-info entitlement loading',
   );
 
+  const lifetimeOnlyOfferingEmpty = computeOfferingStatus({
+    ...baseOfferingInput,
+    hasOffering: true,
+  });
+  assert(lifetimeOnlyOfferingEmpty === 'empty', 'lifetime-only offerings are not usable for new purchases');
+
   const identityFailedWithNoTrustedAccess = computeOfferingStatus({
     ...baseOfferingInput,
     identityStatus: 'error',
